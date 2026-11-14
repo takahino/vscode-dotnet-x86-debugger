@@ -2,6 +2,9 @@
 // and readable exception filter labels. Kept free of the vscode module so it can be exercised directly against netcoredbg.
 
 import * as cp from 'child_process';
+import * as fs from 'fs';
+import { readPdbDocuments } from './pdbDocuments';
+import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type DapMessage = {
@@ -52,6 +55,15 @@ export interface ProxyOptions {
     findWriteSites?: (name: string) => Promise<{ path: string; line: number }[]>;
     /** Localized message shown when "Set Next Statement" is refused. */
     gotoFailedMessage?: string;
+    /**
+     * Maps the source paths recorded in PDBs to local files (sourceFileMap / sourceSearchPaths). VS Code only ever
+     * sees local paths and netcoredbg only PDB paths: messages are rewritten where they enter and leave the relay.
+     */
+    sourceMapper?: SourcePathMapper;
+    /** Assemblies whose PDB documents are learned before the session starts (the launched program's folder). */
+    preloadModules?: string[];
+    /** Console text when the source of a stop is not on this machine (shown once per file). */
+    missingSourceMessage?: (unresolved: UnresolvedSource) => string;
 }
 
 interface WriteSite {
@@ -132,15 +144,33 @@ export class DapProxy {
     private readonly timerStarts = new Map<string, number>();
     /** The exception settings the user chose; with the exception log on, netcoredbg always gets "all" on top. */
     private userExceptionSettings: { filters: string[]; filterOptions: { filterId: string; condition?: string }[] } = { filters: [], filterOptions: [] };
+    private readonly mapper: SourcePathMapper;
+    /** Assemblies whose PDB documents were already given to the mapper (pathKey). */
+    private readonly scannedModules = new Set<string>();
+    /** Local files whose missing source was already reported (pathKey). */
+    private readonly reportedMissing = new Set<string>();
+    /** Client stackTrace requests by seq, to check the source of the top frame in their response. */
+    private readonly pendingStackTraces = new Set<number>();
+    /** Breakpoint ids VS Code got for each source (in order), so breakpoints the proxy sends again keep those ids. */
+    private readonly clientIdsByPath = new Map<string, number[]>();
+    /** netcoredbg breakpoint id -> the id VS Code knows, for breakpoints the proxy sent again. */
+    private readonly idAliases = new Map<number, number>();
 
     constructor(
         executable: string,
         args: string[],
         cwd: string,
-        private readonly toClient: (message: DapMessage) => void,
+        private readonly sink: (message: DapMessage) => void,
         private readonly log: (line: string) => void,
         private readonly options: ProxyOptions = {},
     ) {
+        this.mapper = options.sourceMapper ?? new SourcePathMapper();
+        // Before any message: VS Code sends the breakpoints right after initialize, and they must already carry PDB paths.
+        if (this.mapper.enabled) {
+            for (const module of options.preloadModules ?? []) {
+                this.learnModule(module);
+            }
+        }
         this.child = cp.spawn(executable, args, { cwd, windowsHide: true, env: options.env ? { ...process.env, ...options.env } : process.env });
         this.child.stdout.on('data', (d: Buffer) => this.onData(d));
         this.child.stderr.on('data', (d: Buffer) => this.log(`[netcoredbg] ${d.toString()}`));
@@ -155,6 +185,12 @@ export class DapProxy {
 
     /** Message from VS Code. */
     fromClient(message: DapMessage): void {
+        if (message.type === 'request' && this.mapper.enabled && message.arguments) {
+            message = { ...message, arguments: mapSourcePaths(message.arguments, (p) => this.mapper.toDebugger(p)) };
+        }
+        if (message.type === 'request' && message.command === 'stackTrace' && message.seq !== undefined && !message.arguments?.startFrame) {
+            this.pendingStackTraces.add(message.seq);
+        }
         if (message.type === 'request' && message.command === 'setExceptionBreakpoints' && this.options.exceptionLog) {
             message = { ...message, arguments: this.withExceptionLogFilter(message.arguments ?? {}) };
         }
@@ -202,6 +238,16 @@ export class DapProxy {
         }
         if (message.type === 'response' && message.command === 'setBreakpoints' && message.request_seq !== undefined) {
             this.recordSpecialBreakpoints(message);
+        }
+        if (message.type === 'event' && message.event === 'module' && message.body?.reason === 'new' && this.mapper.enabled) {
+            // A module loaded after the session started (attach, or loaded on demand): learn its documents and
+            // move breakpoints set under a path it records differently.
+            const modulePath = message.body.module?.path;
+            if (typeof modulePath === 'string') {
+                for (const remapped of this.learnModule(modulePath)) {
+                    await this.moveBreakpoints(remapped.previous, remapped.pdbPath);
+                }
+            }
         }
         if (message.type === 'event' && message.event === 'breakpoint') {
             // Breakpoints bind to their final line once the module loads.
@@ -261,6 +307,42 @@ export class DapProxy {
             // The hidden write-site breakpoints at the end are not VS Code's.
             response.body = { ...response.body, breakpoints: breakpoints.slice(0, pending.userCount) };
         }
+        // VS Code now knows these ids; aliases from earlier re-sends of this source are void.
+        const ids = (response.body?.breakpoints ?? []).map((bp: any) => bp.id);
+        for (const [alias, id] of this.idAliases) {
+            if ((this.clientIdsByPath.get(pending.path) ?? []).includes(id)) {
+                this.idAliases.delete(alias);
+            }
+        }
+        this.clientIdsByPath.set(pending.path, ids);
+    }
+
+    /** Learns the PDB documents of an assembly once; returns the local files that now map to another PDB path. */
+    private learnModule(modulePath: string) {
+        const key = pathKey(modulePath);
+        if (this.scannedModules.has(key)) {
+            return [];
+        }
+        this.scannedModules.add(key);
+        return this.mapper.addDocuments(readPdbDocuments(modulePath));
+    }
+
+    /** Sends the breakpoints given for `fromPath` again under `toPath` (removing them from the old path). */
+    private async moveBreakpoints(fromPath: string, toPath: string): Promise<void> {
+        const from = normalizePath(fromPath);
+        const to = normalizePath(toPath);
+        const args = this.userBreakpoints.get(from);
+        if (!args || from === to) {
+            return;
+        }
+        this.log(`[source map] breakpoints moved: ${fromPath} -> ${toPath}`);
+        await this.request('setBreakpoints', { ...args, breakpoints: [] });
+        this.recordSpecials(from, [], []);
+        this.userBreakpoints.delete(from);
+        this.userBreakpoints.set(to, { ...args, source: { ...args.source, path: toPath } });
+        this.clientIdsByPath.set(to, this.clientIdsByPath.get(from) ?? []);
+        this.clientIdsByPath.delete(from);
+        await this.resendBreakpoints(to, toPath);
     }
 
     private recordSpecials(path: string, specs: BreakpointSpec[], breakpoints: any[]): void {
@@ -357,7 +439,9 @@ export class DapProxy {
     private async markerAllowsStop(marker: BreakpointMarker, path: string, frame: any): Promise<boolean> {
         if (marker.kind === 'after') {
             const separator = marker.target.lastIndexOf(':');
-            const file = normalizePath(marker.target.slice(0, separator));
+            const target = marker.target.slice(0, separator);
+            // A bare file name matches anywhere; a full path is the user's (local) one, while locations here are PDB paths.
+            const file = normalizePath(/[\\/]/.test(target) ? this.mapper.toDebugger(target) : target);
             const line = marker.target.slice(separator + 1);
             return [...this.reachedLocations].some((key) => {
                 const at = key.lastIndexOf(':');
@@ -484,7 +568,11 @@ export class DapProxy {
             const name = String(bp.dataId ?? '');
             const sites = name && this.options.findWriteSites ? await this.options.findWriteSites(name) : [];
             if (sites.length) {
-                this.dataWatches.set(name, sites.map((s) => ({ path: normalizePath(s.path), rawPath: s.path, line: s.line })));
+                // Write sites are workspace (local) files; breakpoints go to netcoredbg under the PDB's paths.
+                this.dataWatches.set(name, sites.map((s) => {
+                    const rawPath = this.mapper.toDebugger(s.path);
+                    return { path: normalizePath(rawPath), rawPath, line: s.line };
+                }));
                 results.push({ verified: true, message: `${name}: ${sites.length} assignment(s) watched` });
             } else {
                 results.push({ verified: false, message: `No assignment to ${name} was found in the workspace's C# files.` });
@@ -515,7 +603,20 @@ export class DapProxy {
         const hidden = [...(this.hiddenLines.get(path)?.lines ?? [])].map((line) => ({ line }));
         const response = await this.request('setBreakpoints', { ...args, breakpoints: [...user.map(forDebugger), ...hidden] });
         // netcoredbg recreates every breakpoint of the source, so the user's logpoints / hit counts get new ids.
-        this.recordSpecials(path, user.map(toSpec), (response.body?.breakpoints ?? []).slice(0, user.length));
+        const recreated: any[] = (response.body?.breakpoints ?? []).slice(0, user.length);
+        this.recordSpecials(path, user.map(toSpec), recreated);
+        // VS Code still holds the old ids: report the new state under those, and translate later events.
+        const clientIds = this.clientIdsByPath.get(path) ?? [];
+        recreated.forEach((bp, i) => {
+            const clientId = clientIds[i];
+            if (typeof bp.id !== 'number' || clientId === undefined) {
+                return;
+            }
+            if (bp.id !== clientId) {
+                this.idAliases.set(bp.id, clientId);
+            }
+            this.emitEvent('breakpoint', { reason: 'changed', breakpoint: { ...bp, id: clientId } });
+        });
     }
 
     /**
@@ -700,6 +801,47 @@ export class DapProxy {
         this.emitEvent('output', { category: 'stderr', output: `${message}\n` });
     }
 
+    /** Every message to VS Code goes through here: PDB paths become local ones and re-sent breakpoints keep their ids. */
+    private toClient(message: DapMessage): void {
+        let out = message;
+        if (this.mapper.enabled && out.body) {
+            out = { ...out, body: mapSourcePaths(out.body, (p) => this.mapper.toLocal(p)) };
+            const details = out.body?.details;
+            if (out.type === 'response' && out.command === 'exceptionInfo' && typeof details?.stackTrace === 'string') {
+                out.body = { ...out.body, details: { ...details, stackTrace: this.mapper.rewriteText(details.stackTrace) } };
+            }
+        }
+        if (out.type === 'event' && out.event === 'breakpoint' && this.idAliases.has(out.body?.breakpoint?.id)) {
+            out = { ...out, body: { ...out.body, breakpoint: { ...out.body.breakpoint, id: this.idAliases.get(out.body.breakpoint.id) } } };
+        }
+        if (out.type === 'response' && out.command === 'stackTrace' && out.request_seq !== undefined && this.pendingStackTraces.delete(out.request_seq)) {
+            this.sink(out);
+            this.reportMissingSource(message.body?.stackFrames?.[0]?.source?.path, out.body?.stackFrames?.[0]?.source?.path);
+            return;
+        }
+        this.sink(out);
+    }
+
+    /**
+     * Says once per file how to make the source of a stop show up, when its file is not on this machine
+     * (typically a referenced assembly built elsewhere).
+     */
+    private reportMissingSource(pdbPath: unknown, localPath: unknown): void {
+        if (typeof pdbPath !== 'string' || typeof localPath !== 'string' || !this.options.missingSourceMessage) {
+            return;
+        }
+        const key = pathKey(localPath);
+        if (this.reportedMissing.has(key)) {
+            return;
+        }
+        this.reportedMissing.add(key);
+        if (fs.existsSync(localPath)) {
+            return;
+        }
+        const unresolved = this.mapper.unresolved(pdbPath) ?? { pdbPath, candidates: [] };
+        this.emitEvent('output', { category: 'console', output: `${this.options.missingSourceMessage(unresolved)}\n` });
+    }
+
     private emitEvent(event: string, body?: unknown): void {
         this.toClient({ type: 'event', seq: this.nextEventSeq++, event, body });
     }
@@ -758,6 +900,48 @@ function forDebugger(b: any): any {
     }
     const { condition: _marker, ...rest } = b;
     return rest;
+}
+
+/**
+ * Rewrites the path of every DAP Source object (`source: {path}` and `sources: [{path}]`) anywhere in a message,
+ * copying only what changes: the message objects may still be in use by VS Code or by the proxy's own state.
+ */
+export function mapSourcePaths(value: any, map: (path: string) => string, depth = 0): any {
+    if (value === null || typeof value !== 'object' || depth > 16) {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        let changed = false;
+        const mapped = value.map((v) => {
+            const r = mapSourcePaths(v, map, depth + 1);
+            changed ||= r !== v;
+            return r;
+        });
+        return changed ? mapped : value;
+    }
+    let out = value;
+    for (const [key, v] of Object.entries(value)) {
+        let r = v;
+        if (key === 'source' && v && typeof v === 'object' && typeof (v as any).path === 'string') {
+            r = mapSource(v, map);
+        } else if (key === 'sources' && Array.isArray(v)) {
+            r = v.map((s) => (s && typeof s === 'object' && typeof s.path === 'string' ? mapSource(s, map) : s));
+        } else if (v && typeof v === 'object') {
+            r = mapSourcePaths(v, map, depth + 1);
+        }
+        if (r !== v) {
+            if (out === value) {
+                out = { ...value };
+            }
+            out[key] = r;
+        }
+    }
+    return out;
+}
+
+function mapSource(source: any, map: (path: string) => string): any {
+    const path = map(source.path);
+    return path === source.path ? source : { ...source, path };
 }
 
 function normalizePath(p: string): string {

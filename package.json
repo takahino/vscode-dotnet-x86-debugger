@@ -405,6 +405,24 @@
           "default": false,
           "description": "%config.trace%"
         },
+        "dotnetX86.sourceFileMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "scope": "resource",
+          "markdownDescription": "%config.sourceFileMap%"
+        },
+        "dotnetX86.sourceSearchPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "markdownDescription": "%config.sourceSearchPaths%"
+        },
         "dotnetX86.memoryGraph.autoOpen": {
           "type": "boolean",
           "default": false,
@@ -507,6 +525,22 @@
                 "type": "boolean",
                 "default": true,
                 "description": "%debugger.launch.enableStepFiltering%"
+              },
+              "sourceFileMap": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "default": {},
+                "markdownDescription": "%debugger.launch.sourceFileMap%"
+              },
+              "sourceSearchPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "markdownDescription": "%debugger.launch.sourceSearchPaths%"
               }
             }
           },
@@ -534,6 +568,22 @@
                 "type": "boolean",
                 "default": true,
                 "description": "%debugger.attach.enableStepFiltering%"
+              },
+              "sourceFileMap": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "default": {},
+                "markdownDescription": "%debugger.attach.sourceFileMap%"
+              },
+              "sourceSearchPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "markdownDescription": "%debugger.attach.sourceSearchPaths%"
               },
               "processName": {
                 "type": "string",

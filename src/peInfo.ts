@@ -71,7 +71,8 @@ export function inspectPe(filePath: string): PeInfo {
     return { bitness: is32Bit ? 'x86' : 'anycpu', managed: true };
 }
 
-function rvaToOffset(buf: Buffer, sectionTable: number, count: number, rva: number): number | undefined {
+/** File offset of an RVA, from the section table at `sectionTable` (`count` entries); undefined outside every section. */
+export function rvaToOffset(buf: Buffer, sectionTable: number, count: number, rva: number): number | undefined {
     for (let i = 0; i < count; i++) {
         const s = sectionTable + i * 40;
         if (s + 40 > buf.length) {

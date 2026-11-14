@@ -59,5 +59,11 @@
   "command.refreshControlTree": "最新の情報に更新",
   "command.dumpControl": "コントロールをダンプ",
   "command.copyControlExpression": "式をコピー",
-  "command.exportSessionReport": "デバッグ セッションの報告書を出力"
+  "command.exportSessionReport": "デバッグ セッションの報告書を出力",
+  "debugger.launch.sourceFileMap": "PDB に記録されたソースのパスを、このマシンのフォルダに置き換えます: `{ \"PDB のパスの接頭辞\": \"ローカルのフォルダ\" }`。例: `{ \"C:\\\\build\\\\MyLib\": \"D:\\\\work\\\\MyLib\", \"/_/\": \"D:\\\\work\\\\MyLib\\\\\" }`。最も長く一致した接頭辞を使います。大文字小文字と `/` `\\\\` は区別しません。",
+  "debugger.launch.sourceSearchPaths": "PDB に記録されたパスにソースが無いとき、そのファイルを探すフォルダ（サブフォルダも含む）。PDB のパスと末尾のフォルダが最も多く一致するファイルを使います。同じだけ一致するファイルが複数あるときは使いません。",
+  "debugger.attach.sourceFileMap": "PDB に記録されたソースのパスを、このマシンのフォルダに置き換えます: `{ \"PDB のパスの接頭辞\": \"ローカルのフォルダ\" }`。例: `{ \"C:\\\\build\\\\MyLib\": \"D:\\\\work\\\\MyLib\", \"/_/\": \"D:\\\\work\\\\MyLib\\\\\" }`。最も長く一致した接頭辞を使います。大文字小文字と `/` `\\\\` は区別しません。",
+  "debugger.attach.sourceSearchPaths": "PDB に記録されたパスにソースが無いとき、そのファイルを探すフォルダ（サブフォルダも含む）。PDB のパスと末尾のフォルダが最も多く一致するファイルを使います。同じだけ一致するファイルが複数あるときは使いません。",
+  "config.sourceFileMap": "launch.json の `sourceFileMap` と同じ設定を、すべての構成に適用します（同じ接頭辞は launch.json が優先）。`${workspaceFolder}` と `${userHome}` が使えます。",
+  "config.sourceSearchPaths": "launch.json の `sourceSearchPaths` と同じ設定を、すべての構成に適用します（両方のフォルダを探します）。`${workspaceFolder}` と `${userHome}` が使えます。"
 }

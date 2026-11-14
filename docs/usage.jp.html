@@ -643,6 +643,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td>「64bit プロセスとして起動します」</td><td><code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> を設定し、<code>program</code> を <code>bin/x86/...</code> に向けます。</td></tr>
   <tr><td>「x86 版 dotnet.exe が見つかりません」</td><td>x86 版の .NET ランタイム（WinForms なら .NET Desktop Runtime x86）をインストールします。</td></tr>
   <tr><td>ブレークポイントが白抜きのまま</td><td>モジュール ビューで、自分のアセンブリが「シンボル読み込み済み」か確認します（Debug ビルドで、DLL の隣に PDB があること）。</td></tr>
+  <tr><td>自作ライブラリにステップインできない／デバッグ コンソールに「ソースが見つかりません: …」</td><td>PDB にこのマシンに無いパスが記録されています。ソースの親フォルダを <code>sourceSearchPaths</code> に追加するか、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（Release ビルドなら <code>justMyCode</code> も false に）。</td></tr>
   <tr><td>変数ビューが見当たらない</td><td>非表示または移動している可能性があります。<b>Run and Debug: Focus on Variables View</b> を実行します。</td></tr>
   <tr><td>そのほかの問題</td><td><code>dotnetX86.trace</code> を有効にして再現し、出力パネル「.NET x86 Debugger」の内容を添えて <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/issues">Issue</a> を作成してください。</td></tr>
 </table>
@@ -655,6 +656,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>true</td><td>停止のたびにステップ履歴へ記録します。</td></tr>
   <tr><td><code>dotnetX86.memoryGraph.autoOpen</code></td><td>false</td><td>デバッグ開始時にメモリ / CPU グラフを開きます。</td></tr>
   <tr><td><code>dotnetX86.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>変数をダンプなどのコマンドの上限。</td></tr>
+  <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
   <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>同梱版の代わりに別の x86 版 netcoredbg を使います。</td></tr>
 </table>

@@ -106,12 +106,15 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 | `stopAtEntry` | エントリポイントで停止します。 |
 | `justMyCode` | ユーザーコードのみをデバッグします（既定値 `true`）。 |
 | `enableStepFiltering` | プロパティや演算子をステップオーバーします（既定値 `true`）。 |
+| `sourceFileMap` | PDB に記録されたソースのパスの接頭辞を、ローカルのフォルダに置き換えます（下記参照）。attach でも使えます。 |
+| `sourceSearchPaths` | PDB に記録された場所に無いソースを探すフォルダ（下記参照）。attach でも使えます。 |
 
 ### 設定
 
 | 設定 | 説明 |
 |---|---|
 | `dotnetX86.debuggerPath` | 同梱版の代わりに、別の x86 版 `netcoredbg.exe` を使います。 |
+| `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | 全構成に共通の `sourceFileMap` / `sourceSearchPaths`（`${workspaceFolder}` が使えます）。 |
 | `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、netcoredbg のログファイルも出力します（パスは同パネルに表示）。 |
 | `dotnetX86.stepHistory.enabled` | 停止のたびにステップ履歴ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.enabled` | スローされたすべての例外を、止まらずに例外ログ ビューへ記録します（既定値 `true`）。 |
@@ -213,6 +216,23 @@ Markdown で開きます。プログラム・開始/終了時刻・終了コー�
 変数ビューと自動変数ビューの先頭に `Program.Square returned = 9` のように表示されます。1 行で複数のメソッドを呼んだ場合は、それぞれが表示されます。
 オブジェクトは展開できます（表示は型名で、`DebuggerDisplay` は適用されません）。値は次のステップか続行で消えます。
 `decimal`・`DateTime`・`Nullable<T>`・4 バイトより大きい構造体を返すメソッドは、x86 では隠しバッファー経由で値を返すため、戻り値は表示されません。
+
+### 参照しているアセンブリのデバッグ（ソースが別の場所にある場合）
+
+自作ライブラリ（自分でビルドした NuGet パッケージなど）の PDB に、このマシンに存在しないパスが記録されているときは、
+ソースの場所を指定するとステップインやブレークポイントが効くようになります。
+
+```jsonc
+"justMyCode": false,                          // ライブラリが Release（最適化あり）でビルドされている場合
+"sourceSearchPaths": ["D:\\work"],             // サブフォルダも含めて探し、末尾のフォルダが最も多く一致するファイルを使う
+"sourceFileMap": { "/_/": "D:\\work\\MyLib\\" } // 接頭辞をそのまま置き換える（Deterministic ビルドは /_/ を記録する）
+```
+
+- ライブラリの PDB（Portable PDB）が、.dll に埋め込まれているか .dll の横にある必要があります。
+- 起動するプログラムと同じフォルダにあるアセンブリの PDB は開始前に読むので、ライブラリ内のブレークポイントも最初から効きます。
+  後から読み込まれるアセンブリ（およびアタッチ時）は、読み込まれた時点でブレークポイントを付け直します。
+- どちらも `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` で全構成に共通の設定にできます。
+- 停止位置のソースがこのマシンに無いときは、どの PDB パスを置き換えればよいかをデバッグ コンソールに表示します。
 
 ### Debug.WriteLine
 

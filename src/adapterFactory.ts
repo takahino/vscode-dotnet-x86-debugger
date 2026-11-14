@@ -1,8 +1,10 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DOTNET_FRAMEWORK_KEY, findX86CoreClr } from './configProvider';
 import { DapProxy, ExceptionFilterText } from './dapProxy';
+import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { findWriteLines } from './writeSites';
 
 /** Labels for netcoredbg's exception filters, shown in the Breakpoints view. */
@@ -39,12 +41,105 @@ async function findWriteSites(name: string): Promise<{ path: string; line: numbe
     return sites;
 }
 
+interface SourceMapSetup {
+    mapper: SourcePathMapper;
+    preloadModules: string[];
+}
+
+/** Values of a string -> string object; other entries are reported and skipped. */
+function stringMap(value: unknown, where: string, output: vscode.OutputChannel): Record<string, string> {
+    if (value === undefined || value === null) {
+        return {};
+    }
+    if (typeof value !== 'object' || Array.isArray(value)) {
+        output.appendLine(`[source map] ${where} ignored: expected an object of "PDB path prefix": "local path prefix".`);
+        return {};
+    }
+    const result: Record<string, string> = {};
+    for (const [from, to] of Object.entries(value)) {
+        if (typeof to === 'string') {
+            result[from] = to;
+        } else {
+            output.appendLine(`[source map] ${where}: entry "${from}" ignored: the local path must be a string.`);
+        }
+    }
+    return result;
+}
+
+function stringArray(value: unknown, where: string, output: vscode.OutputChannel): string[] {
+    if (value === undefined || value === null) {
+        return [];
+    }
+    if (!Array.isArray(value)) {
+        output.appendLine(`[source map] ${where} ignored: expected an array of folders.`);
+        return [];
+    }
+    return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '');
+}
+
+/**
+ * sourceFileMap / sourceSearchPaths from launch.json merged over the dotnetX86.* settings (launch.json wins on the
+ * same prefix; folders from both are searched). VS Code substitutes variables in launch.json only, so the settings'
+ * ${workspaceFolder} and ${userHome} are expanded here; relative folders are taken from the workspace folder.
+ */
+function sourceMapSetup(session: vscode.DebugSession, output: vscode.OutputChannel): SourceMapSetup {
+    const config = session.configuration;
+    const folder = session.workspaceFolder?.uri.fsPath;
+    const settings = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri);
+    const expand = (s: string) => s.replace(/\$\{workspaceFolder\}/g, folder ?? '${workspaceFolder}').replace(/\$\{userHome\}/g, os.homedir());
+    const absolute = (p: string) => (folder && !path.isAbsolute(p) ? path.resolve(folder, p) : p);
+
+    const fromSettings = stringMap(settings.get('sourceFileMap'), 'dotnetX86.sourceFileMap', output);
+    const sourceFileMap: Record<string, string> = {};
+    for (const [from, to] of Object.entries(fromSettings)) {
+        sourceFileMap[from] = absolute(expand(to));
+    }
+    for (const [from, to] of Object.entries(stringMap(config.sourceFileMap, 'sourceFileMap', output))) {
+        sourceFileMap[from] = absolute(to);
+    }
+    const sourceSearchPaths = [
+        ...stringArray(config.sourceSearchPaths, 'sourceSearchPaths', output),
+        ...stringArray(settings.get('sourceSearchPaths'), 'dotnetX86.sourceSearchPaths', output).map(expand),
+    ].map(absolute);
+
+    const mapper = new SourcePathMapper({ sourceFileMap, sourceSearchPaths });
+    return { mapper, preloadModules: mapper.enabled ? launchedAssemblies(config) : [] };
+}
+
+/**
+ * The assemblies next to the launched program: their PDB paths are learned before the breakpoints are sent.
+ * (A framework-dependent .dll is launched through dotnet.exe with the .dll as its first argument.)
+ */
+function launchedAssemblies(config: vscode.DebugConfiguration): string[] {
+    if (config.request !== 'launch' || typeof config.program !== 'string') {
+        return [];
+    }
+    const args: unknown[] = Array.isArray(config.args) ? config.args : [];
+    const hostedDll = path.basename(config.program).toLowerCase() === 'dotnet.exe' && typeof args[0] === 'string' ? args[0] : undefined;
+    const dir = path.dirname(hostedDll ?? config.program);
+    try {
+        return fs.readdirSync(dir)
+            .filter((name) => /\.(dll|exe)$/i.test(name))
+            .map((name) => path.join(dir, name));
+    } catch {
+        return [];
+    }
+}
+
+function missingSourceMessage(unresolved: UnresolvedSource): string {
+    if (unresolved.candidates.length > 1) {
+        return vscode.l10n.t('Several files match the source {0}: {1}. Narrow "sourceSearchPaths", or add a "sourceFileMap" entry for its folder.', unresolved.pdbPath, unresolved.candidates.join(', '));
+    }
+    const pdbDir = unresolved.pdbPath.includes('\\') ? path.win32.dirname(unresolved.pdbPath) : path.posix.dirname(unresolved.pdbPath);
+    return vscode.l10n.t('Source not found: {0}. Add a parent folder of the source to "sourceSearchPaths", or map its folder in "sourceFileMap" (e.g. "{1}": "<local folder>").', unresolved.pdbPath, pdbDir);
+}
+
 class ProxyAdapter implements vscode.DebugAdapter {
     private readonly emitter = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
     readonly onDidSendMessage = this.emitter.event;
     private readonly proxy: DapProxy;
 
-    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>) {
+    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>, sourceMap: SourceMapSetup) {
         this.proxy = new DapProxy(
             executable,
             args,
@@ -57,6 +152,9 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 exceptionLog: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('enabled', true),
                 findWriteSites,
                 gotoFailedMessage: vscode.l10n.t('The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.'),
+                sourceMapper: sourceMap.mapper,
+                preloadModules: sourceMap.preloadModules,
+                missingSourceMessage,
             },
         );
     }
@@ -112,8 +210,18 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             args.push(`--log=${logFile}`);
             this.output.appendLine(`[trace] netcoredbg log: ${logFile}`);
         }
+        const sourceMap = sourceMapSetup(session, this.output);
         // netcoredbg runs behind a DAP relay that adds logpoints (see DapProxy).
-        return new vscode.DebugAdapterInlineImplementation(new ProxyAdapter(debugger_, args, this.output, env));
+        const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap);
+        if (sourceMap.mapper.enabled) {
+            // Generated files under obj\ are never on another machine's disk and are not worth reporting.
+            const unresolved = sourceMap.mapper.unresolvedAll().filter((u) => !/[\\/]obj[\\/]/i.test(u.pdbPath));
+            this.output.appendLine(`[source map] ${sourceMap.preloadModules.length} assemblies scanned, ${unresolved.length} source(s) not found${sourceMap.mapper.truncated ? ' (search stopped at the file limit: narrow sourceSearchPaths)' : ''}`);
+            for (const u of unresolved) {
+                this.output.appendLine(`[source map]   not found: ${u.pdbPath}${u.candidates.length > 1 ? ` (ambiguous: ${u.candidates.join(', ')})` : ''}`);
+            }
+        }
+        return new vscode.DebugAdapterInlineImplementation(adapter);
     }
 
     private locateDebugger(): string {

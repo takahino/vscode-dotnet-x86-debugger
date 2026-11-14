@@ -107,12 +107,15 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `stopAtEntry` | Break at the entry point. |
 | `justMyCode` | Only debug user code (default `true`). |
 | `enableStepFiltering` | Step over properties and operators (default `true`). |
+| `sourceFileMap` | Replace source path prefixes recorded in PDBs with local folders (see below). Attach too. |
+| `sourceSearchPaths` | Folders searched for source files the PDB records elsewhere (see below). Attach too. |
 
 ### Settings
 
 | Setting | Description |
 |---|---|
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
+| `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
@@ -221,6 +224,23 @@ A line with several calls shows each of them. Objects can be expanded; their tex
 (`DebuggerDisplay` is not applied to them). The values disappear at the next step or continue.
 Methods that return `decimal`, `DateTime`, `Nullable<T>` or a struct larger than 4 bytes pass the value through a hidden
 buffer on x86, and their return values are not shown.
+
+### Debugging referenced assemblies (source in another folder)
+
+To step into your own library (e.g. a NuGet package you build) whose PDB records paths that do not exist on this
+machine, tell the debugger where the source is:
+
+```jsonc
+"justMyCode": false,                          // when the library is built Release (optimized)
+"sourceSearchPaths": ["D:\\work"],             // searched with subfolders; the best match of the trailing folders wins
+"sourceFileMap": { "/_/": "D:\\work\\MyLib\\" } // or replace a path prefix exactly (deterministic builds record /_/)
+```
+
+- The library's PDB must be readable: embedded in the .dll or next to it (Portable PDB).
+- The PDBs of the assemblies next to the launched program are read before the session starts, so breakpoints in the
+  library work from the beginning; assemblies loaded later (and attach) get their breakpoints moved when they load.
+- Both can also be set for every configuration with `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths`.
+- When a stop has no source on this machine, the Debug Console says which PDB path to map.
 
 ### Debug.WriteLine
 

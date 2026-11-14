@@ -59,5 +59,11 @@
   "command.refreshControlTree": "Refresh",
   "command.dumpControl": "Dump Control",
   "command.copyControlExpression": "Copy Expression",
-  "command.exportSessionReport": "Export Debug Session Report"
+  "command.exportSessionReport": "Export Debug Session Report",
+  "debugger.launch.sourceFileMap": "Maps the source paths recorded in PDBs to folders on this machine: `{ \"PDB path prefix\": \"local folder\" }`, e.g. `{ \"C:\\\\build\\\\MyLib\": \"D:\\\\work\\\\MyLib\", \"/_/\": \"D:\\\\work\\\\MyLib\\\\\" }`. The longest matching prefix wins; case and `/` `\\\\` do not matter.",
+  "debugger.launch.sourceSearchPaths": "Folders searched (with their subfolders) for source files whose PDB path does not exist on this machine. The file whose trailing folders match the PDB path best is used; when several match equally, none is.",
+  "debugger.attach.sourceFileMap": "Maps the source paths recorded in PDBs to folders on this machine: `{ \"PDB path prefix\": \"local folder\" }`, e.g. `{ \"C:\\\\build\\\\MyLib\": \"D:\\\\work\\\\MyLib\", \"/_/\": \"D:\\\\work\\\\MyLib\\\\\" }`. The longest matching prefix wins; case and `/` `\\\\` do not matter.",
+  "debugger.attach.sourceSearchPaths": "Folders searched (with their subfolders) for source files whose PDB path does not exist on this machine. The file whose trailing folders match the PDB path best is used; when several match equally, none is.",
+  "config.sourceFileMap": "Same as `sourceFileMap` in launch.json, for every configuration (launch.json entries win for the same prefix). `${workspaceFolder}` and `${userHome}` can be used.",
+  "config.sourceSearchPaths": "Same as `sourceSearchPaths` in launch.json, for every configuration (both lists are searched). `${workspaceFolder}` and `${userHome}` can be used."
 }

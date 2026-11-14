@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New: **`sourceFileMap` / `sourceSearchPaths`** — debug referenced assemblies whose PDB records source paths that do not exist on this machine: replace path prefixes (`/_/` included), or give parent folders to search. Also as `dotnetX86.*` settings for every configuration. The Debug Console says which path to map when a stop has no source.
+
 ## 0.7.0
 
 - New: **.NET Framework 4.x** apps (x86) can be launched and attached to, as .NET apps can (netcoredbg patch). The debugger needs the x86 .NET runtime (8 or later) for itself, and the app must produce Portable PDBs; a warning tells how to switch when it finds a Windows PDB.
