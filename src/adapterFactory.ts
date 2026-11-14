@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DapProxy, ExceptionFilterText } from './dapProxy';
+import { findWriteLines } from './writeSites';
 
 /** Labels for netcoredbg's exception filters, shown in the Breakpoints view. */
 function exceptionFilterTexts(): Record<string, ExceptionFilterText> {
@@ -20,6 +21,23 @@ function exceptionFilterTexts(): Record<string, ExceptionFilterText> {
     };
 }
 
+/** Lines of the workspace's C# files that assign to `name`, for the "Break on Value Change" emulation. */
+async function findWriteSites(name: string): Promise<{ path: string; line: number }[]> {
+    const files = await vscode.workspace.findFiles('**/*.cs', '**/{bin,obj,node_modules,.git}/**', 5000);
+    const sites: { path: string; line: number }[] = [];
+    for (const uri of files) {
+        try {
+            const text = await fs.promises.readFile(uri.fsPath, 'utf8');
+            for (const line of findWriteLines(text, name)) {
+                sites.push({ path: uri.fsPath, line });
+            }
+        } catch {
+            // Unreadable file: skip it.
+        }
+    }
+    return sites;
+}
+
 class ProxyAdapter implements vscode.DebugAdapter {
     private readonly emitter = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
     readonly onDidSendMessage = this.emitter.event;
@@ -35,6 +53,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
             {
                 exceptionFilters: exceptionFilterTexts(),
                 exceptionLog: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('enabled', true),
+                findWriteSites,
             },
         );
     }

@@ -31,6 +31,24 @@ export interface ProxyOptions {
     exceptionFilters?: Record<string, ExceptionFilterText>;
     /** Records every thrown exception without stopping, unless the user's own exception settings ask to stop. */
     exceptionLog?: boolean;
+    /**
+     * Source lines (1-based) that assign to a member / variable with this name. Enables "Break on Value Change",
+     * emulated with hidden breakpoints at those lines: netcoredbg has no data breakpoints.
+     */
+    findWriteSites?: (name: string) => Promise<{ path: string; line: number }[]>;
+}
+
+interface WriteSite {
+    /** normalized path */
+    path: string;
+    /** path as given, sent back to netcoredbg */
+    rawPath: string;
+    line: number;
+}
+
+interface BreakpointSpec {
+    logMessage?: string;
+    hitCondition?: string;
 }
 
 /** A breakpoint the proxy handles itself: it has a log message and/or a hit condition. */
@@ -50,8 +68,19 @@ export class DapProxy {
     private exited = false;
     private queue: Promise<void> = Promise.resolve();
 
-    /** setBreakpoints requests waiting for their response, to learn which breakpoint ids need special handling. */
-    private readonly pendingSetBreakpoints = new Map<number, { path: string; specs: { logMessage?: string; hitCondition?: string }[] }>();
+    /**
+     * setBreakpoints requests waiting for their response, to learn which breakpoint ids need special handling.
+     * `userCount` is set when hidden write-site breakpoints were appended: only that many go back to VS Code.
+     */
+    private readonly pendingSetBreakpoints = new Map<number, { path: string; specs: BreakpointSpec[]; userCount?: number }>();
+    /** "Break on Value Change" watches by name. */
+    private readonly dataWatches = new Map<string, WriteSite[]>();
+    /** The latest setBreakpoints arguments VS Code sent per source, to merge the hidden write-site breakpoints into. */
+    private readonly userBreakpoints = new Map<string, any>();
+    /** Hidden write-site lines per source, sent to netcoredbg together with the user's breakpoints. */
+    private hiddenLines = new Map<string, { rawPath: string; lines: Set<number> }>();
+    /** Handlers that consume a message from netcoredbg before it is queued (used while the proxy itself steps). */
+    private readonly eventWaiters: ((m: DapMessage) => boolean)[] = [];
     private readonly specialIdsByPath = new Map<string, number[]>();
     private readonly specials = new Map<number, SpecialBreakpoint>();
     /**
@@ -59,8 +88,12 @@ export class DapProxy {
      * so counting by location (not by breakpoint id) keeps the counts across those updates.
      */
     private readonly hits = new Map<string, number>();
-    /** The "continued" event caused by resuming after a hidden stop is hidden too: the client never saw the stop. */
-    private hideNextContinued = false;
+    /**
+     * How many upcoming "continued" events the proxy caused itself (resuming after a hidden stop, or stepping over a
+     * write site); they are hidden because the client never saw the stop. A count, not a flag: the "continued" of a
+     * step can still be queued while the proxy already resumes again.
+     */
+    private hiddenContinuedCount = 0;
     /** Start times of running timers, by "timer name:thread id". */
     private readonly timerStarts = new Map<string, number>();
     /** The exception settings the user chose; with the exception log on, netcoredbg always gets "all" on top. */
@@ -91,15 +124,28 @@ export class DapProxy {
         if (message.type === 'request' && message.command === 'setExceptionBreakpoints' && this.options.exceptionLog) {
             message = { ...message, arguments: this.withExceptionLogFilter(message.arguments ?? {}) };
         }
+        if (message.type === 'request' && message.command === 'dataBreakpointInfo') {
+            this.respond(message, this.dataBreakpointInfo(message.arguments ?? {}));
+            return;
+        }
+        if (message.type === 'request' && message.command === 'setDataBreakpoints') {
+            void this.setDataBreakpoints(message);
+            return;
+        }
         if (message.type === 'request' && message.command === 'setBreakpoints' && message.seq !== undefined) {
             const args = message.arguments ?? {};
+            const path = normalizePath(args.source?.path ?? '');
+            const userBreakpoints: any[] = args.breakpoints ?? [];
+            this.userBreakpoints.set(path, args);
+            const hidden = this.hiddenLines.get(path);
             this.pendingSetBreakpoints.set(message.seq, {
-                path: normalizePath(args.source?.path ?? ''),
-                specs: (args.breakpoints ?? []).map((b: any) => ({
-                    logMessage: typeof b.logMessage === 'string' ? b.logMessage : undefined,
-                    hitCondition: typeof b.hitCondition === 'string' && b.hitCondition.trim() ? b.hitCondition : undefined,
-                })),
+                path,
+                specs: userBreakpoints.map(toSpec),
+                userCount: hidden ? userBreakpoints.length : undefined,
             });
+            if (hidden) {
+                message = { ...message, arguments: { ...args, breakpoints: [...userBreakpoints, ...[...hidden.lines].map((line) => ({ line }))] } };
+            }
         }
         this.write(message);
     }
@@ -125,8 +171,8 @@ export class DapProxy {
                 special.line = bp.line;
             }
         }
-        if (message.type === 'event' && message.event === 'continued' && this.hideNextContinued) {
-            this.hideNextContinued = false;
+        if (message.type === 'event' && message.event === 'continued' && this.hiddenContinuedCount > 0) {
+            this.hiddenContinuedCount--;
             return;
         }
         if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'exception' && this.options.exceptionLog) {
@@ -134,7 +180,7 @@ export class DapProxy {
                 return;
             }
         }
-        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && this.specials.size > 0) {
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && (this.specials.size > 0 || this.hiddenLines.size > 0)) {
             if (await this.handleSpecialStop(message.body.threadId)) {
                 return;
             }
@@ -150,7 +196,13 @@ export class DapProxy {
             // netcoredbg filters by exception type names ("A, B", or "!A" to exclude).
             supportsCondition: true,
         }));
-        return { ...body, exceptionBreakpointFilters: filters, supportsLogPoints: true, supportsHitConditionalBreakpoints: true };
+        return {
+            ...body,
+            exceptionBreakpointFilters: filters,
+            supportsLogPoints: true,
+            supportsHitConditionalBreakpoints: true,
+            supportsDataBreakpoints: Boolean(this.options.findWriteSites),
+        };
     }
 
     private recordSpecialBreakpoints(response: DapMessage): void {
@@ -159,14 +211,22 @@ export class DapProxy {
         if (!pending) {
             return;
         }
+        const breakpoints: any[] = response.body?.breakpoints ?? [];
+        this.recordSpecials(pending.path, pending.specs, breakpoints);
+        if (pending.userCount !== undefined) {
+            // The hidden write-site breakpoints at the end are not VS Code's.
+            response.body = { ...response.body, breakpoints: breakpoints.slice(0, pending.userCount) };
+        }
+    }
+
+    private recordSpecials(path: string, specs: BreakpointSpec[], breakpoints: any[]): void {
         // setBreakpoints replaces every breakpoint of the source.
-        for (const id of this.specialIdsByPath.get(pending.path) ?? []) {
+        for (const id of this.specialIdsByPath.get(path) ?? []) {
             this.specials.delete(id);
         }
         const ids: number[] = [];
-        const breakpoints: any[] = response.body?.breakpoints ?? [];
         breakpoints.forEach((bp, i) => {
-            const spec = pending.specs[i];
+            const spec = specs[i];
             if (!spec || typeof bp.id !== 'number' || (spec.logMessage === undefined && spec.hitCondition === undefined)) {
                 return;
             }
@@ -177,10 +237,10 @@ export class DapProxy {
                     output: `Ignored hit count condition "${spec.hitCondition}": use N, ==N, >=N, >N or %N.\n`,
                 });
             }
-            this.specials.set(bp.id, { path: pending.path, line: bp.line, logMessage: spec.logMessage, hitCondition });
+            this.specials.set(bp.id, { path, line: bp.line, logMessage: spec.logMessage, hitCondition });
             ids.push(bp.id);
         });
-        this.specialIdsByPath.set(pending.path, ids);
+        this.specialIdsByPath.set(path, ids);
     }
 
     /** Returns true when the stop was handled here (hit count not reached, or a logpoint) and execution resumed. */
@@ -194,7 +254,10 @@ export class DapProxy {
             const path = normalizePath(frame.source.path);
             const special = [...this.specials.values()].find((s) => s.path === path && s.line === frame.line);
             if (!special) {
-                return false;
+                // A hidden write-site breakpoint (and not also one of the user's): check whether the value changes.
+                const isHidden = this.hiddenLines.get(path)?.lines.has(frame.line) ?? false;
+                const isUsers = (this.userBreakpoints.get(path)?.breakpoints ?? []).some((b: any) => b.line === frame.line);
+                return isHidden && !isUsers ? this.handleDataWatchStop(threadId, frame, path) : false;
             }
 
             if (special.hitCondition) {
@@ -297,8 +360,122 @@ export class DapProxy {
         }
     }
 
+    /** Only plain names can be found at their write sites (fields, properties, locals); `a.b` or `[0]` cannot. */
+    private dataBreakpointInfo(args: any): any {
+        const name = String(args.name ?? '');
+        if (!this.options.findWriteSites || !/^[A-Za-z_]\w*$/.test(name)) {
+            return { dataId: null, description: 'Break on Value Change works for fields, properties and local variables with a plain name.' };
+        }
+        return { dataId: name, description: name, accessTypes: ['write'], canPersist: false };
+    }
+
+    /** Replaces the value-change watches: finds their write sites and (re)sends the affected sources' breakpoints. */
+    private async setDataBreakpoints(message: DapMessage): Promise<void> {
+        const results: { verified: boolean; message?: string }[] = [];
+        this.dataWatches.clear();
+        for (const bp of message.arguments?.breakpoints ?? []) {
+            const name = String(bp.dataId ?? '');
+            const sites = name && this.options.findWriteSites ? await this.options.findWriteSites(name) : [];
+            if (sites.length) {
+                this.dataWatches.set(name, sites.map((s) => ({ path: normalizePath(s.path), rawPath: s.path, line: s.line })));
+                results.push({ verified: true, message: `${name}: ${sites.length} assignment(s) watched` });
+            } else {
+                results.push({ verified: false, message: `No assignment to ${name} was found in the workspace's C# files.` });
+            }
+        }
+
+        const previous = this.hiddenLines;
+        this.hiddenLines = new Map();
+        for (const site of [...this.dataWatches.values()].flat()) {
+            const entry = this.hiddenLines.get(site.path) ?? { rawPath: site.rawPath, lines: new Set<number>() };
+            entry.lines.add(site.line);
+            this.hiddenLines.set(site.path, entry);
+        }
+        const affected = new Map<string, string>();
+        for (const [path, entry] of [...previous, ...this.hiddenLines]) {
+            affected.set(path, entry.rawPath);
+        }
+        for (const [path, rawPath] of affected) {
+            await this.resendBreakpoints(path, rawPath);
+        }
+        this.respond(message, { breakpoints: results });
+    }
+
+    /** Sends a source's breakpoints again: the user's (as last sent by VS Code) plus the hidden write sites. */
+    private async resendBreakpoints(path: string, rawPath: string): Promise<void> {
+        const args = this.userBreakpoints.get(path) ?? { source: { path: rawPath }, breakpoints: [] };
+        const user: any[] = args.breakpoints ?? [];
+        const hidden = [...(this.hiddenLines.get(path)?.lines ?? [])].map((line) => ({ line }));
+        const response = await this.request('setBreakpoints', { ...args, breakpoints: [...user, ...hidden] });
+        // netcoredbg recreates every breakpoint of the source, so the user's logpoints / hit counts get new ids.
+        this.recordSpecials(path, user.map(toSpec), (response.body?.breakpoints ?? []).slice(0, user.length));
+    }
+
+    /**
+     * Stopped at a line that writes a watched name: reads the value, steps over the line and reads it again.
+     * Shows a "data breakpoint" stop when it changed; otherwise resumes as if nothing happened.
+     */
+    private async handleDataWatchStop(threadId: number, frame: any, path: string): Promise<boolean> {
+        const names = [...this.dataWatches].filter(([, sites]) => sites.some((s) => s.path === path && s.line === frame.line)).map(([name]) => name);
+        const before = new Map<string, string>();
+        for (const name of names) {
+            const r = await this.request('evaluate', { expression: name, frameId: frame.id, context: 'watch' });
+            if (r.success) {
+                before.set(name, r.body.result);
+            }
+        }
+        if (before.size === 0) {
+            await this.resume(threadId);
+            return true;
+        }
+
+        const stepped = this.waitForEvent((m) => m.type === 'event' && m.event === 'stopped' && m.body?.threadId === threadId);
+        this.hiddenContinuedCount++;
+        await this.request('next', { threadId });
+        const stop = await stepped;
+        if (stop.body?.reason !== 'step') {
+            // Stopped somewhere else while stepping over (e.g. a breakpoint in a called method): handle that stop normally.
+            await this.fromDebugger(stop);
+            return true;
+        }
+        const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: 1 });
+        const after = stack.body?.stackFrames?.[0];
+        const changes: string[] = [];
+        for (const [name, old] of before) {
+            const r = after ? await this.request('evaluate', { expression: name, frameId: after.id, context: 'watch' }) : undefined;
+            if (r?.success && r.body.result !== old) {
+                changes.push(`${name}: ${old} → ${r.body.result}`);
+            }
+        }
+        if (changes.length === 0) {
+            await this.resume(threadId);
+            return true;
+        }
+        const text = changes.join(', ');
+        this.emitEvent('stopped', { reason: 'data breakpoint', description: text, text, threadId, allThreadsStopped: true });
+        return true;
+    }
+
+    /** Resolves with the next message from netcoredbg that matches, taking it out of the normal flow. */
+    private waitForEvent(match: (m: DapMessage) => boolean): Promise<DapMessage> {
+        return new Promise((resolve) => {
+            this.eventWaiters.push((m) => {
+                if (!match(m)) {
+                    return false;
+                }
+                resolve(m);
+                return true;
+            });
+        });
+    }
+
+    /** Answers a request from VS Code directly, without netcoredbg. */
+    private respond(request: DapMessage, body: unknown): void {
+        this.toClient({ type: 'response', seq: this.nextEventSeq++, request_seq: request.seq, command: request.command, success: true, body });
+    }
+
     private async resume(threadId: number): Promise<void> {
-        this.hideNextContinued = true;
+        this.hiddenContinuedCount++;
         await this.request('continue', { threadId });
     }
 
@@ -399,6 +576,13 @@ export class DapProxy {
                 this.ownPending.delete(message.request_seq);
                 continue;
             }
+            // A message the proxy itself is waiting for (the stop after its own step) skips the queue: the queued
+            // handler that waits for it would otherwise never get it.
+            const waiter = this.eventWaiters.findIndex((w) => w(message));
+            if (waiter >= 0) {
+                this.eventWaiters.splice(waiter, 1);
+                continue;
+            }
             // Other messages are handled in order: a stop being checked here must not overtake later events.
             this.queue = this.queue.then(() => this.fromDebugger(message)).catch((e) => this.log(`[proxy] ${e}`));
         }
@@ -434,6 +618,13 @@ export function parseHitCondition(text: string): ((hits: number) => boolean) | u
         default:
             return (hits) => hits === n;
     }
+}
+
+function toSpec(b: any): BreakpointSpec {
+    return {
+        logMessage: typeof b.logMessage === 'string' ? b.logMessage : undefined,
+        hitCondition: typeof b.hitCondition === 'string' && b.hitCondition.trim() ? b.hitCondition : undefined,
+    };
 }
 
 function normalizePath(p: string): string {
