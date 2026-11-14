@@ -2,7 +2,7 @@
   "name": "dotnet-x86-debugger",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "takahino",
   "license": "MIT",
   "repository": {

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - New: **Set Next Statement** (Jump to Cursor / "Set Next Statement" in the editor while stopped) within the executing method (netcoredbg patch 0005).
 - New: **Break on Value Change** (Variables view context menu) for fields, properties and locals. netcoredbg has no data breakpoints, so it is emulated: hidden breakpoints at the workspace lines that assign the name, stepping over each and stopping only when the value changed.
