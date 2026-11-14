@@ -92,5 +92,10 @@
   "Stop at line {0} only when this expression has a different value than the last time": "{0} 行目で、この式の値が前回と異なるときだけ停止します",
   "Expression to pin to line {0}": "{0} 行目にピン止めする式",
   "There is no pinned value on this line.": "この行にはピン止めされた値がありません。",
-  "Pinned values to remove": "解除するピン止め"
+  "Pinned values to remove": "解除するピン止め",
+  "(hidden)": "（非表示）",
+  "Stop the program to see its WinForms controls.": "プログラムを停止すると、WinForms のコントロールが表示されます。",
+  "No WinForms form is open.": "開いている WinForms フォームはありません。",
+  "Only the first {0} of {1} controls are listed.": "{1} 個のコントロールのうち、最初の {0} 個だけを表示しています。",
+  "Could not read Application.OpenForms ({0}). Is this a WinForms program?": "Application.OpenForms を読み取れませんでした（{0}）。WinForms のプログラムですか?"
 }

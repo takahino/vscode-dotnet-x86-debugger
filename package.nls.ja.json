@@ -54,5 +54,9 @@
   "command.addWhenChangedBreakpoint": "値が変化したときのブレークポイントを追加...",
   "command.pinValue": "値を行にピン止め...",
   "command.unpinValue": "行のピン止めを解除",
-  "command.clearPinnedValues": "すべてのピン止めを解除"
+  "command.clearPinnedValues": "すべてのピン止めを解除",
+  "view.controls": "WinForms コントロール",
+  "command.refreshControlTree": "最新の情報に更新",
+  "command.dumpControl": "コントロールをダンプ",
+  "command.copyControlExpression": "式をコピー"
 }

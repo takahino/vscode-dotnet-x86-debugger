@@ -157,6 +157,22 @@
         "command": "dotnetX86.clearPinnedValues",
         "title": "%command.clearPinnedValues%",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.refreshControlTree",
+        "title": "%command.refreshControlTree%",
+        "category": ".NET x86",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dotnetX86.dumpControl",
+        "title": "%command.dumpControl%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.copyControlExpression",
+        "title": "%command.copyControlExpression%",
+        "category": ".NET x86"
       }
     ],
     "menus": {
@@ -268,6 +284,18 @@
         {
           "command": "dotnetX86.unpinValue",
           "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.refreshControlTree",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.dumpControl",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.copyControlExpression",
+          "when": "false"
         }
       ],
       "editor/context": [
@@ -322,6 +350,11 @@
           "command": "dotnetX86.clearExceptionLog",
           "when": "view == dotnetX86.exceptions",
           "group": "navigation"
+        },
+        {
+          "command": "dotnetX86.refreshControlTree",
+          "when": "view == dotnetX86.controls",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -333,6 +366,16 @@
         {
           "command": "dotnetX86.revealModule",
           "when": "view == dotnetX86.modules",
+          "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.dumpControl",
+          "when": "view == dotnetX86.controls",
+          "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.copyControlExpression",
+          "when": "view == dotnetX86.controls",
           "group": "z_dotnetX86@2"
         }
       ]
@@ -559,6 +602,12 @@
           "id": "dotnetX86.stepHistory",
           "name": "%view.stepHistory%",
           "when": "debugType == 'dotnet-x86'"
+        },
+        {
+          "id": "dotnetX86.controls",
+          "name": "%view.controls%",
+          "when": "debugType == 'dotnet-x86'",
+          "visibility": "collapsed"
         },
         {
           "id": "dotnetX86.modules",

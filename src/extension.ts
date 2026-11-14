@@ -3,6 +3,7 @@ import { X86AdapterFactory } from './adapterFactory';
 import { AutosView } from './autosView';
 import { BreakpointCommands } from './breakpointCommands';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
+import { ControlNode, ControlTree } from './controlTree';
 import { DapTraceFactory } from './dapTrace';
 import { ExceptionLog } from './exceptionLog';
 import { CSharpInlineValuesProvider } from './inlineValues';
@@ -36,6 +37,9 @@ export function activate(context: vscode.ExtensionContext): void {
     const autos = new AutosView();
     const breakpointCommands = new BreakpointCommands();
     const pinnedValues = new PinnedValues(context.workspaceState);
+    const controlTree = new ControlTree();
+    const controlView = vscode.window.createTreeView('dotnetX86.controls', { treeDataProvider: controlTree });
+    controlTree.attach(controlView);
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
@@ -84,6 +88,11 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.pinValue', () => pinnedValues.pin()),
         vscode.commands.registerCommand('dotnetX86.unpinValue', () => pinnedValues.unpin()),
         vscode.commands.registerCommand('dotnetX86.clearPinnedValues', () => pinnedValues.clear()),
+        controlTree,
+        controlView,
+        vscode.commands.registerCommand('dotnetX86.refreshControlTree', () => controlTree.refresh()),
+        vscode.commands.registerCommand('dotnetX86.dumpControl', (node: ControlNode) => dumpExpressionCommand(node?.expression)),
+        vscode.commands.registerCommand('dotnetX86.copyControlExpression', (node: ControlNode) => node && vscode.env.clipboard.writeText(node.expression)),
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),

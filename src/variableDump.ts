@@ -50,8 +50,9 @@ export async function dumpVariableCommand(arg?: VariablesContextArg): Promise<vo
     }
 }
 
-export async function dumpExpressionCommand(): Promise<void> {
-    const target = await targetFromInput();
+/** `expression` is given by other views (e.g. the WinForms control tree); otherwise the user is asked for one. */
+export async function dumpExpressionCommand(expression?: string): Promise<void> {
+    const target = await targetFromInput(typeof expression === 'string' ? expression : undefined);
     if (target) {
         await showDump(target);
     }
@@ -155,15 +156,17 @@ export function targetFromContext(arg: VariablesContextArg | undefined, commandT
     };
 }
 
-async function targetFromInput(): Promise<Target | undefined> {
+async function targetFromInput(given?: string): Promise<Target | undefined> {
     const session = requireSession();
     if (!session) {
         return undefined;
     }
-    const expression = await vscode.window.showInputBox({
-        prompt: vscode.l10n.t("Expression to dump (e.g. this, myList, order.Items)"),
-        placeHolder: 'this',
-    });
+    const expression =
+        given ??
+        (await vscode.window.showInputBox({
+            prompt: vscode.l10n.t("Expression to dump (e.g. this, myList, order.Items)"),
+            placeHolder: 'this',
+        }));
     if (!expression) {
         return undefined;
     }

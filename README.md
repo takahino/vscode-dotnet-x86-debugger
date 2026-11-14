@@ -184,6 +184,14 @@ Right-click a line and choose **Pin Value to Line...** to show an expression at 
 again in the selected stack frame every time the program stops, and the pins are kept with the workspace.
 Use **Unpin Value from Line** or **Clear All Pinned Values** to remove them.
 
+### WinForms Controls view
+
+While stopped, the **WinForms Controls** view in Run and Debug lists `Application.OpenForms` and their controls as a tree
+(name, type and text; hidden controls are greyed out). Hover a control for its bounds, enabled state, dock and tab index.
+Right-click it to **Dump Control** or **Copy Expression** (e.g. `System.Windows.Forms.Application.OpenForms[0].Controls[1]`,
+which you can paste into the Watch view). Every value is read by evaluating an expression, so children are read only when
+you expand a node.
+
 ### Debug.WriteLine
 
 Output from `Debug.WriteLine`, `Trace.WriteLine` and `Debugger.Log` appears in the Debug Console, with a link to the source line.

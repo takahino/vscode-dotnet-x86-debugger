@@ -4,6 +4,7 @@
 
 - New: **Temporary**, **dependent** and **when-changed** breakpoints (editor context menu, or `#once`, `#after File.cs:12`, `#changed expr` as the condition).
 - New: **Pinned values** — pin an expression to an editor line; it is evaluated again every time the program stops.
+- New: **WinForms Controls** view — the tree of open forms and their controls (name, type, text, hidden ones greyed out; bounds, enabled, dock and tab index in the tooltip). Right-click a control to dump it or copy its expression.
 - Docs: `Debug.WriteLine` / `Trace.WriteLine` output already appears in the Debug Console.
 
 ## 0.5.0

@@ -54,5 +54,9 @@
   "command.addWhenChangedBreakpoint": "Add Breakpoint When Value Changes...",
   "command.pinValue": "Pin Value to Line...",
   "command.unpinValue": "Unpin Value from Line",
-  "command.clearPinnedValues": "Clear All Pinned Values"
+  "command.clearPinnedValues": "Clear All Pinned Values",
+  "view.controls": "WinForms Controls",
+  "command.refreshControlTree": "Refresh",
+  "command.dumpControl": "Dump Control",
+  "command.copyControlExpression": "Copy Expression"
 }
