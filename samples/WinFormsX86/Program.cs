@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Diagnostics; // 必須
 
 namespace WinFormsX86
 {
@@ -33,13 +34,19 @@ namespace WinFormsX86
 
         private void OnButtonClick(object? sender, EventArgs e)
         {
+            Debug.WriteLine("OnButtonClick Before:" + test());
             _count++; // set a breakpoint here
+            Debug.WriteLine("OnButtonClick After :" + test());
             UpdateLabel();
         }
 
         private void UpdateLabel()
         {
             _label.Text = $"Is64BitProcess={Environment.Is64BitProcess}  Count={_count}";
+        }
+
+        private string test() {
+            return _count + "";
         }
     }
 }
