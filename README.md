@@ -5,7 +5,7 @@ Debug **32-bit (x86) .NET applications** — for example WinForms apps built wit
 The C# extension's debugger (vsdbg) is shipped only for x64 / arm64, so it cannot debug 32-bit processes.
 This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg)** (MIT) and registers it as the `dotnet-x86` debug type.
 
-[日本語の説明はこちら](#日本語)
+[日本語](README.jp.md)
 
 ## Requirements
 
@@ -100,16 +100,3 @@ To debug the extension itself, open this folder in VS Code and run **Run Extensi
 
 [MIT](LICENSE). Bundled third-party components are listed in [ThirdPartyNotices.txt](ThirdPartyNotices.txt).
 
----
-
-## 日本語
-
-`<PlatformTarget>x86</PlatformTarget>` でビルドした 32bit の .NET アプリ（WinForms など）を VS Code でデバッグするための拡張機能です。
-
-C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていないため、32bit プロセスはデバッグできません。
-この拡張は [netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）を x86 向けにビルドして同梱し、デバッグ種別 `dotnet-x86` として登録します。
-
-- 必要なもの: Windows (x64)、アプリに合った **x86 版 .NET ランタイム**（WinForms なら .NET Desktop Runtime x86）
-- 使い方: 上記の `launch.json` の例のとおり `"type": "dotnet-x86"` を指定して F5
-- 制限: **.NET Framework は非対応**（netcoredbg が .NET (Core) / .NET 5 以降のみ対応のため）
-- ソースからのビルド: `scripts\install.ps1`（netcoredbg の x86 ビルド → VSIX 作成 → VS Code へインストール）
