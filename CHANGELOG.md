@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - New: Japanese localization. Menus, settings, messages and the memory graph follow VS Code's display language;
   messages that were Japanese-only are now English by default.
