@@ -111,6 +111,14 @@ or run **.NET x86: Dump Expression...** from the Command Palette, to open the wh
 - Property getters run while dumping, as in the Variables view. Large objects such as a `Form` hit the limits above
   (a notification tells you so); raise them in the settings if needed.
 
+### More commands in the Variables view context menu
+
+| Command | What it does |
+|---|---|
+| **Copy as C# Initializer** | Copies the value as C# code (`var order = new Order { Note = "...", People = new List<Person> { ... } };`), handy for test data. Only PascalCase members are emitted; get-only properties are included too, so delete them if the code does not compile. |
+| **View String (JSON / XML / HTML / Text)** | Opens a `string` variable in an editor, pretty-printed when it contains JSON, XML or HTML (auto-detected, or pick the format). |
+| **Take Snapshot** / **Compare with Snapshot** | Records the variable, then shows a diff against its current value after you step or continue — find out what changed and where. |
+
 ## Limitations
 
 - **.NET Framework is not supported.** netcoredbg supports .NET (Core) / .NET 5+ only.

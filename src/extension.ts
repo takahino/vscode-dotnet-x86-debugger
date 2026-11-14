@@ -3,10 +3,20 @@ import { X86AdapterFactory } from './adapterFactory';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
 import { pickProcess } from './processPicker';
-import { dumpExpressionCommand, dumpVariableCommand } from './variableDump';
+import {
+    SNAPSHOT_SCHEME,
+    SnapshotStore,
+    compareWithSnapshotCommand,
+    copyAsCSharpCommand,
+    dumpExpressionCommand,
+    dumpVariableCommand,
+    takeSnapshotCommand,
+    viewStringCommand,
+} from './variableDump';
 
 export function activate(context: vscode.ExtensionContext): void {
     const output = vscode.window.createOutputChannel('.NET x86 Debugger');
+    const snapshots = new SnapshotStore();
 
     context.subscriptions.push(
         output,
@@ -16,6 +26,11 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
         vscode.commands.registerCommand('dotnetX86.dumpExpression', dumpExpressionCommand),
+        vscode.commands.registerCommand('dotnetX86.copyAsCSharp', copyAsCSharpCommand),
+        vscode.commands.registerCommand('dotnetX86.viewString', viewStringCommand),
+        vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
+        vscode.commands.registerCommand('dotnetX86.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),
+        vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshots),
     );
 }
 

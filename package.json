@@ -45,6 +45,26 @@
         "command": "dotnetX86.dumpExpression",
         "title": "Dump Expression...",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.copyAsCSharp",
+        "title": "Copy as C# Initializer",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.viewString",
+        "title": "View String (JSON / XML / HTML / Text)",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.takeSnapshot",
+        "title": "Take Snapshot",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.compareWithSnapshot",
+        "title": "Compare with Snapshot",
+        "category": ".NET x86"
       }
     ],
     "menus": {
@@ -52,12 +72,48 @@
         {
           "command": "dotnetX86.dumpVariable",
           "when": "debugType == 'dotnet-x86'",
-          "group": "z_dotnetX86"
+          "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.copyAsCSharp",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.viewString",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@3"
+        },
+        {
+          "command": "dotnetX86.takeSnapshot",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@4"
+        },
+        {
+          "command": "dotnetX86.compareWithSnapshot",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@5"
         }
       ],
       "commandPalette": [
         {
           "command": "dotnetX86.dumpVariable",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.copyAsCSharp",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.viewString",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.takeSnapshot",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.compareWithSnapshot",
           "when": "false"
         },
         {

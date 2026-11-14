@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- New: **Copy as C# Initializer** copies a variable as C# object / collection initializer code.
+- New: **View String** opens a string variable pretty-printed as JSON / XML / HTML / text.
+- New: **Take Snapshot** / **Compare with Snapshot** show a diff of a variable between two stops.
+- Dump: enums are shown by name and chars as the character.
+
 ## 0.2.0
 
 - New: **Dump Variable** (Variables view context menu) and **Dump Expression...** (Command Palette) open a whole object
