@@ -91,7 +91,8 @@ export class AutosView implements vscode.TreeDataProvider<AutoItem>, vscode.Disp
                         .map((t) => t.text),
                 ),
             ];
-            const items: AutoItem[] = [];
+            // Return values of the last step ("Type.Method returned", added to Locals by the debugger) come first, as in Visual Studio.
+            const items: AutoItem[] = await returnValues(session, item.frameId);
             for (const name of names) {
                 try {
                     const r = await session.customRequest('evaluate', { expression: name, frameId: item.frameId, context: 'watch' });
@@ -104,5 +105,21 @@ export class AutosView implements vscode.TreeDataProvider<AutoItem>, vscode.Disp
         } catch {
             update([]);
         }
+    }
+}
+
+async function returnValues(session: vscode.DebugSession, frameId: number): Promise<AutoItem[]> {
+    try {
+        const scopes = await session.customRequest('scopes', { frameId });
+        const locals = scopes?.scopes?.[0];
+        if (!locals?.variablesReference) {
+            return [];
+        }
+        const result = await session.customRequest('variables', { variablesReference: locals.variablesReference });
+        return (result?.variables ?? [])
+            .filter((v: AutoItem) => v.name.endsWith(' returned'))
+            .map((v: AutoItem) => ({ name: v.name, value: v.value, type: v.type, variablesReference: v.variablesReference ?? 0 }));
+    } catch {
+        return [];
     }
 }

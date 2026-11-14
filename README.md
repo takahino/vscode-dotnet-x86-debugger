@@ -199,6 +199,13 @@ the last session: program, start / end time and exit code, every stop with the v
 (with a count per type), section timings (min / avg / max), tracked values and the modules with symbols. Save it or paste
 it into a bug report.
 
+### Return values
+
+After **Step Over** (or Step Into a line that calls no code of yours) and **Step Out**, the values returned by the
+methods that were called are shown at the top of the Variables and Autos views, e.g. `Program.Square returned = 9`.
+A line with several calls shows each of them. Objects can be expanded; their text is the type name
+(`DebuggerDisplay` is not applied to them). The values disappear at the next step or continue.
+
 ### Debug.WriteLine
 
 Output from `Debug.WriteLine`, `Trace.WriteLine` and `Debugger.Log` appears in the Debug Console, with a link to the source line.

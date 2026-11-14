@@ -1,0 +1,536 @@
+diff --git a/src/debugger/callbacksqueue.cpp b/src/debugger/callbacksqueue.cpp
+index fb74d87..8d67259 100644
+--- a/src/debugger/callbacksqueue.cpp
++++ b/src/debugger/callbacksqueue.cpp
+@@ -29,7 +29,7 @@ bool CallbacksQueue::CallbacksWorkerBreakpoint(ICorDebugAppDomain *pAppDomain, I
+         return false;
+ 
+     // S_FALSE - not error and steppers not affect on callback
+-    if (S_FALSE != m_debugger.m_uniqueSteppers->ManagedCallbackBreakpoint(pAppDomain, pThread))
++    if (S_FALSE != m_debugger.m_uniqueSteppers->ManagedCallbackBreakpoint(pAppDomain, pThread, pBreakpoint))
+         return false;
+ 
+     bool atEntry = false;
+diff --git a/src/debugger/manageddebugger.cpp b/src/debugger/manageddebugger.cpp
+index 28f5c3a..4d72da3 100644
+--- a/src/debugger/manageddebugger.cpp
++++ b/src/debugger/manageddebugger.cpp
+@@ -464,6 +464,7 @@ HRESULT ManagedDebugger::Continue(ThreadId threadId)
+         return S_OK; // Send 'OK' response, but don't generate continue event.
+     }
+ 
++    m_uniqueSteppers->ClearReturnValues(); // Shown only at the stop right after a step.
+     m_sharedVariables->Clear(); // Important, must be sync with MIProtocol m_vars.clear()
+     FrameId::invalidate(); // Clear all created during break frames.
+     pProtocol->EmitContinuedEvent(threadId); // VSCode protocol need thread ID.
+diff --git a/src/debugger/steppers.cpp b/src/debugger/steppers.cpp
+index 3c72ea2..10dbf37 100644
+--- a/src/debugger/steppers.cpp
++++ b/src/debugger/steppers.cpp
+@@ -7,11 +7,333 @@
+ #include "debugger/stepper_async.h"
+ #include "debugger/steppers.h"
+ #include "metadata/attributes.h"
++#include "metadata/typeprinter.h"
++#include "debugger/threads.h"
++#include "debugger/valueprint.h"
+ #include "utils/utf.h"
+ 
+ namespace netcoredbg
+ {
+ 
++namespace
++{
++    struct StoredReturnValue
++    {
++        std::string name;
++        std::string value;
++        std::string type;
++        ICorDebugHandleValue *pHandle; // owned, may be null
++        ThreadId threadId;
++    };
++    std::mutex g_returnValuesMutex;
++    std::vector<StoredReturnValue> g_returnValues;
++
++    void ClearStoredReturnValues()
++    {
++        std::lock_guard<std::mutex> lock(g_returnValuesMutex);
++        for (auto &v : g_returnValues)
++        {
++            if (v.pHandle)
++            {
++                v.pHandle->Dispose();
++                v.pHandle->Release();
++            }
++        }
++        g_returnValues.clear();
++    }
++
++    void StoreReturnValue(const std::string &name, ICorDebugValue *pValue, ThreadId threadId)
++    {
++        StoredReturnValue stored{name, "", "", nullptr, threadId};
++        // Printed now: the value object is neutered when the process continues to the end of the step.
++        // PrintValue does not run code in the debuggee, which must not happen in the middle of a step.
++        if (FAILED(PrintValue(pValue, stored.value)))
++            stored.value = "?";
++        TypePrinter::GetTypeOfValue(pValue, stored.type);
++
++        // Reference types keep a strong handle, so the object can be expanded at the stop.
++        ToRelease<ICorDebugReferenceValue> pRef;
++        BOOL isNull = TRUE;
++        if (SUCCEEDED(pValue->QueryInterface(IID_ICorDebugReferenceValue, (LPVOID *)&pRef)) &&
++            SUCCEEDED(pRef->IsNull(&isNull)) && !isNull)
++        {
++            ToRelease<ICorDebugValue> pTarget;
++            ToRelease<ICorDebugHeapValue2> pHeap;
++            if (SUCCEEDED(pRef->Dereference(&pTarget)) &&
++                SUCCEEDED(pTarget->QueryInterface(IID_ICorDebugHeapValue2, (LPVOID *)&pHeap)))
++            {
++                pHeap->CreateHandle(HANDLE_STRONG, &stored.pHandle);
++            }
++        }
++
++        std::lock_guard<std::mutex> lock(g_returnValuesMutex);
++        g_returnValues.push_back(stored);
++    }
++
++    // Operand size of the IL instruction at il[offset] (ECMA-335 partition III); 0 when the opcode is unknown.
++    ULONG32 ILInstructionSize(const std::vector<BYTE> &il, ULONG32 offset)
++    {
++        BYTE op = il[offset];
++        if (op == 0xFE)
++        {
++            if (offset + 1 >= il.size())
++                return 0;
++            switch (il[offset + 1])
++            {
++            case 0x06: case 0x07: case 0x15: case 0x16: case 0x1C: return 2 + 4; // ldftn, ldvirtftn, initobj, constrained., sizeof
++            case 0x09: case 0x0A: case 0x0B: case 0x0C: case 0x0D: case 0x0E: return 2 + 2; // ldarg, ldarga, starg, ldloc, ldloca, stloc
++            case 0x12: case 0x19: return 2 + 1; // unaligned., no.
++            default: return 2;
++            }
++        }
++        if ((op >= 0x0E && op <= 0x13) || op == 0x1F || (op >= 0x2B && op <= 0x37) || op == 0xDE)
++            return 1 + 1;
++        if (op == 0x21 || op == 0x23) // ldc.i8, ldc.r8
++            return 1 + 8;
++        if (op == 0x45) // switch: count followed by count targets
++        {
++            if (offset + 5 > il.size())
++                return 0;
++            ULONG32 n = il[offset + 1] | (il[offset + 2] << 8) | (il[offset + 3] << 16) | (il[offset + 4] << 24);
++            return 1 + 4 + n * 4;
++        }
++        if (op == 0x20 || op == 0x22 || op == 0x27 || op == 0x28 || op == 0x29 || (op >= 0x38 && op <= 0x44) ||
++            (op >= 0x6F && op <= 0x75) || op == 0x79 || (op >= 0x7B && op <= 0x81) || op == 0x8C || op == 0x8D ||
++            op == 0x8F || op == 0xA3 || op == 0xA4 || op == 0xA5 || op == 0xC2 || op == 0xC6 || op == 0xD0 || op == 0xDD)
++            return 1 + 4;
++        return 1;
++    }
++
++    // call / callvirt instructions in [start, end): IL offset and method token.
++    std::vector<std::pair<ULONG32, mdToken>> FindCalls(const std::vector<BYTE> &il, ULONG32 start, ULONG32 end)
++    {
++        std::vector<std::pair<ULONG32, mdToken>> calls;
++        for (ULONG32 offset = start; offset < end && offset < il.size();)
++        {
++            ULONG32 size = ILInstructionSize(il, offset);
++            if (size == 0)
++                break;
++            if ((il[offset] == 0x28 || il[offset] == 0x6F) && offset + 5 <= il.size())
++                calls.emplace_back(offset, il[offset + 1] | (il[offset + 2] << 8) | (il[offset + 3] << 16) | (il[offset + 4] << 24));
++            offset += size;
++        }
++        return calls;
++    }
++
++    std::string ShortName(const WCHAR *name)
++    {
++        std::string s = to_utf8(name);
++        size_t dot = s.find_last_of('.');
++        return dot == std::string::npos ? s : s.substr(dot + 1);
++    }
++
++    // "Type.Method" for the token of a call instruction.
++    std::string CallName(ICorDebugModule *pModule, mdToken token)
++    {
++        ToRelease<IUnknown> pUnknown;
++        ToRelease<IMetaDataImport2> pMD;
++        if (FAILED(pModule->GetMetaDataInterface(IID_IMetaDataImport, &pUnknown)) ||
++            FAILED(pUnknown->QueryInterface(IID_IMetaDataImport2, (LPVOID *)&pMD)))
++            return "?";
++
++        if (TypeFromToken(token) == mdtMethodSpec)
++        {
++            mdToken parent = mdTokenNil;
++            if (FAILED(pMD->GetMethodSpecProps(token, &parent, nullptr, nullptr)))
++                return "?";
++            token = parent;
++        }
++        WCHAR methodName[mdNameLen] = {0};
++        WCHAR typeName[mdNameLen] = {0};
++        ULONG len = 0;
++        mdToken owner = mdTokenNil;
++        if (TypeFromToken(token) == mdtMethodDef)
++            pMD->GetMethodProps(token, &owner, methodName, _countof(methodName), &len, nullptr, nullptr, nullptr, nullptr, nullptr);
++        else if (TypeFromToken(token) == mdtMemberRef)
++            pMD->GetMemberRefProps(token, &owner, methodName, _countof(methodName), &len, nullptr, nullptr);
++
++        if (TypeFromToken(owner) == mdtTypeDef)
++            pMD->GetTypeDefProps(owner, typeName, _countof(typeName), &len, nullptr, nullptr);
++        else if (TypeFromToken(owner) == mdtTypeRef)
++            pMD->GetTypeRefProps(owner, nullptr, typeName, _countof(typeName), &len);
++
++        std::string method = to_utf8(methodName);
++        return typeName[0] ? ShortName(typeName) + "." + method : method;
++    }
++
++    HRESULT ReadILCode(ICorDebugFunction *pFunction, std::vector<BYTE> &il)
++    {
++        HRESULT Status;
++        ToRelease<ICorDebugCode> pCode;
++        IfFailRet(pFunction->GetILCode(&pCode));
++        ULONG32 size = 0;
++        IfFailRet(pCode->GetSize(&size));
++        il.resize(size);
++        ULONG32 fetched = 0;
++        IfFailRet(pCode->GetCode(0, size, size, il.data(), &fetched));
++        il.resize(fetched);
++        return S_OK;
++    }
++}
++
++void ForEachReturnValue(ThreadId threadId, const std::function<void(const std::string &name, const std::string &value,
++                                                                    const std::string &type, ICorDebugValue *pValue)> &callback)
++{
++    std::lock_guard<std::mutex> lock(g_returnValuesMutex);
++    for (auto &v : g_returnValues)
++    {
++        if (v.threadId == threadId)
++            callback(v.name + " returned", v.value, v.type, v.pHandle);
++    }
++}
++
++void Steppers::SetupReturnValues(ICorDebugThread *pThread, ICorDebugFrame *pFrame, IDebugger::StepType stepType)
++{
++    ThreadId threadId(getThreadId(pThread));
++    if (stepType == IDebugger::STEP_OUT)
++    {
++        m_returnValueStepOutThread = threadId;
++        return;
++    }
++
++    // Step over / into: catch the calls made by the current statement. Failures only mean no return values are shown.
++    ToRelease<ICorDebugNativeFrame> pNativeFrame;
++    ToRelease<ICorDebugCode> pNativeCode;
++    ToRelease<ICorDebugCode3> pNativeCode3;
++    ToRelease<ICorDebugFunction> pFunction;
++    ToRelease<ICorDebugModule> pModule;
++    COR_DEBUG_STEP_RANGE range;
++    CORDB_ADDRESS frameStart = 0, frameEnd = 0;
++    std::vector<BYTE> il;
++    if (FAILED(pFrame->QueryInterface(IID_ICorDebugNativeFrame, (LPVOID *)&pNativeFrame)) ||
++        FAILED(pNativeFrame->GetCode(&pNativeCode)) ||
++        FAILED(pNativeCode->QueryInterface(IID_ICorDebugCode3, (LPVOID *)&pNativeCode3)) ||
++        FAILED(pFrame->GetFunction(&pFunction)) ||
++        FAILED(pFunction->GetModule(&pModule)) ||
++        FAILED(pFrame->GetStackRange(&frameStart, &frameEnd)) ||
++        FAILED(m_sharedModules->GetStepRangeFromCurrentIP(pThread, &range)) ||
++        FAILED(ReadILCode(pFunction, il)))
++        return;
++
++    std::lock_guard<std::mutex> lock(m_returnValueMutex);
++    for (const auto &call : FindCalls(il, range.startOffset, range.endOffset))
++    {
++        ULONG32 offsets[8];
++        ULONG32 fetched = 0;
++        // Fails for void methods: there is nothing to show.
++        if (FAILED(pNativeCode3->GetReturnValueLiveOffset(call.first, _countof(offsets), &fetched, offsets)))
++            continue;
++        std::string name = CallName(pModule, call.second);
++        for (ULONG32 i = 0; i < fetched && i < _countof(offsets); i++)
++        {
++            ICorDebugFunctionBreakpoint *pBreakpoint = nullptr;
++            if (SUCCEEDED(pNativeCode->CreateBreakpoint(offsets[i], &pBreakpoint)))
++                m_returnValueBreakpoints.push_back({pBreakpoint, call.first, name, threadId, frameStart});
++        }
++    }
++}
++
++void Steppers::DeactivateReturnValueBreakpoints()
++{
++    std::lock_guard<std::mutex> lock(m_returnValueMutex);
++    for (auto &b : m_returnValueBreakpoints)
++    {
++        b.pBreakpoint->Activate(FALSE);
++        b.pBreakpoint->Release();
++    }
++    m_returnValueBreakpoints.clear();
++    m_returnValueStepOutThread = ThreadId{};
++}
++
++void Steppers::ClearReturnValues()
++{
++    DeactivateReturnValueBreakpoints();
++    ClearStoredReturnValues();
++}
++
++// True when the breakpoint is one of ours; the callback is then not reported to the user.
++bool Steppers::HandleReturnValueBreakpoint(ICorDebugThread *pThread, ICorDebugBreakpoint *pBreakpoint)
++{
++    ToRelease<ICorDebugFunctionBreakpoint> pFunctionBreakpoint;
++    if (pBreakpoint == nullptr ||
++        FAILED(pBreakpoint->QueryInterface(IID_ICorDebugFunctionBreakpoint, (LPVOID *)&pFunctionBreakpoint)))
++        return false;
++
++    ThreadId threadId(getThreadId(pThread));
++    bool ours = false;
++    std::string name;
++    ULONG32 callILOffset = 0;
++    {
++        std::lock_guard<std::mutex> lock(m_returnValueMutex);
++        for (auto &b : m_returnValueBreakpoints)
++        {
++            if (b.pBreakpoint != pFunctionBreakpoint.GetPtr())
++                continue;
++            ours = true;
++            ToRelease<ICorDebugFrame> pFrame;
++            CORDB_ADDRESS start = 0, end = 0;
++            // Another thread running the same code, or a recursive call, is not the call being stepped over.
++            if (b.threadId == threadId && SUCCEEDED(pThread->GetActiveFrame(&pFrame)) && pFrame != nullptr &&
++                SUCCEEDED(pFrame->GetStackRange(&start, &end)) && start == b.frameStart)
++            {
++                name = b.name;
++                callILOffset = b.callILOffset;
++            }
++            break;
++        }
++    }
++    if (!ours)
++        return false;
++    if (name.empty())
++        return true;
++
++    ToRelease<ICorDebugFrame> pFrame;
++    ToRelease<ICorDebugILFrame3> pILFrame3;
++    ToRelease<ICorDebugValue> pValue;
++    if (SUCCEEDED(pThread->GetActiveFrame(&pFrame)) && pFrame != nullptr &&
++        SUCCEEDED(pFrame->QueryInterface(IID_ICorDebugILFrame3, (LPVOID *)&pILFrame3)) &&
++        SUCCEEDED(pILFrame3->GetReturnValueForILOffset(callILOffset, &pValue)))
++    {
++        StoreReturnValue(name, pValue, threadId);
++    }
++    return true;
++}
++
++// After a step out the caller is stopped right after the call; the runtime gives the value only for the call
++// instruction whose live offset is the current position, so try the calls of the method.
++void Steppers::ReadReturnValueAfterStepOut(ICorDebugThread *pThread)
++{
++    ThreadId threadId(getThreadId(pThread));
++    {
++        std::lock_guard<std::mutex> lock(m_returnValueMutex);
++        if (!m_returnValueStepOutThread || !(m_returnValueStepOutThread == threadId))
++            return;
++        m_returnValueStepOutThread = ThreadId{};
++    }
++
++    ToRelease<ICorDebugFrame> pFrame;
++    ToRelease<ICorDebugILFrame3> pILFrame3;
++    ToRelease<ICorDebugFunction> pFunction;
++    ToRelease<ICorDebugModule> pModule;
++    std::vector<BYTE> il;
++    if (FAILED(pThread->GetActiveFrame(&pFrame)) || pFrame == nullptr ||
++        FAILED(pFrame->QueryInterface(IID_ICorDebugILFrame3, (LPVOID *)&pILFrame3)) ||
++        FAILED(pFrame->GetFunction(&pFunction)) ||
++        FAILED(pFunction->GetModule(&pModule)) ||
++        FAILED(ReadILCode(pFunction, il)))
++        return;
++
++    for (const auto &call : FindCalls(il, 0, (ULONG32)il.size()))
++    {
++        ToRelease<ICorDebugValue> pValue;
++        if (SUCCEEDED(pILFrame3->GetReturnValueForILOffset(call.first, &pValue)) && pValue != nullptr)
++        {
++            StoreReturnValue(CallName(pModule, call.second), pValue, threadId);
++            return;
++        }
++    }
++}
++
+ // From ECMA-335
+ static const std::unordered_set<WSTRING> g_operatorMethodNames
+ {
+@@ -85,6 +407,8 @@ HRESULT Steppers::SetupStep(ICorDebugThread *pThread, IDebugger::StepType stepTy
+     ULONG32 ilOffset;
+     IfFailRet(m_sharedModules->GetFrameILAndSequencePoint(pFrame, ilOffset, m_StepStartSP));
+ 
++    SetupReturnValues(pThread, pFrame, stepType);
++
+     IfFailRet(m_asyncStepper->SetupStep(pThread, stepType));
+     if (Status == S_OK) // S_FALSE = setup simple stepper
+         return S_OK;
+@@ -92,9 +416,13 @@ HRESULT Steppers::SetupStep(ICorDebugThread *pThread, IDebugger::StepType stepTy
+     return m_simpleStepper->SetupStep(pThread, stepType);
+ }
+ 
+-HRESULT Steppers::ManagedCallbackBreakpoint(ICorDebugAppDomain *pAppDomain, ICorDebugThread *pThread)
++HRESULT Steppers::ManagedCallbackBreakpoint(ICorDebugAppDomain *pAppDomain, ICorDebugThread *pThread, ICorDebugBreakpoint *pBreakpoint)
+ {
+     HRESULT Status;
++    // Return value breakpoints are internal: read the value and let the step go on.
++    if (HandleReturnValueBreakpoint(pThread, pBreakpoint))
++        return S_OK;
++
+     // Check async stepping related breakpoints first, since user can't setup breakpoints to await block yield or resume offsets manually,
+     // so, async stepping related breakpoints not a part of any user breakpoints related data (that will be checked in separate thread. see code below).
+     IfFailRet(m_asyncStepper->ManagedCallbackBreakpoint(pThread));
+@@ -108,6 +436,9 @@ HRESULT Steppers::ManagedCallbackStepComplete(ICorDebugThread *pThread, CorDebug
+ {
+     HRESULT Status;
+ 
++    if (reason == CorDebugStepReason::STEP_RETURN)
++        ReadReturnValueAfterStepOut(pThread);
++
+     ToRelease<ICorDebugFrame> iCorFrame;
+     IfFailRet(pThread->GetActiveFrame(&iCorFrame));
+     if (iCorFrame == nullptr)
+@@ -248,6 +579,9 @@ HRESULT Steppers::ManagedCallbackStepComplete(ICorDebugThread *pThread, CorDebug
+         }
+     }
+ 
++    // The step is over; values already read stay until the next step or continue.
++    DeactivateReturnValueBreakpoints();
++
+     // Note, reset steppers right before return only.
+     m_simpleStepper->ManagedCallbackStepComplete();
+     m_asyncStepper->ManagedCallbackStepComplete();
+@@ -258,6 +592,7 @@ HRESULT Steppers::ManagedCallbackStepComplete(ICorDebugThread *pThread, CorDebug
+ HRESULT Steppers::DisableAllSteppers(ICorDebugProcess *pProcess)
+ {
+     HRESULT Status;
++    ClearReturnValues();
+     IfFailRet(m_simpleStepper->DisableAllSteppers(pProcess));
+     return m_asyncStepper->DisableAllSteppers();
+ }
+diff --git a/src/debugger/steppers.h b/src/debugger/steppers.h
+index 154b2b5..013bbd9 100644
+--- a/src/debugger/steppers.h
++++ b/src/debugger/steppers.h
+@@ -6,12 +6,21 @@
+ #include "cor.h"
+ #include "cordebug.h"
+ 
++#include <functional>
+ #include <memory>
++#include <mutex>
++#include <string>
++#include <vector>
+ #include "interfaces/idebugger.h"
+ 
+ namespace netcoredbg
+ {
+ 
++// Return values of the methods called by the last step, listed at the top of Locals as "Type.Method returned"
++// (as Visual Studio does). pValue is a strong handle for reference types (expandable), otherwise null.
++void ForEachReturnValue(ThreadId threadId, const std::function<void(const std::string &name, const std::string &value,
++                                                                    const std::string &type, ICorDebugValue *pValue)> &callback);
++
+ class SimpleStepper;
+ class AsyncStepper;
+ class Modules;
+@@ -40,7 +49,7 @@ public:
+     // Good:
+     //     IfFailRet(pThread->GetID(&threadId));
+     //     return S_OK;
+-    HRESULT ManagedCallbackBreakpoint(ICorDebugAppDomain *pAppDomain, ICorDebugThread *pThread);
++    HRESULT ManagedCallbackBreakpoint(ICorDebugAppDomain *pAppDomain, ICorDebugThread *pThread, ICorDebugBreakpoint *pBreakpoint);
+     HRESULT ManagedCallbackStepComplete(ICorDebugThread *pThread, CorDebugStepReason reason);
+ 
+     HRESULT DisableAllSteppers(ICorDebugProcess *pProcess);
+@@ -50,8 +59,30 @@ public:
+     void SetJustMyCode(bool enable);
+     void SetStepFiltering(bool enable);
+ 
++    // Forgets the return values of the last step and removes the breakpoints used to catch them.
++    void ClearReturnValues();
++
+ private:
+ 
++    // Native breakpoint at the "return value live offset" of a call instruction in the stepped range.
++    struct ReturnValueBreakpoint
++    {
++        ICorDebugFunctionBreakpoint *pBreakpoint; // owned
++        ULONG32 callILOffset;
++        std::string name;
++        ThreadId threadId;
++        CORDB_ADDRESS frameStart; // tells a recursive call of the same method apart
++    };
++    std::mutex m_returnValueMutex;
++    std::vector<ReturnValueBreakpoint> m_returnValueBreakpoints;
++    // Step out: the return value is read in the caller when the step completes.
++    ThreadId m_returnValueStepOutThread;
++
++    void SetupReturnValues(ICorDebugThread *pThread, ICorDebugFrame *pFrame, IDebugger::StepType stepType);
++    void DeactivateReturnValueBreakpoints();
++    bool HandleReturnValueBreakpoint(ICorDebugThread *pThread, ICorDebugBreakpoint *pBreakpoint);
++    void ReadReturnValueAfterStepOut(ICorDebugThread *pThread);
++
+     std::shared_ptr<SimpleStepper> m_simpleStepper;
+     std::unique_ptr<AsyncStepper> m_asyncStepper;
+     std::shared_ptr<Modules> m_sharedModules;
+diff --git a/src/debugger/variables.cpp b/src/debugger/variables.cpp
+index 7275e1f..09aaf38 100644
+--- a/src/debugger/variables.cpp
++++ b/src/debugger/variables.cpp
+@@ -2,6 +2,7 @@
+ // Distributed under the MIT License.
+ // See the LICENSE file in the project root for more information.
+ 
++#include <functional>
+ #include <regex>
+ #include <unordered_set>
+ #include <vector>
+@@ -24,6 +25,10 @@
+ namespace netcoredbg
+ {
+ 
++// Defined in steppers.cpp (return values of the last step).
++void ForEachReturnValue(ThreadId threadId, const std::function<void(const std::string &name, const std::string &value,
++                                                                    const std::string &type, ICorDebugValue *pValue)> &callback);
++
+ // Reads the first constructor argument (the format string) of a DebuggerDisplayAttribute blob:
+ // prolog 0x0001, then a SerString (0xFF for null, or compressed length + UTF-8 bytes).
+ static bool ParseDebuggerDisplayBlob(const void *pBlob, ULONG blobSize, std::string &format)
+@@ -363,6 +368,21 @@ HRESULT Variables::GetStackVariables(
+     }
+     std::vector<std::pair<size_t, std::string>> displayFormats; // index in `variables` -> DebuggerDisplay format
+ 
++    if (int(frameId.getLevel()) == 0)
++    {
++        ForEachReturnValue(frameId.getThread(), [&](const std::string &name, const std::string &value, const std::string &type, ICorDebugValue *pValue)
++        {
++            ++currentIndex;
++            Variable rv;
++            rv.name = name;
++            rv.value = value;
++            rv.type = type;
++            if (pValue != nullptr)
++                AddVariableReference(rv, frameId, pValue, ValueIsVariable);
++            variables.push_back(rv);
++        });
++    }
++
+     if (FAILED(Status = m_sharedEvaluator->WalkStackVars(pThread, frameId.getLevel(),
+         [&](const std::string &name, Evaluator::GetValueCallback getValue) -> HRESULT
+     {
+@@ -415,6 +435,9 @@ HRESULT Variables::GetScopes(ICorDebugProcess *pProcess, FrameId frameId, std::v
+     if (SUCCEEDED(pThread->GetCurrentException(&pExceptionValue)) && pExceptionValue != nullptr)
+         namedVariables++;
+ 
++    if (int(frameId.getLevel()) == 0)
++        ForEachReturnValue(threadId, [&](const std::string &, const std::string &, const std::string &, ICorDebugValue *) { namedVariables++; });
++
+     IfFailRet(m_sharedEvaluator->WalkStackVars(pThread, frameId.getLevel(),
+         [&](const std::string &name, Evaluator::GetValueCallback) -> HRESULT
+     {
