@@ -27,23 +27,6 @@ function Invoke-Step([string]$Title, [scriptblock]$Command) {
     }
 }
 
-function Find-Code {
-    if ($CodePath) {
-        if (-not (Test-Path $CodePath)) { throw "指定された CodePath が見つかりません: $CodePath" }
-        return $CodePath
-    }
-    $cmd = Get-Command code.cmd -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-    $candidates = @(
-        (Join-Path $env:LOCALAPPDATA 'Programs\Microsoft VS Code\bin\code.cmd'),
-        (Join-Path $env:ProgramFiles 'Microsoft VS Code\bin\code.cmd')
-    )
-    foreach ($c in $candidates) {
-        if (Test-Path $c) { return $c }
-    }
-    throw 'VS Code の code コマンドが見つかりません。-CodePath で code.cmd のパスを指定してください。'
-}
-
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
     throw 'npm が見つかりません。Node.js をインストールして PATH を通してください。'
 }
@@ -66,9 +49,9 @@ try {
 
     if ($SkipInstall) { return }
 
-    $code = Find-Code
-    Invoke-Step 'VS Code へのインストール' { & $code --install-extension $vsixPath --force }
-    Write-Host 'インストールが完了しました。VS Code を再読み込み（Developer: Reload Window）してください。' -ForegroundColor Green
+    $installArgs = @{ VsixPath = $vsixPath }
+    if ($CodePath) { $installArgs.CodePath = $CodePath }
+    & (Join-Path $PSScriptRoot 'install-vsix.ps1') @installArgs
 }
 finally {
     Pop-Location
