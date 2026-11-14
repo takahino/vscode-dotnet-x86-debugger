@@ -1,6 +1,32 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { DapProxy } from './dapProxy';
+
+class ProxyAdapter implements vscode.DebugAdapter {
+    private readonly emitter = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
+    readonly onDidSendMessage = this.emitter.event;
+    private readonly proxy: DapProxy;
+
+    constructor(executable: string, args: string[], output: vscode.OutputChannel) {
+        this.proxy = new DapProxy(
+            executable,
+            args,
+            path.dirname(executable),
+            (m) => this.emitter.fire(m as vscode.DebugProtocolMessage),
+            (line) => output.appendLine(line.trimEnd()),
+        );
+    }
+
+    handleMessage(message: vscode.DebugProtocolMessage): void {
+        this.proxy.fromClient(message as Parameters<DapProxy['fromClient']>[0]);
+    }
+
+    dispose(): void {
+        this.proxy.dispose();
+        this.emitter.dispose();
+    }
+}
 
 /** Folder (relative to the extension root) holding the bundled x86 build of netcoredbg. */
 const BUNDLED_DEBUGGER_DIR = path.join('debugger', 'netcoredbg-x86');
@@ -23,9 +49,8 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             args.push(`--log=${logFile}`);
             this.output.appendLine(`[trace] netcoredbg log: ${logFile}`);
         }
-        return new vscode.DebugAdapterExecutable(debugger_, args, {
-            cwd: path.dirname(debugger_),
-        });
+        // netcoredbg runs behind a DAP relay that adds logpoints (see DapProxy).
+        return new vscode.DebugAdapterInlineImplementation(new ProxyAdapter(debugger_, args, this.output));
     }
 
     private locateDebugger(): string {

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New: **Logpoints** (`{expression}`, `$FUNCTION`, `$TID`). netcoredbg now runs behind a DAP relay in the extension
+  that logs the message and resumes, so the stop is never shown.
 - New: **Copy as C# Initializer** copies a variable as C# object / collection initializer code.
 - New: **View String** opens a string variable pretty-printed as JSON / XML / HTML / text.
 - New: **Take Snapshot** / **Compare with Snapshot** show a diff of a variable between two stops.

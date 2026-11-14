@@ -111,6 +111,13 @@ or run **.NET x86: Dump Expression...** from the Command Palette, to open the wh
 - Property getters run while dumping, as in the Variables view. Large objects such as a `Form` hit the limits above
   (a notification tells you so); raise them in the settings if needed.
 
+### Logpoints
+
+Right-click the editor gutter and choose **Add Logpoint...**, then enter a message such as
+`i={i} total={total} in $FUNCTION`. Each time the line runs, the message is written to the Debug Console
+and execution continues without stopping. `{expression}` is evaluated in the current frame;
+`$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
+
 ### More commands in the Variables view context menu
 
 | Command | What it does |
