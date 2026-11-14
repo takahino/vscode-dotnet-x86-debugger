@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **View as Table** for List<T>, arrays, Dictionary and DataTable (sort, filter, CSV copy / save).
 - New: **Step history** view: location and locals at every stop, with changed values marked.
 - New: **Value trend**: record expressions at a line on every pass without stopping and chart them hit by hit.
 - New: **Inline values** for C# while stopped (locals, parameters and fields; properties are skipped).

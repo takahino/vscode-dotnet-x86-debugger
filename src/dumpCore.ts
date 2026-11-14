@@ -6,6 +6,8 @@ export interface DapVariable {
     value: string;
     type?: string;
     variablesReference: number;
+    /** Expression that reaches this value, when the debugger provides one. */
+    evaluateName?: string;
 }
 
 export type DapRequest = (command: string, args: Record<string, unknown>) => PromiseLike<{ variables?: DapVariable[] }>;
@@ -14,6 +16,11 @@ export interface DumpOptions {
     maxDepth: number;
     maxNodes: number;
     isCancelled?: () => boolean;
+    /**
+     * Formats values of FORMATTED_TYPES (e.g. DateTime) in one evaluation (`x.ToString()`) instead of walking
+     * their many members. Returns debugger-formatted text, or undefined to walk the value as usual.
+     */
+    formatValue?: (variable: DapVariable) => PromiseLike<string | undefined>;
 }
 
 /** Collected value. `text` is the value as the debugger formatted it (e.g. "\"abc\"", "42", "{Person}"). */
@@ -39,6 +46,9 @@ export interface DumpResult {
     nodes: number;
     truncated: boolean;
 }
+
+/** Value types whose members are not useful on their own; shown via ToString() when DumpOptions.formatValue is given. */
+const FORMATTED_TYPES = new Set(['System.DateTime', 'System.DateTimeOffset', 'System.TimeSpan', 'System.Guid']);
 
 /** netcoredbg packs statics into a fake child; it is skipped to keep dumps focused on the instance. */
 const STATIC_MEMBERS = 'Static members';
@@ -102,6 +112,12 @@ export async function collectTree(request: DapRequest, root: DapVariable, option
 
     const walk = async (variable: DapVariable, depth: number): Promise<DumpNode> => {
         state.nodes++;
+        if (options.formatValue && variable.evaluateName && variable.type && FORMATTED_TYPES.has(variable.type)) {
+            const text = await options.formatValue(variable);
+            if (text !== undefined) {
+                return { kind: 'leaf', type: variable.type, text };
+            }
+        }
         if (!variable.variablesReference) {
             return { kind: 'leaf', type: variable.type, text: variable.value };
         }

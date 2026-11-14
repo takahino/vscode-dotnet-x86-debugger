@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { toCSharpStatement } from './csharpInitializer';
-import { CollectResult, DapVariable, DumpCancelledError, collectTree, parseLeaf, toJson } from './dumpCore';
+import { CollectResult, DapVariable, DumpCancelledError, DumpOptions, collectTree, parseLeaf, toJson } from './dumpCore';
 import { StringFormat, detectFormat, formatString } from './stringFormat';
 
 /** Argument VS Code passes to commands contributed to "debug/variables/context". */
-interface VariablesContextArg {
+export interface VariablesContextArg {
     variable?: DapVariable & { evaluateName?: string };
 }
 
-interface Target {
+export interface Target {
     session: vscode.DebugSession;
     /** Expression identifying the variable (its evaluateName), used for titles and snapshot keys. */
     expression: string;
@@ -138,7 +138,7 @@ export async function compareWithSnapshotCommand(store: SnapshotStore, arg?: Var
     }
 }
 
-function targetFromContext(arg: VariablesContextArg | undefined, commandTitle: string): Target | undefined {
+export function targetFromContext(arg: VariablesContextArg | undefined, commandTitle: string): Target | undefined {
     const session = requireSession();
     if (!session) {
         return undefined;
@@ -151,7 +151,7 @@ function targetFromContext(arg: VariablesContextArg | undefined, commandTitle: s
     return {
         session,
         expression: v.evaluateName ?? v.name,
-        root: { name: v.name, value: v.value, type: v.type, variablesReference: v.variablesReference },
+        root: { name: v.name, value: v.value, type: v.type, variablesReference: v.variablesReference, evaluateName: v.evaluateName },
     };
 }
 
@@ -183,7 +183,8 @@ async function targetFromInput(): Promise<Target | undefined> {
 }
 
 /** Walks the variable with progress and cancellation; returns undefined when cancelled or failed (already reported). */
-async function collect(target: Target): Promise<CollectResult | undefined> {
+/** `options` overrides the dotnetX86.dump.* limits (e.g. the table view needs exactly two levels). */
+export async function collect(target: Target, options: Partial<DumpOptions> = {}): Promise<CollectResult | undefined> {
     const config = vscode.workspace.getConfiguration('dotnetX86.dump');
     try {
         return await vscode.window.withProgress(
@@ -193,6 +194,7 @@ async function collect(target: Target): Promise<CollectResult | undefined> {
                     maxDepth: config.get<number>('maxDepth', 3),
                     maxNodes: config.get<number>('maxNodes', 2000),
                     isCancelled: () => token.isCancellationRequested,
+                    ...options,
                 }),
         );
     } catch (e) {

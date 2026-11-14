@@ -33,5 +33,6 @@
   "command.showValueTrend": "Show Value Trend",
   "command.clearStepHistory": "Clear Step History",
   "view.stepHistory": "Step History (.NET x86)",
-  "config.stepHistory.enabled": "Record the location and local variables at every stop in the Step History view."
+  "config.stepHistory.enabled": "Record the location and local variables at every stop in the Step History view.",
+  "command.viewAsTable": "View as Table"
 }

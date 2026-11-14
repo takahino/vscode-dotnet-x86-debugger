@@ -64,5 +64,16 @@
   "{0} changed": "{0} 件変化",
   "Go to Location": "位置へ移動",
   "new": "新規",
-  "changed": "変化"
+  "changed": "変化",
+  "View as Table": "表として表示",
+  "{0} cannot be shown as a table (type: {1}). Use it on a List<T>, array, Dictionary or DataTable.": "{0} は表として表示できません（型: {1}）。List<T>・配列・Dictionary・DataTable で実行してください。",
+  "Table: {0}": "表: {0}",
+  "Copied {0} rows as CSV.": "{0} 行を CSV としてコピーしました。",
+  "Save CSV": "CSV を保存",
+  "Filter rows": "行を絞り込み",
+  "Copy CSV": "CSV をコピー",
+  "Save CSV...": "CSV を保存...",
+  "{0} of {1} rows": "{0} / {1} 行",
+  "Only part of the collection was read (limit reached).": "上限に達したため、コレクションの一部だけを読み込みました。",
+  "Click a column header to sort.": "列見出しをクリックすると並べ替えます。"
 }

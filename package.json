@@ -88,6 +88,11 @@
         "title": "%command.clearStepHistory%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "dotnetX86.viewAsTable",
+        "title": "%command.viewAsTable%",
+        "category": ".NET x86"
       }
     ],
     "menus": {
@@ -98,24 +103,29 @@
           "group": "z_dotnetX86@1"
         },
         {
-          "command": "dotnetX86.copyAsCSharp",
+          "command": "dotnetX86.viewAsTable",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@2"
         },
         {
-          "command": "dotnetX86.viewString",
+          "command": "dotnetX86.copyAsCSharp",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@3"
         },
         {
-          "command": "dotnetX86.takeSnapshot",
+          "command": "dotnetX86.viewString",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@4"
         },
         {
-          "command": "dotnetX86.compareWithSnapshot",
+          "command": "dotnetX86.takeSnapshot",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@5"
+        },
+        {
+          "command": "dotnetX86.compareWithSnapshot",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@6"
         }
       ],
       "commandPalette": [
@@ -150,6 +160,10 @@
         {
           "command": "dotnetX86.clearStepHistory",
           "when": "debugType == 'dotnet-x86'"
+        },
+        {
+          "command": "dotnetX86.viewAsTable",
+          "when": "false"
         }
       ],
       "editor/context": [

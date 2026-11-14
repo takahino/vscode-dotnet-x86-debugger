@@ -166,6 +166,7 @@ C# ファイルの行を右クリックして **この行で値の推移を記�
 
 | コマンド | 内容 |
 |---|---|
+| **View as Table（表として表示）** | `List<T>`・配列・`Dictionary`・`DataTable` を表で表示します。列見出しで並べ替え、行の絞り込み、CSV のコピー・保存ができます。要素がオブジェクトの場合はメンバーごとに列になり、日付は `ToString()` で表示します。DataTable は最大 1,000 行まで読み込みます。 |
 | **Copy as C# Initializer** | 値を C# のコード（`var order = new Order { Note = "...", People = new List<Person> { ... } };`）としてコピーします。テストデータ作りに便利です。PascalCase のメンバーだけを出力します。get 専用プロパティも含まれるので、コンパイルが通らない場合は削除してください。 |
 | **View String (JSON / XML / HTML / Text)** | string 型の変数をエディタで開きます。中身が JSON・XML・HTML なら整形して表示します（自動判定、または形式を選択）。 |
 | **Take Snapshot** / **Compare with Snapshot** | 変数の値を記録しておき、ステップ実行や続行の後に現在の値との差分を表示します。どこで何が変わったかを追えます。 |
