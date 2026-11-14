@@ -133,8 +133,8 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <a href="https://github.com/Samsung/netcoredbg">netcoredbg</a> の 32bit 版を同梱し、デバッグの種類 <code>dotnet-x86</code> を追加します。</p>
 <div class="cards">
   <div class="card"><h4>必要なもの</h4>Windows（64bit）、VS Code、.NET SDK、そしてアプリが使う <b>x86 版</b>の .NET ランタイム（WinForms / WPF なら <i>.NET Desktop Runtime (x86)</i>）。</div>
-  <div class="card"><h4>対応</h4>.NET（Core）と .NET 5 以降の 32bit プロセス。起動してのデバッグと、実行中のプロセスへのアタッチ。</div>
-  <div class="card"><h4>非対応</h4>.NET Framework（4.x）のアプリ。デバッグ対象の出力はデバッグコンソールに表示されます（統合ターミナルは使えません）。</div>
+  <div class="card"><h4>対応</h4>.NET（Core）、.NET 5 以降、.NET Framework 4.x の 32bit プロセス。起動してのデバッグと、実行中のプロセスへのアタッチ。.NET Framework では x86 版 .NET ランタイム（8 以降）も必要で、プロジェクトは Portable PDB を出力する必要があります。</div>
+  <div class="card"><h4>非対応</h4>.NET Framework 2.0 / 3.5、Windows PDB。デバッグ対象の出力はデバッグコンソールに表示されます（統合ターミナルは使えません）。</div>
 </div>
 
 <h2 id="install">インストール</h2>
@@ -638,7 +638,8 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 <h2 id="trouble">困ったとき</h2>
 <table>
   <tr><th>症状</th><th>対処</th></tr>
-  <tr><td>「.NET Framework のアプリと判定されました」</td><td>.NET Framework には対応していません。.NET（Core）/ .NET 5 以降を対象にしてください。</td></tr>
+  <tr><td>「… は Windows PDB で、このデバッガーでは読み取れません」</td><td>.NET Framework のプロジェクトに <code>&lt;DebugType&gt;portable&lt;/DebugType&gt;</code> を追加して再ビルドします。</td></tr>
+  <tr><td>「.NET Framework アプリのデバッグには … x86 の .NET ランタイム … が必要」</td><td>.NET Runtime (x86) 8 以降をインストールします。デバッガー自身が使います。</td></tr>
   <tr><td>「64bit プロセスとして起動します」</td><td><code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> を設定し、<code>program</code> を <code>bin/x86/...</code> に向けます。</td></tr>
   <tr><td>「x86 版 dotnet.exe が見つかりません」</td><td>x86 版の .NET ランタイム（WinForms なら .NET Desktop Runtime x86）をインストールします。</td></tr>
   <tr><td>ブレークポイントが白抜きのまま</td><td>モジュール ビューで、自分のアセンブリが「シンボル読み込み済み」か確認します（Debug ビルドで、DLL の隣に PDB があること）。</td></tr>

@@ -1,6 +1,6 @@
 # .NET x86 Debugger for VS Code
 
-**32bit (x86) の .NET アプリケーション**（たとえば `<PlatformTarget>x86</PlatformTarget>` でビルドした WinForms アプリ）を Visual Studio Code でデバッグするための拡張機能です。
+**32bit (x86) の .NET / .NET Framework 4.x アプリケーション**（たとえば `<PlatformTarget>x86</PlatformTarget>` でビルドした WinForms アプリ）を Visual Studio Code でデバッグするための拡張機能です。
 
 C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていないため、32bit プロセスをデバッグできません。
 この拡張は **[netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）の x86 ビルド**を同梱し、デバッグ種別 `dotnet-x86` として登録します。
@@ -13,6 +13,7 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 - アプリに合った **x86 版 .NET ランタイム**（WinForms / WPF なら *.NET Desktop Runtime (x86)*）
   （`C:\Program Files (x86)\dotnet` にインストールされます）
 - プロジェクトをビルドするための .NET SDK
+- **.NET Framework 4.x** のアプリでは、さらに **x86 版 .NET ランタイム（8 以降）**。デバッガー自身の一部がその上で動きます
 
 ## インストール
 
@@ -81,6 +82,16 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 3. F5 を押します。
 
 `tasks.json` を含む完全な例は [`samples/WinFormsX86`](samples/WinFormsX86) を参照してください。
+
+### .NET Framework 4.x
+
+`.NET Framework` のアプリ（`net48`・`net472` など）も同じようにデバッグできます。`program` に x86 の `.exe`
+（例: `bin/x86/Debug/net48/MyApp.exe`）を指定すると、拡張機能が .NET Framework の exe と判定し、.NET Framework のランタイムで起動します。アタッチもできます。
+
+- プロジェクトは **Portable PDB** を出力する必要があります。SDK 形式のプロジェクトは既定で Portable です。古い形式のプロジェクトは既定で
+  Windows PDB を出力するので、`<DebugType>portable</DebugType>` を追加してください（Windows PDB を見つけると警告が出ます）。
+- 対応しているのは .NET Framework 4.x だけです（2.0 / 3.5 は非対応）。
+- アプリ自体は使いませんが、x86 版 .NET ランタイム 8 以降のインストールが必要です。
 
 ### launch のオプション
 
@@ -268,7 +279,7 @@ Visual Studio と同様に、行をもう一度実行したり、行を飛ばし
 
 ## 制限事項
 
-- **.NET Framework には対応していません。** netcoredbg が .NET (Core) / .NET 5 以降のみに対応しているためです。
+- **.NET Framework**: 4.x のみ、Portable PDB が必要です（上記参照）。
 - デバッグ対象の出力は常にデバッグコンソールに表示されます（`console: integratedTerminal` は使えません）。
 - Windows 専用です。
 

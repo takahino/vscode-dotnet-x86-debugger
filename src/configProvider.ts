@@ -5,6 +5,8 @@ import { inspectPe } from './peInfo';
 import { listX86DotnetProcesses } from './processPicker';
 
 export const DEBUG_TYPE = 'dotnet-x86';
+/** Set on a launch configuration whose program is a .NET Framework exe (not written by users). */
+export const DOTNET_FRAMEWORK_KEY = '__dotnetFramework';
 
 export class X86ConfigurationProvider implements vscode.DebugConfigurationProvider {
     resolveDebugConfiguration(
@@ -58,9 +60,12 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
     }
 
     const { bitness, managed } = inspectPe(program);
-    // .NET 5+ produces a native apphost exe; a managed exe means .NET Framework, which netcoredbg cannot debug.
+    // .NET 5+ produces a native apphost exe; a managed exe means .NET Framework, debugged through its own CLR
+    // (the adapter factory tells netcoredbg so). netcoredbg still needs the x86 .NET runtime for itself: check it now.
     if (managed) {
-        throw new Error(vscode.l10n.t("{0} looks like a .NET Framework app. This extension supports .NET (Core / 5 and later) only.", path.basename(program)));
+        findX86CoreClr();
+        config[DOTNET_FRAMEWORK_KEY] = true;
+        warnIfWindowsPdb(program);
     }
     if (bitness === 'x64' || bitness === 'anycpu') {
         void vscode.window.showWarningMessage(
@@ -68,6 +73,29 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
         );
     }
     return config;
+}
+
+/**
+ * netcoredbg reads Portable PDBs only. Old-style .NET Framework projects write Windows PDBs ("full" / "pdbonly"),
+ * with which breakpoints are never hit, so say how to switch.
+ */
+function warnIfWindowsPdb(program: string): void {
+    const pdb = path.join(path.dirname(program), `${path.parse(program).name}.pdb`);
+    let header = '';
+    try {
+        const fd = fs.openSync(pdb, 'r');
+        const buf = Buffer.alloc(19);
+        fs.readSync(fd, buf, 0, buf.length, 0);
+        fs.closeSync(fd);
+        header = buf.toString('latin1');
+    } catch {
+        return; // No PDB next to the exe: the Modules view will show "no symbols".
+    }
+    if (header.startsWith('Microsoft C/C++ MSF')) {
+        void vscode.window.showWarningMessage(
+            vscode.l10n.t("{0} is a Windows PDB, which this debugger cannot read: breakpoints will not be hit. Set <DebugType>portable</DebugType> in the project and rebuild.", path.basename(pdb)),
+        );
+    }
 }
 
 async function resolveAttach(config: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration | undefined> {
@@ -115,11 +143,53 @@ async function waitForProcess(processName: string, timeoutSeconds: number): Prom
     );
 }
 
-function findX86DotnetHost(): string {
-    const candidates = [
+function x86DotnetRoots(): string[] {
+    return [
         process.env['DOTNET_ROOT(x86)'],
         process.env['ProgramFiles(x86)'] && path.join(process.env['ProgramFiles(x86)'], 'dotnet'),
     ].filter((p): p is string => !!p);
+}
+
+/**
+ * coreclr.dll of the newest installed x86 .NET runtime. netcoredbg runs its managed part (PDB reading, expression
+ * parsing) on it when the debuggee is a .NET Framework app, which has no CoreCLR of its own.
+ */
+export function findX86CoreClr(): string {
+    for (const root of x86DotnetRoots()) {
+        const shared = path.join(root, 'shared', 'Microsoft.NETCore.App');
+        let versions: string[];
+        try {
+            versions = fs.readdirSync(shared);
+        } catch {
+            continue;
+        }
+        const newest = versions
+            .filter((v) => fs.existsSync(path.join(shared, v, 'coreclr.dll')))
+            .sort((a, b) => compareVersions(b, a))[0];
+        if (newest) {
+            return path.join(shared, newest, 'coreclr.dll');
+        }
+    }
+    throw new Error(
+        vscode.l10n.t("Debugging a .NET Framework app needs the x86 .NET runtime (8 or later) for the debugger itself, but it was not found. Install the .NET Runtime x86, or set DOTNET_ROOT(x86)."),
+    );
+}
+
+/** Compares "10.0.5" style versions numerically ("10.0.5" > "9.0.12"; prerelease suffixes are ignored). */
+function compareVersions(a: string, b: string): number {
+    const pa = a.split(/[.-]/).map((x) => parseInt(x, 10) || 0);
+    const pb = b.split(/[.-]/).map((x) => parseInt(x, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+        if (d !== 0) {
+            return d;
+        }
+    }
+    return 0;
+}
+
+function findX86DotnetHost(): string {
+    const candidates = x86DotnetRoots();
     for (const dir of candidates) {
         const exe = path.join(dir, 'dotnet.exe');
         if (fs.existsSync(exe)) {

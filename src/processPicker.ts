@@ -14,14 +14,14 @@ interface ProcessItem extends vscode.QuickPickItem {
 }
 
 /**
- * Lists 32-bit .NET (Core) processes: those with coreclr.dll loaded, as seen from a 32-bit PowerShell.
+ * Lists 32-bit .NET processes: those with coreclr.dll (.NET) or clr.dll (.NET Framework 4) loaded, as seen from a 32-bit PowerShell.
  * A 64-bit process cannot enumerate the modules of 32-bit processes, and a 32-bit one fails on 64-bit processes,
  * so the WOW64 PowerShell keeps exactly the processes this debugger can attach to.
  */
 export function listX86DotnetProcesses(): Promise<ProcessInfo[]> {
     const ps32 = path.join(process.env.SystemRoot ?? 'C:\\Windows', 'SysWOW64', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
     const script =
-        'Get-Process | ForEach-Object { try { if ($_.Modules.ModuleName -contains "coreclr.dll") { "{0}`t{1}`t{2}" -f $_.Id, $_.ProcessName, $_.MainWindowTitle } } catch {} }';
+        'Get-Process | ForEach-Object { try { $m = $_.Modules.ModuleName; if ($m -contains "coreclr.dll" -or $m -contains "clr.dll") { "{0}`t{1}`t{2}" -f $_.Id, $_.ProcessName, $_.MainWindowTitle } } catch {} }';
     return new Promise((resolve, reject) => {
         cp.execFile(ps32, ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, maxBuffer: 16 * 1024 * 1024 }, (err, stdout) => {
             if (err) {

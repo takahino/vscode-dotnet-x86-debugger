@@ -27,7 +27,6 @@
   ".NET x86 Debugger works on Windows only.": ".NET x86 Debugger は Windows でのみ動作します。",
   "Set \"program\" (the path to the x86 .exe) in launch.json.": "launch.json に \"program\"（x86 の .exe へのパス）を指定してください。",
   "program not found: {0}. Check that the project is built and the output path (bin/x86/...) is correct.": "program が見つかりません: {0}。ビルド済みか、出力パス（bin/x86/...）が正しいか確認してください。",
-  "{0} looks like a .NET Framework app. This extension supports .NET (Core / 5 and later) only.": "{0} は .NET Framework のアプリと判定されました。この拡張は .NET (Core / 5 以降) のみ対応しています。",
   "{0} will run as a 64-bit process ({1}). To debug it as x86, set <PlatformTarget>x86</PlatformTarget> in the project.": "{0} は 64bit プロセスとして起動します（{1}）。x86 でデバッグするにはプロジェクトに <PlatformTarget>x86</PlatformTarget> を設定してください。",
   "Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".": "processId が不正です: {0}。数値の PID か \"${command:pickProcess}\" を指定してください。",
   "The x86 dotnet.exe was not found. Install the x86 .NET runtime (Windows Desktop Runtime x86) or set DOTNET_ROOT(x86).": "x86 版 dotnet.exe が見つかりません。x86 の .NET ランタイム（Windows Desktop Runtime x86）をインストールするか、DOTNET_ROOT(x86) を設定してください。",
@@ -139,5 +138,7 @@
   "Module with symbols": "シンボルのあるモジュール",
   "Path": "パス",
   "Created by .NET x86 Debugger at {0}.": ".NET x86 Debugger が {0} に作成しました。",
-  "No .NET x86 debug session has run yet. Debug the program first, then export the report.": ".NET x86 のデバッグ セッションがまだ実行されていません。先にプログラムをデバッグしてから報告書を出力してください。"
+  "No .NET x86 debug session has run yet. Debug the program first, then export the report.": ".NET x86 のデバッグ セッションがまだ実行されていません。先にプログラムをデバッグしてから報告書を出力してください。",
+  "Debugging a .NET Framework app needs the x86 .NET runtime (8 or later) for the debugger itself, but it was not found. Install the .NET Runtime x86, or set DOTNET_ROOT(x86).": ".NET Framework アプリのデバッグには、デバッガー自身が使う x86 の .NET ランタイム（8 以降）が必要ですが、見つかりませんでした。.NET Runtime (x86) をインストールするか、DOTNET_ROOT(x86) を設定してください。",
+  "{0} is a Windows PDB, which this debugger cannot read: breakpoints will not be hit. Set <DebugType>portable</DebugType> in the project and rebuild.": "{0} は Windows PDB で、このデバッガーでは読み取れません（ブレークポイントで停止しません）。プロジェクトに <DebugType>portable</DebugType> を設定して再ビルドしてください。"
 }

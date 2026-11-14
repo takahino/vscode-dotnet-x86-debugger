@@ -39,6 +39,8 @@ export interface ExceptionFilterText {
 }
 
 export interface ProxyOptions {
+    /** Extra environment variables for netcoredbg (added to this process's environment). */
+    env?: Record<string, string>;
     /** Replaces netcoredbg's raw exception filter labels ("all", "user-unhandled"), keyed by filter id. */
     exceptionFilters?: Record<string, ExceptionFilterText>;
     /** Records every thrown exception without stopping, unless the user's own exception settings ask to stop. */
@@ -139,7 +141,7 @@ export class DapProxy {
         private readonly log: (line: string) => void,
         private readonly options: ProxyOptions = {},
     ) {
-        this.child = cp.spawn(executable, args, { cwd, windowsHide: true });
+        this.child = cp.spawn(executable, args, { cwd, windowsHide: true, env: options.env ? { ...process.env, ...options.env } : process.env });
         this.child.stdout.on('data', (d: Buffer) => this.onData(d));
         this.child.stderr.on('data', (d: Buffer) => this.log(`[netcoredbg] ${d.toString()}`));
         this.child.on('error', (e) => this.fail(`Failed to start netcoredbg: ${e.message}`));

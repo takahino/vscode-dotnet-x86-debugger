@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { DOTNET_FRAMEWORK_KEY, findX86CoreClr } from './configProvider';
 import { DapProxy, ExceptionFilterText } from './dapProxy';
 import { findWriteLines } from './writeSites';
 
@@ -43,7 +44,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
     readonly onDidSendMessage = this.emitter.event;
     private readonly proxy: DapProxy;
 
-    constructor(executable: string, args: string[], output: vscode.OutputChannel) {
+    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>) {
         this.proxy = new DapProxy(
             executable,
             args,
@@ -51,6 +52,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
             (m) => this.emitter.fire(m as vscode.DebugProtocolMessage),
             (line) => output.appendLine(line.trimEnd()),
             {
+                env,
                 exceptionFilters: exceptionFilterTexts(),
                 exceptionLog: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('enabled', true),
                 findWriteSites,
@@ -69,6 +71,25 @@ class ProxyAdapter implements vscode.DebugAdapter {
     }
 }
 
+/**
+ * Environment for netcoredbg's .NET Framework support (patch 0007): NETCOREDBG_DESKTOP_CLR launches the program with
+ * the .NET Framework CLR, and NETCOREDBG_HOST_CORECLR is the CoreCLR netcoredbg runs its own managed part on.
+ * The host is also given for attach, where netcoredbg falls back to .NET Framework when the process has no CoreCLR.
+ */
+function debuggerEnvironment(config: vscode.DebugConfiguration): Record<string, string> {
+    const framework = config.request === 'launch' && config[DOTNET_FRAMEWORK_KEY] === true;
+    let hostCoreClr: string | undefined;
+    try {
+        hostCoreClr = findX86CoreClr();
+    } catch (e) {
+        if (framework) {
+            throw e; // Required to launch a .NET Framework app.
+        }
+        return {}; // Attach to a .NET Framework process is then unavailable; .NET (Core) does not need it.
+    }
+    return framework ? { NETCOREDBG_DESKTOP_CLR: '1', NETCOREDBG_HOST_CORECLR: hostCoreClr } : { NETCOREDBG_HOST_CORECLR: hostCoreClr };
+}
+
 /** Folder (relative to the extension root) holding the bundled x86 build of netcoredbg. */
 const BUNDLED_DEBUGGER_DIR = path.join('debugger', 'netcoredbg-x86');
 
@@ -79,9 +100,10 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         private readonly output: vscode.OutputChannel,
     ) {}
 
-    createDebugAdapterDescriptor(): vscode.DebugAdapterDescriptor {
+    createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.DebugAdapterDescriptor {
         const debugger_ = this.locateDebugger();
         this.output.appendLine(`[session] using ${debugger_}`);
+        const env = debuggerEnvironment(session.configuration);
         const args = ['--interpreter=vscode'];
         // With tracing on, netcoredbg also writes its own log (flushed per line, so it survives a hang or crash).
         if (vscode.workspace.getConfiguration('dotnetX86').get<boolean>('trace')) {
@@ -91,7 +113,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             this.output.appendLine(`[trace] netcoredbg log: ${logFile}`);
         }
         // netcoredbg runs behind a DAP relay that adds logpoints (see DapProxy).
-        return new vscode.DebugAdapterInlineImplementation(new ProxyAdapter(debugger_, args, this.output));
+        return new vscode.DebugAdapterInlineImplementation(new ProxyAdapter(debugger_, args, this.output, env));
     }
 
     private locateDebugger(): string {

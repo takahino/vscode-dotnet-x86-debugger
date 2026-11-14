@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New: **.NET Framework 4.x** apps (x86) can be launched and attached to, as .NET apps can (netcoredbg patch). The debugger needs the x86 .NET runtime (8 or later) for itself, and the app must produce Portable PDBs; a warning tells how to switch when it finds a Windows PDB.
+- The process picker also lists 32-bit .NET Framework processes.
+
 ## 0.6.0
 
 - New: **Temporary**, **dependent** and **when-changed** breakpoints (editor context menu, or `#once`, `#after File.cs:12`, `#changed expr` as the condition).

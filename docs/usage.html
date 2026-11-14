@@ -134,8 +134,8 @@ the open-source debugger <a href="https://github.com/Samsung/netcoredbg">netcore
 <code>dotnet-x86</code>.</p>
 <div class="cards">
   <div class="card"><h4>You need</h4>Windows (64-bit), VS Code, a .NET SDK, and the <b>x86</b> .NET runtime your app uses — for WinForms / WPF that is the <i>.NET Desktop Runtime (x86)</i>.</div>
-  <div class="card"><h4>Supported</h4>.NET (Core) and .NET 5 or later, 32-bit processes: launch and attach.</div>
-  <div class="card"><h4>Not supported</h4>.NET Framework (4.x) apps. The debuggee's output goes to the Debug Console (no integrated terminal).</div>
+  <div class="card"><h4>Supported</h4>.NET (Core), .NET 5 or later and .NET Framework 4.x, 32-bit processes: launch and attach. For .NET Framework the x86 .NET runtime (8 or later) is also needed, and the project must write Portable PDBs.</div>
+  <div class="card"><h4>Not supported</h4>.NET Framework 2.0 / 3.5, and Windows PDBs. The debuggee's output goes to the Debug Console (no integrated terminal).</div>
 </div>
 
 <h2 id="install">Install</h2>
@@ -676,7 +676,8 @@ Debugging waits until the process appears:</p>
 <h2 id="trouble">Troubleshooting</h2>
 <table>
   <tr><th>Symptom</th><th>What to do</th></tr>
-  <tr><td>“… looks like a .NET Framework app”</td><td>.NET Framework is not supported; the app must target .NET (Core) / .NET 5+.</td></tr>
+  <tr><td>“… is a Windows PDB, which this debugger cannot read”</td><td>Add <code>&lt;DebugType&gt;portable&lt;/DebugType&gt;</code> to the .NET Framework project and rebuild.</td></tr>
+  <tr><td>“Debugging a .NET Framework app needs the x86 .NET runtime”</td><td>Install the .NET Runtime (x86) 8 or later; the debugger itself uses it.</td></tr>
   <tr><td>“… will run as a 64-bit process”</td><td>Set <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> and point <code>program</code> at <code>bin/x86/...</code>.</td></tr>
   <tr><td>“The x86 dotnet.exe was not found”</td><td>Install the x86 .NET runtime (for WinForms: .NET Desktop Runtime x86).</td></tr>
   <tr><td>Breakpoint stays hollow</td><td>Check the Modules view: your assembly needs <i>symbols loaded</i> (Debug build, PDB next to the DLL).</td></tr>

@@ -1,6 +1,6 @@
 # .NET x86 Debugger for VS Code
 
-Debug **32-bit (x86) .NET applications** — for example WinForms apps built with `<PlatformTarget>x86</PlatformTarget>` — in Visual Studio Code.
+Debug **32-bit (x86) .NET and .NET Framework 4.x applications** — for example WinForms apps built with `<PlatformTarget>x86</PlatformTarget>` — in Visual Studio Code.
 
 The C# extension's debugger (vsdbg) is shipped only for x64 / arm64, so it cannot debug 32-bit processes.
 This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg)** (MIT) and registers it as the `dotnet-x86` debug type.
@@ -13,6 +13,7 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
 - The **x86 .NET runtime** for your app, e.g. *.NET Desktop Runtime (x86)* for WinForms / WPF
   (installed under `C:\Program Files (x86)\dotnet`)
 - A .NET SDK to build your project
+- For **.NET Framework 4.x** apps, additionally the **x86 .NET runtime (8 or later)**: the debugger runs part of itself on it
 
 ## Installation
 
@@ -81,6 +82,17 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
 3. Press F5.
 
 See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example including `tasks.json`.
+
+### .NET Framework 4.x
+
+`.NET Framework` apps (`net48`, `net472`, ...) are debugged the same way: point `program` at the x86 `.exe`
+(e.g. `bin/x86/Debug/net48/MyApp.exe`). The extension recognizes the .NET Framework exe and starts it with the
+.NET Framework runtime; attaching works too.
+
+- The project must produce **Portable PDBs**. SDK-style projects do; old-style projects write Windows PDBs by default —
+  add `<DebugType>portable</DebugType>` (the extension warns when it finds a Windows PDB).
+- Only .NET Framework 4.x is supported (not 2.0 / 3.5).
+- The x86 .NET runtime 8 or later must be installed, even though the app does not use it.
 
 ### Launch options
 
@@ -277,7 +289,7 @@ Menus, settings and messages are shown in English, or in Japanese when VS Code's
 
 ## Limitations
 
-- **.NET Framework is not supported.** netcoredbg supports .NET (Core) / .NET 5+ only.
+- **.NET Framework**: 4.x only, with Portable PDBs (see above).
 - The debuggee always runs with its output in the Debug Console (`console: integratedTerminal` is not available).
 - Windows only.
 
