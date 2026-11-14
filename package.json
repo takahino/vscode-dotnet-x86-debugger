@@ -2,7 +2,7 @@
   "name": "dotnet-x86-debugger",
   "displayName": ".NET x86 Debugger",
   "description": "Debug 32-bit (x86) .NET applications such as x86 WinForms apps in VS Code, using a bundled x86 build of netcoredbg.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "takahino",
   "license": "MIT",
   "repository": {
@@ -94,21 +94,33 @@
       }
     },
     "breakpoints": [
-      { "language": "csharp" },
-      { "language": "fsharp" },
-      { "language": "vb" }
+      {
+        "language": "csharp"
+      },
+      {
+        "language": "fsharp"
+      },
+      {
+        "language": "vb"
+      }
     ],
     "debuggers": [
       {
         "type": "dotnet-x86",
         "label": ".NET x86 (netcoredbg)",
-        "languages": ["csharp", "fsharp", "vb"],
+        "languages": [
+          "csharp",
+          "fsharp",
+          "vb"
+        ],
         "variables": {
           "pickProcess": "dotnetX86.pickProcess"
         },
         "configurationAttributes": {
           "launch": {
-            "required": ["program"],
+            "required": [
+              "program"
+            ],
             "properties": {
               "program": {
                 "type": "string",
@@ -116,7 +128,9 @@
               },
               "args": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "default": [],
                 "description": "Command line arguments."
               },
@@ -127,7 +141,9 @@
               },
               "env": {
                 "type": "object",
-                "additionalProperties": { "type": "string" },
+                "additionalProperties": {
+                  "type": "string"
+                },
                 "default": {},
                 "description": "Environment variables."
               },
@@ -149,12 +165,19 @@
             }
           },
           "attach": {
-            "required": ["processId"],
+            "required": [
+              "processId"
+            ],
             "properties": {
               "processId": {
                 "anyOf": [
-                  { "type": "string", "default": "${command:pickProcess}" },
-                  { "type": "integer" }
+                  {
+                    "type": "string",
+                    "default": "${command:pickProcess}"
+                  },
+                  {
+                    "type": "integer"
+                  }
                 ],
                 "description": "Process ID to attach to. Use ${command:pickProcess} to pick from a list."
               },

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - New: **Dump Variable** (Variables view context menu) and **Dump Expression...** (Command Palette) open a whole object
   as JSON. `List<T>` / `Dictionary<TKey, TValue>` are shown as their items.
