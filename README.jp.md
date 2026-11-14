@@ -5,7 +5,7 @@
 C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていないため、32bit プロセスをデバッグできません。
 この拡張は **[netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）の x86 ビルド**を同梱し、デバッグ種別 `dotnet-x86` として登録します。
 
-[English](README.md)
+[English](README.md) · **はじめての方は [図解ガイド](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html) をご覧ください**（[docs/usage.jp.html](docs/usage.jp.html)）
 
 ## 必要なもの
 

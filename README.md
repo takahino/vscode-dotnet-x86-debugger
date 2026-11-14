@@ -5,7 +5,7 @@ Debug **32-bit (x86) .NET applications** — for example WinForms apps built wit
 The C# extension's debugger (vsdbg) is shipped only for x64 / arm64, so it cannot debug 32-bit processes.
 This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg)** (MIT) and registers it as the `dotnet-x86` debug type.
 
-[日本語](README.jp.md)
+[日本語](README.jp.md) · **New to it? Read the [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html)** ([docs/usage.html](docs/usage.html))
 
 ## Requirements
 
