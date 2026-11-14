@@ -1,0 +1,132 @@
+diff --git a/src/debugger/manageddebugger.cpp b/src/debugger/manageddebugger.cpp
+index d6e8daa..28f5c3a 100644
+--- a/src/debugger/manageddebugger.cpp
++++ b/src/debugger/manageddebugger.cpp
+@@ -356,6 +356,57 @@ HRESULT ManagedDebugger::Disconnect(DisconnectAction action)
+     return TerminateProcess();
+ }
+ 
++HRESULT ManagedDebugger::SetNextStatement(ThreadId threadId, const std::string &sourcePath, int line)
++{
++    LogFuncEntry();
++
++    std::lock_guard<Utility::RWLock::Reader> guardProcessRWLock(m_debugProcessRWLock.reader);
++    HRESULT Status;
++    IfFailRet(CheckDebugProcess());
++
++    if (m_sharedEvalWaiter->IsEvalRunning() || m_sharedCallbacksQueue->IsRunning())
++    {
++        LOGW("Can't 'Set Next Statement', process is running.");
++        return E_FAIL;
++    }
++
++    ToRelease<ICorDebugThread> pThread;
++    IfFailRet(m_iCorProcess->GetThread(int(threadId), &pThread));
++    ToRelease<ICorDebugFrame> pFrame;
++    IfFailRet(pThread->GetActiveFrame(&pFrame));
++    if (pFrame == nullptr)
++        return E_FAIL;
++    ToRelease<ICorDebugILFrame> pILFrame;
++    IfFailRet(pFrame->QueryInterface(IID_ICorDebugILFrame, (LPVOID *) &pILFrame));
++    ToRelease<ICorDebugFunction> pFunction;
++    IfFailRet(pFrame->GetFunction(&pFunction));
++    mdMethodDef methodToken = mdMethodDefNil;
++    IfFailRet(pFunction->GetToken(&methodToken));
++    ToRelease<ICorDebugModule> pModule;
++    IfFailRet(pFunction->GetModule(&pModule));
++    CORDB_ADDRESS modAddress = 0;
++    IfFailRet(pModule->GetBaseAddress(&modAddress));
++
++    // Same source -> IL resolution as line breakpoints; only a line of the method that is executing can be the target.
++    unsigned fullnameIndex = 0;
++    std::vector<ModulesSources::resolved_bp_t> resolvedPoints;
++    IfFailRet(m_sharedModules->ResolveBreakpoint(modAddress, sourcePath, fullnameIndex, line, resolvedPoints));
++    for (const auto &point : resolvedPoints)
++    {
++        if (point.methodToken != methodToken)
++            continue;
++        // CanSetIP rejects targets the runtime can't safely move to (e.g. into a catch / finally block).
++        IfFailRet(pILFrame->CanSetIP(point.ilOffset));
++        IfFailRet(pILFrame->SetIP(point.ilOffset));
++        // Frames and variables collected at this stop describe the old position.
++        m_sharedVariables->Clear();
++        FrameId::invalidate();
++        return S_OK;
++    }
++    LOGW("Set Next Statement: line %d is not in the executing method.", line);
++    return E_INVALIDARG;
++}
++
+ HRESULT ManagedDebugger::StepCommand(ThreadId threadId, StepType stepType)
+ {
+     LogFuncEntry();
+diff --git a/src/debugger/manageddebugger.h b/src/debugger/manageddebugger.h
+index 5ef62ef..7a824f2 100644
+--- a/src/debugger/manageddebugger.h
++++ b/src/debugger/manageddebugger.h
+@@ -184,6 +184,7 @@ public:
+     HRESULT AllBreakpointsActivate(bool act) override;
+     HRESULT GetStackTrace(ThreadId threadId, FrameLevel startFrame, unsigned maxFrames, std::vector<StackFrame> &stackFrames, int &totalFrames, bool hotReloadAwareCaller = false) override;
+     HRESULT StepCommand(ThreadId threadId, StepType stepType) override;
++    HRESULT SetNextStatement(ThreadId threadId, const std::string &sourcePath, int line) override;
+     HRESULT GetScopes(FrameId frameId, std::vector<Scope> &scopes) override;
+     HRESULT GetVariables(uint32_t variablesReference, VariablesFilter filter, int start, int count, std::vector<Variable> &variables) override;
+     int GetNamedVariables(uint32_t variablesReference) override;
+diff --git a/src/interfaces/idebugger.h b/src/interfaces/idebugger.h
+index 77b9f8d..c9ac1e1 100644
+--- a/src/interfaces/idebugger.h
++++ b/src/interfaces/idebugger.h
+@@ -91,6 +91,8 @@ public:
+     virtual HRESULT AllBreakpointsActivate(bool act) = 0;
+     virtual HRESULT GetStackTrace(ThreadId threadId, FrameLevel startFrame, unsigned maxFrames, std::vector<StackFrame> &stackFrames, int &totalFrames, bool hotReloadAwareCaller = false) = 0;
+     virtual HRESULT StepCommand(ThreadId threadId, StepType stepType) = 0;
++    // "Set Next Statement": moves the instruction pointer of the thread's top frame to the given source line.
++    virtual HRESULT SetNextStatement(ThreadId threadId, const std::string &sourcePath, int line) = 0;
+     virtual HRESULT GetScopes(FrameId frameId, std::vector<Scope> &scopes) = 0;
+     virtual HRESULT GetVariables(uint32_t variablesReference, VariablesFilter filter, int start, int count, std::vector<Variable> &variables) = 0;
+     virtual int GetNamedVariables(uint32_t variablesReference) = 0;
+diff --git a/src/protocols/vscodeprotocol.cpp b/src/protocols/vscodeprotocol.cpp
+index 0a32ff8..1586a52 100644
+--- a/src/protocols/vscodeprotocol.cpp
++++ b/src/protocols/vscodeprotocol.cpp
+@@ -37,6 +37,10 @@ namespace
+         {"all",            ExceptionBreakpointFilter::THROW},
+         {"user-unhandled", ExceptionBreakpointFilter::USER_UNHANDLED}};
+ 
++    // "gotoTargets" hands out ids; "goto" only gets the id back, so remember the source and line behind each.
++    std::unordered_map<int, std::pair<std::string, int>> g_gotoTargets;
++    int g_nextGotoTargetId = 1;
++
+     const std::string TWO_CRLF("\r\n\r\n");
+     const std::string CONTENT_LENGTH("Content-Length: ");
+ 
+@@ -424,6 +428,7 @@ static void AddCapabilitiesTo(json &capabilities)
+     // "evaluate" handles every context the same way, so hovers work like watch expressions.
+     // Without this capability VS Code never sends evaluate requests for hovers.
+     capabilities["supportsEvaluateForHovers"] = true;
++    capabilities["supportsGotoTargetsRequest"] = true;
+ 
+     capabilities["supportsExceptionInfoRequest"] = true;
+     capabilities["supportsExceptionFilterOptions"] = true;
+@@ -687,6 +692,21 @@ static HRESULT HandleCommand(std::shared_ptr<IDebugger> &sharedDebugger, std::st
+     { "stepOut", [&](const json &arguments, json &body){
+         return sharedDebugger->StepCommand(ThreadId{int(arguments.at("threadId"))}, IDebugger::StepType::STEP_OUT);
+     } },
++    { "gotoTargets", [&](const json &arguments, json &body){
++        // The target is validated by "goto" (CanSetIP needs the stopped thread, which this request doesn't name).
++        std::string path = arguments.at("source").at("path");
++        int line = arguments.at("line");
++        int id = g_nextGotoTargetId++;
++        g_gotoTargets[id] = std::make_pair(path, line);
++        body["targets"] = json::array({ json{{"id", id}, {"label", "line " + std::to_string(line)}, {"line", line}} });
++        return S_OK;
++    } },
++    { "goto", [&](const json &arguments, json &body){
++        auto it = g_gotoTargets.find(int(arguments.at("targetId")));
++        if (it == g_gotoTargets.end())
++            return E_INVALIDARG;
++        return sharedDebugger->SetNextStatement(ThreadId{int(arguments.at("threadId"))}, it->second.first, it->second.second);
++    } },
+     { "scopes", [&](const json &arguments, json &body){
+         HRESULT Status;
+         std::vector<Scope> scopes;

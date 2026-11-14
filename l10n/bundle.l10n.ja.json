@@ -85,5 +85,6 @@
   "≤ {0} elapsed": "≤ {0} 経過",
   "{0} exceptions thrown": "{0} 件の例外",
   "Name of the timer that starts at line {0}": "{0} 行目から開始するタイマーの名前",
-  "Timer that ends at line {0}": "{0} 行目で終了するタイマー"
+  "Timer that ends at line {0}": "{0} 行目で終了するタイマー",
+  "The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.": "次のステートメントに設定できるのは、実行中のメソッド内の行だけです。catch / finally ブロックの内外をまたぐこともできません。"
 }

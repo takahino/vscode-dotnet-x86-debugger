@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Set Next Statement** (Jump to Cursor / "Set Next Statement" in the editor while stopped) within the executing method (netcoredbg patch 0005).
 - New: **Break on Value Change** (Variables view context menu) for fields, properties and locals. netcoredbg has no data breakpoints, so it is emulated: hidden breakpoints at the workspace lines that assign the name, stepping over each and stopping only when the value changed.
 - New: **Section timing**: "Start Timer Here..." / "End Timer Here..." measure the time between two lines on every pass (charted in Value Trend).
 - New: **Exception log**: every thrown exception (also caught ones) is listed in a view and the Debug Console without stopping; your exception settings still decide where to stop.

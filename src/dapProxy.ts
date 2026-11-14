@@ -4,7 +4,17 @@
 import * as cp from 'child_process';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type DapMessage = { type: string; seq?: number; command?: string; event?: string; request_seq?: number; arguments?: any; body?: any; success?: boolean };
+type DapMessage = {
+    type: string;
+    seq?: number;
+    command?: string;
+    event?: string;
+    request_seq?: number;
+    arguments?: any;
+    body?: any;
+    success?: boolean;
+    message?: string;
+};
 
 const HEADER_DELIMITER = '\r\n\r\n';
 /** Requests the proxy sends itself use seq numbers far above the client's, so their responses can be told apart. */
@@ -36,6 +46,8 @@ export interface ProxyOptions {
      * emulated with hidden breakpoints at those lines: netcoredbg has no data breakpoints.
      */
     findWriteSites?: (name: string) => Promise<{ path: string; line: number }[]>;
+    /** Localized message shown when "Set Next Statement" is refused. */
+    gotoFailedMessage?: string;
 }
 
 interface WriteSite {
@@ -79,6 +91,8 @@ export class DapProxy {
     private readonly userBreakpoints = new Map<string, any>();
     /** Hidden write-site lines per source, sent to netcoredbg together with the user's breakpoints. */
     private hiddenLines = new Map<string, { rawPath: string; lines: Set<number> }>();
+    /** "goto" (Set Next Statement) requests by seq -> thread id, to report the new position when they succeed. */
+    private readonly pendingGotos = new Map<number, number>();
     /** Handlers that consume a message from netcoredbg before it is queued (used while the proxy itself steps). */
     private readonly eventWaiters: ((m: DapMessage) => boolean)[] = [];
     private readonly specialIdsByPath = new Map<string, number[]>();
@@ -128,6 +142,9 @@ export class DapProxy {
             this.respond(message, this.dataBreakpointInfo(message.arguments ?? {}));
             return;
         }
+        if (message.type === 'request' && message.command === 'goto' && message.seq !== undefined) {
+            this.pendingGotos.set(message.seq, message.arguments?.threadId);
+        }
         if (message.type === 'request' && message.command === 'setDataBreakpoints') {
             void this.setDataBreakpoints(message);
             return;
@@ -159,6 +176,10 @@ export class DapProxy {
     private async fromDebugger(message: DapMessage): Promise<void> {
         if (message.type === 'response' && message.command === 'initialize' && message.success) {
             message.body = this.extendCapabilities(message.body ?? {});
+        }
+        if (message.type === 'response' && message.command === 'goto' && message.request_seq !== undefined) {
+            this.finishGoto(message);
+            return;
         }
         if (message.type === 'response' && message.command === 'setBreakpoints' && message.request_seq !== undefined) {
             this.recordSpecialBreakpoints(message);
@@ -357,6 +378,27 @@ export class DapProxy {
         } catch (e) {
             this.log(`[proxy] ${e instanceof Error ? e.message : String(e)}`);
             return false;
+        }
+    }
+
+    /**
+     * Set Next Statement: on success a "goto" stop makes VS Code fetch the new position; netcoredbg's bare HRESULT
+     * on failure is replaced with the reasons it can be refused.
+     */
+    private finishGoto(response: DapMessage): void {
+        const threadId = this.pendingGotos.get(response.request_seq!);
+        this.pendingGotos.delete(response.request_seq!);
+        if (!response.success) {
+            this.toClient({
+                ...response,
+                message: this.options.gotoFailedMessage ??
+                    'The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.',
+            });
+            return;
+        }
+        this.toClient(response);
+        if (threadId !== undefined) {
+            this.emitEvent('stopped', { reason: 'goto', threadId, allThreadsStopped: true });
         }
     }
 
