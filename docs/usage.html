@@ -100,7 +100,7 @@
     <li><a href="#features">Features</a>
       <ol>
         <li><a href="#f-breakpoints">Breakpoints, logpoints, hit counts</a></li>
-        <li><a href="#f-bp-more">Temporary, dependent and when-changed breakpoints</a></li>
+        <li><a href="#f-bp-more">Temporary, dependent, when-changed and caller breakpoints</a></li>
         <li><a href="#f-values">Seeing values</a></li>
         <li><a href="#f-pins">Pinned values</a></li>
         <li><a href="#f-returns">Return values</a></li>
@@ -109,11 +109,14 @@
         <li><a href="#f-goto">Set next statement</a></li>
         <li><a href="#f-stepinto">Step into a specific call</a></li>
         <li><a href="#f-exceptions">Exceptions</a></li>
+        <li><a href="#f-freeze">UI freeze detection</a></li>
         <li><a href="#f-time">Time and performance</a></li>
         <li><a href="#f-history">Step history</a></li>
+        <li><a href="#f-decompile">Debugging decompiled assemblies</a></li>
         <li><a href="#f-objectid">Object IDs</a></li>
         <li><a href="#f-testgen">Generate a unit test from a stop</a></li>
         <li><a href="#f-report">Session report</a></li>
+        <li><a href="#f-sourcemap">Source in another folder</a></li>
         <li><a href="#f-modules">Modules</a></li>
         <li><a href="#f-winforms">WinForms controls</a></li>
         <li><a href="#f-attach">Attaching</a></li>
@@ -325,7 +328,7 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
 <div class="usecase"><b>Use case:</b> a bug appears only around the 300th order of a batch. Set a hit count of <code>&gt;=300</code> instead
 of pressing F5 three hundred times, or add a logpoint to print each order's total and look for the first wrong one.</div>
 
-<h3 id="f-bp-more">Temporary, dependent and when-changed breakpoints</h3>
+<h3 id="f-bp-more">Temporary, dependent, when-changed and caller breakpoints</h3>
 <p>Right-click a line in a C# editor. These are ordinary breakpoints with a marker in their condition, so they show in the
 Breakpoints view and can be edited or removed like any other.</p>
 <figure class="figure">
@@ -528,6 +531,15 @@ step ends on the next line.</p>
 <div class="usecase"><b>Use case:</b> a screen shows empty data but no error. The Exception Log reveals a <code>FormatException</code>
 swallowed by an empty <code>catch</code>.</div>
 
+<h3 id="f-freeze">UI freeze detection</h3>
+<p>While the program runs, the extension checks a few times a second whether its UI threads still process window messages.
+When one has not for 2 seconds (<code>dotnetX86.uiFreeze.thresholdMs</code>), the program is paused on that thread: the Call Stack
+shows the code that holds the UI up, and the pause reads <i>UI not responding for 2.0 s</i>. Stops at breakpoints and steps never
+count. If the top frames are framework code (e.g. <code>Thread.Sleep</code>, a lock), select your own frame further down.
+Turn it off with <code>dotnetX86.uiFreeze.enabled</code>.</p>
+<div class="usecase"><b>Use case:</b> the window turns white ("Not Responding") now and then. Just run the app under the debugger;
+when it happens, you are shown the loop or the blocking call on the UI thread.</div>
+
 <h3 id="f-time">Time and performance</h3>
 <h4>PerfTips</h4>
 <p>After each step or continue, the stopped line shows <code>≤ 12 ms elapsed</code>. Step over calls one by one to see which is slow.</p>
@@ -587,6 +599,11 @@ if it never comes down, look for event handlers that are not removed.</div>
 same method are marked <i>changed</i> / <i>new</i>. Click an entry to open its location. It is a history to look at, not a way
 to run backwards.</p>
 
+<h3 id="f-decompile">Debugging decompiled assemblies</h3>
+<p>For a DLL without symbols, right-click it in the <b>Modules</b> view and choose <b>Decompile for Debugging...</b>. From the next debug
+session (a button restarts the current one) you can step into it and set breakpoints in the decompiled C#. The DLL's folder is
+not touched; <b>Delete Decompiled Symbols</b> removes everything generated.</p>
+
 <h3 id="f-objectid">Object IDs</h3>
 <p>Right-click an object in <b>Variables</b> or <b>Watch</b> and choose <b>Make Object ID</b>. The object gets a name, <code>$1</code>, that reaches it
 from any method and any later stop: in Watch, the Debug Console and breakpoint conditions (<code>$1.Count</code>, <code>order == $2</code>).
@@ -615,6 +632,13 @@ summary of the last session: program, start / end time and exit code, every stop
 </svg>
 <figcaption>Save it with the code, or paste it into a bug report or a pull request.</figcaption>
 </figure>
+
+<h3 id="f-sourcemap">Source in another folder</h3>
+<p>To step into your own library whose PDB records source paths that are not on this machine (e.g. a NuGet package you
+build elsewhere), add a parent folder of its source to <code>sourceSearchPaths</code> in launch.json (searched with subfolders),
+or replace a path prefix with <code>sourceFileMap</code> (e.g. <code>{ "/_/": "D:\\work\\MyLib\\" }</code>). Both can also be set for
+every configuration in the settings (<code>dotnetX86.sourceFileMap</code> / <code>dotnetX86.sourceSearchPaths</code>). When a stop has
+no source here, the Debug Console says which path to map. For a library without symbols, see <a href="#f-decompile">decompiling</a>.</p>
 
 <h3 id="f-modules">Modules</h3>
 <p>The <b>Modules</b> view lists the loaded assemblies and whether their symbols (PDB) were found. If a breakpoint stays hollow,

@@ -6,6 +6,8 @@
   "command.copyAsCSharp": "Copy as C# Initializer",
   "command.generateTest": "Generate Unit Test from Here",
   "command.makeObjectId": "Make Object ID",
+  "command.decompileModule": "Decompile for Debugging...",
+  "command.clearDecompiled": "Delete Decompiled Symbols",
   "command.viewString": "View String (JSON / XML / HTML / Text)",
   "command.takeSnapshot": "Take Snapshot",
   "command.compareWithSnapshot": "Compare with Snapshot",

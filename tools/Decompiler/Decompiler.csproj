@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Decompiler helper of the .NET x86 Debugger extension: writes a Portable PDB for an assembly that has none, with the
+    decompiled C# as its source. Published into debugger/decompiler by scripts/build-decompiler.ps1.
+    Framework-dependent on .NET 8, rolling forward to any newer runtime (the debugger already needs one).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <AssemblyName>DotnetX86.Decompiler</AssemblyName>
+    <RootNamespace>DotnetX86.Decompiler</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
+  </ItemGroup>
+
+</Project>

@@ -54,7 +54,8 @@ export class ModuleList implements vscode.TreeDataProvider<ModuleInfo>, vscode.D
         item.tooltip = `${m.path ?? ''}\n${m.symbolStatus ?? ''}`;
         // Icon shape and the description text both say whether symbols are loaded, not color alone.
         item.iconPath = new vscode.ThemeIcon(loaded ? 'symbol-namespace' : 'library');
-        item.contextValue = 'dotnetX86.module';
+        // Modules without symbols can be decompiled.
+        item.contextValue = loaded ? 'dotnetX86.module' : 'dotnetX86.module.noSymbols';
         item.resourceUri = m.path ? vscode.Uri.file(m.path) : undefined;
         return item;
     }

@@ -84,7 +84,21 @@ export class SourcePathMapper {
 
     /** False when nothing is configured: paths then pass through unchanged. */
     get enabled(): boolean {
-        return this.rules.length > 0 || this.searchPaths.length > 0;
+        return this.rules.length > 0 || this.searchPaths.length > 0 || this.hasFilePairs;
+    }
+
+    private hasFilePairs = false;
+
+    /**
+     * Exact PDB document -> local file pairs known in advance (decompiled assemblies: their PDB names documents
+     * relatively, "Namespace\Type.cs", and the extracted files live in the decompiler's cache).
+     */
+    addFilePairs(pairs: { pdbPath: string; local: string }[]): void {
+        for (const { pdbPath, local } of pairs) {
+            this.pdbToLocal.set(pathKey(pdbPath), local);
+            this.localToPdb.set(pathKey(local), pdbPath);
+            this.hasFilePairs = true;
+        }
     }
 
     /** True when the search-path index hit its size limit (some files may be missed). */

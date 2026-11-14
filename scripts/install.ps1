@@ -37,6 +37,10 @@ try {
     if (-not (Test-Path (Join-Path $repoRoot 'debugger\netcoredbg-x86\netcoredbg.exe'))) {
         & (Join-Path $PSScriptRoot 'build-netcoredbg.ps1')
     }
+    # VSIX に同梱する逆コンパイル ヘルパーが未ビルドならビルドする
+    if (-not (Test-Path (Join-Path $repoRoot 'debugger\decompiler\DotnetX86.Decompiler.dll'))) {
+        & (Join-Path $PSScriptRoot 'build-decompiler.ps1')
+    }
     if (-not (Test-Path (Join-Path $repoRoot 'node_modules'))) {
         Invoke-Step '依存関係のインストール (npm ci)' { npm.cmd ci --no-fund --no-audit }
     }

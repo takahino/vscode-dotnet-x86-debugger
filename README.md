@@ -228,6 +228,16 @@ Fill in `expected` and save it in your test project. Async methods work too; lam
 be called from a test, so pick the method that uses them. The values are those at the stopped line: stop at the first line
 of the method to capture the arguments as they came in. Visual Studio has no such command.
 
+### Debugging decompiled assemblies
+
+For an assembly without symbols (e.g. a NuGet package, or a DLL whose source you do not have), right-click it in the
+**Modules** view and choose **Decompile for Debugging...** (or run it from the Command Palette and pick the file). The
+bundled ILSpy engine decompiles it into C# with matching symbols; from the next debug session (a button restarts the
+current one) you can step into it, see its locals and set breakpoints in the decompiled files, with Just My Code on.
+The result is kept in the extension's storage, keyed by the exact build of the assembly, and the assembly's own folder
+is not touched. **Delete Decompiled Symbols** removes them. Needs a .NET 8 or later runtime to run the decompiler, and
+netcoredbg patch 0009 (included in the bundled build). Names of locals are the decompiler's, not the original ones.
+
 ### Object IDs
 
 Right-click an object in the Variables or Watch view and choose **Make Object ID**: it gets a name, `$1`, `$2`, ..., that

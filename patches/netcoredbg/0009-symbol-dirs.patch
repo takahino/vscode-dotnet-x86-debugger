@@ -1,0 +1,81 @@
+diff --git a/src/managed/SymbolReader.cs b/src/managed/SymbolReader.cs
+index 718fa67..1b0f480 100644
+--- a/src/managed/SymbolReader.cs
++++ b/src/managed/SymbolReader.cs
+@@ -1207,6 +1207,14 @@ namespace NetCoreDbg
+                     DebugDirectoryEntry codeViewEntry, embeddedPdbEntry;
+                     ReadPortableDebugTableEntries(peReader, out codeViewEntry, out embeddedPdbEntry);
+ 
++                    // Symbols generated for this assembly on purpose (the .NET x86 Debugger extension decompiles assemblies
++                    // into them) are preferred over whatever the assembly brings.
++                    var generated = TryOpenReaderFromSymbolDirs(peReader, codeViewEntry);
++                    if (generated != null)
++                    {
++                        return generated;
++                    }
++
+                     // First try .pdb file specified in CodeView data (we prefer .pdb file on disk over embedded PDB
+                     // since embedded PDB needs decompression which is less efficient than memory-mapping the file).
+                     if (codeViewEntry.DataSize != 0)
+@@ -1233,6 +1241,61 @@ namespace NetCoreDbg
+             return null;
+         }
+ 
++        /// <summary>
++        /// Looks for &lt;dir&gt;/&lt;MVID&gt;/symbols.pdb in the folders listed in NETCOREDBG_SYMBOL_DIRS (separated like PATH).
++        /// The MVID identifies the exact build of the assembly, so this also works for assemblies built without a PDB
++        /// (no CodeView entry); when there is a CodeView entry, the PDB id must match it as usual.
++        /// </summary>
++        private static OpenedReader TryOpenReaderFromSymbolDirs(PEReader peReader, DebugDirectoryEntry codeViewEntry)
++        {
++            string dirs = Environment.GetEnvironmentVariable("NETCOREDBG_SYMBOL_DIRS");
++            if (string.IsNullOrEmpty(dirs) || !peReader.HasMetadata)
++            {
++                return null;
++            }
++
++            MetadataReader metadata = peReader.GetMetadataReader();
++            Guid mvid = metadata.GetGuid(metadata.GetModuleDefinition().Mvid);
++            foreach (string dir in dirs.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries))
++            {
++                Stream pdbStream;
++                try
++                {
++                    pdbStream = TryOpenFile(Path.Combine(dir, mvid.ToString("D"), "symbols.pdb"));
++                }
++                catch (ArgumentException)
++                {
++                    continue; // invalid characters in the folder
++                }
++                if (pdbStream == null)
++                {
++                    continue;
++                }
++
++                MetadataReaderProvider provider = null;
++                try
++                {
++                    provider = MetadataReaderProvider.FromPortablePdbStream(pdbStream);
++                    MetadataReader reader = provider.GetMetadataReader();
++                    if (codeViewEntry.DataSize != 0)
++                    {
++                        var data = peReader.ReadCodeViewDebugDirectoryData(codeViewEntry);
++                        if (new BlobContentId(reader.DebugMetadataHeader.Id) != new BlobContentId(data.Guid, codeViewEntry.Stamp))
++                        {
++                            provider.Dispose();
++                            continue;
++                        }
++                    }
++                    return new OpenedReader(provider, reader);
++                }
++                catch (Exception e) when (e is BadImageFormatException || e is IOException)
++                {
++                    provider?.Dispose();
++                }
++            }
++            return null;
++        }
++
+         private static void ReadPortableDebugTableEntries(PEReader peReader, out DebugDirectoryEntry codeViewEntry, out DebugDirectoryEntry embeddedPdbEntry)
+         {
+             // See spec: https://github.com/dotnet/corefx/blob/master/src/System.Reflection.Metadata/specs/PE-COFF.md

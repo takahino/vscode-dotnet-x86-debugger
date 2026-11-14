@@ -188,7 +188,7 @@ function compareVersions(a: string, b: string): number {
     return 0;
 }
 
-function findX86DotnetHost(): string {
+export function findX86DotnetHost(): string {
     const candidates = x86DotnetRoots();
     for (const dir of candidates) {
         const exe = path.join(dir, 'dotnet.exe');

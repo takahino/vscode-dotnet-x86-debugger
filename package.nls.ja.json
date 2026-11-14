@@ -6,6 +6,8 @@
   "command.copyAsCSharp": "C# の初期化子としてコピー",
   "command.generateTest": "ここから単体テストを生成",
   "command.makeObjectId": "オブジェクト ID を作成",
+  "command.decompileModule": "逆コンパイルしてデバッグ可能にする...",
+  "command.clearDecompiled": "逆コンパイルしたシンボルを削除",
   "command.viewString": "文字列を表示 (JSON / XML / HTML / テキスト)",
   "command.takeSnapshot": "スナップショットを記録",
   "command.compareWithSnapshot": "スナップショットと比較",

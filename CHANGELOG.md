@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Decompile for Debugging** (Modules view) — an assembly without symbols is decompiled with the bundled ILSpy engine into C# with matching symbols, so you can step into it and set breakpoints in it from the next session. Kept in the extension's storage by assembly MVID (netcoredbg patch 0009 loads them from there).
 - New: **Step Into Target** (Step Into Specific) — pick which call of the line to step into, listed in the order they run. Emulated with a temporary function breakpoint during a step over.
 - New: **Make Object ID** (Variables / Watch context menu) — `$1`, `$2`, ... reach the same object from any method and later stops, in Watch, the Debug Console and breakpoint conditions; the Variables view marks it `{$1}` (netcoredbg patch 0008: weak GC handles, as in Visual Studio).
 - New: **Generate Unit Test from Here** (Call Stack context menu) — a test that calls the selected method again with its current arguments and object, in the workspace's test framework (xUnit / NUnit / MSTest).

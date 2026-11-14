@@ -44,6 +44,8 @@
     "onCommand:dotnetX86.highlightControl",
     "onCommand:dotnetX86.generateTest",
     "onCommand:dotnetX86.makeObjectId",
+    "onCommand:dotnetX86.decompileModule",
+    "onCommand:dotnetX86.clearDecompiled",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
     "onCommand:dotnetX86.clearPinnedValues",
@@ -64,6 +66,16 @@
       {
         "command": "dotnetX86.copyAsCSharp",
         "title": "%command.copyAsCSharp%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.decompileModule",
+        "title": "%command.decompileModule%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.clearDecompiled",
+        "title": "%command.clearDecompiled%",
         "category": ".NET x86"
       },
       {
@@ -439,6 +451,11 @@
           "command": "dotnetX86.copyModulePath",
           "when": "view == dotnetX86.modules",
           "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.decompileModule",
+          "when": "view == dotnetX86.modules && viewItem == dotnetX86.module.noSymbols",
+          "group": "z_dotnetX86@0"
         },
         {
           "command": "dotnetX86.revealModule",

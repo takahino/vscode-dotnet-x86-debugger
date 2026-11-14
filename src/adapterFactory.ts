@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { DOTNET_FRAMEWORK_KEY, findX86CoreClr } from './configProvider';
 import { DapProxy, ExceptionFilterText } from './dapProxy';
+import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
 import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { findWriteLines } from './writeSites';
 
@@ -197,6 +198,8 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         private readonly extensionPath: string,
         private readonly logDir: string,
         private readonly output: vscode.OutputChannel,
+        /** Where "Decompile for Debugging" leaves its symbols (see Decompiler). */
+        private readonly decompiledCache: string,
     ) {}
 
     createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.DebugAdapterDescriptor {
@@ -221,6 +224,14 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             for (const u of unresolved) {
                 this.output.appendLine(`[source map]   not found: ${u.pdbPath}${u.candidates.length > 1 ? ` (ambiguous: ${u.candidates.join(', ')})` : ''}`);
             }
+        }
+        // Decompiled assemblies: netcoredbg (patch 0009) loads their symbols from the cache by MVID, and the PDB names
+        // documents relatively ("Namespace/Type.cs"), so the relay maps them to the extracted files.
+        const decompiled = readDecompiledAssemblies(this.decompiledCache);
+        if (decompiled.length) {
+            env[SYMBOL_DIRS_ENV] = this.decompiledCache;
+            sourceMap.mapper.addFilePairs(decompiled.flatMap((a) => a.documents.map((d) => ({ pdbPath: d.name, local: d.file }))));
+            this.output.appendLine(`[decompiler] symbols of ${decompiled.length} decompiled assemblies are available`);
         }
         return new vscode.DebugAdapterInlineImplementation(adapter);
     }

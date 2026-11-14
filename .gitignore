@@ -11,5 +11,5 @@ obj/
 # env
 .env
 
-# bundled debugger (built by scripts/build-netcoredbg.ps1)
+# bundled debugger and decompiler helper (built by scripts/build-netcoredbg.ps1 / build-decompiler.ps1)
 debugger/

@@ -161,5 +161,17 @@
   "Test framework for the generated test": "生成するテストのフレームワーク",
   "Object IDs can be made for objects only, not for numbers, strings or null.": "オブジェクト ID を作れるのはオブジェクトだけです（数値・文字列・null には作れません）。",
   "{0} now refers to {1}. Use it in Watch, the Debug Console or breakpoint conditions, also in other methods (copied to the clipboard).": "{0} が {1} を指すようになりました。ウォッチ・デバッグ コンソール・ブレークポイントの条件で、ほかのメソッドからも使えます（クリップボードにコピーしました）。",
-  "Could not make an object ID for {0} ({1}). Object IDs can be made for objects only, not for structs or null.": "{0} のオブジェクト ID を作れませんでした（{1}）。オブジェクト ID を作れるのはオブジェクトだけです（構造体や null には作れません）。"
+  "Could not make an object ID for {0} ({1}). Object IDs can be made for objects only, not for structs or null.": "{0} のオブジェクト ID を作れませんでした（{1}）。オブジェクト ID を作れるのはオブジェクトだけです（構造体や null には作れません）。",
+  ".NET assemblies": ".NET アセンブリ",
+  "Decompile": "逆コンパイル",
+  "The bundled decompiler was not found: {0}. Build it with scripts\\build-decompiler.ps1 and rebuild the VSIX.": "同梱の逆コンパイラーが見つかりません: {0}。scripts\\build-decompiler.ps1 でビルドし、VSIX を作り直してください。",
+  "Decompiling {0}…": "{0} を逆コンパイルしています…",
+  "Restart Debugging": "デバッグを再起動",
+  "{0} was decompiled. Restart debugging to step into it (symbols are read when the module loads).": "{0} を逆コンパイルしました。ステップ インするにはデバッグを再起動してください（シンボルはモジュールの読み込み時に読まれます）。",
+  "{0} was decompiled. The next debug session can step into it.": "{0} を逆コンパイルしました。次のデバッグ セッションからステップ インできます。",
+  "Could not decompile {0}: {1}": "{0} を逆コンパイルできませんでした: {1}",
+  "Delete": "削除",
+  "Delete all decompiled symbols and sources? Debugging then works as before for those assemblies.": "逆コンパイルしたシンボルとソースをすべて削除しますか？ それらのアセンブリは元どおりのデバッグに戻ります。",
+  "Decompiled symbols were deleted. This applies from the next debug session.": "逆コンパイルしたシンボルを削除しました。次のデバッグ セッションから反映されます。",
+  "Could not delete {0}: {1}": "{0} を削除できませんでした: {1}"
 }

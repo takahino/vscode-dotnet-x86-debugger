@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { X86AdapterFactory } from './adapterFactory';
 import { AutosView } from './autosView';
@@ -5,6 +6,7 @@ import { BreakpointCommands } from './breakpointCommands';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { ControlNode, ControlTree } from './controlTree';
 import { DapTraceFactory } from './dapTrace';
+import { Decompiler } from './decompiler';
 import { ExceptionLog } from './exceptionLog';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
@@ -49,12 +51,13 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
+    const decompiler = new Decompiler(context.extensionPath, path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
 
     context.subscriptions.push(
         output,
         vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new X86ConfigurationProvider()),
-        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output)),
+        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, decompiler.cacheRoot)),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new DapTraceFactory(output)),
         vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
@@ -62,6 +65,8 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.copyAsCSharp', copyAsCSharpCommand),
         vscode.commands.registerCommand('dotnetX86.makeObjectId', makeObjectIdCommand),
         vscode.commands.registerCommand('dotnetX86.generateTest', generateTestCommand),
+        vscode.commands.registerCommand('dotnetX86.decompileModule', (module?: { name?: string; path?: string }) => decompiler.decompile(module)),
+        vscode.commands.registerCommand('dotnetX86.clearDecompiled', () => decompiler.clearCache()),
         vscode.commands.registerCommand('dotnetX86.viewString', viewStringCommand),
         vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
         vscode.commands.registerCommand('dotnetX86.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),
