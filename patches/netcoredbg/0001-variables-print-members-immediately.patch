@@ -1,0 +1,49 @@
+diff --git a/src/debugger/variables.cpp b/src/debugger/variables.cpp
+index 8e9efb9..e38c37e 100644
+--- a/src/debugger/variables.cpp
++++ b/src/debugger/variables.cpp
+@@ -67,27 +67,40 @@ struct VariableMember
+     std::string name;
+     std::string ownerType;
+     ToRelease<ICorDebugValue> value;
++    // Value and type are printed right after the member is fetched: property getters of the following
++    // members run func-evals, which may trigger a GC and invalidate this (non-handle) reference value.
++    std::string printedValue;
++    std::string printedType;
++    HRESULT printStatus = S_FALSE;
+     VariableMember(const std::string &name, const std::string& ownerType, ICorDebugValue *pValue) :
+         name(name),
+         ownerType(ownerType),
+         value(pValue)
+-    {}
++    {
++        if (value == nullptr)
++            return;
++        TypePrinter::GetTypeOfValue(value, printedType);
++        printStatus = PrintValue(value, printedValue, true);
++    }
+     VariableMember(VariableMember &&that) = default;
+     VariableMember(const VariableMember &that) = delete;
+ };
+ 
+ static HRESULT FillValueAndType(VariableMember &member, Variable &var)
+ {
+-    if (member.value == nullptr)
++    if (member.value == nullptr || FAILED(member.printStatus))
+     {
+         // "SUCCEEDED" result, variable found but error during value receive itself.
+         // For example, in case of eval flags `EVAL_NOFUNCEVAL` and property.
++        // A single member that can't be printed must not fail the whole "variables" request.
++        var.type = member.printedType;
+         var.value = "<error>";
+         return S_FALSE;
+     }
+ 
+-    TypePrinter::GetTypeOfValue(member.value, var.type);
+-    return PrintValue(member.value, var.value, true);
++    var.type = member.printedType;
++    var.value = member.printedValue;
++    return S_OK;
+ }
+ 
+ static HRESULT FetchFieldsAndProperties(Evaluator *pEvaluator, ICorDebugValue *pInputValue, ICorDebugThread *pThread,

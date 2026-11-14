@@ -36,13 +36,13 @@ jobs:
             throw "タグ $tag と package.json の version ($version) が一致しません。package.json を更新してからタグを付け直してください。"
           }
 
-      # netcoredbg のビルドは時間がかかるため、ビルドスクリプトが変わらない限りキャッシュを使う
+      # netcoredbg のビルドは時間がかかるため、ビルドスクリプトとパッチが変わらない限りキャッシュを使う
       - name: Restore netcoredbg (x86) cache
         id: netcoredbg-cache
         uses: actions/cache@v4
         with:
           path: debugger/netcoredbg-x86
-          key: netcoredbg-x86-${{ runner.os }}-${{ hashFiles('scripts/build-netcoredbg.ps1') }}
+          key: netcoredbg-x86-${{ runner.os }}-${{ hashFiles('scripts/build-netcoredbg.ps1', 'patches/netcoredbg/**') }}
 
       - name: Build netcoredbg (x86)
         if: steps.netcoredbg-cache.outputs.cache-hit != 'true'
