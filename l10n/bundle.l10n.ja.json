@@ -158,5 +158,8 @@
   "Some values could not be read completely and are marked TODO: {0}": "一部の値を完全には読み取れなかったため、TODO にしています: {0}",
   "Could not generate the test: {0}": "テストを生成できませんでした: {0}",
   "used in this workspace": "このワークスペースで使用中",
-  "Test framework for the generated test": "生成するテストのフレームワーク"
+  "Test framework for the generated test": "生成するテストのフレームワーク",
+  "Object IDs can be made for objects only, not for numbers, strings or null.": "オブジェクト ID を作れるのはオブジェクトだけです（数値・文字列・null には作れません）。",
+  "{0} now refers to {1}. Use it in Watch, the Debug Console or breakpoint conditions, also in other methods (copied to the clipboard).": "{0} が {1} を指すようになりました。ウォッチ・デバッグ コンソール・ブレークポイントの条件で、ほかのメソッドからも使えます（クリップボードにコピーしました）。",
+  "Could not make an object ID for {0} ({1}). Object IDs can be made for objects only, not for structs or null.": "{0} のオブジェクト ID を作れませんでした（{1}）。オブジェクト ID を作れるのはオブジェクトだけです（構造体や null には作れません）。"
 }

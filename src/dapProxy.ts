@@ -3,6 +3,7 @@
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
+import { MAKE_OBJECT_ID_REQUEST, requestWithDebuggerObjectIds, responseWithClientObjectIds } from './objectIds';
 import { readPdbDocuments } from './pdbDocuments';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 
@@ -793,6 +794,11 @@ export class DapProxy {
         if (this.exited) {
             return;
         }
+        // Every expression that reaches netcoredbg, from VS Code or from the proxy itself (logpoints, "#changed"),
+        // may use object IDs.
+        if (message.type === 'request' && message.arguments) {
+            message = { ...message, arguments: requestWithDebuggerObjectIds(message.command, message.arguments) };
+        }
         const body = Buffer.from(JSON.stringify(message), 'utf8');
         this.child.stdin.write(`Content-Length: ${body.length}${HEADER_DELIMITER}`);
         this.child.stdin.write(body);
@@ -851,7 +857,13 @@ export class DapProxy {
 
     /** Every message to VS Code goes through here: PDB paths become local ones and re-sent breakpoints keep their ids. */
     private toClient(message: DapMessage): void {
-        let out = message;
+        let out = responseWithClientObjectIds(message);
+        if (out.type === 'response' && out.command === MAKE_OBJECT_ID_REQUEST && out.success) {
+            // Values shown so far do not carry the "{$N}" mark yet: have VS Code read them again.
+            this.sink(out);
+            this.emitEvent('invalidated', { areas: ['variables'] });
+            return;
+        }
         if (this.mapper.enabled && out.body) {
             out = { ...out, body: mapSourcePaths(out.body, (p) => this.mapper.toLocal(p)) };
             const details = out.body?.details;

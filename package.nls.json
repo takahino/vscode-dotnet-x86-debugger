@@ -5,6 +5,7 @@
   "command.dumpExpression": "Dump Expression...",
   "command.copyAsCSharp": "Copy as C# Initializer",
   "command.generateTest": "Generate Unit Test from Here",
+  "command.makeObjectId": "Make Object ID",
   "command.viewString": "View String (JSON / XML / HTML / Text)",
   "command.takeSnapshot": "Take Snapshot",
   "command.compareWithSnapshot": "Compare with Snapshot",

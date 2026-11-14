@@ -11,6 +11,7 @@ import { MemoryMonitor } from './memoryMonitor';
 import { PerfTips } from './perfTips';
 import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
+import { makeObjectIdCommand } from './objectIdCommand';
 import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
 import { generateTestCommand } from './testGenerator';
@@ -59,6 +60,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
         vscode.commands.registerCommand('dotnetX86.dumpExpression', dumpExpressionCommand),
         vscode.commands.registerCommand('dotnetX86.copyAsCSharp', copyAsCSharpCommand),
+        vscode.commands.registerCommand('dotnetX86.makeObjectId', makeObjectIdCommand),
         vscode.commands.registerCommand('dotnetX86.generateTest', generateTestCommand),
         vscode.commands.registerCommand('dotnetX86.viewString', viewStringCommand),
         vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),

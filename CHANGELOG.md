@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Make Object ID** (Variables / Watch context menu) — `$1`, `$2`, ... reach the same object from any method and later stops, in Watch, the Debug Console and breakpoint conditions; the Variables view marks it `{$1}` (netcoredbg patch 0008: weak GC handles, as in Visual Studio).
 - New: **Generate Unit Test from Here** (Call Stack context menu) — a test that calls the selected method again with its current arguments and object, in the workspace's test framework (xUnit / NUnit / MSTest).
 - New: **UI freeze detection** — when a UI thread does not process window messages for 2 s (`dotnetX86.uiFreeze.thresholdMs`), the program is paused on that thread to show what holds the UI up.
 - New: **Highlight on Screen** in the WinForms Controls view (eye icon) — frames the control on the screen with its name and size. The stopped form is shown in front from the desktop compositor's image, so it works even when the form is behind VS Code.

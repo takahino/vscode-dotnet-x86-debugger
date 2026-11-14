@@ -228,6 +228,14 @@ Fill in `expected` and save it in your test project. Async methods work too; lam
 be called from a test, so pick the method that uses them. The values are those at the stopped line: stop at the first line
 of the method to capture the arguments as they came in. Visual Studio has no such command.
 
+### Object IDs
+
+Right-click an object in the Variables or Watch view and choose **Make Object ID**: it gets a name, `$1`, `$2`, ..., that
+reaches that very object from any method and any later stop — in Watch, the Debug Console, hovers and breakpoint conditions
+(e.g. `$1.Count`, `order == $2`). Values that are that object show `{$1}` in the Variables view. As in Visual Studio, an object ID
+does not keep its object alive: once it is garbage collected, `$1` is `null`. IDs last until the debug session ends.
+Objects only (not numbers, strings, structs or null). Needs netcoredbg patch 0008, included in the bundled build.
+
 ### Debug session report
 
 Run **.NET x86: Export Debug Session Report** (or the button in the Step History view title) to open a Markdown report of
