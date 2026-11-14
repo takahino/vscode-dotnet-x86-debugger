@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
 - New: **Temporary**, **dependent** and **when-changed** breakpoints (editor context menu, or `#once`, `#after File.cs:12`, `#changed expr` as the condition).
 - New: **Pinned values** — pin an expression to an editor line; it is evaluated again every time the program stops.
