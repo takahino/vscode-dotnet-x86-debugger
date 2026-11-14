@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { X86AdapterFactory } from './adapterFactory';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
+import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
 import { pickProcess } from './processPicker';
 import {
@@ -36,6 +37,7 @@ export function activate(context: vscode.ExtensionContext): void {
         memory,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, memory),
         vscode.commands.registerCommand('dotnetX86.showMemoryGraph', () => memory.show()),
+        vscode.languages.registerInlineValuesProvider('csharp', new CSharpInlineValuesProvider()),
     );
 }
 

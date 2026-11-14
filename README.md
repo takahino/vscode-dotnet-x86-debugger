@@ -112,6 +112,12 @@ or run **.NET x86: Dump Expression...** from the Command Palette, to open the wh
 - Property getters run while dumping, as in the Variables view. Large objects such as a `Form` hit the limits above
   (a notification tells you so); raise them in the settings if needed.
 
+### Inline values
+
+While stopped, values are shown at the end of the lines of the current method, like Visual Studio's inline values:
+locals and parameters, and fields (`_count`, `this._count`). Properties are not shown, since reading them runs getters.
+Turn this off with the VS Code setting `debug.inlineValues`.
+
 ### DebuggerDisplay
 
 Types with `[DebuggerDisplay("Name = {Name}, Age = {Age}")]` are shown with that text in the Variables view,
