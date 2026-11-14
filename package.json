@@ -1,7 +1,7 @@
 {
   "name": "dotnet-x86-debugger",
-  "displayName": ".NET x86 Debugger",
-  "description": "Debug 32-bit (x86) .NET applications such as x86 WinForms apps in VS Code, using a bundled x86 build of netcoredbg.",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.2.0",
   "publisher": "takahino",
   "license": "MIT",
@@ -38,37 +38,37 @@
     "commands": [
       {
         "command": "dotnetX86.dumpVariable",
-        "title": "Dump Variable",
+        "title": "%command.dumpVariable%",
         "category": ".NET x86"
       },
       {
         "command": "dotnetX86.dumpExpression",
-        "title": "Dump Expression...",
+        "title": "%command.dumpExpression%",
         "category": ".NET x86"
       },
       {
         "command": "dotnetX86.copyAsCSharp",
-        "title": "Copy as C# Initializer",
+        "title": "%command.copyAsCSharp%",
         "category": ".NET x86"
       },
       {
         "command": "dotnetX86.viewString",
-        "title": "View String (JSON / XML / HTML / Text)",
+        "title": "%command.viewString%",
         "category": ".NET x86"
       },
       {
         "command": "dotnetX86.takeSnapshot",
-        "title": "Take Snapshot",
+        "title": "%command.takeSnapshot%",
         "category": ".NET x86"
       },
       {
         "command": "dotnetX86.compareWithSnapshot",
-        "title": "Compare with Snapshot",
+        "title": "%command.compareWithSnapshot%",
         "category": ".NET x86"
       },
       {
         "command": "dotnetX86.showMemoryGraph",
-        "title": "Show Memory Graph",
+        "title": "%command.showMemoryGraph%",
         "category": ".NET x86"
       }
     ],
@@ -128,34 +128,34 @@
       ]
     },
     "configuration": {
-      "title": ".NET x86 Debugger",
+      "title": "%config.title%",
       "properties": {
         "dotnetX86.debuggerPath": {
           "type": "string",
           "default": "",
-          "description": "Full path to an x86 netcoredbg.exe. When empty, the bundled x86 build is used."
+          "description": "%config.debuggerPath%"
         },
         "dotnetX86.trace": {
           "type": "boolean",
           "default": false,
-          "description": "Troubleshooting: log the debug adapter protocol traffic to the \".NET x86 Debugger\" output channel and write a netcoredbg log file (its path is shown in that channel)."
+          "description": "%config.trace%"
         },
         "dotnetX86.memoryGraph.autoOpen": {
           "type": "boolean",
           "default": false,
-          "description": "Open the memory graph automatically when a dotnet-x86 debug session starts."
+          "description": "%config.memoryGraph.autoOpen%"
         },
         "dotnetX86.dump.maxDepth": {
           "type": "integer",
           "default": 3,
           "minimum": 1,
-          "description": "Maximum nesting depth expanded by Dump Variable / Dump Expression."
+          "description": "%config.dump.maxDepth%"
         },
         "dotnetX86.dump.maxNodes": {
           "type": "integer",
           "default": 2000,
           "minimum": 1,
-          "description": "Dump Variable / Dump Expression stops expanding further objects once this many values have been collected. Large objects (e.g. a Form) have hundreds of members per level."
+          "description": "%config.dump.maxNodes%"
         }
       }
     },
@@ -173,7 +173,7 @@
     "debuggers": [
       {
         "type": "dotnet-x86",
-        "label": ".NET x86 (netcoredbg)",
+        "label": "%debugger.label%",
         "languages": [
           "csharp",
           "fsharp",
@@ -190,7 +190,7 @@
             "properties": {
               "program": {
                 "type": "string",
-                "description": "Path to the x86 .exe (or a framework-dependent .dll, launched with the x86 dotnet host)."
+                "description": "%debugger.launch.program%"
               },
               "args": {
                 "type": "array",
@@ -198,12 +198,12 @@
                   "type": "string"
                 },
                 "default": [],
-                "description": "Command line arguments."
+                "description": "%debugger.launch.args%"
               },
               "cwd": {
                 "type": "string",
                 "default": "${workspaceFolder}",
-                "description": "Working directory."
+                "description": "%debugger.launch.cwd%"
               },
               "env": {
                 "type": "object",
@@ -211,22 +211,22 @@
                   "type": "string"
                 },
                 "default": {},
-                "description": "Environment variables."
+                "description": "%debugger.launch.env%"
               },
               "stopAtEntry": {
                 "type": "boolean",
                 "default": false,
-                "description": "Break at the entry point."
+                "description": "%debugger.launch.stopAtEntry%"
               },
               "justMyCode": {
                 "type": "boolean",
                 "default": true,
-                "description": "Only debug user code."
+                "description": "%debugger.launch.justMyCode%"
               },
               "enableStepFiltering": {
                 "type": "boolean",
                 "default": true,
-                "description": "Step over properties and operators."
+                "description": "%debugger.launch.enableStepFiltering%"
               }
             }
           },
@@ -245,17 +245,17 @@
                     "type": "integer"
                   }
                 ],
-                "description": "Process ID to attach to. Use ${command:pickProcess} to pick from a list."
+                "description": "%debugger.attach.processId%"
               },
               "justMyCode": {
                 "type": "boolean",
                 "default": true,
-                "description": "Only debug user code."
+                "description": "%debugger.attach.justMyCode%"
               },
               "enableStepFiltering": {
                 "type": "boolean",
                 "default": true,
-                "description": "Step over properties and operators."
+                "description": "%debugger.attach.enableStepFiltering%"
               }
             }
           }
@@ -274,8 +274,8 @@
         ],
         "configurationSnippets": [
           {
-            "label": ".NET x86: Launch",
-            "description": "Launch a 32-bit .NET application",
+            "label": "%snippet.launch.label%",
+            "description": "%snippet.launch.description%",
             "body": {
               "name": ".NET x86 Launch",
               "type": "dotnet-x86",
@@ -288,8 +288,8 @@
             }
           },
           {
-            "label": ".NET x86: Attach",
-            "description": "Attach to a running 32-bit .NET process",
+            "label": "%snippet.attach.label%",
+            "description": "%snippet.attach.description%",
             "body": {
               "name": ".NET x86 Attach",
               "type": "dotnet-x86",
@@ -312,5 +312,6 @@
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.0.0",
     "typescript": "^5.6.0"
-  }
+  },
+  "l10n": "./l10n"
 }

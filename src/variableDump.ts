@@ -44,7 +44,7 @@ export class SnapshotStore implements vscode.TextDocumentContentProvider {
 }
 
 export async function dumpVariableCommand(arg?: VariablesContextArg): Promise<void> {
-    const target = targetFromContext(arg, 'Dump Variable');
+    const target = targetFromContext(arg, vscode.l10n.t("Dump Variable"));
     if (target) {
         await showDump(target);
     }
@@ -58,37 +58,37 @@ export async function dumpExpressionCommand(): Promise<void> {
 }
 
 export async function copyAsCSharpCommand(arg?: VariablesContextArg): Promise<void> {
-    const target = targetFromContext(arg, 'Copy as C# Initializer');
+    const target = targetFromContext(arg, vscode.l10n.t("Copy as C# Initializer"));
     const result = target && (await collect(target));
     if (!target || !result) {
         return;
     }
     await vscode.env.clipboard.writeText(toCSharpStatement(target.expression, result.node));
     void vscode.window.showInformationMessage(
-        `${target.expression} を C# の初期化子としてコピーしました。get 専用プロパティも含まれるため、必要に応じて削除してください。`,
+        vscode.l10n.t("Copied {0} as a C# initializer. Get-only properties are included too; remove them if the code does not compile.", target.expression),
     );
     reportTruncation(result);
 }
 
 export async function viewStringCommand(arg?: VariablesContextArg): Promise<void> {
-    const target = targetFromContext(arg, 'View String');
+    const target = targetFromContext(arg, vscode.l10n.t("View String"));
     if (!target) {
         return;
     }
     if (target.root.type !== 'string' || target.root.value === 'null') {
-        void vscode.window.showErrorMessage(`${target.expression} は文字列ではありません（型: ${target.root.type ?? '不明'}）。string 型の変数で実行してください。`);
+        void vscode.window.showErrorMessage(vscode.l10n.t("{0} is not a string (type: {1}). Run this on a string variable.", target.expression, target.root.type ?? '?'));
         return;
     }
     const value = String(parseLeaf(target.root.value));
     const detected = detectFormat(value);
     const choices: { label: string; format: StringFormat }[] = [
-        { label: `自動判定 (${detected})`, format: detected },
+        { label: vscode.l10n.t("Auto-detect ({0})", detected), format: detected },
         { label: 'JSON', format: 'json' },
         { label: 'XML', format: 'xml' },
         { label: 'HTML', format: 'html' },
-        { label: 'テキスト', format: 'text' },
+        { label: vscode.l10n.t("Text"), format: 'text' },
     ];
-    const picked = await vscode.window.showQuickPick(choices, { placeHolder: `${target.expression} の表示形式` });
+    const picked = await vscode.window.showQuickPick(choices, { placeHolder: vscode.l10n.t("Display format for {0}", target.expression) });
     if (!picked) {
         return;
     }
@@ -102,26 +102,26 @@ export async function viewStringCommand(arg?: VariablesContextArg): Promise<void
 }
 
 export async function takeSnapshotCommand(store: SnapshotStore, arg?: VariablesContextArg): Promise<void> {
-    const target = targetFromContext(arg, 'Take Snapshot');
+    const target = targetFromContext(arg, vscode.l10n.t("Take Snapshot"));
     const result = target && (await collect(target));
     if (!target || !result) {
         return;
     }
     store.take(target.expression, JSON.stringify(toJson(result.node), null, 2));
     void vscode.window.showInformationMessage(
-        `${target.expression} のスナップショットを記録しました。値が変わった後に「Compare with Snapshot」で差分を表示できます。`,
+        vscode.l10n.t("Took a snapshot of {0}. After the value changes, run \"Compare with Snapshot\" to see the difference.", target.expression),
     );
     reportTruncation(result);
 }
 
 export async function compareWithSnapshotCommand(store: SnapshotStore, arg?: VariablesContextArg): Promise<void> {
-    const target = targetFromContext(arg, 'Compare with Snapshot');
+    const target = targetFromContext(arg, vscode.l10n.t("Compare with Snapshot"));
     if (!target) {
         return;
     }
     const snapshot = store.get(target.expression);
     if (!snapshot) {
-        void vscode.window.showErrorMessage(`${target.expression} のスナップショットがありません。先に「Take Snapshot」を実行してください。`);
+        void vscode.window.showErrorMessage(vscode.l10n.t("There is no snapshot of {0}. Run \"Take Snapshot\" first.", target.expression));
         return;
     }
     const result = await collect(target);
@@ -132,9 +132,9 @@ export async function compareWithSnapshotCommand(store: SnapshotStore, arg?: Var
     const left = store.createDocument(`${target.expression} (snapshot)`, snapshot.json);
     const right = store.createDocument(`${target.expression} (now)`, current);
     const time = snapshot.takenAt.toLocaleTimeString();
-    await vscode.commands.executeCommand('vscode.diff', left, right, `${target.expression}: ${time} ↔ 現在`);
+    await vscode.commands.executeCommand('vscode.diff', left, right, vscode.l10n.t("{0}: {1} ↔ now", target.expression, time));
     if (snapshot.json === current) {
-        void vscode.window.showInformationMessage(`${target.expression} はスナップショット（${time}）から変化していません。`);
+        void vscode.window.showInformationMessage(vscode.l10n.t("{0} has not changed since the snapshot ({1}).", target.expression, time));
     }
 }
 
@@ -144,7 +144,7 @@ function targetFromContext(arg: VariablesContextArg | undefined, commandTitle: s
         return undefined;
     }
     if (!arg?.variable) {
-        void vscode.window.showErrorMessage(`変数ビューで変数を右クリックして「${commandTitle}」を実行してください。`);
+        void vscode.window.showErrorMessage(vscode.l10n.t("Right-click a variable in the Variables view and run \"{0}\".", commandTitle));
         return undefined;
     }
     const v = arg.variable;
@@ -161,7 +161,7 @@ async function targetFromInput(): Promise<Target | undefined> {
         return undefined;
     }
     const expression = await vscode.window.showInputBox({
-        prompt: 'ダンプする式（例: this, myList, order.Items）',
+        prompt: vscode.l10n.t("Expression to dump (e.g. this, myList, order.Items)"),
         placeHolder: 'this',
     });
     if (!expression) {
@@ -177,7 +177,7 @@ async function targetFromInput(): Promise<Target | undefined> {
             root: { name: expression, value: evaluated.result, type: evaluated.type, variablesReference: evaluated.variablesReference },
         };
     } catch (e) {
-        void vscode.window.showErrorMessage(`式を評価できませんでした: ${expression} (${errorMessage(e)})。停止中のフレームで評価できる式か確認してください。`);
+        void vscode.window.showErrorMessage(vscode.l10n.t("Could not evaluate {0} ({1}). Check that the expression can be evaluated in the stopped frame.", expression, errorMessage(e)));
         return undefined;
     }
 }
@@ -187,7 +187,7 @@ async function collect(target: Target): Promise<CollectResult | undefined> {
     const config = vscode.workspace.getConfiguration('dotnetX86.dump');
     try {
         return await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: `${target.expression} の値を取得しています…`, cancellable: true },
+            { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t("Reading {0}…", target.expression), cancellable: true },
             (_progress, token) =>
                 collectTree((command, args) => target.session.customRequest(command, args), target.root, {
                     maxDepth: config.get<number>('maxDepth', 3),
@@ -197,7 +197,7 @@ async function collect(target: Target): Promise<CollectResult | undefined> {
         );
     } catch (e) {
         if (!(e instanceof DumpCancelledError)) {
-            void vscode.window.showErrorMessage(`値の取得に失敗しました: ${errorMessage(e)}`);
+            void vscode.window.showErrorMessage(vscode.l10n.t("Could not read the value: {0}", errorMessage(e)));
         }
         return undefined;
     }
@@ -218,7 +218,7 @@ function reportTruncation(result: CollectResult): void {
     if (result.truncated) {
         const config = vscode.workspace.getConfiguration('dotnetX86.dump');
         void vscode.window.showInformationMessage(
-            `上限に達したため一部を展開していません（深さ ${config.get('maxDepth', 3)} / ノード ${config.get('maxNodes', 2000)}）。設定 dotnetX86.dump.maxDepth / maxNodes で変更できます。`,
+            vscode.l10n.t("Some values were not expanded because a limit was reached (depth {0} / nodes {1}). Change it with the dotnetX86.dump.maxDepth / maxNodes settings.", config.get('maxDepth', 3), config.get('maxNodes', 2000)),
         );
     }
 }
@@ -226,7 +226,7 @@ function reportTruncation(result: CollectResult): void {
 function requireSession(): vscode.DebugSession | undefined {
     const session = vscode.debug.activeDebugSession;
     if (!session) {
-        void vscode.window.showErrorMessage('デバッグ中ではありません。ブレークポイントで停止してから実行してください。');
+        void vscode.window.showErrorMessage(vscode.l10n.t("Not debugging. Stop at a breakpoint and try again."));
     }
     return session;
 }

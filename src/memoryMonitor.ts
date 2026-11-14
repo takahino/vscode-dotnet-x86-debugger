@@ -56,11 +56,11 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
             this.panel.reveal(vscode.ViewColumn.Beside, true);
             return;
         }
-        this.panel = vscode.window.createWebviewPanel('dotnetX86.memory', 'Memory (.NET x86)', { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
+        this.panel = vscode.window.createWebviewPanel('dotnetX86.memory', vscode.l10n.t('Memory (.NET x86)'), { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
             enableScripts: true,
             retainContextWhenHidden: true,
         });
-        this.panel.webview.html = renderHtml();
+        this.panel.webview.html = renderHtml(localizedStrings());
         this.panel.onDidDispose(() => (this.panel = undefined));
         this.panel.webview.onDidReceiveMessage((m) => m?.type === 'ready' && this.post());
     }
@@ -136,7 +136,30 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
     }
 }
 
-function renderHtml(): string {
+/** Webview texts, localized in the extension host (the webview has no access to vscode.l10n). */
+function localizedStrings() {
+    return {
+        title: vscode.l10n.t('Process memory'),
+        waiting: vscode.l10n.t('Start debugging with the dotnet-x86 debugger to see memory.'),
+        privateNow: vscode.l10n.t('Private Bytes (now)'),
+        privatePeak: vscode.l10n.t('Private Bytes (peak)'),
+        workingSetNow: vscode.l10n.t('Working Set (now)'),
+        stoppedLegend: vscode.l10n.t('Stopped (break / step)'),
+        chartLabel: vscode.l10n.t('Process memory over time'),
+        tableSummary: vscode.l10n.t('Data table (last 30 samples)'),
+        time: vscode.l10n.t('Elapsed'),
+        exited: vscode.l10n.t('process exited'),
+        stopped: vscode.l10n.t('stopped'),
+    };
+}
+
+type Strings = ReturnType<typeof localizedStrings>;
+
+function escapeHtml(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderHtml(t: Strings): string {
     const nonce = Math.random().toString(36).slice(2);
     return /* html */ `<!DOCTYPE html>
 <html lang="en">
@@ -179,22 +202,23 @@ function renderHtml(): string {
 </style>
 </head>
 <body>
-<h1>Process memory</h1>
-<div class="sub" id="sub">Start debugging with the dotnet-x86 debugger to see memory.</div>
+<h1>${escapeHtml(t.title)}</h1>
+<div class="sub" id="sub">${escapeHtml(t.waiting)}</div>
 <div class="tiles">
-  <div class="tile"><div class="label">Private Bytes (now)</div><div class="value" id="privNow">-</div></div>
-  <div class="tile"><div class="label">Private Bytes (peak)</div><div class="value" id="privPeak">-</div></div>
-  <div class="tile"><div class="label">Working Set (now)</div><div class="value" id="wsNow">-</div></div>
+  <div class="tile"><div class="label">${escapeHtml(t.privateNow)}</div><div class="value" id="privNow">-</div></div>
+  <div class="tile"><div class="label">${escapeHtml(t.privatePeak)}</div><div class="value" id="privPeak">-</div></div>
+  <div class="tile"><div class="label">${escapeHtml(t.workingSetNow)}</div><div class="value" id="wsNow">-</div></div>
 </div>
 <div class="legend">
   <span><span class="swatch" style="background: var(--series-1)"></span>Private Bytes</span>
   <span><span class="swatch" style="background: var(--series-2)"></span>Working Set</span>
-  <span><span class="band-swatch"></span>Stopped (break / step)</span>
+  <span><span class="band-swatch"></span>${escapeHtml(t.stoppedLegend)}</span>
 </div>
-<div id="chart"><svg id="svg" height="260" role="img" aria-label="Process memory over time"></svg><div id="tooltip"></div></div>
-<details><summary>Data table (last 30 samples)</summary><table id="table"></table></details>
+<div id="chart"><svg id="svg" height="260" role="img" aria-label="${escapeHtml(t.chartLabel)}"></svg><div id="tooltip"></div></div>
+<details><summary>${escapeHtml(t.tableSummary)}</summary><table id="table"></table></details>
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
+const T = ${JSON.stringify(t).replace(/</g, '\\u003c')};
 const svg = document.getElementById('svg');
 const tooltip = document.getElementById('tooltip');
 let state;
@@ -272,7 +296,7 @@ function draw() {
     series.forEach((s, i) => { dots[i].setAttribute('cx', x(p.t)); dots[i].setAttribute('cy', y(p[s.key])); });
     hover.setAttribute('visibility', 'visible');
     const stopped = breaks.some((b) => p.t >= b.start && p.t <= (b.end ?? state.now));
-    tooltip.innerHTML = '<b>' + fmtTime(p.t) + '</b>' + (stopped ? ' (stopped)' : '') +
+    tooltip.innerHTML = '<b>' + fmtTime(p.t) + '</b>' + (stopped ? ' (' + T.stopped + ')' : '') +
       '<br>Private Bytes: ' + fmtMB(p.privateBytes) + '<br>Working Set: ' + fmtMB(p.workingSet);
     tooltip.style.display = 'block';
     const left = Math.min(x(p.t) + 12, W - tooltip.offsetWidth - 4);
@@ -283,12 +307,12 @@ function draw() {
 
 function update() {
   const s = state.session, samples = s.samples, last = samples[samples.length - 1];
-  document.getElementById('sub').textContent = s.name + ' (PID ' + s.pid + ')' + (s.exited ? ' - process exited' : '');
+  document.getElementById('sub').textContent = s.name + ' (PID ' + s.pid + ')' + (s.exited ? ' - ' + T.exited : '');
   document.getElementById('privNow').textContent = last ? fmtMB(last.privateBytes) : '-';
   document.getElementById('privPeak').textContent = samples.length ? fmtMB(Math.max(...samples.map((p) => p.privateBytes))) : '-';
   document.getElementById('wsNow').textContent = last ? fmtMB(last.workingSet) : '-';
   const rows = samples.slice(-30).reverse().map((p) => '<tr><td>' + fmtTime(p.t) + '</td><td>' + fmtMB(p.privateBytes) + '</td><td>' + fmtMB(p.workingSet) + '</td></tr>');
-  document.getElementById('table').innerHTML = '<tr><th>Time</th><th>Private Bytes</th><th>Working Set</th></tr>' + rows.join('');
+  document.getElementById('table').innerHTML = '<tr><th>' + T.time + '</th><th>Private Bytes</th><th>Working Set</th></tr>' + rows.join('');
   draw();
 }
 

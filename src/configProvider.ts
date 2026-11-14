@@ -11,7 +11,7 @@ export class X86ConfigurationProvider implements vscode.DebugConfigurationProvid
         config: vscode.DebugConfiguration,
     ): vscode.ProviderResult<vscode.DebugConfiguration> {
         if (process.platform !== 'win32') {
-            void vscode.window.showErrorMessage('.NET x86 Debugger は Windows でのみ動作します。');
+            void vscode.window.showErrorMessage(vscode.l10n.t(".NET x86 Debugger works on Windows only."));
             return undefined;
         }
         // F5 without launch.json: ask VS Code to open launch.json with our initial configuration.
@@ -42,10 +42,10 @@ export class X86ConfigurationProvider implements vscode.DebugConfigurationProvid
 function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfiguration {
     const program: unknown = config.program;
     if (typeof program !== 'string' || !program) {
-        throw new Error('launch.json に "program"（x86 の .exe へのパス）を指定してください。');
+        throw new Error(vscode.l10n.t("Set \"program\" (the path to the x86 .exe) in launch.json."));
     }
     if (!fs.existsSync(program)) {
-        throw new Error(`program が見つかりません: ${program}。ビルド済みか、出力パス（bin/x86/...）が正しいか確認してください。`);
+        throw new Error(vscode.l10n.t("program not found: {0}. Check that the project is built and the output path (bin/x86/...) is correct.", program));
     }
 
     const isDll = path.extname(program).toLowerCase() === '.dll';
@@ -59,12 +59,11 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
     const { bitness, managed } = inspectPe(program);
     // .NET 5+ produces a native apphost exe; a managed exe means .NET Framework, which netcoredbg cannot debug.
     if (managed) {
-        throw new Error(`${path.basename(program)} は .NET Framework のアプリと判定されました。この拡張は .NET (Core / 5 以降) のみ対応しています。`);
+        throw new Error(vscode.l10n.t("{0} looks like a .NET Framework app. This extension supports .NET (Core / 5 and later) only.", path.basename(program)));
     }
     if (bitness === 'x64' || bitness === 'anycpu') {
         void vscode.window.showWarningMessage(
-            `${path.basename(program)} は 64bit プロセスとして起動します（${bitness}）。` +
-                'x86 でデバッグするにはプロジェクトに <PlatformTarget>x86</PlatformTarget> を設定してください。',
+            vscode.l10n.t("{0} will run as a 64-bit process ({1}). To debug it as x86, set <PlatformTarget>x86</PlatformTarget> in the project.", path.basename(program), bitness),
         );
     }
     return config;
@@ -73,7 +72,7 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
 function resolveAttach(config: vscode.DebugConfiguration): vscode.DebugConfiguration {
     const pid = Number(config.processId);
     if (!Number.isInteger(pid) || pid <= 0) {
-        throw new Error(`processId が不正です: ${config.processId}。数値の PID か "\${command:pickProcess}" を指定してください。`);
+        throw new Error(vscode.l10n.t("Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".", String(config.processId)));
     }
     config.processId = pid;
     return config;
@@ -91,6 +90,6 @@ function findX86DotnetHost(): string {
         }
     }
     throw new Error(
-        'x86 版 dotnet.exe が見つかりません。x86 の .NET ランタイム（Windows Desktop Runtime x86）をインストールするか、DOTNET_ROOT(x86) を設定してください。',
+        vscode.l10n.t("The x86 dotnet.exe was not found. Install the x86 .NET runtime (Windows Desktop Runtime x86) or set DOTNET_ROOT(x86)."),
     );
 }

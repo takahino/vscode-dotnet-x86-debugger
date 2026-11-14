@@ -141,6 +141,11 @@ and open *Data table* for the latest samples.
 | **View String (JSON / XML / HTML / Text)** | Opens a `string` variable in an editor, pretty-printed when it contains JSON, XML or HTML (auto-detected, or pick the format). |
 | **Take Snapshot** / **Compare with Snapshot** | Records the variable, then shows a diff against its current value after you step or continue — find out what changed and where. |
 
+### Display language
+
+Menus, settings and messages are shown in English, or in Japanese when VS Code's display language is Japanese
+(e.g. with the Japanese Language Pack).
+
 ## Limitations
 
 - **.NET Framework is not supported.** netcoredbg supports .NET (Core) / .NET 5+ only.

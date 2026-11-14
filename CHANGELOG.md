@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New: Japanese localization. Menus, settings, messages and the memory graph follow VS Code's display language;
+  messages that were Japanese-only are now English by default.
 - New: **DebuggerDisplay** attribute support in the Variables view, hovers and Watch (netcoredbg patch 0004).
 - Build: netcoredbg patches are now re-applied from a clean checkout on every build.
 - New: **Memory graph** (Private Bytes / Working Set per second, stopped periods shaded).

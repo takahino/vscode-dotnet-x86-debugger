@@ -58,7 +58,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         if (configured) {
             if (!fs.existsSync(configured)) {
                 throw new Error(
-                    `設定 dotnetX86.debuggerPath の netcoredbg が見つかりません: ${configured}。パスを修正するか、空にして同梱版を使ってください。`,
+                    vscode.l10n.t("netcoredbg in the dotnetX86.debuggerPath setting was not found: {0}. Fix the path, or clear it to use the bundled one.", configured),
                 );
             }
             return configured;
@@ -66,7 +66,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const bundled = path.join(this.extensionPath, BUNDLED_DEBUGGER_DIR, 'netcoredbg.exe');
         if (!fs.existsSync(bundled)) {
             throw new Error(
-                `同梱の netcoredbg (x86) が見つかりません: ${bundled}。scripts\\build-netcoredbg.ps1 でビルドしてから VSIX を作り直すか、dotnetX86.debuggerPath を設定してください。`,
+                vscode.l10n.t("The bundled netcoredbg (x86) was not found: {0}. Build it with scripts\\build-netcoredbg.ps1 and rebuild the VSIX, or set dotnetX86.debuggerPath.", bundled),
             );
         }
         return bundled;
