@@ -107,6 +107,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 
 `scripts\build-netcoredbg.ps1` は、Windows の `MAX_PATH` 制限に収まるよう、netcoredbg（タグ固定）と `dotnet/runtime` の必要な部分だけを
 短い作業ディレクトリ（既定は `%LOCALAPPDATA%\ncdbg`）に取得してビルドします。
+netcoredbg への独自修正は [`patches/netcoredbg`](patches/netcoredbg) にあり、ビルド時に自動で適用されます。
 
 拡張機能自体をデバッグするには、このフォルダを VS Code で開き **Run Extension**（F5）を実行します。
 
