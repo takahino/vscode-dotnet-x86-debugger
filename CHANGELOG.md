@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - New: **View as Table** for List<T>, arrays, Dictionary and DataTable (sort, filter, CSV copy / save).
 - New: **Step history** view: location and locals at every stop, with changed values marked.
