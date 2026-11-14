@@ -1,0 +1,179 @@
+{
+  "name": "dotnet-x86-debugger",
+  "displayName": ".NET x86 Debugger",
+  "description": "Debug 32-bit (x86) .NET applications such as x86 WinForms apps in VS Code, using a bundled x86 build of netcoredbg.",
+  "version": "0.1.0",
+  "publisher": "takahino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takahino/vscode-dotnet-x86-debugger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/takahino/vscode-dotnet-x86-debugger/issues"
+  },
+  "homepage": "https://github.com/takahino/vscode-dotnet-x86-debugger#readme",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Debuggers"
+  ],
+  "keywords": [
+    "dotnet",
+    ".NET",
+    "x86",
+    "32-bit",
+    "WinForms",
+    "netcoredbg",
+    "C#"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onDebugResolve:dotnet-x86",
+    "onDebugDynamicConfigurations:dotnet-x86",
+    "onDebugInitialConfigurations"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": ".NET x86 Debugger",
+      "properties": {
+        "dotnetX86.debuggerPath": {
+          "type": "string",
+          "default": "",
+          "description": "Full path to an x86 netcoredbg.exe. When empty, the bundled x86 build is used."
+        }
+      }
+    },
+    "breakpoints": [
+      { "language": "csharp" },
+      { "language": "fsharp" },
+      { "language": "vb" }
+    ],
+    "debuggers": [
+      {
+        "type": "dotnet-x86",
+        "label": ".NET x86 (netcoredbg)",
+        "languages": ["csharp", "fsharp", "vb"],
+        "variables": {
+          "pickProcess": "dotnetX86.pickProcess"
+        },
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the x86 .exe (or a framework-dependent .dll, launched with the x86 dotnet host)."
+              },
+              "args": {
+                "type": "array",
+                "items": { "type": "string" },
+                "default": [],
+                "description": "Command line arguments."
+              },
+              "cwd": {
+                "type": "string",
+                "default": "${workspaceFolder}",
+                "description": "Working directory."
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": { "type": "string" },
+                "default": {},
+                "description": "Environment variables."
+              },
+              "stopAtEntry": {
+                "type": "boolean",
+                "default": false,
+                "description": "Break at the entry point."
+              },
+              "justMyCode": {
+                "type": "boolean",
+                "default": true,
+                "description": "Only debug user code."
+              },
+              "enableStepFiltering": {
+                "type": "boolean",
+                "default": true,
+                "description": "Step over properties and operators."
+              }
+            }
+          },
+          "attach": {
+            "required": ["processId"],
+            "properties": {
+              "processId": {
+                "anyOf": [
+                  { "type": "string", "default": "${command:pickProcess}" },
+                  { "type": "integer" }
+                ],
+                "description": "Process ID to attach to. Use ${command:pickProcess} to pick from a list."
+              },
+              "justMyCode": {
+                "type": "boolean",
+                "default": true,
+                "description": "Only debug user code."
+              },
+              "enableStepFiltering": {
+                "type": "boolean",
+                "default": true,
+                "description": "Step over properties and operators."
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "name": ".NET x86 Launch",
+            "type": "dotnet-x86",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/x86/Debug/net10.0-windows/${workspaceFolderBasename}.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": ".NET x86: Launch",
+            "description": "Launch a 32-bit .NET application",
+            "body": {
+              "name": ".NET x86 Launch",
+              "type": "dotnet-x86",
+              "request": "launch",
+              "preLaunchTask": "build",
+              "program": "^\"\\${workspaceFolder}/bin/x86/Debug/net10.0-windows/\\${workspaceFolderBasename}.exe\"",
+              "args": [],
+              "cwd": "^\"\\${workspaceFolder}\"",
+              "stopAtEntry": false
+            }
+          },
+          {
+            "label": ".NET x86: Attach",
+            "description": "Attach to a running 32-bit .NET process",
+            "body": {
+              "name": ".NET x86 Attach",
+              "type": "dotnet-x86",
+              "request": "attach",
+              "processId": "^\"\\${command:pickProcess}\""
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package --target win32-x64 -o out/dotnet-x86-debugger.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -10,3 +10,6 @@ obj/
 
 # env
 .env
+
+# bundled debugger (built by scripts/build-netcoredbg.ps1)
+debugger/
