@@ -86,6 +86,29 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 | 設定 | 説明 |
 |---|---|
 | `dotnetX86.debuggerPath` | 同梱版の代わりに、別の x86 版 `netcoredbg.exe` を使います。 |
+| `dotnetX86.dump.maxDepth` | *Dump Variable* で展開する入れ子の深さ（既定値 `3`）。 |
+| `dotnetX86.dump.maxNodes` | この数の値を集めた時点で、それ以上の展開をやめます（既定値 `2000`）。 |
+
+### Dump Variable（変数のダンプ）
+
+停止中に **変数** ビューで変数を右クリックして **Dump Variable** を選ぶか、
+コマンドパレットで **.NET x86: Dump Expression...** を実行すると、オブジェクト全体を JSON としてエディタに表示します。
+
+```json
+{
+  "p": {
+    "$type": "Person",
+    "Name": "Alice",
+    "Friends": [ { "$type": "Person", "Name": "Bob" } ],
+    "Scores": { "math": 90 }
+  }
+}
+```
+
+- `List<T>` と `Dictionary<TKey, TValue>` は、Visual Studio の *Results View* のように要素だけを表示します。
+- static メンバー、明示的なインターフェイス実装、インデクサは省略します。
+- 変数ビューと同様に、ダンプ中もプロパティの getter が実行されます。`Form` のような大きなオブジェクトは上記の上限に達します
+  （その旨が通知されます）。必要なら設定で上限を上げてください。
 
 ## 制限事項
 

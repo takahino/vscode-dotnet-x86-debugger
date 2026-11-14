@@ -35,6 +35,37 @@
     "onDebugInitialConfigurations"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "dotnetX86.dumpVariable",
+        "title": "Dump Variable",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.dumpExpression",
+        "title": "Dump Expression...",
+        "category": ".NET x86"
+      }
+    ],
+    "menus": {
+      "debug/variables/context": [
+        {
+          "command": "dotnetX86.dumpVariable",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "dotnetX86.dumpVariable",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.dumpExpression",
+          "when": "inDebugMode && debugState == 'stopped'"
+        }
+      ]
+    },
     "configuration": {
       "title": ".NET x86 Debugger",
       "properties": {
@@ -42,6 +73,18 @@
           "type": "string",
           "default": "",
           "description": "Full path to an x86 netcoredbg.exe. When empty, the bundled x86 build is used."
+        },
+        "dotnetX86.dump.maxDepth": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "description": "Maximum nesting depth expanded by Dump Variable / Dump Expression."
+        },
+        "dotnetX86.dump.maxNodes": {
+          "type": "integer",
+          "default": 2000,
+          "minimum": 1,
+          "description": "Dump Variable / Dump Expression stops expanding further objects once this many values have been collected. Large objects (e.g. a Form) have hundreds of members per level."
         }
       }
     },

@@ -86,6 +86,29 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | Setting | Description |
 |---|---|
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
+| `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
+| `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
+
+### Dump Variable
+
+While stopped, right-click a variable in the **Variables** view and choose **Dump Variable**,
+or run **.NET x86: Dump Expression...** from the Command Palette, to open the whole object as JSON in an editor.
+
+```json
+{
+  "p": {
+    "$type": "Person",
+    "Name": "Alice",
+    "Friends": [ { "$type": "Person", "Name": "Bob" } ],
+    "Scores": { "math": 90 }
+  }
+}
+```
+
+- `List<T>` and `Dictionary<TKey, TValue>` are shown as their items, like Visual Studio's *Results View*.
+- Static members, explicit interface implementations and indexers are omitted.
+- Property getters run while dumping, as in the Variables view. Large objects such as a `Form` hit the limits above
+  (a notification tells you so); raise them in the settings if needed.
 
 ## Limitations
 

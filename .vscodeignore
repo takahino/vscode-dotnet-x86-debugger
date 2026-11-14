@@ -8,3 +8,5 @@ tsconfig.json
 **/*.vsix
 scripts/**
 .github/**
+patches/**
+.gitattributes
