@@ -14,6 +14,20 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
   （`C:\Program Files (x86)\dotnet` にインストールされます）
 - プロジェクトをビルドするための .NET SDK
 
+## インストール
+
+1. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から
+   `dotnet-x86-debugger-<version>.vsix` と `install-vsix.ps1` を同じフォルダにダウンロードします。
+2. 次を実行します。
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File install-vsix.ps1
+   ```
+
+   VS Code の **Extensions: Install from VSIX...** で `.vsix` を選んでインストールすることもできます。
+
+3. VS Code を再読み込みします（**Developer: Reload Window**）。
+
 ## 使い方
 
 1. プロジェクトを 32bit にします。
@@ -95,6 +109,20 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 短い作業ディレクトリ（既定は `%LOCALAPPDATA%\ncdbg`）に取得してビルドします。
 
 拡張機能自体をデバッグするには、このフォルダを VS Code で開き **Run Extension**（F5）を実行します。
+
+## リリース手順
+
+1. `package.json` の `version` と `CHANGELOG.md` を更新してコミットします。
+2. version と一致するタグを push します。
+
+   ```powershell
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+[Release ワークフロー](.github/workflows/release.yml)が netcoredbg (x86) のビルド・VSIX の作成を行い、
+`dotnet-x86-debugger-<version>.vsix` と `install-vsix.ps1` を添付した GitHub Release を作成します。
+手動実行（*workflow_dispatch*）の場合は、ファイルをビルド成果物 (artifact) としてアップロードするだけです。
 
 ## ライセンス
 

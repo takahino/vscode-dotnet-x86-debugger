@@ -14,6 +14,20 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
   (installed under `C:\Program Files (x86)\dotnet`)
 - A .NET SDK to build your project
 
+## Installation
+
+1. Download `dotnet-x86-debugger-<version>.vsix` and `install-vsix.ps1` from
+   [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) into the same folder.
+2. Run:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File install-vsix.ps1
+   ```
+
+   Alternatively, run **Extensions: Install from VSIX...** in VS Code and select the `.vsix`.
+
+3. Reload VS Code (**Developer: Reload Window**).
+
 ## Usage
 
 1. Make your project 32-bit:
@@ -95,6 +109,20 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 into a short working directory (`%LOCALAPPDATA%\ncdbg` by default) to stay under the Windows `MAX_PATH` limit.
 
 To debug the extension itself, open this folder in VS Code and run **Run Extension** (F5).
+
+## Releasing
+
+1. Update `version` in `package.json` and `CHANGELOG.md`, and commit.
+2. Push a tag that matches the version:
+
+   ```powershell
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+The [Release workflow](.github/workflows/release.yml) builds netcoredbg (x86), packages the VSIX and creates a GitHub Release
+with `dotnet-x86-debugger-<version>.vsix` and `install-vsix.ps1`.
+Running the workflow manually (*workflow_dispatch*) only uploads the files as a build artifact.
 
 ## License
 
