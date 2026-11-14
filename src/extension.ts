@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { X86AdapterFactory } from './adapterFactory';
+import { AutosView } from './autosView';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
 import { CSharpInlineValuesProvider } from './inlineValues';
@@ -29,6 +30,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const stepHistory = new StepHistory();
     const moduleList = new ModuleList();
     const perfTips = new PerfTips();
+    const autos = new AutosView();
 
     context.subscriptions.push(
         output,
@@ -62,6 +64,8 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.revealModule', revealModule),
         perfTips,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
+        autos,
+        vscode.window.createTreeView('dotnetX86.autos', { treeDataProvider: autos }),
     );
 }
 

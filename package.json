@@ -415,6 +415,11 @@
     "views": {
       "debug": [
         {
+          "id": "dotnetX86.autos",
+          "name": "%view.autos%",
+          "when": "debugType == 'dotnet-x86'"
+        },
+        {
           "id": "dotnetX86.stepHistory",
           "name": "%view.stepHistory%",
           "when": "debugType == 'dotnet-x86'"

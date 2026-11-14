@@ -42,5 +42,6 @@
   "debugger.attach.waitTimeout": "processName の起動を待つ秒数。",
   "snippet.waitAttach.label": ".NET x86: 起動を待ってアタッチ",
   "snippet.waitAttach.description": "名前で 32bit .NET プロセスの起動を待ってアタッチします",
-  "config.perfTips.enabled": "ステップ実行や続行で停止したとき、停止行の末尾に経過時間を表示します（PerfTips）。"
+  "config.perfTips.enabled": "ステップ実行や続行で停止したとき、停止行の末尾に経過時間を表示します（PerfTips）。",
+  "view.autos": "自動変数 (.NET x86)"
 }
