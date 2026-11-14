@@ -32,7 +32,9 @@
   "activationEvents": [
     "onDebugResolve:dotnet-x86",
     "onDebugDynamicConfigurations:dotnet-x86",
-    "onDebugInitialConfigurations"
+    "onDebugInitialConfigurations",
+    "onCommand:dotnetX86.trackValue",
+    "onCommand:dotnetX86.showValueTrend"
   ],
   "contributes": {
     "commands": [
@@ -69,6 +71,16 @@
       {
         "command": "dotnetX86.showMemoryGraph",
         "title": "%command.showMemoryGraph%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.trackValue",
+        "title": "%command.trackValue%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.showValueTrend",
+        "title": "%command.showValueTrend%",
         "category": ".NET x86"
       }
     ],
@@ -124,6 +136,17 @@
         {
           "command": "dotnetX86.dumpExpression",
           "when": "inDebugMode && debugState == 'stopped'"
+        },
+        {
+          "command": "dotnetX86.trackValue",
+          "when": "resourceLangId == csharp"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "dotnetX86.trackValue",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86@1"
         }
       ]
     },

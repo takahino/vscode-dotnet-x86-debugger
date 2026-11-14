@@ -10,6 +10,11 @@ const HEADER_DELIMITER = '\r\n\r\n';
 /** Requests the proxy sends itself use seq numbers far above the client's, so their responses can be told apart. */
 const OWN_SEQ_BASE = 1_000_000_000;
 
+/** A logpoint whose message starts with this records values for the value trend view instead of printing. */
+export const TRACK_PREFIX = '#track:';
+/** Custom DAP event carrying the values of a "#track:" logpoint hit. */
+export const TRACK_EVENT = 'dotnetX86.trackedValues';
+
 export interface ExceptionFilterText {
     label: string;
     description: string;
@@ -185,6 +190,11 @@ export class DapProxy {
             if (special.logMessage === undefined) {
                 return false; // A plain breakpoint whose hit condition is met: show the stop.
             }
+            if (special.logMessage.startsWith(TRACK_PREFIX)) {
+                await this.emitTrackedValues(special.logMessage.slice(TRACK_PREFIX.length), frame);
+                await this.resume(threadId);
+                return true;
+            }
             const text = await this.formatMessage(special.logMessage, frame.id, frame.name, threadId);
             this.emitEvent('output', { category: 'console', output: `${text}\n`, source: frame.source, line: frame.line });
             await this.resume(threadId);
@@ -198,6 +208,16 @@ export class DapProxy {
     private async resume(threadId: number): Promise<void> {
         this.hideNextContinued = true;
         await this.request('continue', { threadId });
+    }
+
+    /** Evaluates the `;`-separated expressions of a "#track:" logpoint and reports them as a custom event (no console output). */
+    private async emitTrackedValues(expressionList: string, frame: any): Promise<void> {
+        const values: { expression: string; value: string; type?: string; error?: string }[] = [];
+        for (const expression of expressionList.split(';').map((e) => e.trim()).filter(Boolean)) {
+            const r = await this.request('evaluate', { expression, frameId: frame.id, context: 'watch' });
+            values.push(r.success ? { expression, value: r.body.result, type: r.body.type } : { expression, value: '', error: r.message ?? 'evaluation failed' });
+        }
+        this.emitEvent(TRACK_EVENT, { source: frame.source, line: frame.line, time: Date.now(), values });
     }
 
     /** Expands `{expression}` (evaluated in the stopped frame) plus $FUNCTION and $TID, like Visual Studio tracepoints. */

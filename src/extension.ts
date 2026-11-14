@@ -4,6 +4,7 @@ import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
+import { ValueTracker } from './valueTracker';
 import { pickProcess } from './processPicker';
 import {
     SNAPSHOT_SCHEME,
@@ -20,6 +21,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const output = vscode.window.createOutputChannel('.NET x86 Debugger');
     const snapshots = new SnapshotStore();
     const memory = new MemoryMonitor(output);
+    const valueTracker = new ValueTracker();
 
     context.subscriptions.push(
         output,
@@ -38,6 +40,9 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, memory),
         vscode.commands.registerCommand('dotnetX86.showMemoryGraph', () => memory.show()),
         vscode.languages.registerInlineValuesProvider('csharp', new CSharpInlineValuesProvider()),
+        valueTracker,
+        vscode.commands.registerCommand('dotnetX86.trackValue', () => valueTracker.addTracker()),
+        vscode.commands.registerCommand('dotnetX86.showValueTrend', () => valueTracker.show()),
     );
 }
 

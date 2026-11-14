@@ -28,5 +28,7 @@
   "snippet.launch.label": ".NET x86: 起動",
   "snippet.launch.description": "32bit の .NET アプリケーションを起動します",
   "snippet.attach.label": ".NET x86: アタッチ",
-  "snippet.attach.description": "実行中の 32bit .NET プロセスにアタッチします"
+  "snippet.attach.description": "実行中の 32bit .NET プロセスにアタッチします",
+  "command.trackValue": "この行で値の推移を記録...",
+  "command.showValueTrend": "値の推移を表示"
 }

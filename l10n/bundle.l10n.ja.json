@@ -50,5 +50,15 @@
   "CPU (now)": "CPU（現在）",
   "CPU (peak)": "CPU（ピーク）",
   "Memory": "メモリ",
-  "CPU usage (% of all cores)": "CPU 使用率（全コアに対する %）"
+  "CPU usage (% of all cores)": "CPU 使用率（全コアに対する %）",
+  "Open a C# file and put the cursor on the line to track.": "C# ファイルを開き、記録したい行にカーソルを置いてください。",
+  "Expressions to record each time line {0} runs, separated by \";\" (e.g. total; items.Count)": "{0} 行目を通るたびに記録する式（\";\" 区切り、例: total; items.Count）",
+  "Value Trend (.NET x86)": "値の推移 (.NET x86)",
+  "Value trend": "値の推移",
+  "Right-click a line and choose \"Track Value at This Line...\", then run the code. Values are recorded each time the line runs, without stopping.": "行を右クリックして「この行で値の推移を記録...」を選び、コードを実行してください。その行を通るたびに、止まらずに値を記録します。",
+  "Hit": "ヒット",
+  "Location": "場所",
+  "No numeric values to chart; see the data table.": "数値ではないためグラフにできません。データ表を参照してください。",
+  "Data table (last 50 hits)": "データ表（直近 50 件）",
+  "{0} hits": "{0} 回"
 }

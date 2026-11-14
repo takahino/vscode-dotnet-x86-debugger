@@ -28,5 +28,7 @@
   "snippet.launch.label": ".NET x86: Launch",
   "snippet.launch.description": "Launch a 32-bit .NET application",
   "snippet.attach.label": ".NET x86: Attach",
-  "snippet.attach.description": "Attach to a running 32-bit .NET process"
+  "snippet.attach.description": "Attach to a running 32-bit .NET process",
+  "command.trackValue": "Track Value at This Line...",
+  "command.showValueTrend": "Show Value Trend"
 }

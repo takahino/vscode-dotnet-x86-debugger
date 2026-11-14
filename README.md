@@ -132,6 +132,13 @@ Right-click the editor gutter and choose **Add Logpoint...**, then enter a messa
 and execution continues without stopping. `{expression}` is evaluated in the current frame;
 `$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
 
+### Value trend
+
+Right-click a line in a C# file and choose **Track Value at This Line...**, then enter expressions separated by `;`
+(e.g. `total; items.Count`). Each time the line runs, the values are recorded without stopping and charted hit by hit,
+one small chart per expression (**.NET x86: Show Value Trend**). It is a logpoint whose message starts with `#track:`,
+so it is removed like any breakpoint.
+
 ### Hit count breakpoints
 
 Edit a breakpoint and choose **Hit Count**, then enter `5` or `==5` (stop on the 5th hit), `>=5` / `>5`
