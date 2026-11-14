@@ -56,6 +56,8 @@ export function activate(context: vscode.ExtensionContext): void {
         valueTracker,
         vscode.commands.registerCommand('dotnetX86.trackValue', () => valueTracker.addTracker()),
         vscode.commands.registerCommand('dotnetX86.showValueTrend', () => valueTracker.show()),
+        vscode.commands.registerCommand('dotnetX86.startTimer', () => valueTracker.addTimerStart()),
+        vscode.commands.registerCommand('dotnetX86.endTimer', () => valueTracker.addTimerEnd()),
         stepHistory,
         vscode.window.createTreeView('dotnetX86.stepHistory', { treeDataProvider: stepHistory }),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, stepHistory),

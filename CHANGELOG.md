@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Section timing**: "Start Timer Here..." / "End Timer Here..." measure the time between two lines on every pass (charted in Value Trend).
 - New: **Exception log**: every thrown exception (also caught ones) is listed in a view and the Debug Console without stopping; your exception settings still decide where to stop.
 - New: **Autos** view: variables used on the current and previous line of the selected frame.
 - New: **PerfTips**: elapsed time since the last step / continue at the end of the stopped line.

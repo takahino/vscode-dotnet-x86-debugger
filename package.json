@@ -34,7 +34,9 @@
     "onDebugDynamicConfigurations:dotnet-x86",
     "onDebugInitialConfigurations",
     "onCommand:dotnetX86.trackValue",
-    "onCommand:dotnetX86.showValueTrend"
+    "onCommand:dotnetX86.showValueTrend",
+    "onCommand:dotnetX86.startTimer",
+    "onCommand:dotnetX86.endTimer"
   ],
   "contributes": {
     "commands": [
@@ -109,6 +111,16 @@
         "title": "%command.clearExceptionLog%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "dotnetX86.startTimer",
+        "title": "%command.startTimer%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.endTimer",
+        "title": "%command.endTimer%",
+        "category": ".NET x86"
       }
     ],
     "menus": {
@@ -192,6 +204,14 @@
         {
           "command": "dotnetX86.clearExceptionLog",
           "when": "debugType == 'dotnet-x86'"
+        },
+        {
+          "command": "dotnetX86.startTimer",
+          "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.endTimer",
+          "when": "resourceLangId == csharp"
         }
       ],
       "editor/context": [
@@ -199,6 +219,16 @@
           "command": "dotnetX86.trackValue",
           "when": "resourceLangId == csharp",
           "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.startTimer",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.endTimer",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86@3"
         }
       ],
       "view/title": [

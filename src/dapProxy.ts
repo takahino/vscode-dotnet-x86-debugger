@@ -14,6 +14,9 @@ const OWN_SEQ_BASE = 1_000_000_000;
 export const TRACK_PREFIX = '#track:';
 /** Custom DAP event carrying the values of a "#track:" logpoint hit. */
 export const TRACK_EVENT = 'dotnetX86.trackedValues';
+/** Logpoints marking the start / end of a timed section; the elapsed time is reported like a tracked value. */
+export const TIMER_START_PREFIX = '#timer-start:';
+export const TIMER_END_PREFIX = '#timer-end:';
 /** Custom DAP event for every exception thrown while the exception log is on. */
 export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
 
@@ -58,6 +61,8 @@ export class DapProxy {
     private readonly hits = new Map<string, number>();
     /** The "continued" event caused by resuming after a hidden stop is hidden too: the client never saw the stop. */
     private hideNextContinued = false;
+    /** Start times of running timers, by "timer name:thread id". */
+    private readonly timerStarts = new Map<string, number>();
     /** The exception settings the user chose; with the exception log on, netcoredbg always gets "all" on top. */
     private userExceptionSettings: { filters: string[]; filterOptions: { filterId: string; condition?: string }[] } = { filters: [], filterOptions: [] };
 
@@ -204,6 +209,11 @@ export class DapProxy {
             if (special.logMessage === undefined) {
                 return false; // A plain breakpoint whose hit condition is met: show the stop.
             }
+            if (special.logMessage.startsWith(TIMER_START_PREFIX) || special.logMessage.startsWith(TIMER_END_PREFIX)) {
+                this.handleTimer(special.logMessage, threadId, frame);
+                await this.resume(threadId);
+                return true;
+            }
             if (special.logMessage.startsWith(TRACK_PREFIX)) {
                 await this.emitTrackedValues(special.logMessage.slice(TRACK_PREFIX.length), frame);
                 await this.resume(threadId);
@@ -290,6 +300,26 @@ export class DapProxy {
     private async resume(threadId: number): Promise<void> {
         this.hideNextContinued = true;
         await this.request('continue', { threadId });
+    }
+
+    /** Records a timer start, or reports the time since the matching start on the same thread. */
+    private handleTimer(logMessage: string, threadId: number, frame: any): void {
+        const isStart = logMessage.startsWith(TIMER_START_PREFIX);
+        const name = logMessage.slice((isStart ? TIMER_START_PREFIX : TIMER_END_PREFIX).length).trim() || 'timer';
+        const key = `${name}:${threadId}`;
+        if (isStart) {
+            this.timerStarts.set(key, Date.now());
+            return;
+        }
+        const startedAt = this.timerStarts.get(key);
+        if (startedAt === undefined) {
+            return; // the end was reached without passing the start (e.g. the start is in another branch)
+        }
+        this.timerStarts.delete(key);
+        const ms = Date.now() - startedAt;
+        // Every pass also includes the debugger's own pause / resume time, hence "≤".
+        this.emitEvent(TRACK_EVENT, { source: frame.source, line: frame.line, time: Date.now(), values: [{ expression: `⏱ ${name} (ms)`, value: String(ms), type: 'int' }] });
+        this.emitEvent('output', { category: 'console', output: `⏱ ${name}: ≤ ${ms} ms\n`, source: frame.source, line: frame.line });
     }
 
     /** Evaluates the `;`-separated expressions of a "#track:" logpoint and reports them as a custom event (no console output). */

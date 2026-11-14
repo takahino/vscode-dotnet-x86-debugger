@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
-import { TRACK_EVENT, TRACK_PREFIX } from './dapProxy';
+import { TIMER_END_PREFIX, TIMER_START_PREFIX, TRACK_EVENT, TRACK_PREFIX } from './dapProxy';
 
 interface TrackedValue {
     expression: string;
@@ -65,6 +65,50 @@ export class ValueTracker implements vscode.Disposable {
         const location = new vscode.Location(editor.document.uri, new vscode.Position(position.line, 0));
         vscode.debug.addBreakpoints([new vscode.SourceBreakpoint(location, true, undefined, undefined, `${TRACK_PREFIX} ${expressions.trim()}`)]);
         this.show();
+    }
+
+    /** Adds a "#timer-start:" logpoint on the current line; the elapsed time is charted when a matching end is reached. */
+    async addTimerStart(): Promise<void> {
+        const editor = this.requireEditor();
+        if (!editor) {
+            return;
+        }
+        const name = await vscode.window.showInputBox({ prompt: vscode.l10n.t('Name of the timer that starts at line {0}', editor.selection.active.line + 1), value: 'timer' });
+        if (name?.trim()) {
+            this.addLogpoint(editor, `${TIMER_START_PREFIX} ${name.trim()}`);
+        }
+    }
+
+    /** Adds a "#timer-end:" logpoint on the current line for one of the timers started elsewhere. */
+    async addTimerEnd(): Promise<void> {
+        const editor = this.requireEditor();
+        if (!editor) {
+            return;
+        }
+        const started = vscode.debug.breakpoints
+            .filter((b): b is vscode.SourceBreakpoint => b instanceof vscode.SourceBreakpoint && !!b.logMessage?.startsWith(TIMER_START_PREFIX))
+            .map((b) => b.logMessage!.slice(TIMER_START_PREFIX.length).trim());
+        const names = [...new Set(started)];
+        const name = names.length
+            ? await vscode.window.showQuickPick(names, { placeHolder: vscode.l10n.t('Timer that ends at line {0}', editor.selection.active.line + 1) })
+            : await vscode.window.showInputBox({ prompt: vscode.l10n.t('Timer that ends at line {0}', editor.selection.active.line + 1), value: 'timer' });
+        if (name?.trim()) {
+            this.addLogpoint(editor, `${TIMER_END_PREFIX} ${name.trim()}`);
+            this.show();
+        }
+    }
+
+    private requireEditor(): vscode.TextEditor | undefined {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            void vscode.window.showErrorMessage(vscode.l10n.t('Open a C# file and put the cursor on the line to track.'));
+        }
+        return editor;
+    }
+
+    private addLogpoint(editor: vscode.TextEditor, message: string): void {
+        const location = new vscode.Location(editor.document.uri, new vscode.Position(editor.selection.active.line, 0));
+        vscode.debug.addBreakpoints([new vscode.SourceBreakpoint(location, true, undefined, undefined, message)]);
     }
 
     show(): void {

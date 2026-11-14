@@ -83,5 +83,7 @@
   "Waiting for {0} to start (x86 .NET)…": "{0} の起動を待っています（x86 .NET）…",
   "{0} did not start within {1} seconds. Start the app, or raise \"waitTimeout\" in launch.json.": "{0} が {1} 秒以内に起動しませんでした。アプリを起動するか、launch.json の \"waitTimeout\" を増やしてください。",
   "≤ {0} elapsed": "≤ {0} 経過",
-  "{0} exceptions thrown": "{0} 件の例外"
+  "{0} exceptions thrown": "{0} 件の例外",
+  "Name of the timer that starts at line {0}": "{0} 行目から開始するタイマーの名前",
+  "Timer that ends at line {0}": "{0} 行目で終了するタイマー"
 }
