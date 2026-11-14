@@ -149,5 +149,14 @@
   "{0} is not visible on the screen (it or one of its parents is hidden).": "{0} は画面に表示されていません（それ自身か親のどれかが非表示です）。",
   "The form of {0} is minimized: restore it, then stop the program again.": "{0} のフォームが最小化されています。元のサイズに戻してから、もう一度停止してください。",
   "Could not highlight {0}: {1}": "{0} を強調表示できませんでした: {1}",
-  "UI not responding for {0} s": "UI が {0} 秒応答していません"
+  "UI not responding for {0} s": "UI が {0} 秒応答していません",
+  "Stop the program and select the method in the Call Stack view.": "プログラムを停止し、コールスタック ビューでメソッドを選んでください。",
+  "The selected frame has no source file here. Select a frame of your own code in the Call Stack view.": "選んだフレームのソース ファイルがありません。コールスタック ビューで自分のコードのフレームを選んでください。",
+  "{0} is a lambda, local function or constructor, which a test cannot call. Select the frame of the method that uses it.": "{0} はラムダ・ローカル関数・コンストラクターのいずれかで、テストから直接呼べません。それを使っているメソッドのフレームを選んでください。",
+  "Could not find the declaration of {0} above line {1} of {2}.": "{2} の {1} 行目より上に {0} の宣言が見つかりませんでした。",
+  "Reading the arguments of {0}…": "{0} の引数を読み取っています…",
+  "Some values could not be read completely and are marked TODO: {0}": "一部の値を完全には読み取れなかったため、TODO にしています: {0}",
+  "Could not generate the test: {0}": "テストを生成できませんでした: {0}",
+  "used in this workspace": "このワークスペースで使用中",
+  "Test framework for the generated test": "生成するテストのフレームワーク"
 }

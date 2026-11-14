@@ -13,6 +13,7 @@ import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
+import { generateTestCommand } from './testGenerator';
 import { viewAsTableCommand } from './tableVisualizer';
 import { UiFreezeDetector } from './uiFreeze';
 import { ValueTracker } from './valueTracker';
@@ -58,6 +59,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
         vscode.commands.registerCommand('dotnetX86.dumpExpression', dumpExpressionCommand),
         vscode.commands.registerCommand('dotnetX86.copyAsCSharp', copyAsCSharpCommand),
+        vscode.commands.registerCommand('dotnetX86.generateTest', generateTestCommand),
         vscode.commands.registerCommand('dotnetX86.viewString', viewStringCommand),
         vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
         vscode.commands.registerCommand('dotnetX86.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),

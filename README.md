@@ -219,6 +219,15 @@ Click the eye icon (**Highlight on Screen**) to see where a control is: the form
 program stopped, with a red frame and the control's name and size around it for a few seconds. Visual Studio cannot do
 this for WinForms. (The stopped program cannot repaint or come to the front itself; the image comes from the desktop compositor.)
 
+### Generate a unit test from a stop
+
+Right-click a frame in the Call Stack view and choose **Generate Unit Test from Here**: a test that calls that method again
+with the arguments — and, for an instance method, the object — it has now opens beside the editor (unsaved). The test
+framework is the one the workspace's projects reference (xUnit, NUnit or MSTest); you are asked when there is none or several.
+Fill in `expected` and save it in your test project. Async methods work too; lambdas, local functions and constructors cannot
+be called from a test, so pick the method that uses them. The values are those at the stopped line: stop at the first line
+of the method to capture the arguments as they came in. Visual Studio has no such command.
+
 ### Debug session report
 
 Run **.NET x86: Export Debug Session Report** (or the button in the Step History view title) to open a Markdown report of

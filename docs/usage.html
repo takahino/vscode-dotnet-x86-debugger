@@ -110,6 +110,7 @@
         <li><a href="#f-exceptions">Exceptions</a></li>
         <li><a href="#f-time">Time and performance</a></li>
         <li><a href="#f-history">Step history</a></li>
+        <li><a href="#f-testgen">Generate a unit test from a stop</a></li>
         <li><a href="#f-report">Session report</a></li>
         <li><a href="#f-modules">Modules</a></li>
         <li><a href="#f-winforms">WinForms controls</a></li>
@@ -578,6 +579,11 @@ if it never comes down, look for event handlers that are not removed.</div>
 <p>The <b>Step History</b> view keeps the locals of every stop (newest first). Values that changed since the previous stop in the
 same method are marked <i>changed</i> / <i>new</i>. Click an entry to open its location. It is a history to look at, not a way
 to run backwards.</p>
+
+<h3 id="f-testgen">Generate a unit test from a stop</h3>
+<p>Right-click a frame in the <b>Call Stack</b> view and choose <b>Generate Unit Test from Here</b>. A test that calls the method again with
+its current arguments (and object) opens beside the editor, in the framework your projects use (xUnit, NUnit or MSTest). Fill in
+<code>expected</code> and save it in your test project. Stop at the first line of the method to capture the arguments as they came in.</p>
 
 <h3 id="f-report">Session report</h3>
 <p>Run <b>.NET x86: Export Debug Session Report</b> (or click the button in the Step History view title) to open a Markdown

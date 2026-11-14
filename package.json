@@ -42,6 +42,7 @@
     "onCommand:dotnetX86.addWhenChangedBreakpoint",
     "onCommand:dotnetX86.addCallerBreakpoint",
     "onCommand:dotnetX86.highlightControl",
+    "onCommand:dotnetX86.generateTest",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
     "onCommand:dotnetX86.clearPinnedValues",
@@ -62,6 +63,11 @@
       {
         "command": "dotnetX86.copyAsCSharp",
         "title": "%command.copyAsCSharp%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.generateTest",
+        "title": "%command.generateTest%",
         "category": ".NET x86"
       },
       {
@@ -196,6 +202,13 @@
       }
     ],
     "menus": {
+      "debug/callstack/context": [
+        {
+          "command": "dotnetX86.generateTest",
+          "when": "debugType == 'dotnet-x86' && callStackItemType == 'stackFrame'",
+          "group": "z_dotnetX86@1"
+        }
+      ],
       "debug/variables/context": [
         {
           "command": "dotnetX86.dumpVariable",
@@ -236,6 +249,10 @@
         {
           "command": "dotnetX86.copyAsCSharp",
           "when": "false"
+        },
+        {
+          "command": "dotnetX86.generateTest",
+          "when": "inDebugMode && debugType == 'dotnet-x86'"
         },
         {
           "command": "dotnetX86.viewString",
