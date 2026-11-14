@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Exception log**: every thrown exception (also caught ones) is listed in a view and the Debug Console without stopping; your exception settings still decide where to stop.
 - New: **Autos** view: variables used on the current and previous line of the selected frame.
 - New: **PerfTips**: elapsed time since the last step / continue at the end of the stopped line.
 - New: the attach process picker lists only x86 .NET processes (with window titles); "Show all processes..." falls back to every process.

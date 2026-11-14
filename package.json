@@ -103,6 +103,12 @@
         "command": "dotnetX86.revealModule",
         "title": "%command.revealModule%",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.clearExceptionLog",
+        "title": "%command.clearExceptionLog%",
+        "category": ".NET x86",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -182,6 +188,10 @@
         {
           "command": "dotnetX86.revealModule",
           "when": "false"
+        },
+        {
+          "command": "dotnetX86.clearExceptionLog",
+          "when": "debugType == 'dotnet-x86'"
         }
       ],
       "editor/context": [
@@ -195,6 +205,11 @@
         {
           "command": "dotnetX86.clearStepHistory",
           "when": "view == dotnetX86.stepHistory",
+          "group": "navigation"
+        },
+        {
+          "command": "dotnetX86.clearExceptionLog",
+          "when": "view == dotnetX86.exceptions",
           "group": "navigation"
         }
       ],
@@ -250,6 +265,11 @@
           "type": "boolean",
           "default": true,
           "description": "%config.perfTips.enabled%"
+        },
+        "dotnetX86.exceptionLog.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.exceptionLog.enabled%"
         }
       }
     },
@@ -417,6 +437,11 @@
         {
           "id": "dotnetX86.autos",
           "name": "%view.autos%",
+          "when": "debugType == 'dotnet-x86'"
+        },
+        {
+          "id": "dotnetX86.exceptions",
+          "name": "%view.exceptions%",
           "when": "debugType == 'dotnet-x86'"
         },
         {

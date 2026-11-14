@@ -32,7 +32,10 @@ class ProxyAdapter implements vscode.DebugAdapter {
             path.dirname(executable),
             (m) => this.emitter.fire(m as vscode.DebugProtocolMessage),
             (line) => output.appendLine(line.trimEnd()),
-            { exceptionFilters: exceptionFilterTexts() },
+            {
+                exceptionFilters: exceptionFilterTexts(),
+                exceptionLog: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('enabled', true),
+            },
         );
     }
 

@@ -43,5 +43,8 @@
   "snippet.waitAttach.label": ".NET x86: Attach when the process starts",
   "snippet.waitAttach.description": "Wait for a 32-bit .NET process by name and attach to it",
   "config.perfTips.enabled": "Show the elapsed time at the end of the stopped line after a step or continue (PerfTips).",
-  "view.autos": "Autos (.NET x86)"
+  "view.autos": "Autos (.NET x86)",
+  "view.exceptions": "Exception Log (.NET x86)",
+  "command.clearExceptionLog": "Clear Exception Log",
+  "config.exceptionLog.enabled": "Record every exception thrown in the debuggee (including caught ones) in the Exception Log view and the Debug Console, without stopping. Applies to new debug sessions. Apps that throw very many exceptions run slower while it is on."
 }

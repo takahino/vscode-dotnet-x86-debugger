@@ -14,6 +14,8 @@ const OWN_SEQ_BASE = 1_000_000_000;
 export const TRACK_PREFIX = '#track:';
 /** Custom DAP event carrying the values of a "#track:" logpoint hit. */
 export const TRACK_EVENT = 'dotnetX86.trackedValues';
+/** Custom DAP event for every exception thrown while the exception log is on. */
+export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
 
 export interface ExceptionFilterText {
     label: string;
@@ -24,6 +26,8 @@ export interface ExceptionFilterText {
 export interface ProxyOptions {
     /** Replaces netcoredbg's raw exception filter labels ("all", "user-unhandled"), keyed by filter id. */
     exceptionFilters?: Record<string, ExceptionFilterText>;
+    /** Records every thrown exception without stopping, unless the user's own exception settings ask to stop. */
+    exceptionLog?: boolean;
 }
 
 /** A breakpoint the proxy handles itself: it has a log message and/or a hit condition. */
@@ -54,6 +58,8 @@ export class DapProxy {
     private readonly hits = new Map<string, number>();
     /** The "continued" event caused by resuming after a hidden stop is hidden too: the client never saw the stop. */
     private hideNextContinued = false;
+    /** The exception settings the user chose; with the exception log on, netcoredbg always gets "all" on top. */
+    private userExceptionSettings: { filters: string[]; filterOptions: { filterId: string; condition?: string }[] } = { filters: [], filterOptions: [] };
 
     constructor(
         executable: string,
@@ -77,6 +83,9 @@ export class DapProxy {
 
     /** Message from VS Code. */
     fromClient(message: DapMessage): void {
+        if (message.type === 'request' && message.command === 'setExceptionBreakpoints' && this.options.exceptionLog) {
+            message = { ...message, arguments: this.withExceptionLogFilter(message.arguments ?? {}) };
+        }
         if (message.type === 'request' && message.command === 'setBreakpoints' && message.seq !== undefined) {
             const args = message.arguments ?? {};
             this.pendingSetBreakpoints.set(message.seq, {
@@ -114,6 +123,11 @@ export class DapProxy {
         if (message.type === 'event' && message.event === 'continued' && this.hideNextContinued) {
             this.hideNextContinued = false;
             return;
+        }
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'exception' && this.options.exceptionLog) {
+            if (await this.handleExceptionStop(message.body.threadId)) {
+                return;
+            }
         }
         if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && this.specials.size > 0) {
             if (await this.handleSpecialStop(message.body.threadId)) {
@@ -197,6 +211,74 @@ export class DapProxy {
             }
             const text = await this.formatMessage(special.logMessage, frame.id, frame.name, threadId);
             this.emitEvent('output', { category: 'console', output: `${text}\n`, source: frame.source, line: frame.line });
+            await this.resume(threadId);
+            return true;
+        } catch (e) {
+            this.log(`[proxy] ${e instanceof Error ? e.message : String(e)}`);
+            return false;
+        }
+    }
+
+    /** Keeps the user's settings for later decisions and adds an unconditional "all" filter for the log. */
+    private withExceptionLogFilter(args: any): any {
+        const filters: string[] = Array.isArray(args.filters) ? args.filters : [];
+        const filterOptions: { filterId: string; condition?: string }[] = Array.isArray(args.filterOptions) ? args.filterOptions : [];
+        this.userExceptionSettings = { filters, filterOptions };
+        return {
+            ...args,
+            filters: [...new Set([...filters, 'all'])],
+            filterOptions: filterOptions.filter((o) => o.filterId !== 'all'),
+        };
+    }
+
+    /** Whether the user's own "All Exceptions" setting (with its type condition, if any) covers this exception type. */
+    private userBreaksOnThrow(typeName: string): boolean {
+        if (this.userExceptionSettings.filters.includes('all')) {
+            return true;
+        }
+        return this.userExceptionSettings.filterOptions.some((o) => {
+            if (o.filterId !== 'all') {
+                return false;
+            }
+            let condition = (o.condition ?? '').trim();
+            if (!condition) {
+                return true;
+            }
+            // Same syntax as netcoredbg: "A, B" breaks on those types, "!A, B" on every type except those.
+            const negate = condition.startsWith('!');
+            if (negate) {
+                condition = condition.slice(1);
+            }
+            const types = condition.split(/[\s,]+/).filter(Boolean);
+            return types.includes(typeName) !== negate;
+        });
+    }
+
+    /** Logs the exception; returns true when the stop was only for the log and execution resumed. */
+    private async handleExceptionStop(threadId: number): Promise<boolean> {
+        try {
+            const info = await this.request('exceptionInfo', { threadId });
+            const typeName: string = info.body?.details?.fullTypeName ?? info.body?.exceptionId ?? '?';
+            const breakMode: string = info.body?.breakMode ?? 'always';
+            const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: 20 });
+            // Exceptions thrown inside the framework have no source on the top frame: report the first user frame.
+            const frame = (stack.body?.stackFrames ?? []).find((f: any) => f.source?.path);
+            const stops = breakMode !== 'always' || this.userBreaksOnThrow(typeName);
+            this.emitEvent(EXCEPTION_EVENT, {
+                time: Date.now(),
+                typeName,
+                message: info.body?.details?.message ?? '',
+                breakMode,
+                stopped: stops,
+                functionName: frame?.name,
+                source: frame?.source,
+                line: frame?.line,
+            });
+            const where = frame?.source?.path ? ` at ${frame.source.path.split(/[\\/]/).pop()}:${frame.line}` : '';
+            this.emitEvent('output', { category: 'console', output: `${info.body?.description ?? typeName}${where}\n`, source: frame?.source, line: frame?.line });
+            if (stops) {
+                return false;
+            }
             await this.resume(threadId);
             return true;
         } catch (e) {

@@ -3,6 +3,7 @@ import { X86AdapterFactory } from './adapterFactory';
 import { AutosView } from './autosView';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
+import { ExceptionLog } from './exceptionLog';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
 import { PerfTips } from './perfTips';
@@ -31,6 +32,9 @@ export function activate(context: vscode.ExtensionContext): void {
     const moduleList = new ModuleList();
     const perfTips = new PerfTips();
     const autos = new AutosView();
+    const exceptionLog = new ExceptionLog();
+    const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
+    exceptionLog.attach(exceptionView);
 
     context.subscriptions.push(
         output,
@@ -66,6 +70,9 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
         autos,
         vscode.window.createTreeView('dotnetX86.autos', { treeDataProvider: autos }),
+        exceptionLog,
+        exceptionView,
+        vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),
     );
 }
 
