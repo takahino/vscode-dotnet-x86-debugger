@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.0
 
 - New: **Decompile for Debugging** (Modules view) — an assembly without symbols is decompiled with the bundled ILSpy engine into C# with matching symbols, so you can step into it and set breakpoints in it from the next session. Kept in the extension's storage by assembly MVID (netcoredbg patch 0009 loads them from there).
 - New: **Step Into Target** (Step Into Specific) — pick which call of the line to step into, listed in the order they run. Emulated with a temporary function breakpoint during a step over.
