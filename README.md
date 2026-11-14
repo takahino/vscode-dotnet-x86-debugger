@@ -65,6 +65,19 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
    }
    ```
 
+   The process list shows only x86 .NET processes (with their window titles); choose *Show all processes...* for the rest.
+   To attach as soon as an app starts (e.g. one launched by another program), give its name instead:
+
+   ```jsonc
+   {
+     "name": ".NET x86 Attach (wait for process)",
+     "type": "dotnet-x86",
+     "request": "attach",
+     "processName": "MyApp",
+     "waitTimeout": 120
+   }
+   ```
+
 3. Press F5.
 
 See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example including `tasks.json`.
@@ -88,6 +101,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
+| `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
+| `dotnetX86.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
 | `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
@@ -165,6 +180,44 @@ Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotn
 to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
 in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
 and open *Data table* for the latest samples.
+
+### Break on Value Change
+
+Right-click a field, property or local variable in the Variables view and choose **Break on Value Change**.
+Execution stops right after the value changes, showing `old → new`. netcoredbg has no data breakpoints, so this is
+emulated: the extension finds the lines of the workspace's C# files that assign that name (`x = …`, `x += …`, `x++`, …),
+checks the value before and after each of them, and stops only when it changed. Writes through `ref` / `out`,
+from other objects (`other.x = …`) or from code outside the workspace are not detected.
+
+### Set Next Statement
+
+While stopped, right-click a line of the method that is executing and choose **Jump to Cursor** (Set Next Statement)
+to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
+or moving into / out of a catch / finally block, are refused.
+
+### PerfTips
+
+After a step or continue, the stopped line shows the elapsed time (e.g. `≤ 12 ms elapsed`). It includes the debugger's
+own overhead, hence "≤".
+
+### Section timing
+
+Right-click a line and choose **Start Timer Here...**, then right-click a later line and choose **End Timer Here...**.
+Each pass from start to end is measured without stopping and charted in the **Value Trend** view (`⏱ name (ms)`),
+also written to the Debug Console. Each pass includes a few milliseconds of debugger overhead.
+
+### Exception log
+
+The **Exception Log (.NET x86)** view lists every exception thrown in the debuggee, including ones that are caught
+and swallowed, with type, message and the first location in your code (click to open it). They are also written to the
+Debug Console like Visual Studio's `Exception thrown: …` lines. Execution only stops where your exception settings say so.
+Apps that throw very many exceptions run slower while it is on (`dotnetX86.exceptionLog.enabled`).
+
+### Autos and Modules views
+
+- **Autos (.NET x86)**: the variables used on the current and the previous line of the selected frame, as in Visual Studio.
+- **Modules (.NET x86)**: the loaded assemblies and whether their symbols (PDB) were loaded; right-click to copy the path
+  or reveal the file.
 
 ### More commands in the Variables view context menu
 
