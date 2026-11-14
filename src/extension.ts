@@ -4,6 +4,7 @@ import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
+import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { StepHistory } from './stepHistory';
 import { viewAsTableCommand } from './tableVisualizer';
 import { ValueTracker } from './valueTracker';
@@ -25,6 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const memory = new MemoryMonitor(output);
     const valueTracker = new ValueTracker();
     const stepHistory = new StepHistory();
+    const moduleList = new ModuleList();
 
     context.subscriptions.push(
         output,
@@ -51,6 +53,11 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, stepHistory),
         vscode.commands.registerCommand('dotnetX86.clearStepHistory', () => stepHistory.clear()),
         vscode.commands.registerCommand('dotnetX86.viewAsTable', viewAsTableCommand),
+        moduleList,
+        vscode.window.createTreeView('dotnetX86.modules', { treeDataProvider: moduleList }),
+        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, moduleList),
+        vscode.commands.registerCommand('dotnetX86.copyModulePath', copyModulePath),
+        vscode.commands.registerCommand('dotnetX86.revealModule', revealModule),
     );
 }
 

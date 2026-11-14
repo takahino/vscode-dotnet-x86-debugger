@@ -75,5 +75,7 @@
   "Save CSV...": "CSV を保存...",
   "{0} of {1} rows": "{0} / {1} 行",
   "Only part of the collection was read (limit reached).": "上限に達したため、コレクションの一部だけを読み込みました。",
-  "Click a column header to sort.": "列見出しをクリックすると並べ替えます。"
+  "Click a column header to sort.": "列見出しをクリックすると並べ替えます。",
+  "symbols loaded": "シンボル読み込み済み",
+  "no symbols": "シンボルなし"
 }

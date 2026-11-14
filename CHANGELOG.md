@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New: **Modules** view (loaded assemblies, symbol status, copy path / reveal in File Explorer).
+
 ## 0.4.0
 
 - New: **View as Table** for List<T>, arrays, Dictionary and DataTable (sort, filter, CSV copy / save).

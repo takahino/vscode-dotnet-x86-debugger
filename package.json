@@ -93,6 +93,16 @@
         "command": "dotnetX86.viewAsTable",
         "title": "%command.viewAsTable%",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.copyModulePath",
+        "title": "%command.copyModulePath%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.revealModule",
+        "title": "%command.revealModule%",
+        "category": ".NET x86"
       }
     ],
     "menus": {
@@ -164,6 +174,14 @@
         {
           "command": "dotnetX86.viewAsTable",
           "when": "false"
+        },
+        {
+          "command": "dotnetX86.copyModulePath",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.revealModule",
+          "when": "false"
         }
       ],
       "editor/context": [
@@ -178,6 +196,18 @@
           "command": "dotnetX86.clearStepHistory",
           "when": "view == dotnetX86.stepHistory",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "dotnetX86.copyModulePath",
+          "when": "view == dotnetX86.modules",
+          "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.revealModule",
+          "when": "view == dotnetX86.modules",
+          "group": "z_dotnetX86@2"
         }
       ]
     },
@@ -365,6 +395,12 @@
           "id": "dotnetX86.stepHistory",
           "name": "%view.stepHistory%",
           "when": "debugType == 'dotnet-x86'"
+        },
+        {
+          "id": "dotnetX86.modules",
+          "name": "%view.modules%",
+          "when": "debugType == 'dotnet-x86'",
+          "visibility": "collapsed"
         }
       ]
     }
