@@ -74,6 +74,11 @@
           "default": "",
           "description": "Full path to an x86 netcoredbg.exe. When empty, the bundled x86 build is used."
         },
+        "dotnetX86.trace": {
+          "type": "boolean",
+          "default": false,
+          "description": "Troubleshooting: log the debug adapter protocol traffic to the \".NET x86 Debugger\" output channel and write a netcoredbg log file (its path is shown in that channel)."
+        },
         "dotnetX86.dump.maxDepth": {
           "type": "integer",
           "default": 3,

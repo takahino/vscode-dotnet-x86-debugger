@@ -7,6 +7,9 @@
 - Fix: expanding objects with many properties (e.g. a WinForms `Form`) in the Variables view failed with `0x80131305`.
   The bundled netcoredbg is patched to print each member right after it is fetched and to show `<error>`
   for a single failing member instead of failing the whole request.
+- Fix: hovering over a variable in the editor showed nothing. netcoredbg did not report `supportsEvaluateForHovers`,
+  so VS Code never asked for hover values.
+- New: `dotnetX86.trace` setting logs the debug adapter traffic and writes a netcoredbg log for troubleshooting.
 - Fix: expanding an object with a `void*` field that points to valid memory (e.g. `Form.TaskbarOwner`)
   hung the debugger. `void*` values are now shown as addresses and are not dereferenced.
 

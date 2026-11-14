@@ -8,13 +8,22 @@ const BUNDLED_DEBUGGER_DIR = path.join('debugger', 'netcoredbg-x86');
 export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     constructor(
         private readonly extensionPath: string,
+        private readonly logDir: string,
         private readonly output: vscode.OutputChannel,
     ) {}
 
     createDebugAdapterDescriptor(): vscode.DebugAdapterDescriptor {
         const debugger_ = this.locateDebugger();
         this.output.appendLine(`[session] using ${debugger_}`);
-        return new vscode.DebugAdapterExecutable(debugger_, ['--interpreter=vscode'], {
+        const args = ['--interpreter=vscode'];
+        // With tracing on, netcoredbg also writes its own log (flushed per line, so it survives a hang or crash).
+        if (vscode.workspace.getConfiguration('dotnetX86').get<boolean>('trace')) {
+            fs.mkdirSync(this.logDir, { recursive: true });
+            const logFile = path.join(this.logDir, `netcoredbg-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+            args.push(`--log=${logFile}`);
+            this.output.appendLine(`[trace] netcoredbg log: ${logFile}`);
+        }
+        return new vscode.DebugAdapterExecutable(debugger_, args, {
             cwd: path.dirname(debugger_),
         });
     }

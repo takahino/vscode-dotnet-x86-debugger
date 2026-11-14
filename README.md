@@ -86,6 +86,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | Setting | Description |
 |---|---|
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
+| `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
 
