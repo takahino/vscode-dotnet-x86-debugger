@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New: **Caller-filtered breakpoints** (`#caller Orders.Save`, or `#caller !Name` to exclude) — stop only when the line is reached through one of the methods. Editor context menu: *Add Breakpoint Filtered by Caller...*.
+
 ## 0.8.0
 
 - New: **`sourceFileMap` / `sourceSearchPaths`** — debug referenced assemblies whose PDB records source paths that do not exist on this machine: replace path prefixes (`/_/` included), or give parent folders to search. Also as `dotnetX86.*` settings for every configuration. The Debug Console says which path to map when a stop has no source.

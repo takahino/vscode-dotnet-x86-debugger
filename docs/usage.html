@@ -353,6 +353,7 @@ Breakpoints view and can be edited or removed like any other.</p>
   <tr><td>Add Temporary Breakpoint</td><td><code>#once</code></td><td>Stops once, then the breakpoint removes itself.</td></tr>
   <tr><td>Add Dependent Breakpoint...</td><td><code>#after Orders.cs:42</code></td><td>Does nothing until the program has stopped at the breakpoint you pick; from then on it stops normally.</td></tr>
   <tr><td>Add Breakpoint When Value Changes...</td><td><code>#changed order.Status</code></td><td>Evaluates the expression every time the line runs and stops only when the value differs from the previous time. The old and new values are written to the Debug Console.</td></tr>
+  <tr><td>Add Breakpoint Filtered by Caller...</td><td><code>#caller Import.Run</code></td><td>Stops only when one of the methods is on the call stack (<code>!Import.Run</code>: unless it is). While stopped, the current call stack is offered.</td></tr>
 </table>
 <p>The markers can be typed into any breakpoint's condition and combined with a hit count.</p>
 <div class="usecase"><b>Use case:</b> <code>Save()</code> is called from many places, but the bug only happens after an import.

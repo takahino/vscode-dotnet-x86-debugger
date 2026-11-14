@@ -52,6 +52,7 @@
   "command.addTemporaryBreakpoint": "Add Temporary Breakpoint",
   "command.addDependentBreakpoint": "Add Dependent Breakpoint...",
   "command.addWhenChangedBreakpoint": "Add Breakpoint When Value Changes...",
+  "command.addCallerBreakpoint": "Add Breakpoint Filtered by Caller...",
   "command.pinValue": "Pin Value to Line...",
   "command.unpinValue": "Unpin Value from Line",
   "command.clearPinnedValues": "Clear All Pinned Values",

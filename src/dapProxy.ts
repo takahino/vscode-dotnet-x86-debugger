@@ -78,8 +78,17 @@ interface WriteSite {
  * Visual Studio 2022 breakpoint options, written in the breakpoint's condition (netcoredbg never sees them):
  * `#once` (temporary: removed after the first stop), `#after File.cs:12` (dependent: active only after that
  * breakpoint was reached) and `#changed expr` (stops only when the expression's value changed since the last pass).
+ * Not in Visual Studio: `#caller A, B` (stops only when one of these methods is on the call stack; `#caller !A`
+ * stops unless it is).
  */
-export type BreakpointMarker = { kind: 'once' } | { kind: 'after'; target: string } | { kind: 'changed'; expression: string };
+export type BreakpointMarker =
+    | { kind: 'once' }
+    | { kind: 'after'; target: string }
+    | { kind: 'changed'; expression: string }
+    | { kind: 'caller'; methods: string[]; negate: boolean };
+
+/** How many callers "#caller" looks at: deep enough for UI event chains, bounded for deep recursion. */
+const CALLER_SEARCH_DEPTH = 100;
 
 interface BreakpointSpec {
     logMessage?: string;
@@ -397,7 +406,7 @@ export class DapProxy {
                     return true;
                 }
             }
-            if (special.marker && !(await this.markerAllowsStop(special.marker, path, frame))) {
+            if (special.marker && !(await this.markerAllowsStop(special.marker, path, frame, threadId))) {
                 await this.resume(threadId);
                 return true;
             }
@@ -435,8 +444,17 @@ export class DapProxy {
         }
     }
 
-    /** "#after": the target was reached; "#changed": the value differs from the last pass (never on the first pass). */
-    private async markerAllowsStop(marker: BreakpointMarker, path: string, frame: any): Promise<boolean> {
+    /**
+     * "#after": the target was reached; "#changed": the value differs from the last pass (never on the first pass);
+     * "#caller": one of the methods is a caller (the stopped method itself does not count).
+     */
+    private async markerAllowsStop(marker: BreakpointMarker, path: string, frame: any, threadId: number): Promise<boolean> {
+        if (marker.kind === 'caller') {
+            const stack = await this.request('stackTrace', { threadId, startFrame: 1, levels: CALLER_SEARCH_DEPTH });
+            const callers: string[] = (stack.body?.stackFrames ?? []).map((f: any) => String(f.name ?? ''));
+            const called = callers.some((name) => marker.methods.some((m) => frameIsMethod(name, m)));
+            return called !== marker.negate;
+        }
         if (marker.kind === 'after') {
             const separator = marker.target.lastIndexOf(':');
             const target = marker.target.slice(0, separator);
@@ -889,8 +907,24 @@ export function parseMarker(condition: unknown): BreakpointMarker | undefined {
     if (after) {
         return { kind: 'after', target: after[1] };
     }
+    const caller = /^#caller\s+(!?)\s*(.+)$/.exec(text);
+    if (caller) {
+        const methods = caller[2].split(/[\s,]+/).filter(Boolean);
+        return methods.length ? { kind: 'caller', methods, negate: caller[1] === '!' } : undefined;
+    }
     const changed = /^#changed\s+(.+)$/.exec(text);
     return changed ? { kind: 'changed', expression: changed[1].trim() } : undefined;
+}
+
+/**
+ * Whether a stack frame name from netcoredbg ("MyLib.Orders.Save()") is the method `method` names, matched on whole
+ * dot-separated parts from the end, ignoring case: "Save", "Orders.Save" and "MyLib.Orders.Save" all match,
+ * "SaveAll" does not.
+ */
+export function frameIsMethod(frameName: string, method: string): boolean {
+    const name = frameName.replace(/\(.*$/, '').toLowerCase();
+    const wanted = method.replace(/\(.*$/, '').toLowerCase();
+    return wanted !== '' && (name === wanted || name.endsWith('.' + wanted));
 }
 
 /** The breakpoint as netcoredbg gets it: a marker in the condition is the proxy's, not a C# expression. */

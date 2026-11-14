@@ -185,13 +185,17 @@ Edit a breakpoint and choose **Hit Count**, then enter `5` or `==5` (stop on the
 (from the 5th / after the 5th hit) or `%5` (every 5th hit). It can be combined with a condition (hits are counted
 only when the condition is true) and with a log message.
 
-### Temporary, dependent and when-changed breakpoints
+### Temporary, dependent, when-changed and caller-filtered breakpoints
 
 Right-click a line in a C# editor:
 
 - **Add Temporary Breakpoint** — stops once, then the breakpoint removes itself (condition `#once`).
 - **Add Dependent Breakpoint...** — active only after the program has stopped at another breakpoint you pick (condition `#after File.cs:12`).
 - **Add Breakpoint When Value Changes...** — stops only when an expression has a different value than the last time the line ran; the old and new values are written to the Debug Console (condition `#changed expr`).
+- **Add Breakpoint Filtered by Caller...** — stops only when the line is reached through one of the methods you pick
+  (while stopped, the methods of the current call stack are offered); `!Name` stops unless called from it
+  (condition `#caller Orders.Save, Import.Run`). Names match from the end: `Save`, `Orders.Save` or `MyApp.Orders.Save`.
+  Visual Studio has no such filter.
 
 You can also type these markers as the condition of any breakpoint. They can be combined with a hit count.
 

@@ -40,6 +40,7 @@
     "onCommand:dotnetX86.addTemporaryBreakpoint",
     "onCommand:dotnetX86.addDependentBreakpoint",
     "onCommand:dotnetX86.addWhenChangedBreakpoint",
+    "onCommand:dotnetX86.addCallerBreakpoint",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
     "onCommand:dotnetX86.clearPinnedValues",
@@ -142,6 +143,11 @@
       {
         "command": "dotnetX86.addWhenChangedBreakpoint",
         "title": "%command.addWhenChangedBreakpoint%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.addCallerBreakpoint",
+        "title": "%command.addCallerBreakpoint%",
         "category": ".NET x86"
       },
       {
@@ -285,6 +291,10 @@
           "when": "resourceLangId == csharp"
         },
         {
+          "command": "dotnetX86.addCallerBreakpoint",
+          "when": "resourceLangId == csharp"
+        },
+        {
           "command": "dotnetX86.pinValue",
           "when": "resourceLangId == csharp"
         },
@@ -335,6 +345,11 @@
           "command": "dotnetX86.addWhenChangedBreakpoint",
           "when": "resourceLangId == csharp",
           "group": "z_dotnetX86bp@3"
+        },
+        {
+          "command": "dotnetX86.addCallerBreakpoint",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86bp@4"
         },
         {
           "command": "dotnetX86.pinValue",

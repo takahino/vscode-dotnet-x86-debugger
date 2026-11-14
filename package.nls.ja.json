@@ -52,6 +52,7 @@
   "command.addTemporaryBreakpoint": "一時ブレークポイントを追加",
   "command.addDependentBreakpoint": "依存ブレークポイントを追加...",
   "command.addWhenChangedBreakpoint": "値が変化したときのブレークポイントを追加...",
+  "command.addCallerBreakpoint": "呼び出し元で絞るブレークポイントを追加...",
   "command.pinValue": "値を行にピン止め...",
   "command.unpinValue": "行のピン止めを解除",
   "command.clearPinnedValues": "すべてのピン止めを解除",

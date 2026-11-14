@@ -86,6 +86,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.addTemporaryBreakpoint', () => breakpointCommands.addTemporary()),
         vscode.commands.registerCommand('dotnetX86.addDependentBreakpoint', () => breakpointCommands.addDependent()),
         vscode.commands.registerCommand('dotnetX86.addWhenChangedBreakpoint', () => breakpointCommands.addWhenChanged()),
+        vscode.commands.registerCommand('dotnetX86.addCallerBreakpoint', () => breakpointCommands.addCallerFiltered()),
         pinnedValues,
         vscode.commands.registerCommand('dotnetX86.pinValue', () => pinnedValues.pin()),
         vscode.commands.registerCommand('dotnetX86.unpinValue', () => pinnedValues.unpin()),

@@ -5,7 +5,7 @@ import { REMOVE_BREAKPOINT_EVENT, parseMarker } from './dapProxy';
 
 /**
  * Visual Studio 2022 breakpoint options. They are ordinary breakpoints whose condition holds a marker
- * (`#once`, `#after File.cs:12`, `#changed expr`) that the DAP relay interprets.
+ * (`#once`, `#after File.cs:12`, `#changed expr`, `#caller Method`) that the DAP relay interprets.
  */
 export class BreakpointCommands implements vscode.Disposable {
     private readonly disposables: vscode.Disposable[] = [];
@@ -64,6 +64,34 @@ export class BreakpointCommands implements vscode.Disposable {
         }
     }
 
+    /**
+     * "#caller": stops at the line only when it is reached through one of the picked methods. While stopped, the
+     * methods of the current call stack are offered; any method name can also be typed ("!Name" to exclude).
+     */
+    async addCallerFiltered(): Promise<void> {
+        const location = currentLine();
+        if (!location) {
+            return;
+        }
+        const pick = vscode.window.createQuickPick<vscode.QuickPickItem>();
+        pick.canSelectMany = true;
+        pick.placeholder = vscode.l10n.t('Stop at line {0} only when called from (pick, or type a method name; "!Name" stops unless called from it)', location.range.start.line + 1);
+        pick.items = (await currentCallStack()).map((name) => ({ label: name }));
+        const methods = await new Promise<string | undefined>((resolve) => {
+            pick.onDidAccept(() => {
+                const picked = pick.selectedItems.map((i) => i.label);
+                resolve(picked.length ? picked.join(', ') : pick.value.trim());
+                pick.hide();
+            });
+            pick.onDidHide(() => resolve(undefined));
+            pick.show();
+        });
+        pick.dispose();
+        if (methods) {
+            vscode.debug.addBreakpoints([new vscode.SourceBreakpoint(location, true, `#caller ${methods}`)]);
+        }
+    }
+
     dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
@@ -83,6 +111,23 @@ export class BreakpointCommands implements vscode.Disposable {
         if (matches.length) {
             vscode.debug.removeBreakpoints(matches);
         }
+    }
+}
+
+/** Method names ("Orders.Save", without namespace and arguments) on the selected thread's stack, when stopped. */
+async function currentCallStack(): Promise<string[]> {
+    const item = vscode.debug.activeStackItem;
+    if (!item || item.session.type !== DEBUG_TYPE) {
+        return [];
+    }
+    try {
+        const r = await item.session.customRequest('stackTrace', { threadId: item.threadId, startFrame: 0, levels: 50 });
+        const names: string[] = (r?.stackFrames ?? []).map((f: { name?: string }) => String(f.name ?? '').replace(/\(.*$/, ''));
+        // "Namespace.Class.Method" -> "Class.Method": specific enough, and short in the condition.
+        const short = names.filter(Boolean).map((n) => n.split('.').slice(-2).join('.'));
+        return [...new Set(short)];
+    } catch {
+        return []; // Running, or the thread is gone: the user types the name instead.
     }
 }
 
