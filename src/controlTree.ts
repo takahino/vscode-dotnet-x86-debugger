@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
+import { WindowHighlighter } from './windowHighlight';
 
 export interface ControlNode {
     /** C# expression that reaches the control, e.g. System.Windows.Forms.Application.OpenForms[0].Controls[1] */
@@ -110,6 +111,42 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
             // Not a WinForms program (System.Windows.Forms is not loaded) or the frame cannot evaluate.
             this.setMessage(node ? undefined : vscode.l10n.t('Could not read Application.OpenForms ({0}). Is this a WinForms program?', errorMessage(e)));
             return [];
+        }
+    }
+
+    /**
+     * Frames the control on the screen. Its window handle is read only when the handle already exists:
+     * reading Control.Handle would create the window of a control that was never shown.
+     */
+    async highlight(node: ControlNode | undefined, highlighter: WindowHighlighter): Promise<void> {
+        const evaluate = this.evaluator();
+        if (!node || !evaluate) {
+            void vscode.window.showInformationMessage(vscode.l10n.t('Stop the program to see its WinForms controls.'));
+            return;
+        }
+        const label = [node.name, shortType(node.typeName)].filter(Boolean).join('  ');
+        try {
+            if ((await evaluate(`${node.expression}.IsHandleCreated`)) !== 'true') {
+                void vscode.window.showInformationMessage(vscode.l10n.t('{0} has no window yet: it has not been shown.', label));
+                return;
+            }
+            const hwnd = await evaluate(`${node.expression}.Handle`);
+            if (!/^\d+$/.test(hwnd)) {
+                throw new Error(hwnd);
+            }
+            const result = await highlighter.highlight(hwnd, label);
+            const problems: Record<string, string> = {
+                gone: vscode.l10n.t('The window of {0} no longer exists.', label),
+                hidden: vscode.l10n.t('{0} is not visible on the screen (it or one of its parents is hidden).', label),
+                minimized: vscode.l10n.t('The form of {0} is minimized: restore it, then stop the program again.', label),
+            };
+            if (typeof result === 'object') {
+                void vscode.window.showErrorMessage(vscode.l10n.t('Could not highlight {0}: {1}', label, result.error));
+            } else if (result !== 'ok') {
+                void vscode.window.showInformationMessage(problems[result]);
+            }
+        } catch (e) {
+            void vscode.window.showErrorMessage(vscode.l10n.t('Could not highlight {0}: {1}', label, errorMessage(e)));
         }
     }
 

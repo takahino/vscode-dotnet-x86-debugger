@@ -213,6 +213,10 @@ Right-click it to **Dump Control** or **Copy Expression** (e.g. `System.Windows.
 which you can paste into the Watch view). Every value is read by evaluating an expression, so children are read only when
 you expand a node.
 
+Click the eye icon (**Highlight on Screen**) to see where a control is: the form is shown in front, as it was when the
+program stopped, with a red frame and the control's name and size around it for a few seconds. Visual Studio cannot do
+this for WinForms. (The stopped program cannot repaint or come to the front itself; the image comes from the desktop compositor.)
+
 ### Debug session report
 
 Run **.NET x86: Export Debug Session Report** (or the button in the Step History view title) to open a Markdown report of

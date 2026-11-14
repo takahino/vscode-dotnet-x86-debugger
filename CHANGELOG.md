@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Highlight on Screen** in the WinForms Controls view (eye icon) — frames the control on the screen with its name and size. The stopped form is shown in front from the desktop compositor's image, so it works even when the form is behind VS Code.
 - New: **Caller-filtered breakpoints** (`#caller Orders.Save`, or `#caller !Name` to exclude) — stop only when the line is reached through one of the methods. Editor context menu: *Add Breakpoint Filtered by Caller...*.
 
 ## 0.8.0

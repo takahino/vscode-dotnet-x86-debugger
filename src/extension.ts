@@ -15,6 +15,7 @@ import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
 import { viewAsTableCommand } from './tableVisualizer';
 import { ValueTracker } from './valueTracker';
+import { WindowHighlighter } from './windowHighlight';
 import { pickProcess } from './processPicker';
 import {
     SNAPSHOT_SCHEME,
@@ -41,6 +42,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const controlTree = new ControlTree();
     const controlView = vscode.window.createTreeView('dotnetX86.controls', { treeDataProvider: controlTree });
     controlTree.attach(controlView);
+    const highlighter = new WindowHighlighter(context.extensionPath, (line) => output.appendLine(line));
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
@@ -95,6 +97,8 @@ export function activate(context: vscode.ExtensionContext): void {
         controlView,
         vscode.commands.registerCommand('dotnetX86.refreshControlTree', () => controlTree.refresh()),
         vscode.commands.registerCommand('dotnetX86.dumpControl', (node: ControlNode) => dumpExpressionCommand(node?.expression)),
+        highlighter,
+        vscode.commands.registerCommand('dotnetX86.highlightControl', (node?: ControlNode) => controlTree.highlight(node ?? controlView.selection[0], highlighter)),
         vscode.commands.registerCommand('dotnetX86.copyControlExpression', (node: ControlNode) => node && vscode.env.clipboard.writeText(node.expression)),
         exceptionLog,
         exceptionView,

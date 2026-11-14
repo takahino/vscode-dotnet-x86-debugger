@@ -41,6 +41,7 @@
     "onCommand:dotnetX86.addDependentBreakpoint",
     "onCommand:dotnetX86.addWhenChangedBreakpoint",
     "onCommand:dotnetX86.addCallerBreakpoint",
+    "onCommand:dotnetX86.highlightControl",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
     "onCommand:dotnetX86.clearPinnedValues",
@@ -170,6 +171,12 @@
         "title": "%command.refreshControlTree%",
         "category": ".NET x86",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "dotnetX86.highlightControl",
+        "title": "%command.highlightControl%",
+        "category": ".NET x86",
+        "icon": "$(eye)"
       },
       {
         "command": "dotnetX86.dumpControl",
@@ -307,6 +314,10 @@
           "when": "false"
         },
         {
+          "command": "dotnetX86.highlightControl",
+          "when": "false"
+        },
+        {
           "command": "dotnetX86.dumpControl",
           "when": "false"
         },
@@ -394,6 +405,16 @@
           "command": "dotnetX86.revealModule",
           "when": "view == dotnetX86.modules",
           "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.highlightControl",
+          "when": "view == dotnetX86.controls",
+          "group": "inline"
+        },
+        {
+          "command": "dotnetX86.highlightControl",
+          "when": "view == dotnetX86.controls",
+          "group": "z_dotnetX86@0"
         },
         {
           "command": "dotnetX86.dumpControl",

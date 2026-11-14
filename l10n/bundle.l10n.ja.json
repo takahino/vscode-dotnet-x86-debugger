@@ -143,5 +143,10 @@
   "{0} is a Windows PDB, which this debugger cannot read: breakpoints will not be hit. Set <DebugType>portable</DebugType> in the project and rebuild.": "{0} は Windows PDB で、このデバッガーでは読み取れません（ブレークポイントで停止しません）。プロジェクトに <DebugType>portable</DebugType> を設定して再ビルドしてください。",
   "Several files match the source {0}: {1}. Narrow \"sourceSearchPaths\", or add a \"sourceFileMap\" entry for its folder.": "ソース {0} に一致するファイルが複数あります: {1}。\"sourceSearchPaths\" を絞り込むか、そのフォルダを \"sourceFileMap\" に追加してください。",
   "Source not found: {0}. Add a parent folder of the source to \"sourceSearchPaths\", or map its folder in \"sourceFileMap\" (e.g. \"{1}\": \"<local folder>\").": "ソースが見つかりません: {0}。ソースの親フォルダを \"sourceSearchPaths\" に追加するか、そのフォルダを \"sourceFileMap\" で置き換えてください（例: \"{1}\": \"<ローカルのフォルダ>\"）。",
-  "Stop at line {0} only when called from (pick, or type a method name; \"!Name\" stops unless called from it)": "{0} 行目で、次のメソッドから呼ばれたときだけ停止します（選択するか、メソッド名を入力。\"!名前\" はそのメソッドから呼ばれたとき以外に停止）"
+  "Stop at line {0} only when called from (pick, or type a method name; \"!Name\" stops unless called from it)": "{0} 行目で、次のメソッドから呼ばれたときだけ停止します（選択するか、メソッド名を入力。\"!名前\" はそのメソッドから呼ばれたとき以外に停止）",
+  "{0} has no window yet: it has not been shown.": "{0} にはまだウィンドウがありません（一度も表示されていません）。",
+  "The window of {0} no longer exists.": "{0} のウィンドウはもう存在しません。",
+  "{0} is not visible on the screen (it or one of its parents is hidden).": "{0} は画面に表示されていません（それ自身か親のどれかが非表示です）。",
+  "The form of {0} is minimized: restore it, then stop the program again.": "{0} のフォームが最小化されています。元のサイズに戻してから、もう一度停止してください。",
+  "Could not highlight {0}: {1}": "{0} を強調表示できませんでした: {1}"
 }
