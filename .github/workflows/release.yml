@@ -1,0 +1,79 @@
+name: Release
+
+# v* タグの push で GitHub Release を作成する。手動実行時は成果物 (artifact) の作成のみ。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # netcoredbg の ManagedPart のビルドに使う
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = '${{ github.ref_name }}'
+          if ($tag -ne "v$version") {
+            throw "タグ $tag と package.json の version ($version) が一致しません。package.json を更新してからタグを付け直してください。"
+          }
+
+      # netcoredbg のビルドは時間がかかるため、ビルドスクリプトが変わらない限りキャッシュを使う
+      - name: Restore netcoredbg (x86) cache
+        id: netcoredbg-cache
+        uses: actions/cache@v4
+        with:
+          path: debugger/netcoredbg-x86
+          key: netcoredbg-x86-${{ runner.os }}-${{ hashFiles('scripts/build-netcoredbg.ps1') }}
+
+      - name: Build netcoredbg (x86)
+        if: steps.netcoredbg-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        # dotnet/runtime のソースは MAX_PATH を超えやすいので短い作業パスを使う
+        run: ./scripts/build-netcoredbg.ps1 -WorkDir C:\ncdbg
+
+      - name: Package VSIX
+        shell: pwsh
+        run: ./scripts/install.ps1 -SkipInstall
+
+      - name: Stage release assets
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item out/dotnet-x86-debugger.vsix "dist/dotnet-x86-debugger-$version.vsix"
+          Copy-Item scripts/install-vsix.ps1 dist/
+          Get-ChildItem dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: dist/*
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = (Get-ChildItem dist).FullName
+          gh release create '${{ github.ref_name }}' @assets --title '${{ github.ref_name }}' --generate-notes --verify-tag
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release の作成に失敗しました (exit code $LASTEXITCODE)。" }
