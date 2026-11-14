@@ -100,14 +100,19 @@
     <li><a href="#features">Features</a>
       <ol>
         <li><a href="#f-breakpoints">Breakpoints, logpoints, hit counts</a></li>
+        <li><a href="#f-bp-more">Temporary, dependent and when-changed breakpoints</a></li>
         <li><a href="#f-values">Seeing values</a></li>
+        <li><a href="#f-pins">Pinned values</a></li>
+        <li><a href="#f-returns">Return values</a></li>
         <li><a href="#f-variables-menu">Variables view commands</a></li>
         <li><a href="#f-data-bp">Break on value change</a></li>
         <li><a href="#f-goto">Set next statement</a></li>
         <li><a href="#f-exceptions">Exceptions</a></li>
         <li><a href="#f-time">Time and performance</a></li>
         <li><a href="#f-history">Step history</a></li>
+        <li><a href="#f-report">Session report</a></li>
         <li><a href="#f-modules">Modules</a></li>
+        <li><a href="#f-winforms">WinForms controls</a></li>
         <li><a href="#f-attach">Attaching</a></li>
       </ol>
     </li>
@@ -317,6 +322,43 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
 <div class="usecase"><b>Use case:</b> a bug appears only around the 300th order of a batch. Set a hit count of <code>&gt;=300</code> instead
 of pressing F5 three hundred times, or add a logpoint to print each order's total and look for the first wrong one.</div>
 
+<h3 id="f-bp-more">Temporary, dependent and when-changed breakpoints</h3>
+<p>Right-click a line in a C# editor. These are ordinary breakpoints with a marker in their condition, so they show in the
+Breakpoints view and can be edited or removed like any other.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 190" role="img" aria-label="Editor context menu with the breakpoint commands">
+  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g class="mono" font-size="12">
+    <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">21</text>
+    <text x="56" y="34" fill="var(--ui-text)">order.Status = Recalculate(order);</text>
+    <text x="40" y="54" fill="var(--ui-muted)" text-anchor="end">22</text>
+    <text x="56" y="54" fill="var(--ui-text)">Save(order);</text>
+  </g>
+  <rect x="300" y="24" width="420" height="152" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <g font-size="12" fill="var(--ui-muted)">
+    <text x="316" y="46">Go to Definition</text><text x="316" y="66">Find All References</text>
+  </g>
+  <line x1="306" y1="76" x2="714" y2="76" stroke="var(--ui-frame)"/>
+  <rect x="306" y="82" width="408" height="20" fill="var(--ui-sel)"/>
+  <g font-size="12" fill="var(--ui-text)">
+    <text x="316" y="96">Add Temporary Breakpoint</text><text x="316" y="118">Add Dependent Breakpoint...</text><text x="316" y="140">Add Breakpoint When Value Changes...</text>
+  </g>
+  <line x1="306" y1="150" x2="714" y2="150" stroke="var(--ui-frame)"/>
+  <text x="316" y="168" font-size="12" fill="var(--ui-text)">Pin Value to Line...</text>
+</svg>
+<figcaption>The commands are at the bottom of the editor context menu.</figcaption>
+</figure>
+<table>
+  <tr><th>Command</th><th>Condition it sets</th><th>Behavior</th></tr>
+  <tr><td>Add Temporary Breakpoint</td><td><code>#once</code></td><td>Stops once, then the breakpoint removes itself.</td></tr>
+  <tr><td>Add Dependent Breakpoint...</td><td><code>#after Orders.cs:42</code></td><td>Does nothing until the program has stopped at the breakpoint you pick; from then on it stops normally.</td></tr>
+  <tr><td>Add Breakpoint When Value Changes...</td><td><code>#changed order.Status</code></td><td>Evaluates the expression every time the line runs and stops only when the value differs from the previous time. The old and new values are written to the Debug Console.</td></tr>
+</table>
+<p>The markers can be typed into any breakpoint's condition and combined with a hit count.</p>
+<div class="usecase"><b>Use case:</b> <code>Save()</code> is called from many places, but the bug only happens after an import.
+Put a breakpoint in the import, then a <b>dependent</b> breakpoint in <code>Save()</code> on it: you stop only in the saves that
+follow an import.</div>
+
 <h3 id="f-values">Seeing values</h3>
 <ul>
   <li><b>Hover</b> a variable in the editor to see its value; expand objects in the tooltip.</li>
@@ -325,7 +367,54 @@ of pressing F5 three hundred times, or add a logpoint to print each order's tota
   <li><b>DebuggerDisplay</b>: types with <code>[DebuggerDisplay("Name = {Name}")]</code> are shown with that text everywhere, as in
     Visual Studio. <code>List&lt;T&gt;</code> shows <code>Count = 3</code>.</li>
   <li>The <b>Autos</b> view lists the variables of the current and previous line, so you do not have to search the whole Locals tree.</li>
+  <li><b>Debug.WriteLine</b> / <b>Trace.WriteLine</b> output appears in the Debug Console, with a link to the line that wrote it.</li>
 </ul>
+
+<h3 id="f-pins">Pinned values</h3>
+<p>Right-click a line and choose <b>Pin Value to Line...</b> to keep an expression at the end of that line. It is evaluated again in
+the selected stack frame every time the program stops, so you can watch a value next to the code instead of in the Watch view.
+Pins are kept with the workspace. Remove them with <b>Unpin Value from Line</b> or <b>.NET x86: Clear All Pinned Values</b>.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 110" role="img" aria-label="Pinned values at the end of an editor line">
+  <rect x="0" y="0" width="860" height="110" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g class="mono" font-size="12">
+    <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">30</text>
+    <text x="56" y="34" fill="var(--ui-kw)">foreach <tspan fill="var(--ui-text)">(var line in invoice.Lines)</tspan></text>
+    <rect x="330" y="21" width="380" height="18" rx="3" fill="var(--ui-sel)"/>
+    <text x="340" y="34" fill="var(--ui-str)">📌 invoice.Total = 1280.50   📌 invoice.Lines.Count = 4</text>
+    <rect x="44" y="61" width="816" height="18" fill="var(--ui-current)"/>
+    <polygon points="10,64 18,70 10,76" fill="var(--ui-arrow)"/>
+    <text x="40" y="74" fill="var(--ui-muted)" text-anchor="end">32</text>
+    <text x="56" y="74" fill="var(--ui-text)">invoice.Total += line.Amount;</text>
+  </g>
+</svg>
+<figcaption>Two pinned expressions on line 30, updated at every stop.</figcaption>
+</figure>
+
+<h3 id="f-returns">Return values</h3>
+<p>After <b>Step Over</b> or <b>Step Out</b>, the values returned by the methods that were called are shown at the top of the
+Variables and Autos views — no need to store them in a temporary variable first. A line with several calls shows each of them.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 140" role="img" aria-label="Return values at the top of Locals">
+  <rect x="0" y="0" width="860" height="140" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ VARIABLES</text>
+    <text x="28" y="48" fill="var(--ui-text)">▾ Locals</text>
+    <rect x="34" y="55" width="420" height="40" fill="var(--ui-sel)"/>
+    <text x="42" y="69" class="mono" fill="var(--ui-text)">  Program.Square returned: 9</text>
+    <text x="42" y="89" class="mono" fill="var(--ui-text)">  Program.Square returned: 16</text>
+    <text x="42" y="111" class="mono" fill="var(--ui-text)">  a: 25</text>
+    <text x="42" y="131" class="mono" fill="var(--ui-text)">▸ list: Count = 3</text>
+  </g>
+  <text x="480" y="80" font-size="12" class="mono" fill="var(--ui-muted)">int a = Square(3) + Square(4);  // F10</text>
+</svg>
+<figcaption>After stepping over a line that calls Square twice.</figcaption>
+</figure>
+<div class="note">Objects can be expanded; their text is the type name (<code>DebuggerDisplay</code> is not applied to them). The values
+are shown only at the stop right after the step and disappear on the next step or continue. Calls that end at a breakpoint
+inside them are not shown.</div>
+<div class="usecase"><b>Use case:</b> <code>if (IsValid(order) &amp;&amp; HasStock(order))</code> takes the wrong branch. Step over it and
+read which of the two returned <code>false</code>.</div>
 
 <h3 id="f-variables-menu">Variables view commands</h3>
 <p>Right-click a variable in the <b>Variables</b> view while stopped:</p>
@@ -488,9 +577,59 @@ if it never comes down, look for event handlers that are not removed.</div>
 same method are marked <i>changed</i> / <i>new</i>. Click an entry to open its location. It is a history to look at, not a way
 to run backwards.</p>
 
+<h3 id="f-report">Session report</h3>
+<p>Run <b>.NET x86: Export Debug Session Report</b> (or click the button in the Step History view title) to open a Markdown
+summary of the last session: program, start / end time and exit code, every stop with the values that changed, the exceptions
+(with a count per type), section timings, tracked values and the modules with symbols.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 170" role="img" aria-label="Part of a session report">
+  <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g font-size="12" fill="var(--ui-text)">
+    <text x="20" y="30" font-size="16" font-weight="700">Debug session report: Launch OrderApp</text>
+    <text x="20" y="56" font-weight="700">Stops (step history)</text>
+    <text x="20" y="76" class="mono" fill="var(--ui-muted)">| # | Time | Function | Location | Changed values |</text>
+    <text x="20" y="94" class="mono">| 2 | 18:41:48 | MainForm.OnButtonClick() | Program.cs:37 | _count = 1 |</text>
+    <text x="20" y="122" font-weight="700">Section timings</text>
+    <text x="20" y="142" class="mono">| load | Program.cs:12 | 2 | 80 | 100.0 | 120 |</text>
+  </g>
+</svg>
+<figcaption>Save it with the code, or paste it into a bug report or a pull request.</figcaption>
+</figure>
+
 <h3 id="f-modules">Modules</h3>
 <p>The <b>Modules</b> view lists the loaded assemblies and whether their symbols (PDB) were found. If a breakpoint stays hollow,
 check here that your assembly shows <i>symbols loaded</i>.</p>
+
+<h3 id="f-winforms">WinForms controls</h3>
+<p>While stopped, the <b>WinForms Controls</b> view (collapsed at the bottom of Run and Debug) shows the open forms and their controls
+as a tree: name, type and text, with hidden controls greyed out. Hover a control for its bounds, enabled state, dock and tab index.
+Right-click it to <b>Dump Control</b> or <b>Copy Expression</b>; the expression can be pasted into the Watch view.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 190" role="img" aria-label="WinForms Controls view with a tooltip">
+  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ WINFORMS CONTROLS</text>
+    <text x="790" y="26" fill="var(--ui-muted)">⟳</text>
+    <text x="28" y="50" fill="var(--ui-text)">▾ 🗔 mainForm <tspan fill="var(--ui-muted)">  Form  "Orders"</tspan></text>
+    <text x="48" y="72" fill="var(--ui-text)">▾ ▭ panel1 <tspan fill="var(--ui-muted)">  Panel</tspan></text>
+    <rect x="62" y="80" width="330" height="18" fill="var(--ui-sel)"/>
+    <text x="68" y="93" fill="var(--ui-text)">  ▭ okButton <tspan fill="var(--ui-muted)">  Button  "OK"</tspan></text>
+    <text x="68" y="115" fill="var(--ui-text)">  ▭ nameBox <tspan fill="var(--ui-muted)">  TextBox  "abc"</tspan></text>
+    <text x="48" y="137" fill="var(--ui-muted)">  ▭ status   Label  "Ready"  (hidden)</text>
+  </g>
+  <rect x="430" y="70" width="410" height="108" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <g font-size="12" fill="var(--ui-text)">
+    <text x="444" y="90" font-weight="600">okButton — System.Windows.Forms.Button</text>
+    <text x="444" y="110" class="mono">Bounds: {X=4,Y=4,Width=75,Height=23}</text>
+    <text x="444" y="128" class="mono">Visible: true   Enabled: true</text>
+    <text x="444" y="146" class="mono">Dock: None   TabIndex: 0</text>
+    <text x="444" y="166" class="mono" fill="var(--ui-muted)">…OpenForms[0].Controls[0].Controls[0]</text>
+  </g>
+</svg>
+<figcaption>Children are read when you expand a node, so large forms stay quick to open.</figcaption>
+</figure>
+<div class="usecase"><b>Use case:</b> a button “does not appear”. The tree tells you whether it exists, which panel it is in, and
+whether it is hidden or placed outside its parent's bounds.</div>
 
 <h3 id="f-attach">Attaching to a running app</h3>
 <p>Use an <code>attach</code> configuration. The process list shows only x86 .NET processes with their window titles; choose
@@ -529,6 +668,9 @@ Debugging waits until the process appears:</p>
   <div class="card"><h4>Reproduce a bug in a test</h4>Copy as C# Initializer turns the live data into code for a unit test.</div>
   <div class="card"><h4>Check loaded data</h4>View as Table shows the List or DataTable as rows; sort, filter, save as CSV.</div>
   <div class="card"><h4>App launched by another program</h4>Attach with <code>processName</code> and debug it from its first moments.</div>
+  <div class="card"><h4>Which call returned false?</h4>Step over the condition and read the return values in Variables.</div>
+  <div class="card"><h4>Where did my control go?</h4>The WinForms Controls view shows its parent, bounds and visibility.</div>
+  <div class="card"><h4>Write up a bug</h4>Export the session report and attach it: stops, changed values and exceptions in one file.</div>
 </div>
 
 <h2 id="trouble">Troubleshooting</h2>

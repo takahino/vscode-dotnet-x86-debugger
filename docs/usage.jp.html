@@ -100,14 +100,19 @@
     <li><a href="#features">機能</a>
       <ol>
         <li><a href="#f-breakpoints">ブレークポイント・ログポイント・ヒットカウント</a></li>
+        <li><a href="#f-bp-more">一時・依存・値の変化ブレークポイント</a></li>
         <li><a href="#f-values">値を見る</a></li>
+        <li><a href="#f-pins">値のピン止め</a></li>
+        <li><a href="#f-returns">戻り値の表示</a></li>
         <li><a href="#f-variables-menu">変数ビューのコマンド</a></li>
         <li><a href="#f-data-bp">値が変わったら停止</a></li>
         <li><a href="#f-goto">次のステートメントの設定</a></li>
         <li><a href="#f-exceptions">例外</a></li>
         <li><a href="#f-time">時間とパフォーマンス</a></li>
         <li><a href="#f-history">ステップ履歴</a></li>
+        <li><a href="#f-report">セッションの報告書</a></li>
         <li><a href="#f-modules">モジュール</a></li>
+        <li><a href="#f-winforms">WinForms コントロール</a></li>
         <li><a href="#f-attach">アタッチ</a></li>
       </ol>
     </li>
@@ -273,8 +278,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <h2 id="features">機能</h2>
 
 <h3 id="f-breakpoints">ブレークポイント・ログポイント・ヒットカウント</h3>
-<p>行番号の左を右クリックすると、<b>ブレークポイント</b>、<b>条件付きブレークポイント</b>、<b>ログポイント</b> を追加できます。
-すでにあるものを変えるには、赤い丸を右クリックして <b>ブレークポイントの編集</b> を選びます。</p>
+<p>行番号の左を右クリックすると、<b>ブレークポイント</b>、<b>条件付きブレークポイント</b>、<b>ログポイント</b> を追加できます。すでにあるものを変えるには、赤い丸を右クリックして <b>ブレークポイントの編集</b> を選びます。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 170" role="img" aria-label="ブレークポイントの編集: ヒットカウントとログメッセージ">
   <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -307,8 +311,42 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr><td>ヒットカウント</td><td><code>5</code> または <code>==5</code>、<code>&gt;=5</code>、<code>&gt;5</code>、<code>%5</code></td><td>5 回目で停止 / 5 回目以降 / 5 回目より後 / 5 回ごとに停止。</td></tr>
   <tr><td>ログポイント</td><td><code>i={i} total={total} in $FUNCTION</code></td><td>メッセージをデバッグコンソールに出して、そのまま実行を続けます。<code>{式}</code> は評価され、<code>$FUNCTION</code> と <code>$TID</code> はメソッド名とスレッド ID に置き換わります。</td></tr>
 </table>
-<div class="usecase"><b>ユースケース:</b> 一括処理の 300 件目あたりでだけ不具合が出る。F5 を 300 回押す代わりにヒットカウント <code>&gt;=300</code> を設定するか、
-ログポイントで各注文の合計を出力して、最初におかしくなる件を探します。</div>
+<div class="usecase"><b>ユースケース:</b> 一括処理の 300 件目あたりでだけ不具合が出る。F5 を 300 回押す代わりにヒットカウント <code>&gt;=300</code> を設定するか、ログポイントで各注文の合計を出力して、最初におかしくなる件を探します。</div>
+
+<h3 id="f-bp-more">一時・依存・値の変化ブレークポイント</h3>
+<p>C# エディターの行を右クリックします。条件欄にマーカーを書いた普通のブレークポイントなので、ブレークポイント ビューに表示され、ほかのブレークポイントと同じように編集・削除できます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 190" role="img" aria-label="ブレークポイントのコマンドがあるエディターの右クリックメニュー">
+  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g class="mono" font-size="12">
+    <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">21</text>
+    <text x="56" y="34" fill="var(--ui-text)">order.Status = Recalculate(order);</text>
+    <text x="40" y="54" fill="var(--ui-muted)" text-anchor="end">22</text>
+    <text x="56" y="54" fill="var(--ui-text)">Save(order);</text>
+  </g>
+  <rect x="300" y="24" width="420" height="152" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <g font-size="12" fill="var(--ui-muted)">
+    <text x="316" y="46">定義へ移動</text><text x="316" y="66">すべての参照を検索</text>
+  </g>
+  <line x1="306" y1="76" x2="714" y2="76" stroke="var(--ui-frame)"/>
+  <rect x="306" y="82" width="408" height="20" fill="var(--ui-sel)"/>
+  <g font-size="12" fill="var(--ui-text)">
+    <text x="316" y="96">一時ブレークポイントを追加</text><text x="316" y="118">依存ブレークポイントを追加...</text><text x="316" y="140">値が変化したときのブレークポイントを追加...</text>
+  </g>
+  <line x1="306" y1="150" x2="714" y2="150" stroke="var(--ui-frame)"/>
+  <text x="316" y="168" font-size="12" fill="var(--ui-text)">値を行にピン止め...</text>
+</svg>
+<figcaption>コマンドはエディターの右クリックメニューの下の方にあります。</figcaption>
+</figure>
+<table>
+  <tr><th>コマンド</th><th>設定される条件</th><th>動作</th></tr>
+  <tr><td>一時ブレークポイントを追加</td><td><code>#once</code></td><td>1 回停止すると、そのブレークポイントは自動で削除されます。</td></tr>
+  <tr><td>依存ブレークポイントを追加...</td><td><code>#after Orders.cs:42</code></td><td>選んだブレークポイントで一度停止するまでは何もしません。それ以降は普通に停止します。</td></tr>
+  <tr><td>値が変化したときのブレークポイントを追加...</td><td><code>#changed order.Status</code></td><td>その行を通るたびに式を評価し、前回と値が異なるときだけ停止します。変化前後の値はデバッグ コンソールに出力されます。</td></tr>
+</table>
+<p>マーカーは任意のブレークポイントの条件に直接入力でき、ヒット カウントとも組み合わせられます。</p>
+<div class="usecase"><b>ユースケース:</b> <code>Save()</code> はあちこちから呼ばれるが、不具合はインポートの後だけで起きる。インポート処理にブレークポイントを置き、
+<code>Save()</code> にはそれに<b>依存</b>するブレークポイントを置けば、インポートの後の保存でだけ停止します。</div>
 
 <h3 id="f-values">値を見る</h3>
 <ul>
@@ -318,7 +356,49 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <li><b>DebuggerDisplay</b>: <code>[DebuggerDisplay("Name = {Name}")]</code> を付けた型は、Visual Studio と同じくその書式で表示されます。
     <code>List&lt;T&gt;</code> は <code>Count = 3</code> と表示されます。</li>
   <li><b>自動変数</b> ビューには現在の行と直前の行の変数だけが並ぶので、Locals の木を探し回る必要がありません。</li>
+  <li><b>Debug.WriteLine</b> / <b>Trace.WriteLine</b> の出力は、書き込んだ行へのリンク付きでデバッグ コンソールに表示されます。</li>
 </ul>
+
+<h3 id="f-pins">値のピン止め</h3>
+<p>行を右クリックして <b>値を行にピン止め...</b> を選ぶと、式の値がその行の末尾に表示され続けます。プログラムが停止するたびに、選択中のスタック フレームで評価し直すので、ウォッチ ビューではなくコードの横で値を追えます。ピン止めはワークスペースに保存されます。
+<b>行のピン止めを解除</b> または <b>.NET x86: すべてのピン止めを解除</b> で外せます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 110" role="img" aria-label="エディターの行末にピン止めされた値">
+  <rect x="0" y="0" width="860" height="110" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g class="mono" font-size="12">
+    <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">30</text>
+    <text x="56" y="34" fill="var(--ui-kw)">foreach <tspan fill="var(--ui-text)">(var line in invoice.Lines)</tspan></text>
+    <rect x="330" y="21" width="380" height="18" rx="3" fill="var(--ui-sel)"/>
+    <text x="340" y="34" fill="var(--ui-str)">📌 invoice.Total = 1280.50   📌 invoice.Lines.Count = 4</text>
+    <rect x="44" y="61" width="816" height="18" fill="var(--ui-current)"/>
+    <polygon points="10,64 18,70 10,76" fill="var(--ui-arrow)"/>
+    <text x="40" y="74" fill="var(--ui-muted)" text-anchor="end">32</text>
+    <text x="56" y="74" fill="var(--ui-text)">invoice.Total += line.Amount;</text>
+  </g>
+</svg>
+<figcaption>30 行目にピン止めした 2 つの式。停止するたびに更新されます。</figcaption>
+</figure>
+
+<h3 id="f-returns">戻り値の表示</h3>
+<p><b>ステップ オーバー</b> や <b>ステップ アウト</b> の後、呼び出したメソッドの戻り値が変数ビューと自動変数ビューの先頭に表示されます。戻り値を確認するためだけに一時変数へ代入する必要はありません。1 行で複数のメソッドを呼んだ場合は、それぞれが表示されます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 140" role="img" aria-label="Locals の先頭に表示された戻り値">
+  <rect x="0" y="0" width="860" height="140" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ 変数</text>
+    <text x="28" y="48" fill="var(--ui-text)">▾ Locals</text>
+    <rect x="34" y="55" width="420" height="40" fill="var(--ui-sel)"/>
+    <text x="42" y="69" class="mono" fill="var(--ui-text)">  Program.Square returned: 9</text>
+    <text x="42" y="89" class="mono" fill="var(--ui-text)">  Program.Square returned: 16</text>
+    <text x="42" y="111" class="mono" fill="var(--ui-text)">  a: 25</text>
+    <text x="42" y="131" class="mono" fill="var(--ui-text)">▸ list: Count = 3</text>
+  </g>
+  <text x="480" y="80" font-size="12" class="mono" fill="var(--ui-muted)">int a = Square(3) + Square(4);  // F10</text>
+</svg>
+<figcaption>Square を 2 回呼ぶ行をステップ オーバーした後。</figcaption>
+</figure>
+<div class="note">オブジェクトは展開できます（表示は型名で、<code>DebuggerDisplay</code> は適用されません）。値はステップ直後の停止でだけ表示され、次のステップか続行で消えます。呼び出し先のブレークポイントで止まった呼び出しは表示されません。</div>
+<div class="usecase"><b>ユースケース:</b> <code>if (IsValid(order) &amp;&amp; HasStock(order))</code> が思わぬ分岐に進む。ステップ オーバーして、どちらが <code>false</code> を返したかを読み取ります。</div>
 
 <h3 id="f-variables-menu">変数ビューのコマンド</h3>
 <p>停止中に <b>変数</b> ビューで変数を右クリックします。</p>
@@ -378,8 +458,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </figure>
 
 <h3 id="f-data-bp">値が変わったら停止</h3>
-<p>変数ビューでフィールド・プロパティ・ローカル変数を右クリックし、<b>値の変更時に中断</b>（Break on Value Change）を選びます。
-値が変わった直後に停止し、停止理由に変化前と変化後の値が表示されます。</p>
+<p>変数ビューでフィールド・プロパティ・ローカル変数を右クリックし、<b>値の変更時に中断</b>（Break on Value Change）を選びます。値が変わった直後に停止し、停止理由に変化前と変化後の値が表示されます。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 130" role="img" aria-label="データブレークポイントで一時停止">
   <rect x="0" y="0" width="860" height="130" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -395,16 +474,12 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>書き込みの次の行で停止し、「変化前 → 変化後」を表示します。</figcaption>
 </figure>
-<div class="note"><b>仕組みと制限。</b> netcoredbg にはハードウェアのデータブレークポイントが無いため、この拡張機能はワークスペースの C# ファイルから
-その名前への代入箇所（<code>x = …</code>、<code>x += …</code>、<code>x++</code>）を探し、各箇所の前後で値を比べて、変わったときだけ停止します。
-<code>ref</code> / <code>out</code> 経由の書き換え、別オブジェクトのメンバーへの代入（<code>other.x = …</code>）、ワークスペース外のコードによる書き換えは
-検出できません。また、同じ名前のメンバーはインスタンスを区別せずに監視します。</div>
-<div class="usecase"><b>ユースケース:</b> 状態を表すフィールドが「いつの間にか」<code>Cancelled</code> になっているが、どこで設定されているのか分からない。
-値が変わったら停止を使えば、その行で直接止まります。</div>
+<div class="note"><b>仕組みと制限。</b> netcoredbg にはハードウェアのデータブレークポイントが無いため、この拡張機能はワークスペースの C# ファイルからその名前への代入箇所（<code>x = …</code>、<code>x += …</code>、<code>x++</code>）を探し、各箇所の前後で値を比べて、変わったときだけ停止します。
+<code>ref</code> / <code>out</code> 経由の書き換え、別オブジェクトのメンバーへの代入（<code>other.x = …</code>）、ワークスペース外のコードによる書き換えは検出できません。また、同じ名前のメンバーはインスタンスを区別せずに監視します。</div>
+<div class="usecase"><b>ユースケース:</b> 状態を表すフィールドが「いつの間にか」<code>Cancelled</code> になっているが、どこで設定されているのか分からない。値が変わったら停止を使えば、その行で直接止まります。</div>
 
 <h3 id="f-goto">次のステートメントの設定</h3>
-<p>停止中に、実行中のメソッドの行を右クリックして <b>カーソルへジャンプ</b>（Jump to Cursor）を選ぶと、間の行を実行せずに黄色い矢印がそこへ移ります。
-値を直してから行をもう一度実行したり、実行したくない呼び出しを飛ばしたりできます。</p>
+<p>停止中に、実行中のメソッドの行を右クリックして <b>カーソルへジャンプ</b>（Jump to Cursor）を選ぶと、間の行を実行せずに黄色い矢印がそこへ移ります。値を直してから行をもう一度実行したり、実行したくない呼び出しを飛ばしたりできます。</p>
 <p>移動先にできるのは実行中のメソッド内の行だけで、<code>catch</code> / <code>finally</code> ブロックの内外をまたぐ移動はランタイムが拒否します。その場合は理由を説明するメッセージが出ます。</p>
 <div class="usecase"><b>ユースケース:</b> 計算結果がおかしかった。変数ビューの <b>値の設定</b> で入力値を直し、計算の行へジャンプして、もう一度ステップオーバーします。再起動は要りません。</div>
 
@@ -421,11 +496,9 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <h4>PerfTips</h4>
 <p>ステップ実行や続行のたびに、停止した行に <code>≤ 12 ms 経過</code> と表示されます。呼び出しを 1 つずつステップオーバーすれば、どれが遅いかが分かります。</p>
 <h4>区間の時間計測</h4>
-<p>行を右クリックして <b>ここから時間を計測...</b> を選んで名前を付け、後の行を右クリックして <b>ここまでの時間を計測...</b> を選びます。
-通過するたびに止まらずに時間を測り、<b>値の推移</b> ビューにグラフで表示します。</p>
+<p>行を右クリックして <b>ここから時間を計測...</b> を選んで名前を付け、後の行を右クリックして <b>ここまでの時間を計測...</b> を選びます。通過するたびに止まらずに時間を測り、<b>値の推移</b> ビューにグラフで表示します。</p>
 <h4>値の推移</h4>
-<p>行を右クリックして <b>この行で値の推移を記録...</b> を選び、<code>total; items.Count</code> のように式を入力します。
-その行を通るたびに止まらずに値を記録し、式ごとにグラフにします。</p>
+<p>行を右クリックして <b>この行で値の推移を記録...</b> を選び、<code>total; items.Count</code> のように式を入力します。その行を通るたびに止まらずに値を記録し、式ごとにグラフにします。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 210" role="img" aria-label="total と区間計測の値の推移グラフ">
   <rect x="0" y="0" width="860" height="210" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -444,8 +517,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <figcaption>式ごとに小さなグラフが並びます。計測グラフの山が、遅かった回です。</figcaption>
 </figure>
 <h4>メモリ / CPU グラフ</h4>
-<p>コマンドパレットで <b>.NET x86: メモリ / CPU グラフを表示</b> を実行すると、Private Bytes・Working Set・CPU 使用率を 1 秒ごとに表示します。
-停止していた区間は網掛けになります。<code>dotnetX86.memoryGraph.autoOpen</code> を有効にすると、デバッグ開始時に自動で開きます。</p>
+<p>コマンドパレットで <b>.NET x86: メモリ / CPU グラフを表示</b> を実行すると、Private Bytes・Working Set・CPU 使用率を 1 秒ごとに表示します。停止していた区間は網掛けになります。<code>dotnetX86.memoryGraph.autoOpen</code> を有効にすると、デバッグ開始時に自動で開きます。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 250" role="img" aria-label="メモリ / CPU グラフの画面">
   <rect x="0" y="0" width="860" height="250" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -471,12 +543,56 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <div class="usecase"><b>ユースケース:</b> フォームを開いて閉じるたびにメモリが増える。操作を繰り返しながら Private Bytes を見て、下がらないなら解除し忘れたイベントハンドラを疑います。</div>
 
 <h3 id="f-history">ステップ履歴</h3>
-<p><b>ステップ履歴</b> ビューには、停止のたびのローカル変数が新しい順に残ります。同じメソッド内の直前の停止から変わった値には「変化」「新規」と表示されます。
-項目をクリックするとその位置を開きます。履歴を見返すための機能で、実行を巻き戻すわけではありません。</p>
+<p><b>ステップ履歴</b> ビューには、停止のたびのローカル変数が新しい順に残ります。同じメソッド内の直前の停止から変わった値には「変化」「新規」と表示されます。項目をクリックするとその位置を開きます。履歴を見返すための機能で、実行を巻き戻すわけではありません。</p>
+
+<h3 id="f-report">セッションの報告書</h3>
+<p><b>.NET x86: デバッグ セッションの報告書を出力</b>（またはステップ履歴ビューのタイトルにあるボタン）で、直前のセッションの要約を Markdown で開きます。プログラム・開始/終了時刻・終了コード、各停止と変化した値、例外（型ごとの件数付き）、区間の時間計測、記録した値、シンボルのあるモジュールが含まれます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 170" role="img" aria-label="セッションの報告書の一部">
+  <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g font-size="12" fill="var(--ui-text)">
+    <text x="20" y="30" font-size="16" font-weight="700">デバッグ セッションの報告書: Launch OrderApp</text>
+    <text x="20" y="56" font-weight="700">停止の履歴（ステップ履歴）</text>
+    <text x="20" y="76" class="mono" fill="var(--ui-muted)">| # | 時刻 | 関数 | 場所 | 変化した値 |</text>
+    <text x="20" y="94" class="mono">| 2 | 18:41:48 | MainForm.OnButtonClick() | Program.cs:37 | _count = 1 |</text>
+    <text x="20" y="122" font-weight="700">区間の時間計測</text>
+    <text x="20" y="142" class="mono">| load | Program.cs:12 | 2 | 80 | 100.0 | 120 |</text>
+  </g>
+</svg>
+<figcaption>コードと一緒に保存したり、不具合報告やプル リクエストに貼り付けたりできます。</figcaption>
+</figure>
 
 <h3 id="f-modules">モジュール</h3>
-<p><b>モジュール</b> ビューには、読み込まれたアセンブリと、シンボル（PDB）が見つかったかどうかが並びます。ブレークポイントが白抜きのままのときは、
-自分のアセンブリが「シンボル読み込み済み」になっているかをここで確認します。</p>
+<p><b>モジュール</b> ビューには、読み込まれたアセンブリと、シンボル（PDB）が見つかったかどうかが並びます。ブレークポイントが白抜きのままのときは、自分のアセンブリが「シンボル読み込み済み」になっているかをここで確認します。</p>
+
+<h3 id="f-winforms">WinForms コントロール</h3>
+<p>停止中、<b>WinForms コントロール</b> ビュー（実行とデバッグの下部。初期状態は折りたたみ）に、開いているフォームとそのコントロールがツリーで表示されます。名前・型・テキストを示し、非表示のコントロールは淡色になります。マウスを合わせると、位置とサイズ・有効/無効・Dock・
+TabIndex を表示します。右クリックで <b>コントロールをダンプ</b> / <b>式をコピー</b>。コピーした式はウォッチ ビューに貼り付けられます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 190" role="img" aria-label="ツールチップ付きの WinForms コントロール ビュー">
+  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ WINFORMS コントロール</text>
+    <text x="790" y="26" fill="var(--ui-muted)">⟳</text>
+    <text x="28" y="50" fill="var(--ui-text)">▾ 🗔 mainForm <tspan fill="var(--ui-muted)">  Form  "Orders"</tspan></text>
+    <text x="48" y="72" fill="var(--ui-text)">▾ ▭ panel1 <tspan fill="var(--ui-muted)">  Panel</tspan></text>
+    <rect x="62" y="80" width="330" height="18" fill="var(--ui-sel)"/>
+    <text x="68" y="93" fill="var(--ui-text)">  ▭ okButton <tspan fill="var(--ui-muted)">  Button  "OK"</tspan></text>
+    <text x="68" y="115" fill="var(--ui-text)">  ▭ nameBox <tspan fill="var(--ui-muted)">  TextBox  "abc"</tspan></text>
+    <text x="48" y="137" fill="var(--ui-muted)">  ▭ status   Label  "Ready"  （非表示）</text>
+  </g>
+  <rect x="430" y="70" width="410" height="108" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <g font-size="12" fill="var(--ui-text)">
+    <text x="444" y="90" font-weight="600">okButton — System.Windows.Forms.Button</text>
+    <text x="444" y="110" class="mono">Bounds: {X=4,Y=4,Width=75,Height=23}</text>
+    <text x="444" y="128" class="mono">Visible: true   Enabled: true</text>
+    <text x="444" y="146" class="mono">Dock: None   TabIndex: 0</text>
+    <text x="444" y="166" class="mono" fill="var(--ui-muted)">…OpenForms[0].Controls[0].Controls[0]</text>
+  </g>
+</svg>
+<figcaption>子はノードを展開したときに読み込むので、大きなフォームでもすぐに開けます。</figcaption>
+</figure>
+<div class="usecase"><b>ユースケース:</b> ボタンが「表示されない」。ツリーを見れば、存在するか、どのパネルに入っているか、非表示なのか親の範囲外に置かれているのかが分かります。</div>
 
 <h3 id="f-attach">実行中のアプリにアタッチする</h3>
 <p><code>attach</code> の構成を使います。プロセスの一覧には x86 の .NET プロセスだけがウィンドウタイトル付きで表示されます。それ以外は
@@ -514,6 +630,9 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <div class="card"><h4>不具合をテストで再現</h4>C# の初期化子としてコピーで、実際のデータを単体テストのコードにできます。</div>
   <div class="card"><h4>読み込んだデータの確認</h4>表として表示で List や DataTable を行で確認し、並べ替え・絞り込み・CSV 保存ができます。</div>
   <div class="card"><h4>別のプログラムから起動される</h4><code>processName</code> でアタッチすれば、起動直後からデバッグできます。</div>
+  <div class="card"><h4>どの呼び出しが false を返した?</h4>条件の行をステップ オーバーし、変数ビューで戻り値を読みます。</div>
+  <div class="card"><h4>コントロールはどこへ?</h4>WinForms コントロール ビューで親・位置・表示状態が分かります。</div>
+  <div class="card"><h4>不具合をまとめる</h4>セッションの報告書を出力して添付。停止・変化した値・例外が 1 つのファイルに。</div>
 </div>
 
 <h2 id="trouble">困ったとき</h2>
