@@ -4,6 +4,7 @@ import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
+import { PerfTips } from './perfTips';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { StepHistory } from './stepHistory';
 import { viewAsTableCommand } from './tableVisualizer';
@@ -27,6 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const valueTracker = new ValueTracker();
     const stepHistory = new StepHistory();
     const moduleList = new ModuleList();
+    const perfTips = new PerfTips();
 
     context.subscriptions.push(
         output,
@@ -58,6 +60,8 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, moduleList),
         vscode.commands.registerCommand('dotnetX86.copyModulePath', copyModulePath),
         vscode.commands.registerCommand('dotnetX86.revealModule', revealModule),
+        perfTips,
+        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
     );
 }
 

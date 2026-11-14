@@ -41,5 +41,6 @@
   "debugger.attach.processName": "Name of the x86 .NET process to attach to (with or without \".exe\"). Debugging waits until it starts. Used when processId is not set.",
   "debugger.attach.waitTimeout": "Seconds to wait for processName to start.",
   "snippet.waitAttach.label": ".NET x86: Attach when the process starts",
-  "snippet.waitAttach.description": "Wait for a 32-bit .NET process by name and attach to it"
+  "snippet.waitAttach.description": "Wait for a 32-bit .NET process by name and attach to it",
+  "config.perfTips.enabled": "Show the elapsed time at the end of the stopped line after a step or continue (PerfTips)."
 }

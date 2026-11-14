@@ -245,6 +245,11 @@
           "type": "boolean",
           "default": true,
           "description": "%config.stepHistory.enabled%"
+        },
+        "dotnetX86.perfTips.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.perfTips.enabled%"
         }
       }
     },

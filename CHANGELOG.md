@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **PerfTips**: elapsed time since the last step / continue at the end of the stopped line.
 - New: the attach process picker lists only x86 .NET processes (with window titles); "Show all processes..." falls back to every process.
 - New: attach by **processName**: waits until the x86 .NET process starts (`waitTimeout`, default 120 s), then attaches.
 - New: **Modules** view (loaded assemblies, symbol status, copy path / reveal in File Explorer).
