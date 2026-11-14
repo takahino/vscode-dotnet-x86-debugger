@@ -300,6 +300,14 @@ While stopped, right-click a line of the method that is executing and choose **J
 to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
 or moving into / out of a catch / finally block, are refused.
 
+### Step Into Specific
+
+On a line with several calls, such as `Outer(Inner1(), Inner2())`, right-click and choose **Step Into Target** (or run it
+from the Command Palette) and pick the call to step into; the others run without stopping. The calls are listed in the
+order they run (arguments first). netcoredbg has no step-in targets, so the step goes over the line with a temporary
+function breakpoint on the picked method: if the line does not call it after all, the step ends on the next line.
+Constructors (`new T(...)`) are not listed.
+
 ### UI freeze detection
 
 When the program's UI stops responding — a UI thread does not process window messages for 2 seconds

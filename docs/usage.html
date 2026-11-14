@@ -107,6 +107,7 @@
         <li><a href="#f-variables-menu">Variables view commands</a></li>
         <li><a href="#f-data-bp">Break on value change</a></li>
         <li><a href="#f-goto">Set next statement</a></li>
+        <li><a href="#f-stepinto">Step into a specific call</a></li>
         <li><a href="#f-exceptions">Exceptions</a></li>
         <li><a href="#f-time">Time and performance</a></li>
         <li><a href="#f-history">Step history</a></li>
@@ -509,6 +510,11 @@ without running the lines in between — run a line again after fixing a value, 
 <code>finally</code> block; you then get a message explaining why.</p>
 <div class="usecase"><b>Use case:</b> a calculation went wrong. Change an input with <b>Set Value</b> in the Variables view, jump back
 to the calculation line, and step over it again — no restart needed.</div>
+
+<h3 id="f-stepinto">Step into a specific call</h3>
+<p>On a line such as <code>Outer(Inner1(), Inner2())</code>, right-click and choose <b>Step Into Target</b>, then pick the call. The
+other calls run without stopping. The calls are listed in the order they run; if the picked one is not called after all, the
+step ends on the next line.</p>
 
 <h3 id="f-exceptions">Exceptions</h3>
 <ul>

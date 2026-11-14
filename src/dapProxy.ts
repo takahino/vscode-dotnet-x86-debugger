@@ -5,6 +5,7 @@ import * as cp from 'child_process';
 import * as fs from 'fs';
 import { MAKE_OBJECT_ID_REQUEST, requestWithDebuggerObjectIds, responseWithClientObjectIds } from './objectIds';
 import { readPdbDocuments } from './pdbDocuments';
+import { findCallTargets } from './stepTargets';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -171,6 +172,14 @@ export class DapProxy {
     private readonly idAliases = new Map<number, number>();
     /** A pause asked for because of a UI freeze: its stop is reported as such, on the frozen thread. */
     private pendingFreeze: { threadId: number; ms: number } | undefined;
+    /** Where each frame VS Code was shown at this stop is (PDB path, line), for "Step Into Target". */
+    private readonly frameLocations = new Map<number, { path: string; line: number }>();
+    /** Targets offered by the last stepInTargets request, by id. */
+    private stepTargets = new Map<number, string>();
+    /** The user's function breakpoints, sent again (without the step target) once a "Step Into Target" ends. */
+    private userFunctionBreakpoints: any[] = [];
+    /** A "Step Into Target" in progress: a step over the line with a function breakpoint on the target. */
+    private pendingTargetStep: { method: string } | undefined;
 
     constructor(
         executable: string,
@@ -213,6 +222,17 @@ export class DapProxy {
         if (message.type === 'request' && message.command === FREEZE_PAUSE_REQUEST) {
             void this.pauseForFreeze(message);
             return;
+        }
+        if (message.type === 'request' && message.command === 'stepInTargets') {
+            this.respond(message, { targets: this.stepInTargets(Number(message.arguments?.frameId)) });
+            return;
+        }
+        if (message.type === 'request' && message.command === 'stepIn' && message.arguments?.targetId !== undefined) {
+            void this.stepIntoTarget(message);
+            return;
+        }
+        if (message.type === 'request' && message.command === 'setFunctionBreakpoints') {
+            this.userFunctionBreakpoints = message.arguments?.breakpoints ?? [];
         }
         if (message.type === 'request' && message.command === 'dataBreakpointInfo') {
             this.respond(message, this.dataBreakpointInfo(message.arguments ?? {}));
@@ -277,6 +297,19 @@ export class DapProxy {
                 special.line = bp.line;
             }
         }
+        if (message.type === 'response' && message.command === 'stackTrace' && message.success) {
+            for (const frame of message.body?.stackFrames ?? []) {
+                if (typeof frame.id === 'number' && frame.source?.path && typeof frame.line === 'number') {
+                    this.frameLocations.set(frame.id, { path: frame.source.path, line: frame.line });
+                }
+            }
+        }
+        if (message.type === 'event' && message.event === 'stopped') {
+            this.frameLocations.clear(); // frame ids are handed out anew at every stop
+            if (this.pendingTargetStep) {
+                message = await this.finishTargetStep(message);
+            }
+        }
         if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'pause' && this.pendingFreeze) {
             // netcoredbg stops every thread and names some thread; show the frozen UI thread and why.
             const { threadId, ms } = this.pendingFreeze;
@@ -320,6 +353,7 @@ export class DapProxy {
             supportsLogPoints: true,
             supportsHitConditionalBreakpoints: true,
             supportsDataBreakpoints: Boolean(this.options.findWriteSites),
+            supportsStepInTargetsRequest: true,
         };
     }
 
@@ -712,6 +746,61 @@ export class DapProxy {
                 return true;
             });
         });
+    }
+
+    /** The calls of the frame's current statement, read from its source file (empty when there is none). */
+    private stepInTargets(frameId: number): { id: number; label: string; line: number; column: number }[] {
+        const location = this.frameLocations.get(frameId);
+        this.stepTargets = new Map();
+        if (!location) {
+            return [];
+        }
+        let lines: string[];
+        try {
+            lines = fs.readFileSync(this.mapper.toLocal(location.path), 'utf8').split(/\r?\n/);
+        } catch {
+            return [];
+        }
+        return findCallTargets(lines, location.line - 1).map((target, i) => {
+            this.stepTargets.set(i + 1, target.method);
+            return { id: i + 1, label: target.label, line: location.line + target.lineOffset, column: target.column };
+        });
+    }
+
+    /**
+     * netcoredbg has no step-in targets: steps over the line with a function breakpoint on the target method, so the
+     * step ends inside the target if the line calls it, or on the next line if it does not.
+     */
+    private async stepIntoTarget(message: DapMessage): Promise<void> {
+        const threadId = message.arguments?.threadId;
+        const method = this.stepTargets.get(Number(message.arguments?.targetId));
+        if (!method) {
+            const { targetId: _unknown, ...args } = message.arguments ?? {};
+            this.write({ ...message, arguments: args });
+            return;
+        }
+        await this.request('setFunctionBreakpoints', { breakpoints: [...this.userFunctionBreakpoints, { name: method }] });
+        this.pendingTargetStep = { method };
+        const r = await this.request('next', { threadId });
+        if (!r.success) {
+            this.pendingTargetStep = undefined;
+            await this.request('setFunctionBreakpoints', { breakpoints: this.userFunctionBreakpoints });
+        }
+        this.toClient({ type: 'response', seq: this.nextEventSeq++, request_seq: message.seq, command: 'stepIn', success: r.success, message: r.message, body: {} });
+    }
+
+    /** The stop that ends a "Step Into Target": the target's breakpoint goes, and arriving in the target is a step. */
+    private async finishTargetStep(stop: DapMessage): Promise<DapMessage> {
+        const { method } = this.pendingTargetStep!;
+        this.pendingTargetStep = undefined;
+        await this.request('setFunctionBreakpoints', { breakpoints: this.userFunctionBreakpoints });
+        if (stop.body?.reason !== 'breakpoint') {
+            return stop;
+        }
+        // A stop in the target is the step arriving; any other breakpoint on the way is a real breakpoint stop.
+        const top = await this.request('stackTrace', { threadId: stop.body.threadId, startFrame: 0, levels: 1 });
+        const name = String(top.body?.stackFrames?.[0]?.name ?? '');
+        return frameIsMethod(name, method) ? { ...stop, body: { ...stop.body, reason: 'step' } } : stop;
     }
 
     /** Pauses the program for a UI freeze; the stop that follows is reported on the frozen thread. */
