@@ -1,0 +1,212 @@
+diff --git a/src/debugger/variables.cpp b/src/debugger/variables.cpp
+index e38c37e..7275e1f 100644
+--- a/src/debugger/variables.cpp
++++ b/src/debugger/variables.cpp
+@@ -24,6 +24,111 @@
+ namespace netcoredbg
+ {
+ 
++// Reads the first constructor argument (the format string) of a DebuggerDisplayAttribute blob:
++// prolog 0x0001, then a SerString (0xFF for null, or compressed length + UTF-8 bytes).
++static bool ParseDebuggerDisplayBlob(const void *pBlob, ULONG blobSize, std::string &format)
++{
++    const BYTE *data = static_cast<const BYTE *>(pBlob);
++    if (blobSize < 3 || data[0] != 0x01 || data[1] != 0x00 || data[2] == 0xFF)
++        return false;
++    PCCOR_SIGNATURE p = data + 2;
++    ULONG length = CorSigUncompressData(p);
++    if (p + length > data + blobSize)
++        return false;
++    format.assign(reinterpret_cast<const char *>(p), length);
++    return !format.empty();
++}
++
++static bool GetDebuggerDisplayFormat(ICorDebugType *pType, std::string &format)
++{
++    CorElementType corType;
++    if (pType == nullptr || FAILED(pType->GetType(&corType)) || (corType != ELEMENT_TYPE_CLASS && corType != ELEMENT_TYPE_VALUETYPE))
++        return false;
++
++    ToRelease<ICorDebugClass> pClass;
++    ToRelease<ICorDebugModule> pModule;
++    ToRelease<IUnknown> pMDUnknown;
++    ToRelease<IMetaDataImport> pMD;
++    mdTypeDef typeDef = mdTypeDefNil;
++    if (FAILED(pType->GetClass(&pClass)) || FAILED(pClass->GetToken(&typeDef)) || FAILED(pClass->GetModule(&pModule)) ||
++        FAILED(pModule->GetMetaDataInterface(IID_IMetaDataImport, &pMDUnknown)) ||
++        FAILED(pMDUnknown->QueryInterface(IID_IMetaDataImport, (LPVOID *) &pMD)))
++        return false;
++
++    const void *pBlob = nullptr;
++    ULONG blobSize = 0;
++    if (pMD->GetCustomAttributeByName(typeDef, reinterpret_cast<LPCWSTR>(to_utf16("System.Diagnostics.DebuggerDisplayAttribute").c_str()),
++                                      &pBlob, &blobSize) == S_OK)
++        return ParseDebuggerDisplayBlob(pBlob, blobSize, format);
++
++    // The attribute is inherited by derived types.
++    ToRelease<ICorDebugType> pBaseType;
++    return SUCCEEDED(pType->GetBase(&pBaseType)) && GetDebuggerDisplayFormat(pBaseType, format);
++}
++
++// Metadata lookup only, no func-eval: safe to call while other values are still being collected.
++static bool GetDebuggerDisplayFormat(ICorDebugValue *pInputValue, std::string &format)
++{
++    BOOL isNull = FALSE;
++    ToRelease<ICorDebugValue> pValue;
++    if (pInputValue == nullptr || FAILED(DereferenceAndUnboxValue(pInputValue, &pValue, &isNull)) || isNull || pValue == nullptr)
++        return false;
++
++    ToRelease<ICorDebugValue2> pValue2;
++    ToRelease<ICorDebugType> pType;
++    return SUCCEEDED(pValue->QueryInterface(IID_ICorDebugValue2, (LPVOID *) &pValue2)) &&
++           SUCCEEDED(pValue2->GetExactType(&pType)) &&
++           GetDebuggerDisplayFormat(pType, format);
++}
++
++void Variables::ApplyDebuggerDisplay(ICorDebugThread *pThread, FrameId frameId, const std::string &format, Variable &variable)
++{
++    // Expressions are evaluated relative to the object; that needs a name to reach it by.
++    if (variable.evaluateName.empty())
++        return;
++
++    std::string result;
++    size_t pos = 0;
++    while (pos < format.size())
++    {
++        size_t open = format.find('{', pos);
++        if (open == std::string::npos)
++        {
++            result += format.substr(pos);
++            break;
++        }
++        size_t close = format.find('}', open);
++        if (close == std::string::npos)
++            return;
++        result += format.substr(pos, open - pos);
++
++        std::string expression = format.substr(open + 1, close - open - 1);
++        // Format specifiers: ",nq" removes the quotes around strings; others (",d", ",h", ...) are ignored.
++        bool noQuotes = false;
++        size_t comma = expression.rfind(',');
++        if (comma != std::string::npos && expression.find_first_of("()\"", comma) == std::string::npos)
++        {
++            noQuotes = expression.find("nq", comma) != std::string::npos;
++            expression.erase(comma);
++        }
++
++        ToRelease<ICorDebugValue> pResultValue;
++        std::string output;
++        bool editable = false;
++        std::string value;
++        if (FAILED(m_sharedEvalStackMachine->EvaluateExpression(pThread, frameId.getLevel(), variable.evalFlags,
++                                                                variable.evaluateName + "." + expression, &pResultValue, output, &editable)) ||
++            FAILED(PrintValue(pResultValue, value)))
++            return; // Keep the default "{Type}" text when any part can't be evaluated.
++
++        if (noQuotes && value.size() >= 2 && value.front() == '"' && value.back() == '"')
++            value = value.substr(1, value.size() - 2);
++        result += value;
++        pos = close + 1;
++    }
++    variable.value = result;
++}
++
+ static void GetNumChild(Evaluator *pEvaluator, ICorDebugValue *pValue, int &numChild, bool static_members)
+ {
+     numChild = 0;
+@@ -72,6 +177,7 @@ struct VariableMember
+     std::string printedValue;
+     std::string printedType;
+     HRESULT printStatus = S_FALSE;
++    std::string displayFormat; // DebuggerDisplayAttribute format, applied after all members are collected
+     VariableMember(const std::string &name, const std::string& ownerType, ICorDebugValue *pValue) :
+         name(name),
+         ownerType(ownerType),
+@@ -81,6 +187,7 @@ struct VariableMember
+             return;
+         TypePrinter::GetTypeOfValue(value, printedType);
+         printStatus = PrintValue(value, printedValue, true);
++        GetDebuggerDisplayFormat(value, displayFormat);
+     }
+     VariableMember(VariableMember &&that) = default;
+     VariableMember(const VariableMember &that) = delete;
+@@ -254,6 +361,7 @@ HRESULT Variables::GetStackVariables(
+         variables.push_back(var);
+         ++currentIndex;
+     }
++    std::vector<std::pair<size_t, std::string>> displayFormats; // index in `variables` -> DebuggerDisplay format
+ 
+     if (FAILED(Status = m_sharedEvaluator->WalkStackVars(pThread, frameId.getLevel(),
+         [&](const std::string &name, Evaluator::GetValueCallback getValue) -> HRESULT
+@@ -273,6 +381,10 @@ HRESULT Variables::GetStackVariables(
+         IfFailRet(TypePrinter::GetTypeOfValue(iCorValue, var.type));
+         IfFailRet(PrintValue(iCorValue, var.value));
+ 
++        std::string displayFormat;
++        if (GetDebuggerDisplayFormat(iCorValue, displayFormat))
++            displayFormats.emplace_back(variables.size(), displayFormat);
++
+         IfFailRet(AddVariableReference(var, frameId, iCorValue, ValueIsVariable));
+         variables.push_back(var);
+         return S_OK;
+@@ -281,6 +393,9 @@ HRESULT Variables::GetStackVariables(
+         return Status;
+     }
+ 
++    for (auto &entry : displayFormats)
++        ApplyDebuggerDisplay(pThread, frameId, entry.second, variables[entry.first]);
++
+     return S_OK;
+ }
+ 
+@@ -360,6 +475,7 @@ HRESULT Variables::GetChildren(
+ 
+     FixupInheritedFieldNames(members);
+ 
++    const size_t firstMember = variables.size();
+     for (auto &it : members)
+     {
+         Variable var(ref.evalFlags);
+@@ -372,6 +488,12 @@ HRESULT Variables::GetChildren(
+         variables.push_back(var);
+     }
+ 
++    for (size_t i = 0; i < members.size(); ++i)
++    {
++        if (!members[i].displayFormat.empty())
++            ApplyDebuggerDisplay(pThread, ref.frameId, members[i].displayFormat, variables[firstMember + i]);
++    }
++
+     if (ref.valueKind == ValueIsVariable && hasStaticMembers)
+     {
+         bool staticsInRange = start < ref.namedVariables && (count == 0 || start + count >= ref.namedVariables);
+@@ -419,7 +541,12 @@ HRESULT Variables::Evaluate(
+     IfFailRet(TypePrinter::GetTypeOfValue(pResultValue, variable.type));
+     IfFailRet(PrintValue(pResultValue, variable.value));
+ 
+-    return AddVariableReference(variable, frameId, pResultValue, ValueIsVariable);
++    std::string displayFormat;
++    bool hasDisplay = GetDebuggerDisplayFormat(pResultValue, displayFormat);
++    IfFailRet(AddVariableReference(variable, frameId, pResultValue, ValueIsVariable));
++    if (hasDisplay)
++        ApplyDebuggerDisplay(pThread, frameId, displayFormat, variable);
++    return S_OK;
+ }
+ 
+ HRESULT Variables::SetVariable(
+diff --git a/src/debugger/variables.h b/src/debugger/variables.h
+index 5abcb27..61e5473 100644
+--- a/src/debugger/variables.h
++++ b/src/debugger/variables.h
+@@ -138,6 +138,11 @@ private:
+ 
+     HRESULT AddVariableReference(Variable &variable, FrameId frameId, ICorDebugValue *pValue, ValueKind valueKind);
+ 
++    // DebuggerDisplayAttribute support. The format is read from metadata while values are collected (no func-eval);
++    // it is applied afterwards by evaluating "<evaluateName>.<expression>", because func-evals may invalidate
++    // the values still held by the caller.
++    void ApplyDebuggerDisplay(ICorDebugThread *pThread, FrameId frameId, const std::string &format, Variable &variable);
++
+     HRESULT GetStackVariables(
+         FrameId frameId,
+         ICorDebugThread *pThread,

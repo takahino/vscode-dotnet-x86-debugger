@@ -112,6 +112,13 @@ or run **.NET x86: Dump Expression...** from the Command Palette, to open the wh
 - Property getters run while dumping, as in the Variables view. Large objects such as a `Form` hit the limits above
   (a notification tells you so); raise them in the settings if needed.
 
+### DebuggerDisplay
+
+Types with `[DebuggerDisplay("Name = {Name}, Age = {Age}")]` are shown with that text in the Variables view,
+hovers and the Watch view, as in Visual Studio (`List<T>` shows `Count = 3`). Member access and method calls work,
+`,nq` removes the quotes around strings, and the attribute is inherited. Expressions are evaluated relative to the
+object, so complex expressions (operators, casts) fall back to the default `{Type}` text.
+
 ### Logpoints
 
 Right-click the editor gutter and choose **Add Logpoint...**, then enter a message such as

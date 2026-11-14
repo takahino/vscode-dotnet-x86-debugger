@@ -87,14 +87,12 @@ if (-not (Test-Path $runtimeDir)) {
     Invoke-Step 'sparse-checkout の設定' { git -C $runtimeDir sparse-checkout set src/coreclr src/native eng }
 }
 
-# netcoredbg への独自修正 (patches\netcoredbg\*.patch) を当てる。作業ディレクトリを再利用した場合に備え、適用済みならスキップする
+# netcoredbg への独自修正 (patches\netcoredbg\*.patch) を番号順に当てる。
+# 後のパッチが前のパッチの近くを変更するため「適用済みか」の個別判定はできない。作業ディレクトリを再利用した場合も
+# 毎回タグの状態に戻してから全パッチを当て直す（変更されたファイルだけが再コンパイルされる）。
+Invoke-Step 'netcoredbg のソースをタグの状態に戻す' { git -C $srcDir checkout -- . }
 $patches = Get-ChildItem (Join-Path $repoRoot 'patches\netcoredbg') -Filter '*.patch' -ErrorAction SilentlyContinue | Sort-Object Name
 foreach ($patch in $patches) {
-    git -C $srcDir apply --reverse --check $patch.FullName 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "==> パッチ適用済み: $($patch.Name)" -ForegroundColor DarkGray
-        continue
-    }
     Invoke-Step "パッチの適用: $($patch.Name)" { git -C $srcDir apply $patch.FullName }
 }
 
