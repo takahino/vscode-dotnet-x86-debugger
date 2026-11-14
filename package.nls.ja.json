@@ -42,6 +42,8 @@
   "debugger.attach.waitTimeout": "processName の起動を待つ秒数。",
   "snippet.waitAttach.label": ".NET x86: 起動を待ってアタッチ",
   "snippet.waitAttach.description": "名前で 32bit .NET プロセスの起動を待ってアタッチします",
+  "config.uiFreeze.enabled": "UI が応答しなくなったら（UI スレッドが dotnetX86.uiFreeze.thresholdMs の間ウィンドウ メッセージを処理しなかったら）プログラムを一時停止し、原因のコードを表示します。",
+  "config.uiFreeze.thresholdMs": "UI スレッドが応答しない状態がこの時間（ミリ秒）続いたら一時停止します。",
   "config.perfTips.enabled": "ステップ実行や続行で停止したとき、停止行の末尾に経過時間を表示します（PerfTips）。",
   "view.autos": "自動変数 (.NET x86)",
   "view.exceptions": "例外ログ (.NET x86)",

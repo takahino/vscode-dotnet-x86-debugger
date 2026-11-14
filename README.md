@@ -119,6 +119,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
+| `dotnetX86.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
+| `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
 | `dotnetX86.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
 | `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
@@ -280,6 +282,16 @@ from other objects (`other.x = …`) or from code outside the workspace are not 
 While stopped, right-click a line of the method that is executing and choose **Jump to Cursor** (Set Next Statement)
 to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
 or moving into / out of a catch / finally block, are refused.
+
+### UI freeze detection
+
+When the program's UI stops responding — a UI thread does not process window messages for 2 seconds
+(`dotnetX86.uiFreeze.thresholdMs`) — the program is paused on that thread, so the Call Stack shows the code that holds
+the UI up, and the pause is labeled *UI not responding for 2.0 s*. Steps and stops at breakpoints never count as freezes.
+Visual Studio has no such option. Turn it off with `dotnetX86.uiFreeze.enabled`.
+
+If the UI thread is waiting inside native code (e.g. `Thread.Sleep`, a lock), the top frames are framework / native ones:
+look a few frames down for your code. Expressions cannot be evaluated in such a frame (pick one of your own frames).
 
 ### PerfTips
 

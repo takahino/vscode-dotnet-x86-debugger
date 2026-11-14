@@ -42,6 +42,8 @@
   "debugger.attach.waitTimeout": "Seconds to wait for processName to start.",
   "snippet.waitAttach.label": ".NET x86: Attach when the process starts",
   "snippet.waitAttach.description": "Wait for a 32-bit .NET process by name and attach to it",
+  "config.uiFreeze.enabled": "Pause the program when its UI stops responding (a UI thread does not process window messages for dotnetX86.uiFreeze.thresholdMs), showing the code that holds it up.",
+  "config.uiFreeze.thresholdMs": "How long (ms) a UI thread may not respond before the program is paused.",
   "config.perfTips.enabled": "Show the elapsed time at the end of the stopped line after a step or continue (PerfTips).",
   "view.autos": "Autos (.NET x86)",
   "view.exceptions": "Exception Log (.NET x86)",

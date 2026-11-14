@@ -14,6 +14,7 @@ import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
 import { viewAsTableCommand } from './tableVisualizer';
+import { UiFreezeDetector } from './uiFreeze';
 import { ValueTracker } from './valueTracker';
 import { WindowHighlighter } from './windowHighlight';
 import { pickProcess } from './processPicker';
@@ -82,6 +83,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.revealModule', revealModule),
         perfTips,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
+        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new UiFreezeDetector(context.extensionPath, output)),
         autos,
         vscode.window.createTreeView('dotnetX86.autos', { treeDataProvider: autos }),
         breakpointCommands,

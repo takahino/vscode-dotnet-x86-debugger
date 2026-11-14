@@ -155,6 +155,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 sourceMapper: sourceMap.mapper,
                 preloadModules: sourceMap.preloadModules,
                 missingSourceMessage,
+                freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
             },
         );
     }

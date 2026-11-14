@@ -486,6 +486,17 @@
           "default": true,
           "description": "%config.perfTips.enabled%"
         },
+        "dotnetX86.uiFreeze.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.uiFreeze.enabled%"
+        },
+        "dotnetX86.uiFreeze.thresholdMs": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 500,
+          "description": "%config.uiFreeze.thresholdMs%"
+        },
         "dotnetX86.exceptionLog.enabled": {
           "type": "boolean",
           "default": true,

@@ -34,6 +34,8 @@ export const TIMER_END_PREFIX = '#timer-end:';
 export const REMOVE_BREAKPOINT_EVENT = 'dotnetX86.removeBreakpoint';
 /** Custom DAP event for every exception thrown while the exception log is on. */
 export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
+/** Custom DAP request: pause because this UI thread stopped answering for `ms` (arguments: threadId, ms). */
+export const FREEZE_PAUSE_REQUEST = 'dotnetX86.pauseForFreeze';
 
 export interface ExceptionFilterText {
     label: string;
@@ -64,6 +66,8 @@ export interface ProxyOptions {
     preloadModules?: string[];
     /** Console text when the source of a stop is not on this machine (shown once per file). */
     missingSourceMessage?: (unresolved: UnresolvedSource) => string;
+    /** Reason shown for a pause caused by a UI freeze ("UI not responding for 2.3 s"). */
+    freezeDescription?: (ms: number) => string;
 }
 
 interface WriteSite {
@@ -164,6 +168,8 @@ export class DapProxy {
     private readonly clientIdsByPath = new Map<string, number[]>();
     /** netcoredbg breakpoint id -> the id VS Code knows, for breakpoints the proxy sent again. */
     private readonly idAliases = new Map<number, number>();
+    /** A pause asked for because of a UI freeze: its stop is reported as such, on the frozen thread. */
+    private pendingFreeze: { threadId: number; ms: number } | undefined;
 
     constructor(
         executable: string,
@@ -202,6 +208,10 @@ export class DapProxy {
         }
         if (message.type === 'request' && message.command === 'setExceptionBreakpoints' && this.options.exceptionLog) {
             message = { ...message, arguments: this.withExceptionLogFilter(message.arguments ?? {}) };
+        }
+        if (message.type === 'request' && message.command === FREEZE_PAUSE_REQUEST) {
+            void this.pauseForFreeze(message);
+            return;
         }
         if (message.type === 'request' && message.command === 'dataBreakpointInfo') {
             this.respond(message, this.dataBreakpointInfo(message.arguments ?? {}));
@@ -265,6 +275,14 @@ export class DapProxy {
             if (special && typeof bp.line === 'number') {
                 special.line = bp.line;
             }
+        }
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'pause' && this.pendingFreeze) {
+            // netcoredbg stops every thread and names some thread; show the frozen UI thread and why.
+            const { threadId, ms } = this.pendingFreeze;
+            this.pendingFreeze = undefined;
+            const description = this.options.freezeDescription?.(ms) ?? `UI not responding for ${(ms / 1000).toFixed(1)} s`;
+            message = { ...message, body: { ...message.body, threadId, description, text: description, allThreadsStopped: true } };
+            this.emitEvent('output', { category: 'console', output: `${description}\n` });
         }
         if (message.type === 'event' && message.event === 'continued' && this.hiddenContinuedCount > 0) {
             this.hiddenContinuedCount--;
@@ -693,6 +711,18 @@ export class DapProxy {
                 return true;
             });
         });
+    }
+
+    /** Pauses the program for a UI freeze; the stop that follows is reported on the frozen thread. */
+    private async pauseForFreeze(message: DapMessage): Promise<void> {
+        const threadId = Number(message.arguments?.threadId);
+        const ms = Number(message.arguments?.ms) || 0;
+        this.pendingFreeze = { threadId, ms };
+        const r = await this.request('pause', { threadId });
+        if (!r.success) {
+            this.pendingFreeze = undefined;
+        }
+        this.toClient({ type: 'response', seq: this.nextEventSeq++, request_seq: message.seq, command: message.command, success: r.success, message: r.message, body: {} });
     }
 
     /** Answers a request from VS Code directly, without netcoredbg. */

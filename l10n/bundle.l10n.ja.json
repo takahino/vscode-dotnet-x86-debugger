@@ -148,5 +148,6 @@
   "The window of {0} no longer exists.": "{0} のウィンドウはもう存在しません。",
   "{0} is not visible on the screen (it or one of its parents is hidden).": "{0} は画面に表示されていません（それ自身か親のどれかが非表示です）。",
   "The form of {0} is minimized: restore it, then stop the program again.": "{0} のフォームが最小化されています。元のサイズに戻してから、もう一度停止してください。",
-  "Could not highlight {0}: {1}": "{0} を強調表示できませんでした: {1}"
+  "Could not highlight {0}: {1}": "{0} を強調表示できませんでした: {1}",
+  "UI not responding for {0} s": "UI が {0} 秒応答していません"
 }
