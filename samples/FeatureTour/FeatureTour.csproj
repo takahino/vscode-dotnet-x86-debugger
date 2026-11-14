@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- One source, two runtimes: .NET 10 and .NET Framework 4.8. Both are built by the "build" task. -->
+    <TargetFrameworks>net10.0-windows;net48</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x86</PlatformTarget>
+    <Platforms>x86</Platforms>
+    <!-- The debugger reads Portable PDBs only (SDK-style projects default to it; old-style projects need this line). -->
+    <DebugType>portable</DebugType>
+    <!-- The code is kept to C# 7.3, the .NET Framework default, so it compiles the same for both targets. -->
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

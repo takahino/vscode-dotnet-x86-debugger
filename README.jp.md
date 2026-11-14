@@ -83,6 +83,7 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 
 `tasks.json` を含む完全な例は [`samples/WinFormsX86`](samples/WinFormsX86) を、.NET Framework 4.8 版は
 [`samples/WinFormsNet48X86`](samples/WinFormsNet48X86) を参照してください。
+機能ごとにボタンを並べた **[`samples/FeatureTour`](samples/FeatureTour)**（.NET 10 / .NET Framework 4.8）で、各機能をひととおり試せます。
 
 ### .NET Framework 4.x
 
@@ -211,6 +212,7 @@ Markdown で開きます。プログラム・開始/終了時刻・終了コー�
 **ステップ オーバー**（または、自分のコードを呼ばない行でのステップ イン）と **ステップ アウト** の後、呼び出したメソッドの戻り値が
 変数ビューと自動変数ビューの先頭に `Program.Square returned = 9` のように表示されます。1 行で複数のメソッドを呼んだ場合は、それぞれが表示されます。
 オブジェクトは展開できます（表示は型名で、`DebuggerDisplay` は適用されません）。値は次のステップか続行で消えます。
+`decimal`・`DateTime`・`Nullable<T>`・4 バイトより大きい構造体を返すメソッドは、x86 では隠しバッファー経由で値を返すため、戻り値は表示されません。
 
 ### Debug.WriteLine
 

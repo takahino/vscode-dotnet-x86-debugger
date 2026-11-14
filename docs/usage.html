@@ -412,7 +412,8 @@ Variables and Autos views — no need to store them in a temporary variable firs
 </figure>
 <div class="note">Objects can be expanded; their text is the type name (<code>DebuggerDisplay</code> is not applied to them). The values
 are shown only at the stop right after the step and disappear on the next step or continue. Calls that end at a breakpoint
-inside them are not shown.</div>
+inside them are not shown, nor are methods returning <code>decimal</code>, <code>DateTime</code>, <code>Nullable&lt;T&gt;</code> or a struct
+larger than 4 bytes (on x86 these values travel through a hidden buffer).</div>
 <div class="usecase"><b>Use case:</b> <code>if (IsValid(order) &amp;&amp; HasStock(order))</code> takes the wrong branch. Step over it and
 read which of the two returned <code>false</code>.</div>
 

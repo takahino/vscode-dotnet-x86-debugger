@@ -397,7 +397,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>Square を 2 回呼ぶ行をステップ オーバーした後。</figcaption>
 </figure>
-<div class="note">オブジェクトは展開できます（表示は型名で、<code>DebuggerDisplay</code> は適用されません）。値はステップ直後の停止でだけ表示され、次のステップか続行で消えます。呼び出し先のブレークポイントで止まった呼び出しは表示されません。</div>
+<div class="note">オブジェクトは展開できます（表示は型名で、<code>DebuggerDisplay</code> は適用されません）。値はステップ直後の停止でだけ表示され、次のステップか続行で消えます。呼び出し先のブレークポイントで止まった呼び出しと、<code>decimal</code>・<code>DateTime</code>・<code>Nullable&lt;T&gt;</code>・4 バイトより大きい構造体を返すメソッド（x86 では隠しバッファー経由で値を返すため）は表示されません。</div>
 <div class="usecase"><b>ユースケース:</b> <code>if (IsValid(order) &amp;&amp; HasStock(order))</code> が思わぬ分岐に進む。ステップ オーバーして、どちらが <code>false</code> を返したかを読み取ります。</div>
 
 <h3 id="f-variables-menu">変数ビューのコマンド</h3>

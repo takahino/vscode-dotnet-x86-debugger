@@ -83,6 +83,7 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
 
 See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example including `tasks.json`, and
 [`samples/WinFormsNet48X86`](samples/WinFormsNet48X86) for the same with .NET Framework 4.8.
+**[`samples/FeatureTour`](samples/FeatureTour)** is a WinForms app with one button per feature, for .NET 10 and .NET Framework 4.8.
 
 ### .NET Framework 4.x
 
@@ -218,6 +219,8 @@ After **Step Over** (or Step Into a line that calls no code of yours) and **Step
 methods that were called are shown at the top of the Variables and Autos views, e.g. `Program.Square returned = 9`.
 A line with several calls shows each of them. Objects can be expanded; their text is the type name
 (`DebuggerDisplay` is not applied to them). The values disappear at the next step or continue.
+Methods that return `decimal`, `DateTime`, `Nullable<T>` or a struct larger than 4 bytes pass the value through a hidden
+buffer on x86, and their return values are not shown.
 
 ### Debug.WriteLine
 
