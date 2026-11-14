@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Framework x86 Launch",
+      "type": "dotnet-x86",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/bin/x86/Debug/net48/WinFormsNet48X86.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false
+    },
+    {
+      "name": ".NET Framework x86 Attach",
+      "type": "dotnet-x86",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    }
+  ]
+}

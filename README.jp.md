@@ -81,7 +81,8 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 
 3. F5 を押します。
 
-`tasks.json` を含む完全な例は [`samples/WinFormsX86`](samples/WinFormsX86) を参照してください。
+`tasks.json` を含む完全な例は [`samples/WinFormsX86`](samples/WinFormsX86) を、.NET Framework 4.8 版は
+[`samples/WinFormsNet48X86`](samples/WinFormsNet48X86) を参照してください。
 
 ### .NET Framework 4.x
 

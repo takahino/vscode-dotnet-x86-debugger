@@ -81,7 +81,8 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
 
 3. Press F5.
 
-See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example including `tasks.json`.
+See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example including `tasks.json`, and
+[`samples/WinFormsNet48X86`](samples/WinFormsNet48X86) for the same with .NET Framework 4.8.
 
 ### .NET Framework 4.x
 

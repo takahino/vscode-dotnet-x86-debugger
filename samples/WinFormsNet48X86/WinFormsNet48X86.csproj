@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x86</PlatformTarget>
+    <Platforms>x86</Platforms>
+    <!-- The debugger reads Portable PDBs only (SDK-style projects default to it; old-style projects need this line). -->
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+</Project>
