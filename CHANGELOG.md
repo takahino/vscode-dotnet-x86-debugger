@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **CPU usage graph** below the memory graph (% of all cores, stopped periods shaded).
 - New: **Hit count breakpoints** (`N`, `==N`, `>=N`, `>N`, `%N`), also combined with conditions and log messages.
 - New: readable, localized exception filter labels; exception breakpoints accept a condition listing exception types.
 - Fix: the "failed to start netcoredbg" message was still Japanese-only.

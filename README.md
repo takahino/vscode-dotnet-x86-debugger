@@ -138,11 +138,11 @@ The Breakpoints view shows **All Exceptions (when thrown)** and **User-Unhandled
 choose **Edit Condition** to limit it to exception types, e.g. `System.NullReferenceException, System.InvalidOperationException`;
 start with `!` to break on every type except those.
 
-### Memory graph
+### Memory / CPU graph
 
-Run **.NET x86: Show Memory Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)
-to see the debuggee's **Private Bytes** and **Working Set** once per second, like the process memory graph of
-Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
+Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)
+to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
+in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
 and open *Data table* for the latest samples.
 
 ### More commands in the Variables view context menu

@@ -31,14 +31,11 @@
   "{0} will run as a 64-bit process ({1}). To debug it as x86, set <PlatformTarget>x86</PlatformTarget> in the project.": "{0} は 64bit プロセスとして起動します（{1}）。x86 でデバッグするにはプロジェクトに <PlatformTarget>x86</PlatformTarget> を設定してください。",
   "Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".": "processId が不正です: {0}。数値の PID か \"${command:pickProcess}\" を指定してください。",
   "The x86 dotnet.exe was not found. Install the x86 .NET runtime (Windows Desktop Runtime x86) or set DOTNET_ROOT(x86).": "x86 版 dotnet.exe が見つかりません。x86 の .NET ランタイム（Windows Desktop Runtime x86）をインストールするか、DOTNET_ROOT(x86) を設定してください。",
-  "Memory (.NET x86)": "メモリ (.NET x86)",
-  "Process memory": "プロセスのメモリ",
   "Start debugging with the dotnet-x86 debugger to see memory.": "dotnet-x86 デバッガでデバッグを開始するとメモリを表示します。",
   "Private Bytes (now)": "Private Bytes（現在）",
   "Private Bytes (peak)": "Private Bytes（ピーク）",
   "Working Set (now)": "Working Set（現在）",
   "Stopped (break / step)": "停止中（ブレーク / ステップ）",
-  "Process memory over time": "プロセスのメモリの推移",
   "Data table (last 30 samples)": "データ表（直近 30 件）",
   "Elapsed": "経過時間",
   "process exited": "プロセス終了",
@@ -47,5 +44,11 @@
   "All Exceptions (when thrown)": "すべての例外（スロー時）",
   "Break whenever an exception is thrown, even if it is caught later.": "例外がスローされたら、後で catch される場合でも停止します。",
   "User-Unhandled Exceptions": "ユーザーコードで未処理の例外",
-  "Break when an exception is not handled by user code.": "ユーザーコードで処理されなかった例外で停止します。"
+  "Break when an exception is not handled by user code.": "ユーザーコードで処理されなかった例外で停止します。",
+  "Memory / CPU (.NET x86)": "メモリ / CPU (.NET x86)",
+  "Process memory and CPU": "プロセスのメモリと CPU",
+  "CPU (now)": "CPU（現在）",
+  "CPU (peak)": "CPU（ピーク）",
+  "Memory": "メモリ",
+  "CPU usage (% of all cores)": "CPU 使用率（全コアに対する %）"
 }

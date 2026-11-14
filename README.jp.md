@@ -136,10 +136,10 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 **条件の編集** を選ぶと、例外の型で絞り込めます（例: `System.NullReferenceException, System.InvalidOperationException`）。
 先頭に `!` を付けると、指定した型以外のすべてで停止します。
 
-### メモリグラフ
+### メモリ / CPU グラフ
 
-コマンドパレットで **.NET x86: Show Memory Graph** を実行すると（または `dotnetX86.memoryGraph.autoOpen` を `true` にすると）、
-デバッグ対象の **Private Bytes** と **Working Set** を 1 秒ごとにグラフ表示します。Visual Studio の診断ツールのプロセスメモリに相当します。
+コマンドパレットで **.NET x86: メモリ / CPU グラフを表示** を実行すると（または `dotnetX86.memoryGraph.autoOpen` を `true` にすると）、
+デバッグ対象の **Private Bytes** と **Working Set**、および **CPU 使用率**（全コアに対する %、タスクマネージャーと同じ基準）を 1 秒ごとにグラフ表示します。Visual Studio の診断ツールのプロセスメモリ / CPU に相当します。
 ブレークポイントやステップで停止していた区間は網掛けで表示されます。マウスを乗せると値が読め、*Data table* で直近の値を一覧できます。
 
 ### 変数ビューの右クリックメニューにあるその他のコマンド
