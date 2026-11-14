@@ -60,5 +60,9 @@
   "Location": "場所",
   "No numeric values to chart; see the data table.": "数値ではないためグラフにできません。データ表を参照してください。",
   "Data table (last 50 hits)": "データ表（直近 50 件）",
-  "{0} hits": "{0} 回"
+  "{0} hits": "{0} 回",
+  "{0} changed": "{0} 件変化",
+  "Go to Location": "位置へ移動",
+  "new": "新規",
+  "changed": "変化"
 }

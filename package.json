@@ -82,6 +82,12 @@
         "command": "dotnetX86.showValueTrend",
         "title": "%command.showValueTrend%",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.clearStepHistory",
+        "title": "%command.clearStepHistory%",
+        "category": ".NET x86",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -140,6 +146,10 @@
         {
           "command": "dotnetX86.trackValue",
           "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.clearStepHistory",
+          "when": "debugType == 'dotnet-x86'"
         }
       ],
       "editor/context": [
@@ -147,6 +157,13 @@
           "command": "dotnetX86.trackValue",
           "when": "resourceLangId == csharp",
           "group": "z_dotnetX86@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "dotnetX86.clearStepHistory",
+          "when": "view == dotnetX86.stepHistory",
+          "group": "navigation"
         }
       ]
     },
@@ -179,6 +196,11 @@
           "default": 2000,
           "minimum": 1,
           "description": "%config.dump.maxNodes%"
+        },
+        "dotnetX86.stepHistory.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.stepHistory.enabled%"
         }
       }
     },
@@ -322,7 +344,16 @@
           }
         ]
       }
-    ]
+    ],
+    "views": {
+      "debug": [
+        {
+          "id": "dotnetX86.stepHistory",
+          "name": "%view.stepHistory%",
+          "when": "debugType == 'dotnet-x86'"
+        }
+      ]
+    }
   },
   "scripts": {
     "compile": "tsc -p ./",

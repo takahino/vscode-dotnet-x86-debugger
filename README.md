@@ -87,6 +87,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 |---|---|
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
+| `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
@@ -131,6 +132,13 @@ Right-click the editor gutter and choose **Add Logpoint...**, then enter a messa
 `i={i} total={total} in $FUNCTION`. Each time the line runs, the message is written to the Debug Console
 and execution continues without stopping. `{expression}` is evaluated in the current frame;
 `$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
+
+### Step history
+
+The **Step History (.NET x86)** view in Run and Debug records the location and the local variables at every stop,
+newest first. Values that changed since the previous stop in the same method are marked *changed* / *new*, so you can
+look back at "the value three steps ago" (it is a history to browse; execution does not run backwards).
+Click an entry to open its location. Turn it off with `dotnetX86.stepHistory.enabled`.
 
 ### Value trend
 

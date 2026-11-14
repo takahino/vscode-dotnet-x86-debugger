@@ -30,5 +30,8 @@
   "snippet.attach.label": ".NET x86: アタッチ",
   "snippet.attach.description": "実行中の 32bit .NET プロセスにアタッチします",
   "command.trackValue": "この行で値の推移を記録...",
-  "command.showValueTrend": "値の推移を表示"
+  "command.showValueTrend": "値の推移を表示",
+  "command.clearStepHistory": "ステップ履歴をクリア",
+  "view.stepHistory": "ステップ履歴 (.NET x86)",
+  "config.stepHistory.enabled": "停止のたびに、停止位置とローカル変数をステップ履歴ビューに記録します。"
 }

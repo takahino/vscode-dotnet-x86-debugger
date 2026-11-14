@@ -30,5 +30,8 @@
   "snippet.attach.label": ".NET x86: Attach",
   "snippet.attach.description": "Attach to a running 32-bit .NET process",
   "command.trackValue": "Track Value at This Line...",
-  "command.showValueTrend": "Show Value Trend"
+  "command.showValueTrend": "Show Value Trend",
+  "command.clearStepHistory": "Clear Step History",
+  "view.stepHistory": "Step History (.NET x86)",
+  "config.stepHistory.enabled": "Record the location and local variables at every stop in the Step History view."
 }

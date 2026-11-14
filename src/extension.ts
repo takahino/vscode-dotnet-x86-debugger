@@ -4,6 +4,7 @@ import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
+import { StepHistory } from './stepHistory';
 import { ValueTracker } from './valueTracker';
 import { pickProcess } from './processPicker';
 import {
@@ -22,6 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const snapshots = new SnapshotStore();
     const memory = new MemoryMonitor(output);
     const valueTracker = new ValueTracker();
+    const stepHistory = new StepHistory();
 
     context.subscriptions.push(
         output,
@@ -43,6 +45,10 @@ export function activate(context: vscode.ExtensionContext): void {
         valueTracker,
         vscode.commands.registerCommand('dotnetX86.trackValue', () => valueTracker.addTracker()),
         vscode.commands.registerCommand('dotnetX86.showValueTrend', () => valueTracker.show()),
+        stepHistory,
+        vscode.window.createTreeView('dotnetX86.stepHistory', { treeDataProvider: stepHistory }),
+        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, stepHistory),
+        vscode.commands.registerCommand('dotnetX86.clearStepHistory', () => stepHistory.clear()),
     );
 }
 
