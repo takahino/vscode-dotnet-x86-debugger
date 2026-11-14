@@ -42,5 +42,10 @@
   "Data table (last 30 samples)": "データ表（直近 30 件）",
   "Elapsed": "経過時間",
   "process exited": "プロセス終了",
-  "stopped": "停止中"
+  "stopped": "停止中",
+  "Exception types to break on, e.g. \"System.NullReferenceException, System.InvalidOperationException\". Start with \"!\" to break on every type except these.": "停止する例外の型。例: \"System.NullReferenceException, System.InvalidOperationException\"。先頭に \"!\" を付けると、指定した型以外のすべてで停止します。",
+  "All Exceptions (when thrown)": "すべての例外（スロー時）",
+  "Break whenever an exception is thrown, even if it is caught later.": "例外がスローされたら、後で catch される場合でも停止します。",
+  "User-Unhandled Exceptions": "ユーザーコードで未処理の例外",
+  "Break when an exception is not handled by user code.": "ユーザーコードで処理されなかった例外で停止します。"
 }

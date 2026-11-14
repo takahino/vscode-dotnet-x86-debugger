@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- New: **Hit count breakpoints** (`N`, `==N`, `>=N`, `>N`, `%N`), also combined with conditions and log messages.
+- New: readable, localized exception filter labels; exception breakpoints accept a condition listing exception types.
+- Fix: the "failed to start netcoredbg" message was still Japanese-only.
+
 ## 0.3.0
 
 - New: Japanese localization. Menus, settings, messages and the memory graph follow VS Code's display language;

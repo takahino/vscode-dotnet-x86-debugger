@@ -1,7 +1,24 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { DapProxy } from './dapProxy';
+import { DapProxy, ExceptionFilterText } from './dapProxy';
+
+/** Labels for netcoredbg's exception filters, shown in the Breakpoints view. */
+function exceptionFilterTexts(): Record<string, ExceptionFilterText> {
+    const conditionDescription = vscode.l10n.t('Exception types to break on, e.g. "System.NullReferenceException, System.InvalidOperationException". Start with "!" to break on every type except these.');
+    return {
+        all: {
+            label: vscode.l10n.t('All Exceptions (when thrown)'),
+            description: vscode.l10n.t('Break whenever an exception is thrown, even if it is caught later.'),
+            conditionDescription,
+        },
+        'user-unhandled': {
+            label: vscode.l10n.t('User-Unhandled Exceptions'),
+            description: vscode.l10n.t('Break when an exception is not handled by user code.'),
+            conditionDescription,
+        },
+    };
+}
 
 class ProxyAdapter implements vscode.DebugAdapter {
     private readonly emitter = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
@@ -15,6 +32,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
             path.dirname(executable),
             (m) => this.emitter.fire(m as vscode.DebugProtocolMessage),
             (line) => output.appendLine(line.trimEnd()),
+            { exceptionFilters: exceptionFilterTexts() },
         );
     }
 

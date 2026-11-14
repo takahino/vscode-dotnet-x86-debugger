@@ -126,6 +126,18 @@ Right-click the editor gutter and choose **Add Logpoint...**, then enter a messa
 and execution continues without stopping. `{expression}` is evaluated in the current frame;
 `$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
 
+### Hit count breakpoints
+
+Edit a breakpoint and choose **Hit Count**, then enter `5` or `==5` (stop on the 5th hit), `>=5` / `>5`
+(from the 5th / after the 5th hit) or `%5` (every 5th hit). It can be combined with a condition (hits are counted
+only when the condition is true) and with a log message.
+
+### Exception breakpoints
+
+The Breakpoints view shows **All Exceptions (when thrown)** and **User-Unhandled Exceptions**. Right-click one and
+choose **Edit Condition** to limit it to exception types, e.g. `System.NullReferenceException, System.InvalidOperationException`;
+start with `!` to break on every type except those.
+
 ### Memory graph
 
 Run **.NET x86: Show Memory Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)

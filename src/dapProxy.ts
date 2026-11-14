@@ -1,5 +1,5 @@
-// DAP relay between VS Code and netcoredbg that adds logpoints, which netcoredbg does not support.
-// Kept free of the vscode module so it can be exercised directly against netcoredbg.
+// DAP relay between VS Code and netcoredbg that adds what netcoredbg lacks: logpoints, hit-count breakpoints
+// and readable exception filter labels. Kept free of the vscode module so it can be exercised directly against netcoredbg.
 
 import * as cp from 'child_process';
 
@@ -10,10 +10,23 @@ const HEADER_DELIMITER = '\r\n\r\n';
 /** Requests the proxy sends itself use seq numbers far above the client's, so their responses can be told apart. */
 const OWN_SEQ_BASE = 1_000_000_000;
 
-interface Logpoint {
+export interface ExceptionFilterText {
+    label: string;
+    description: string;
+    conditionDescription: string;
+}
+
+export interface ProxyOptions {
+    /** Replaces netcoredbg's raw exception filter labels ("all", "user-unhandled"), keyed by filter id. */
+    exceptionFilters?: Record<string, ExceptionFilterText>;
+}
+
+/** A breakpoint the proxy handles itself: it has a log message and/or a hit condition. */
+interface SpecialBreakpoint {
     path: string;
     line: number;
-    message: string;
+    logMessage?: string;
+    hitCondition?: (hits: number) => boolean;
 }
 
 export class DapProxy {
@@ -25,11 +38,16 @@ export class DapProxy {
     private exited = false;
     private queue: Promise<void> = Promise.resolve();
 
-    /** setBreakpoints requests waiting for their response, to learn which breakpoint ids are logpoints. */
-    private readonly pendingSetBreakpoints = new Map<number, { path: string; messages: (string | undefined)[] }>();
-    private readonly logpointIdsByPath = new Map<string, number[]>();
-    private readonly logpoints = new Map<number, Logpoint>();
-    /** The "continued" event caused by resuming after a logpoint is hidden: the client never saw the stop. */
+    /** setBreakpoints requests waiting for their response, to learn which breakpoint ids need special handling. */
+    private readonly pendingSetBreakpoints = new Map<number, { path: string; specs: { logMessage?: string; hitCondition?: string }[] }>();
+    private readonly specialIdsByPath = new Map<string, number[]>();
+    private readonly specials = new Map<number, SpecialBreakpoint>();
+    /**
+     * Hit counts by "path:line". VS Code re-sends every breakpoint of a file when one of them changes,
+     * so counting by location (not by breakpoint id) keeps the counts across those updates.
+     */
+    private readonly hits = new Map<string, number>();
+    /** The "continued" event caused by resuming after a hidden stop is hidden too: the client never saw the stop. */
     private hideNextContinued = false;
 
     constructor(
@@ -38,11 +56,12 @@ export class DapProxy {
         cwd: string,
         private readonly toClient: (message: DapMessage) => void,
         private readonly log: (line: string) => void,
+        private readonly options: ProxyOptions = {},
     ) {
         this.child = cp.spawn(executable, args, { cwd, windowsHide: true });
         this.child.stdout.on('data', (d: Buffer) => this.onData(d));
         this.child.stderr.on('data', (d: Buffer) => this.log(`[netcoredbg] ${d.toString()}`));
-        this.child.on('error', (e) => this.fail(`netcoredbg を起動できませんでした: ${e.message}`));
+        this.child.on('error', (e) => this.fail(`Failed to start netcoredbg: ${e.message}`));
         this.child.on('exit', (code) => {
             this.exited = true;
             this.log(`[netcoredbg] exited with code ${code}`);
@@ -57,7 +76,10 @@ export class DapProxy {
             const args = message.arguments ?? {};
             this.pendingSetBreakpoints.set(message.seq, {
                 path: normalizePath(args.source?.path ?? ''),
-                messages: (args.breakpoints ?? []).map((b: any) => (typeof b.logMessage === 'string' ? b.logMessage : undefined)),
+                specs: (args.breakpoints ?? []).map((b: any) => ({
+                    logMessage: typeof b.logMessage === 'string' ? b.logMessage : undefined,
+                    hitCondition: typeof b.hitCondition === 'string' && b.hitCondition.trim() ? b.hitCondition : undefined,
+                })),
             });
         }
         this.write(message);
@@ -71,55 +93,74 @@ export class DapProxy {
 
     private async fromDebugger(message: DapMessage): Promise<void> {
         if (message.type === 'response' && message.command === 'initialize' && message.success) {
-            message.body = { ...(message.body ?? {}), supportsLogPoints: true };
+            message.body = this.extendCapabilities(message.body ?? {});
         }
         if (message.type === 'response' && message.command === 'setBreakpoints' && message.request_seq !== undefined) {
-            this.recordLogpoints(message);
+            this.recordSpecialBreakpoints(message);
         }
         if (message.type === 'event' && message.event === 'breakpoint') {
             // Breakpoints bind to their final line once the module loads.
             const bp = message.body?.breakpoint;
-            const logpoint = bp && this.logpoints.get(bp.id);
-            if (logpoint && typeof bp.line === 'number') {
-                logpoint.line = bp.line;
+            const special = bp && this.specials.get(bp.id);
+            if (special && typeof bp.line === 'number') {
+                special.line = bp.line;
             }
         }
         if (message.type === 'event' && message.event === 'continued' && this.hideNextContinued) {
             this.hideNextContinued = false;
             return;
         }
-        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && this.logpoints.size > 0) {
-            if (await this.handleLogpointStop(message.body.threadId)) {
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && this.specials.size > 0) {
+            if (await this.handleSpecialStop(message.body.threadId)) {
                 return;
             }
         }
         this.toClient(message);
     }
 
-    private recordLogpoints(response: DapMessage): void {
+    private extendCapabilities(body: any): any {
+        const labels = this.options.exceptionFilters ?? {};
+        const filters = (body.exceptionBreakpointFilters ?? []).map((f: any) => ({
+            ...f,
+            ...(labels[f.filter] ?? {}),
+            // netcoredbg filters by exception type names ("A, B", or "!A" to exclude).
+            supportsCondition: true,
+        }));
+        return { ...body, exceptionBreakpointFilters: filters, supportsLogPoints: true, supportsHitConditionalBreakpoints: true };
+    }
+
+    private recordSpecialBreakpoints(response: DapMessage): void {
         const pending = this.pendingSetBreakpoints.get(response.request_seq!);
         this.pendingSetBreakpoints.delete(response.request_seq!);
         if (!pending) {
             return;
         }
         // setBreakpoints replaces every breakpoint of the source.
-        for (const id of this.logpointIdsByPath.get(pending.path) ?? []) {
-            this.logpoints.delete(id);
+        for (const id of this.specialIdsByPath.get(pending.path) ?? []) {
+            this.specials.delete(id);
         }
         const ids: number[] = [];
         const breakpoints: any[] = response.body?.breakpoints ?? [];
         breakpoints.forEach((bp, i) => {
-            const message = pending.messages[i];
-            if (message !== undefined && typeof bp.id === 'number') {
-                this.logpoints.set(bp.id, { path: pending.path, line: bp.line, message });
-                ids.push(bp.id);
+            const spec = pending.specs[i];
+            if (!spec || typeof bp.id !== 'number' || (spec.logMessage === undefined && spec.hitCondition === undefined)) {
+                return;
             }
+            const hitCondition = spec.hitCondition !== undefined ? parseHitCondition(spec.hitCondition) : undefined;
+            if (spec.hitCondition !== undefined && !hitCondition) {
+                this.emitEvent('output', {
+                    category: 'console',
+                    output: `Ignored hit count condition "${spec.hitCondition}": use N, ==N, >=N, >N or %N.\n`,
+                });
+            }
+            this.specials.set(bp.id, { path: pending.path, line: bp.line, logMessage: spec.logMessage, hitCondition });
+            ids.push(bp.id);
         });
-        this.logpointIdsByPath.set(pending.path, ids);
+        this.specialIdsByPath.set(pending.path, ids);
     }
 
-    /** Returns true when the stop was a logpoint: the message was logged and execution resumed. */
-    private async handleLogpointStop(threadId: number): Promise<boolean> {
+    /** Returns true when the stop was handled here (hit count not reached, or a logpoint) and execution resumed. */
+    private async handleSpecialStop(threadId: number): Promise<boolean> {
         try {
             const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: 1 });
             const frame = stack.body?.stackFrames?.[0];
@@ -127,19 +168,36 @@ export class DapProxy {
                 return false;
             }
             const path = normalizePath(frame.source.path);
-            const logpoint = [...this.logpoints.values()].find((l) => l.path === path && l.line === frame.line);
-            if (!logpoint) {
+            const special = [...this.specials.values()].find((s) => s.path === path && s.line === frame.line);
+            if (!special) {
                 return false;
             }
-            const text = await this.formatMessage(logpoint.message, frame.id, frame.name, threadId);
+
+            if (special.hitCondition) {
+                const key = `${path}:${frame.line}`;
+                const count = (this.hits.get(key) ?? 0) + 1;
+                this.hits.set(key, count);
+                if (!special.hitCondition(count)) {
+                    await this.resume(threadId);
+                    return true;
+                }
+            }
+            if (special.logMessage === undefined) {
+                return false; // A plain breakpoint whose hit condition is met: show the stop.
+            }
+            const text = await this.formatMessage(special.logMessage, frame.id, frame.name, threadId);
             this.emitEvent('output', { category: 'console', output: `${text}\n`, source: frame.source, line: frame.line });
-            this.hideNextContinued = true;
-            await this.request('continue', { threadId });
+            await this.resume(threadId);
             return true;
         } catch (e) {
-            this.log(`[logpoint] ${e instanceof Error ? e.message : String(e)}`);
+            this.log(`[proxy] ${e instanceof Error ? e.message : String(e)}`);
             return false;
         }
+    }
+
+    private async resume(threadId: number): Promise<void> {
+        this.hideNextContinued = true;
+        await this.request('continue', { threadId });
     }
 
     /** Expands `{expression}` (evaluated in the stopped frame) plus $FUNCTION and $TID, like Visual Studio tracepoints. */
@@ -209,7 +267,7 @@ export class DapProxy {
                 this.ownPending.delete(message.request_seq);
                 continue;
             }
-            // Other messages are handled in order: a stop being checked for a logpoint must not overtake later events.
+            // Other messages are handled in order: a stop being checked here must not overtake later events.
             this.queue = this.queue.then(() => this.fromDebugger(message)).catch((e) => this.log(`[proxy] ${e}`));
         }
     }
@@ -221,6 +279,28 @@ export class DapProxy {
 
     private emitEvent(event: string, body?: unknown): void {
         this.toClient({ type: 'event', seq: this.nextEventSeq++, event, body });
+    }
+}
+
+/**
+ * Hit count conditions, as in Visual Studio: "N" or "==N" (the N-th hit), ">=N", ">N" (from the N-th hit on)
+ * and "%N" (every N-th hit). Returns undefined for anything else.
+ */
+export function parseHitCondition(text: string): ((hits: number) => boolean) | undefined {
+    const match = /^\s*(==|>=|>|%)?\s*(\d+)\s*$/.exec(text);
+    if (!match) {
+        return undefined;
+    }
+    const n = Number(match[2]);
+    switch (match[1]) {
+        case '>=':
+            return (hits) => hits >= n;
+        case '>':
+            return (hits) => hits > n;
+        case '%':
+            return n > 0 ? (hits) => hits % n === 0 : undefined;
+        default:
+            return (hits) => hits === n;
     }
 }
 
