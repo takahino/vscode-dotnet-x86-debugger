@@ -1,0 +1,12 @@
+# Node / extension build
+node_modules/
+out/
+*.vsix
+
+# .NET samples
+bin/
+obj/
+.vs/
+
+# env
+.env
