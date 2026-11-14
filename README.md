@@ -178,6 +178,12 @@ Right-click a line in a C# editor:
 
 You can also type these markers as the condition of any breakpoint. They can be combined with a hit count.
 
+### Pinned values
+
+Right-click a line and choose **Pin Value to Line...** to show an expression at the end of that line. It is evaluated
+again in the selected stack frame every time the program stops, and the pins are kept with the workspace.
+Use **Unpin Value from Line** or **Clear All Pinned Values** to remove them.
+
 ### Debug.WriteLine
 
 Output from `Debug.WriteLine`, `Trace.WriteLine` and `Debugger.Log` appears in the Debug Console, with a link to the source line.

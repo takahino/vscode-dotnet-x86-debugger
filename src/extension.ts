@@ -8,6 +8,7 @@ import { ExceptionLog } from './exceptionLog';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
 import { PerfTips } from './perfTips';
+import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { StepHistory } from './stepHistory';
 import { viewAsTableCommand } from './tableVisualizer';
@@ -34,6 +35,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const perfTips = new PerfTips();
     const autos = new AutosView();
     const breakpointCommands = new BreakpointCommands();
+    const pinnedValues = new PinnedValues(context.workspaceState);
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
@@ -78,6 +80,10 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.addTemporaryBreakpoint', () => breakpointCommands.addTemporary()),
         vscode.commands.registerCommand('dotnetX86.addDependentBreakpoint', () => breakpointCommands.addDependent()),
         vscode.commands.registerCommand('dotnetX86.addWhenChangedBreakpoint', () => breakpointCommands.addWhenChanged()),
+        pinnedValues,
+        vscode.commands.registerCommand('dotnetX86.pinValue', () => pinnedValues.pin()),
+        vscode.commands.registerCommand('dotnetX86.unpinValue', () => pinnedValues.unpin()),
+        vscode.commands.registerCommand('dotnetX86.clearPinnedValues', () => pinnedValues.clear()),
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - New: **Temporary**, **dependent** and **when-changed** breakpoints (editor context menu, or `#once`, `#after File.cs:12`, `#changed expr` as the condition).
+- New: **Pinned values** — pin an expression to an editor line; it is evaluated again every time the program stops.
 - Docs: `Debug.WriteLine` / `Trace.WriteLine` output already appears in the Debug Console.
 
 ## 0.5.0

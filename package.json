@@ -39,7 +39,10 @@
     "onCommand:dotnetX86.endTimer",
     "onCommand:dotnetX86.addTemporaryBreakpoint",
     "onCommand:dotnetX86.addDependentBreakpoint",
-    "onCommand:dotnetX86.addWhenChangedBreakpoint"
+    "onCommand:dotnetX86.addWhenChangedBreakpoint",
+    "onCommand:dotnetX86.pinValue",
+    "onCommand:dotnetX86.unpinValue",
+    "onCommand:dotnetX86.clearPinnedValues"
   ],
   "contributes": {
     "commands": [
@@ -138,6 +141,21 @@
       {
         "command": "dotnetX86.addWhenChangedBreakpoint",
         "title": "%command.addWhenChangedBreakpoint%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.pinValue",
+        "title": "%command.pinValue%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.unpinValue",
+        "title": "%command.unpinValue%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.clearPinnedValues",
+        "title": "%command.clearPinnedValues%",
         "category": ".NET x86"
       }
     ],
@@ -242,6 +260,14 @@
         {
           "command": "dotnetX86.addWhenChangedBreakpoint",
           "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.pinValue",
+          "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.unpinValue",
+          "when": "resourceLangId == csharp"
         }
       ],
       "editor/context": [
@@ -274,6 +300,16 @@
           "command": "dotnetX86.addWhenChangedBreakpoint",
           "when": "resourceLangId == csharp",
           "group": "z_dotnetX86bp@3"
+        },
+        {
+          "command": "dotnetX86.pinValue",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86pin@1"
+        },
+        {
+          "command": "dotnetX86.unpinValue",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86pin@2"
         }
       ],
       "view/title": [
