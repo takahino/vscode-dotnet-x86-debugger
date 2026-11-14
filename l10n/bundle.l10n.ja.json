@@ -86,5 +86,8 @@
   "{0} exceptions thrown": "{0} 件の例外",
   "Name of the timer that starts at line {0}": "{0} 行目から開始するタイマーの名前",
   "Timer that ends at line {0}": "{0} 行目で終了するタイマー",
-  "The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.": "次のステートメントに設定できるのは、実行中のメソッド内の行だけです。catch / finally ブロックの内外をまたぐこともできません。"
+  "The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.": "次のステートメントに設定できるのは、実行中のメソッド内の行だけです。catch / finally ブロックの内外をまたぐこともできません。",
+  "Set the breakpoint it should depend on first.": "先に、依存先となるブレークポイントを設定してください。",
+  "Line {0} becomes active only after stopping at:": "{0} 行目は、次の場所で停止した後にだけ有効になります:",
+  "Stop at line {0} only when this expression has a different value than the last time": "{0} 行目で、この式の値が前回と異なるときだけ停止します"
 }

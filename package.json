@@ -36,7 +36,10 @@
     "onCommand:dotnetX86.trackValue",
     "onCommand:dotnetX86.showValueTrend",
     "onCommand:dotnetX86.startTimer",
-    "onCommand:dotnetX86.endTimer"
+    "onCommand:dotnetX86.endTimer",
+    "onCommand:dotnetX86.addTemporaryBreakpoint",
+    "onCommand:dotnetX86.addDependentBreakpoint",
+    "onCommand:dotnetX86.addWhenChangedBreakpoint"
   ],
   "contributes": {
     "commands": [
@@ -120,6 +123,21 @@
       {
         "command": "dotnetX86.endTimer",
         "title": "%command.endTimer%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.addTemporaryBreakpoint",
+        "title": "%command.addTemporaryBreakpoint%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.addDependentBreakpoint",
+        "title": "%command.addDependentBreakpoint%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.addWhenChangedBreakpoint",
+        "title": "%command.addWhenChangedBreakpoint%",
         "category": ".NET x86"
       }
     ],
@@ -212,6 +230,18 @@
         {
           "command": "dotnetX86.endTimer",
           "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.addTemporaryBreakpoint",
+          "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.addDependentBreakpoint",
+          "when": "resourceLangId == csharp"
+        },
+        {
+          "command": "dotnetX86.addWhenChangedBreakpoint",
+          "when": "resourceLangId == csharp"
         }
       ],
       "editor/context": [
@@ -229,6 +259,21 @@
           "command": "dotnetX86.endTimer",
           "when": "resourceLangId == csharp",
           "group": "z_dotnetX86@3"
+        },
+        {
+          "command": "dotnetX86.addTemporaryBreakpoint",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86bp@1"
+        },
+        {
+          "command": "dotnetX86.addDependentBreakpoint",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86bp@2"
+        },
+        {
+          "command": "dotnetX86.addWhenChangedBreakpoint",
+          "when": "resourceLangId == csharp",
+          "group": "z_dotnetX86bp@3"
         }
       ],
       "view/title": [

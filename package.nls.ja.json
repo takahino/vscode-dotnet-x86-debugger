@@ -48,5 +48,8 @@
   "command.clearExceptionLog": "例外ログをクリア",
   "config.exceptionLog.enabled": "デバッグ対象でスローされたすべての例外（catch されたものも含む）を、止まらずに例外ログ ビューとデバッグコンソールに記録します。新しいデバッグセッションから有効です。例外を大量にスローするアプリでは、有効にすると動作が遅くなります。",
   "command.startTimer": "ここから時間を計測...",
-  "command.endTimer": "ここまでの時間を計測..."
+  "command.endTimer": "ここまでの時間を計測...",
+  "command.addTemporaryBreakpoint": "一時ブレークポイントを追加",
+  "command.addDependentBreakpoint": "依存ブレークポイントを追加...",
+  "command.addWhenChangedBreakpoint": "値が変化したときのブレークポイントを追加..."
 }

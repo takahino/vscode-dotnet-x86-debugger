@@ -27,6 +27,8 @@ export const TRACK_EVENT = 'dotnetX86.trackedValues';
 /** Logpoints marking the start / end of a timed section; the elapsed time is reported like a tracked value. */
 export const TIMER_START_PREFIX = '#timer-start:';
 export const TIMER_END_PREFIX = '#timer-end:';
+/** Custom DAP event asking the extension to remove a temporary ("#once") breakpoint that was just hit. */
+export const REMOVE_BREAKPOINT_EVENT = 'dotnetX86.removeBreakpoint';
 /** Custom DAP event for every exception thrown while the exception log is on. */
 export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
 
@@ -58,17 +60,26 @@ interface WriteSite {
     line: number;
 }
 
+/**
+ * Visual Studio 2022 breakpoint options, written in the breakpoint's condition (netcoredbg never sees them):
+ * `#once` (temporary: removed after the first stop), `#after File.cs:12` (dependent: active only after that
+ * breakpoint was reached) and `#changed expr` (stops only when the expression's value changed since the last pass).
+ */
+export type BreakpointMarker = { kind: 'once' } | { kind: 'after'; target: string } | { kind: 'changed'; expression: string };
+
 interface BreakpointSpec {
     logMessage?: string;
     hitCondition?: string;
+    marker?: BreakpointMarker;
 }
 
-/** A breakpoint the proxy handles itself: it has a log message and/or a hit condition. */
+/** A breakpoint the proxy handles itself: it has a log message, a hit condition and/or a marker. */
 interface SpecialBreakpoint {
     path: string;
     line: number;
     logMessage?: string;
     hitCondition?: (hits: number) => boolean;
+    marker?: BreakpointMarker;
 }
 
 export class DapProxy {
@@ -91,6 +102,13 @@ export class DapProxy {
     private readonly userBreakpoints = new Map<string, any>();
     /** Hidden write-site lines per source, sent to netcoredbg together with the user's breakpoints. */
     private hiddenLines = new Map<string, { rawPath: string; lines: Set<number> }>();
+    /** Breakpoint locations ("path:line") where execution stopped so far, for dependent ("#after") breakpoints. */
+    private readonly reachedLocations = new Set<string>();
+    private lastStopLocation: string | undefined;
+    /** Temporary ("#once") breakpoints that already stopped once. */
+    private readonly firedOnce = new Set<string>();
+    /** Last value of each "#changed" breakpoint's expression, by "path:line". */
+    private readonly lastChangedValues = new Map<string, string>();
     /** "goto" (Set Next Statement) requests by seq -> thread id, to report the new position when they succeed. */
     private readonly pendingGotos = new Map<number, number>();
     /** Handlers that consume a message from netcoredbg before it is queued (used while the proxy itself steps). */
@@ -160,9 +178,8 @@ export class DapProxy {
                 specs: userBreakpoints.map(toSpec),
                 userCount: hidden ? userBreakpoints.length : undefined,
             });
-            if (hidden) {
-                message = { ...message, arguments: { ...args, breakpoints: [...userBreakpoints, ...[...hidden.lines].map((line) => ({ line }))] } };
-            }
+            const hiddenBreakpoints = hidden ? [...hidden.lines].map((line) => ({ line })) : [];
+            message = { ...message, arguments: { ...args, breakpoints: [...userBreakpoints.map(forDebugger), ...hiddenBreakpoints] } };
         }
         this.write(message);
     }
@@ -202,8 +219,12 @@ export class DapProxy {
             }
         }
         if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && (this.specials.size > 0 || this.hiddenLines.size > 0)) {
+            this.lastStopLocation = undefined;
             if (await this.handleSpecialStop(message.body.threadId)) {
                 return;
+            }
+            if (this.lastStopLocation) {
+                this.reachedLocations.add(this.lastStopLocation);
             }
         }
         this.toClient(message);
@@ -248,7 +269,7 @@ export class DapProxy {
         const ids: number[] = [];
         breakpoints.forEach((bp, i) => {
             const spec = specs[i];
-            if (!spec || typeof bp.id !== 'number' || (spec.logMessage === undefined && spec.hitCondition === undefined)) {
+            if (!spec || typeof bp.id !== 'number' || (spec.logMessage === undefined && spec.hitCondition === undefined && !spec.marker)) {
                 return;
             }
             const hitCondition = spec.hitCondition !== undefined ? parseHitCondition(spec.hitCondition) : undefined;
@@ -258,7 +279,7 @@ export class DapProxy {
                     output: `Ignored hit count condition "${spec.hitCondition}": use N, ==N, >=N, >N or %N.\n`,
                 });
             }
-            this.specials.set(bp.id, { path, line: bp.line, logMessage: spec.logMessage, hitCondition });
+            this.specials.set(bp.id, { path, line: bp.line, logMessage: spec.logMessage, hitCondition, marker: spec.marker });
             ids.push(bp.id);
         });
         this.specialIdsByPath.set(path, ids);
@@ -273,6 +294,8 @@ export class DapProxy {
                 return false;
             }
             const path = normalizePath(frame.source.path);
+            // Added to reachedLocations by fromDebugger only if this stop is shown (a dependent breakpoint waits for a real stop).
+            this.lastStopLocation = `${path}:${frame.line}`;
             const special = [...this.specials.values()].find((s) => s.path === path && s.line === frame.line);
             if (!special) {
                 // A hidden write-site breakpoint (and not also one of the user's): check whether the value changes.
@@ -289,6 +312,21 @@ export class DapProxy {
                     await this.resume(threadId);
                     return true;
                 }
+            }
+            if (special.marker && !(await this.markerAllowsStop(special.marker, path, frame))) {
+                await this.resume(threadId);
+                return true;
+            }
+            if (special.marker?.kind === 'once') {
+                const key = `${path}:${frame.line}`;
+                if (this.firedOnce.has(key)) {
+                    // Hit again before VS Code removed it.
+                    await this.resume(threadId);
+                    return true;
+                }
+                this.firedOnce.add(key);
+                // VS Code owns the breakpoint list, so the extension removes the temporary breakpoint there.
+                this.emitEvent(REMOVE_BREAKPOINT_EVENT, { source: frame.source, line: frame.line });
             }
             if (special.logMessage === undefined) {
                 return false; // A plain breakpoint whose hit condition is met: show the stop.
@@ -311,6 +349,31 @@ export class DapProxy {
             this.log(`[proxy] ${e instanceof Error ? e.message : String(e)}`);
             return false;
         }
+    }
+
+    /** "#after": the target was reached; "#changed": the value differs from the last pass (never on the first pass). */
+    private async markerAllowsStop(marker: BreakpointMarker, path: string, frame: any): Promise<boolean> {
+        if (marker.kind === 'after') {
+            const separator = marker.target.lastIndexOf(':');
+            const file = normalizePath(marker.target.slice(0, separator));
+            const line = marker.target.slice(separator + 1);
+            return [...this.reachedLocations].some((key) => {
+                const at = key.lastIndexOf(':');
+                return key.slice(at + 1) === line && (key.slice(0, at) === file || key.slice(0, at).endsWith('\\' + file));
+            });
+        }
+        if (marker.kind === 'changed') {
+            const r = await this.request('evaluate', { expression: marker.expression, frameId: frame.id, context: 'watch' });
+            const value = r.success ? r.body.result : `<error: ${r.message ?? 'evaluation failed'}>`;
+            const key = `${path}:${frame.line}`;
+            const previous = this.lastChangedValues.get(key);
+            this.lastChangedValues.set(key, value);
+            if (previous === undefined || previous === value) {
+                return false;
+            }
+            this.emitEvent('output', { category: 'console', output: `${marker.expression}: ${previous} → ${value}\n`, source: frame.source, line: frame.line });
+        }
+        return true;
     }
 
     /** Keeps the user's settings for later decisions and adds an unconditional "all" filter for the log. */
@@ -448,7 +511,7 @@ export class DapProxy {
         const args = this.userBreakpoints.get(path) ?? { source: { path: rawPath }, breakpoints: [] };
         const user: any[] = args.breakpoints ?? [];
         const hidden = [...(this.hiddenLines.get(path)?.lines ?? [])].map((line) => ({ line }));
-        const response = await this.request('setBreakpoints', { ...args, breakpoints: [...user, ...hidden] });
+        const response = await this.request('setBreakpoints', { ...args, breakpoints: [...user.map(forDebugger), ...hidden] });
         // netcoredbg recreates every breakpoint of the source, so the user's logpoints / hit counts get new ids.
         this.recordSpecials(path, user.map(toSpec), (response.body?.breakpoints ?? []).slice(0, user.length));
     }
@@ -666,7 +729,33 @@ function toSpec(b: any): BreakpointSpec {
     return {
         logMessage: typeof b.logMessage === 'string' ? b.logMessage : undefined,
         hitCondition: typeof b.hitCondition === 'string' && b.hitCondition.trim() ? b.hitCondition : undefined,
+        marker: parseMarker(b.condition),
     };
+}
+
+export function parseMarker(condition: unknown): BreakpointMarker | undefined {
+    if (typeof condition !== 'string') {
+        return undefined;
+    }
+    const text = condition.trim();
+    if (text === '#once') {
+        return { kind: 'once' };
+    }
+    const after = /^#after\s+(.+:\d+)\s*$/.exec(text);
+    if (after) {
+        return { kind: 'after', target: after[1] };
+    }
+    const changed = /^#changed\s+(.+)$/.exec(text);
+    return changed ? { kind: 'changed', expression: changed[1].trim() } : undefined;
+}
+
+/** The breakpoint as netcoredbg gets it: a marker in the condition is the proxy's, not a C# expression. */
+function forDebugger(b: any): any {
+    if (!parseMarker(b.condition)) {
+        return b;
+    }
+    const { condition: _marker, ...rest } = b;
+    return rest;
 }
 
 function normalizePath(p: string): string {
