@@ -58,5 +58,6 @@
   "view.controls": "WinForms Controls",
   "command.refreshControlTree": "Refresh",
   "command.dumpControl": "Dump Control",
-  "command.copyControlExpression": "Copy Expression"
+  "command.copyControlExpression": "Copy Expression",
+  "command.exportSessionReport": "Export Debug Session Report"
 }

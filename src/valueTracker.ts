@@ -111,6 +111,10 @@ export class ValueTracker implements vscode.Disposable {
         vscode.debug.addBreakpoints([new vscode.SourceBreakpoint(location, true, undefined, undefined, message)]);
     }
 
+    getHits(): readonly Hit[] {
+        return this.hits;
+    }
+
     show(): void {
         if (this.panel) {
             this.panel.reveal(vscode.ViewColumn.Beside, true);

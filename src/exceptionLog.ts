@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
 import { EXCEPTION_EVENT } from './dapProxy';
 
-interface ExceptionEntry {
+export interface ExceptionEntry {
     n: number;
     time: number;
     typeName: string;
@@ -41,6 +41,10 @@ export class ExceptionLog implements vscode.TreeDataProvider<ExceptionEntry>, vs
 
     attach(view: vscode.TreeView<ExceptionEntry>): void {
         this.view = view;
+    }
+
+    getEntries(): readonly ExceptionEntry[] {
+        return this.entries;
     }
 
     clear(): void {

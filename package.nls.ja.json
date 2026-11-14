@@ -58,5 +58,6 @@
   "view.controls": "WinForms コントロール",
   "command.refreshControlTree": "最新の情報に更新",
   "command.dumpControl": "コントロールをダンプ",
-  "command.copyControlExpression": "式をコピー"
+  "command.copyControlExpression": "式をコピー",
+  "command.exportSessionReport": "デバッグ セッションの報告書を出力"
 }

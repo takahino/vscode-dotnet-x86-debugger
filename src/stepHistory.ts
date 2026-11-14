@@ -60,6 +60,10 @@ export class StepHistory implements vscode.TreeDataProvider<HistoryEntry | Local
         };
     }
 
+    getEntries(): readonly HistoryEntry[] {
+        return this.entries;
+    }
+
     clear(): void {
         this.entries = [];
         this.changeEmitter.fire();

@@ -42,7 +42,8 @@
     "onCommand:dotnetX86.addWhenChangedBreakpoint",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
-    "onCommand:dotnetX86.clearPinnedValues"
+    "onCommand:dotnetX86.clearPinnedValues",
+    "onCommand:dotnetX86.exportSessionReport"
   ],
   "contributes": {
     "commands": [
@@ -173,6 +174,12 @@
         "command": "dotnetX86.copyControlExpression",
         "title": "%command.copyControlExpression%",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.exportSessionReport",
+        "title": "%command.exportSessionReport%",
+        "category": ".NET x86",
+        "icon": "$(output)"
       }
     ],
     "menus": {
@@ -355,6 +362,11 @@
           "command": "dotnetX86.refreshControlTree",
           "when": "view == dotnetX86.controls",
           "group": "navigation"
+        },
+        {
+          "command": "dotnetX86.exportSessionReport",
+          "when": "view == dotnetX86.stepHistory",
+          "group": "navigation@0"
         }
       ],
       "view/item/context": [

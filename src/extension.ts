@@ -11,6 +11,7 @@ import { MemoryMonitor } from './memoryMonitor';
 import { PerfTips } from './perfTips';
 import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
+import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
 import { viewAsTableCommand } from './tableVisualizer';
 import { ValueTracker } from './valueTracker';
@@ -43,6 +44,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
+    const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
 
     context.subscriptions.push(
         output,
@@ -96,6 +98,9 @@ export function activate(context: vscode.ExtensionContext): void {
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),
+        sessionReport,
+        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, sessionReport),
+        vscode.commands.registerCommand('dotnetX86.exportSessionReport', () => sessionReport.export()),
     );
 }
 

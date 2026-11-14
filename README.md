@@ -192,6 +192,13 @@ Right-click it to **Dump Control** or **Copy Expression** (e.g. `System.Windows.
 which you can paste into the Watch view). Every value is read by evaluating an expression, so children are read only when
 you expand a node.
 
+### Debug session report
+
+Run **.NET x86: Export Debug Session Report** (or the button in the Step History view title) to open a Markdown report of
+the last session: program, start / end time and exit code, every stop with the values that changed, the exceptions
+(with a count per type), section timings (min / avg / max), tracked values and the modules with symbols. Save it or paste
+it into a bug report.
+
 ### Debug.WriteLine
 
 Output from `Debug.WriteLine`, `Trace.WriteLine` and `Debugger.Log` appears in the Debug Console, with a link to the source line.
