@@ -37,5 +37,9 @@
   "command.viewAsTable": "View as Table",
   "view.modules": "Modules (.NET x86)",
   "command.copyModulePath": "Copy Path",
-  "command.revealModule": "Reveal in File Explorer"
+  "command.revealModule": "Reveal in File Explorer",
+  "debugger.attach.processName": "Name of the x86 .NET process to attach to (with or without \".exe\"). Debugging waits until it starts. Used when processId is not set.",
+  "debugger.attach.waitTimeout": "Seconds to wait for processName to start.",
+  "snippet.waitAttach.label": ".NET x86: Attach when the process starts",
+  "snippet.waitAttach.description": "Wait for a 32-bit .NET process by name and attach to it"
 }

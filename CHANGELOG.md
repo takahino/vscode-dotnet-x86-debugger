@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New: the attach process picker lists only x86 .NET processes (with window titles); "Show all processes..." falls back to every process.
+- New: attach by **processName**: waits until the x86 .NET process starts (`waitTimeout`, default 120 s), then attaches.
 - New: **Modules** view (loaded assemblies, symbol status, copy path / reveal in File Explorer).
 
 ## 0.4.0

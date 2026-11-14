@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { inspectPe } from './peInfo';
+import { listX86DotnetProcesses } from './processPicker';
 
 export const DEBUG_TYPE = 'dotnet-x86';
 
@@ -26,12 +27,12 @@ export class X86ConfigurationProvider implements vscode.DebugConfigurationProvid
         return config;
     }
 
-    resolveDebugConfigurationWithSubstitutedVariables(
+    async resolveDebugConfigurationWithSubstitutedVariables(
         _folder: vscode.WorkspaceFolder | undefined,
         config: vscode.DebugConfiguration,
-    ): vscode.ProviderResult<vscode.DebugConfiguration> {
+    ): Promise<vscode.DebugConfiguration | undefined> {
         try {
-            return config.request === 'attach' ? resolveAttach(config) : resolveLaunch(config);
+            return config.request === 'attach' ? await resolveAttach(config) : resolveLaunch(config);
         } catch (e) {
             void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
             return undefined;
@@ -69,13 +70,49 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
     return config;
 }
 
-function resolveAttach(config: vscode.DebugConfiguration): vscode.DebugConfiguration {
+async function resolveAttach(config: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration | undefined> {
+    if (config.processId === undefined && typeof config.processName === 'string' && config.processName.trim()) {
+        const pid = await waitForProcess(config.processName.trim(), Number(config.waitTimeout ?? 120));
+        if (pid === undefined) {
+            return undefined; // cancelled
+        }
+        config.processId = pid;
+    }
     const pid = Number(config.processId);
     if (!Number.isInteger(pid) || pid <= 0) {
         throw new Error(vscode.l10n.t("Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".", String(config.processId)));
     }
     config.processId = pid;
     return config;
+}
+
+/**
+ * Waits until an x86 .NET process with this name (with or without ".exe") is running with its runtime loaded,
+ * then returns its PID. Returns undefined when the user cancels; throws on timeout.
+ */
+async function waitForProcess(processName: string, timeoutSeconds: number): Promise<number | undefined> {
+    const wanted = processName.replace(/.exe$/i, '').toLowerCase();
+    return vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: vscode.l10n.t('Waiting for {0} to start (x86 .NET)…', processName),
+            cancellable: true,
+        },
+        async (_progress, token) => {
+            const deadline = Date.now() + Math.max(1, timeoutSeconds) * 1000;
+            while (!token.isCancellationRequested) {
+                const found = (await listX86DotnetProcesses()).find((p) => p.name.toLowerCase() === wanted);
+                if (found) {
+                    return Number(found.pid);
+                }
+                if (Date.now() > deadline) {
+                    throw new Error(vscode.l10n.t('{0} did not start within {1} seconds. Start the app, or raise "waitTimeout" in launch.json.', processName, timeoutSeconds));
+                }
+                await new Promise((r) => setTimeout(r, 500));
+            }
+            return undefined;
+        },
+    );
 }
 
 function findX86DotnetHost(): string {

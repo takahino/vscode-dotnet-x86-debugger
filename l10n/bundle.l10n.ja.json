@@ -77,5 +77,9 @@
   "Only part of the collection was read (limit reached).": "上限に達したため、コレクションの一部だけを読み込みました。",
   "Click a column header to sort.": "列見出しをクリックすると並べ替えます。",
   "symbols loaded": "シンボル読み込み済み",
-  "no symbols": "シンボルなし"
+  "no symbols": "シンボルなし",
+  "$(list-unordered) Show all processes...": "$(list-unordered) すべてのプロセスを表示...",
+  "No x86 .NET process is running. Start the app, or show all processes.": "実行中の x86 .NET プロセスがありません。アプリを起動するか、すべてのプロセスを表示してください。",
+  "Waiting for {0} to start (x86 .NET)…": "{0} の起動を待っています（x86 .NET）…",
+  "{0} did not start within {1} seconds. Start the app, or raise \"waitTimeout\" in launch.json.": "{0} が {1} 秒以内に起動しませんでした。アプリを起動するか、launch.json の \"waitTimeout\" を増やしてください。"
 }

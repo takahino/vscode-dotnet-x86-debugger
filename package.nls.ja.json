@@ -37,5 +37,9 @@
   "command.viewAsTable": "表として表示",
   "view.modules": "モジュール (.NET x86)",
   "command.copyModulePath": "パスをコピー",
-  "command.revealModule": "エクスプローラーで表示"
+  "command.revealModule": "エクスプローラーで表示",
+  "debugger.attach.processName": "アタッチする x86 .NET プロセスの名前（\".exe\" はあってもなくても可）。起動するまで待ってからアタッチします。processId が無い場合に使われます。",
+  "debugger.attach.waitTimeout": "processName の起動を待つ秒数。",
+  "snippet.waitAttach.label": ".NET x86: 起動を待ってアタッチ",
+  "snippet.waitAttach.description": "名前で 32bit .NET プロセスの起動を待ってアタッチします"
 }

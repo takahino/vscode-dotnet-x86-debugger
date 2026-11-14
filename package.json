@@ -320,9 +320,7 @@
             }
           },
           "attach": {
-            "required": [
-              "processId"
-            ],
+            "required": [],
             "properties": {
               "processId": {
                 "anyOf": [
@@ -345,6 +343,15 @@
                 "type": "boolean",
                 "default": true,
                 "description": "%debugger.attach.enableStepFiltering%"
+              },
+              "processName": {
+                "type": "string",
+                "description": "%debugger.attach.processName%"
+              },
+              "waitTimeout": {
+                "type": "number",
+                "default": 120,
+                "description": "%debugger.attach.waitTimeout%"
               }
             }
           }
@@ -384,6 +391,17 @@
               "type": "dotnet-x86",
               "request": "attach",
               "processId": "^\"\\${command:pickProcess}\""
+            }
+          },
+          {
+            "label": "%snippet.waitAttach.label%",
+            "description": "%snippet.waitAttach.description%",
+            "body": {
+              "name": ".NET x86 Attach (wait for process)",
+              "type": "dotnet-x86",
+              "request": "attach",
+              "processName": "MyApp",
+              "waitTimeout": 120
             }
           }
         ]
