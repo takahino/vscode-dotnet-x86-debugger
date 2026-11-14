@@ -87,6 +87,7 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 |---|---|
 | `dotnetX86.debuggerPath` | 同梱版の代わりに、別の x86 版 `netcoredbg.exe` を使います。 |
 | `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、netcoredbg のログファイルも出力します（パスは同パネルに表示）。 |
+| `dotnetX86.memoryGraph.autoOpen` | デバッグ開始時にメモリグラフを自動で開きます（既定値 `false`）。 |
 | `dotnetX86.dump.maxDepth` | *Dump Variable* で展開する入れ子の深さ（既定値 `3`）。 |
 | `dotnetX86.dump.maxNodes` | この数の値を集めた時点で、それ以上の展開をやめます（既定値 `2000`）。 |
 
@@ -117,6 +118,12 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 `i={i} total={total} in $FUNCTION` のようなメッセージを入力します。その行を通るたびにメッセージがデバッグコンソールに出力され、
 実行は止まらずに続きます。`{式}` は現在のフレームで評価され、`$FUNCTION` と `$TID` はメソッド名とスレッド ID に置き換わります。
 条件と組み合わせることもできます。
+
+### メモリグラフ
+
+コマンドパレットで **.NET x86: Show Memory Graph** を実行すると（または `dotnetX86.memoryGraph.autoOpen` を `true` にすると）、
+デバッグ対象の **Private Bytes** と **Working Set** を 1 秒ごとにグラフ表示します。Visual Studio の診断ツールのプロセスメモリに相当します。
+ブレークポイントやステップで停止していた区間は網掛けで表示されます。マウスを乗せると値が読め、*Data table* で直近の値を一覧できます。
 
 ### 変数ビューの右クリックメニューにあるその他のコマンド
 

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { X86AdapterFactory } from './adapterFactory';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { DapTraceFactory } from './dapTrace';
+import { MemoryMonitor } from './memoryMonitor';
 import { pickProcess } from './processPicker';
 import {
     SNAPSHOT_SCHEME,
@@ -17,6 +18,7 @@ import {
 export function activate(context: vscode.ExtensionContext): void {
     const output = vscode.window.createOutputChannel('.NET x86 Debugger');
     const snapshots = new SnapshotStore();
+    const memory = new MemoryMonitor(output);
 
     context.subscriptions.push(
         output,
@@ -31,6 +33,9 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
         vscode.commands.registerCommand('dotnetX86.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),
         vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshots),
+        memory,
+        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, memory),
+        vscode.commands.registerCommand('dotnetX86.showMemoryGraph', () => memory.show()),
     );
 }
 

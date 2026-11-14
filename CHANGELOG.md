@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Memory graph** (Private Bytes / Working Set per second, stopped periods shaded).
 - New: **Logpoints** (`{expression}`, `$FUNCTION`, `$TID`). netcoredbg now runs behind a DAP relay in the extension
   that logs the message and resumes, so the stop is never shown.
 - New: **Copy as C# Initializer** copies a variable as C# object / collection initializer code.

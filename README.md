@@ -87,6 +87,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 |---|---|
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
+| `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
 
@@ -117,6 +118,13 @@ Right-click the editor gutter and choose **Add Logpoint...**, then enter a messa
 `i={i} total={total} in $FUNCTION`. Each time the line runs, the message is written to the Debug Console
 and execution continues without stopping. `{expression}` is evaluated in the current frame;
 `$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
+
+### Memory graph
+
+Run **.NET x86: Show Memory Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)
+to see the debuggee's **Private Bytes** and **Working Set** once per second, like the process memory graph of
+Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
+and open *Data table* for the latest samples.
 
 ### More commands in the Variables view context menu
 
