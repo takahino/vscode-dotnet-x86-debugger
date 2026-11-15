@@ -121,10 +121,13 @@
         <li><a href="#f-decompile">Debugging decompiled assemblies</a></li>
         <li><a href="#f-objectid">Object IDs</a></li>
         <li><a href="#f-testgen">Generate a unit test from a stop</a></li>
+        <li><a href="#f-sql">SQL log</a></li>
         <li><a href="#f-report">Session report</a></li>
+        <li><a href="#f-evidence">Capture evidence</a></li>
         <li><a href="#f-sourcemap">Source in another folder</a></li>
         <li><a href="#f-modules">Modules</a></li>
         <li><a href="#f-winforms">WinForms controls</a></li>
+        <li><a href="#f-eventtrace">Event trace</a></li>
         <li><a href="#f-attach">Attaching</a></li>
       </ol>
     </li>
@@ -326,10 +329,14 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
   <tr><td><a href="#f-time">Section timing, value trend</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Time a section or chart values on every pass, without stopping</td><td>Editor right-click</td></tr>
   <tr><td><a href="#f-time">Memory / CPU graph</a></td><td>Private Bytes, Working Set and CPU over time</td><td>Command Palette</td></tr>
   <tr><td><a href="#f-heap">Heap snapshots</a></td><td>Objects per type on the GC heap, and what grew between two stops</td><td>Call Stack right-click / Command Palette</td></tr>
+  <tr><td><a href="#f-time">GDI / USER objects, handles, address space</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Catch GDI leaks and a full 32-bit address space before the app crashes</td><td>Command Palette</td></tr>
+  <tr><td><a href="#f-heap">GDI leak candidates</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Fonts, brushes, bitmaps, icons and windows that were not disposed, and which keep growing</td><td>Heap Snapshots panel</td></tr>
   <tr class="group"><th colspan="3">History and records</th></tr>
   <tr><td><a href="#f-history">Step history</a></td><td>The locals of every earlier stop</td><td>Step History view</td></tr>
   <tr><td><a href="#f-exceptions">Exception log</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Every thrown exception, also the swallowed ones, with the stack and locals at the throw</td><td>Exception Log view</td></tr>
   <tr><td><a href="#f-report">Session report</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Markdown summary of the session for a bug report</td><td>Command Palette</td></tr>
+  <tr><td><a href="#f-sql">SQL log</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Every SQL statement run through ODP.NET / SqlClient / OleDb / Odbc with its parameter values and caller, also from your own data access component</td><td>SQL Log view</td></tr>
+  <tr><td><a href="#f-evidence">Capture evidence</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Pictures of the open forms, control values, variables, call stack and SQL as Markdown + PNG for a test report</td><td>Command Palette / Call Stack right-click</td></tr>
   <tr><td><a href="#f-testgen">Generate a unit test</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>A test that replays the stopped method call</td><td>Call Stack right-click</td></tr>
   <tr class="group"><th colspan="3">Source and symbols</th></tr>
   <tr><td><a href="#f-modules">Modules view</a></td><td>Loaded assemblies and whether symbols were found</td><td>Modules view</td></tr>
@@ -341,6 +348,8 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
   <tr><td><a href="#f-winforms">Highlight on screen</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Frame a control on the stopped form</td><td>Eye icon in the view</td></tr>
   <tr><td><a href="#f-winforms">Break on a control event</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Stop in the handlers of a control's event, wherever they are</td><td>WinForms Controls right-click</td></tr>
   <tr><td><a href="#f-winforms">Change control properties</a></td><td>Change text, visibility, colors, position or size while stopped</td><td>WinForms Controls right-click</td></tr>
+  <tr><td><a href="#f-winforms">Data bindings</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Every binding of a form with the value on each side; unconnected bindings and unsaved edits flagged</td><td>WinForms Controls view</td></tr>
+  <tr><td><a href="#f-eventtrace">Event trace</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Which control's event fired, in what order and how far apart, without stopping</td><td>WinForms Controls right-click</td></tr>
   <tr class="group"><th colspan="3">Starting a session</th></tr>
   <tr><td><a href="#f-attach">Attach, by name too</a></td><td>Attach to a running x86 app, or wait for it to start</td><td>launch.json</td></tr>
 </table>
@@ -959,6 +968,45 @@ its current arguments (and object) opens beside the editor, in the framework you
 <div class="usecase"><b>Use case:</b> a customer's order totals wrong. Reproduce it once under the debugger, stop in <code>Total()</code>,
 generate the test and fill in the right total: the bug is now a failing test, and stays covered after the fix.</div>
 
+<h3 id="f-sql">SQL log</h3>
+<p>The <b>SQL Log (.NET x86)</b> view lists every SQL statement the program runs through an ADO.NET provider — ODP.NET (managed and
+unmanaged), SqlClient, OleDb and Odbc — without stopping: the statement, its <b>parameter values</b>, the <b>caller</b> and, expanded,
+the call stack. It hooks the provider, not your code, so statements run by a home-made data access component that wraps ODP.NET are
+logged too, with your method as the caller.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 200" role="img" aria-label="SQL Log">
+  <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ SQL LOG</text>
+    <text x="780" y="26" fill="var(--ui-muted)">⇪  ⌫</text>
+    <text x="28" y="52" fill="var(--ui-text)">▾ 🛢 SELECT * FROM ORDERS WHERE CUSTOMER_ID = :id AND ORDERED &gt;= :since <tspan fill="var(--ui-muted)">  OrderForm.LoadOrders · 10:42:15</tspan></text>
+    <text x="56" y="74" fill="var(--ui-text)">id = 1001 <tspan fill="var(--ui-muted)">  number</tspan></text>
+    <text x="56" y="94" fill="var(--ui-text)">since = 2026-04-01 00:00:00.000 <tspan fill="var(--ui-muted)">  datetime</tspan></text>
+    <text x="56" y="114" fill="var(--ui-text)">⨍ CustomerDal.GetOrders <tspan fill="var(--ui-muted)">  (no symbols)</tspan></text>
+    <text x="56" y="134" fill="var(--ui-text)">⨍ OrderForm.LoadOrders <tspan fill="var(--ui-muted)">  OrderForm.cs:58</tspan></text>
+    <rect x="22" y="146" width="820" height="20" fill="var(--ui-sel)"/>
+    <text x="28" y="160" fill="var(--ui-text)">⚠ SELECT NAME FROM ITEMS WHERE ITEM_ID = :id <tspan fill="var(--ui-muted)">  OrderForm.LoadLines · 10:42:16 · ×24</tspan></text>
+    <text x="28" y="186" fill="var(--ui-text)">▸ 🛢 UPDATE ORDERS SET STATUS = :s WHERE ORDER_ID = :id <tspan fill="var(--ui-muted)">  OrderForm.Save · 10:43:02</tspan></text>
+  </g>
+</svg>
+<figcaption>Click a statement to open it as a SQL document with the values filled in. ×24 with ⚠: the same statement ran 24 times — the usual shape of an N+1 problem.</figcaption>
+</figure>
+<ul>
+  <li><b>Copy SQL with Parameter Values</b> (right-click) gives the statement with every <code>:name</code> / <code>@name</code> / <code>?</code>
+    replaced by its literal value — strings quoted, dates as <code>TO_TIMESTAMP(...)</code> for Oracle, binary as <code>HEXTORAW</code> / <code>0x...</code> —
+    ready to paste into SQL Developer or SSMS. Placeholders in string literals and comments are left alone, and Oracle's
+    <code>BindByName = false</code> (the default: bind by position) is honored. A stored procedure becomes the <code>BEGIN ... END;</code> /
+    <code>EXEC</code> that runs it.</li>
+  <li><b>Copy SQL</b> copies the statement as the program sent it.</li>
+  <li><b>Export SQL Log</b> (view title) writes every statement, with its time, caller and values, to a <code>.sql</code> file.</li>
+</ul>
+<p>Each statement pauses the program for a moment while it is read (about a few hundred milliseconds), so leave it off
+(<code>dotnetX86.sqlLog.enabled</code>) when timing. To log another provider, add its command type to <code>dotnetX86.sqlLog.methods</code>,
+e.g. <code>Npgsql.NpgsqlCommand.ExecuteReader</code>. The time a statement took is not recorded; <code>...Async</code> methods are logged only
+where the provider calls its synchronous method. Needs netcoredbg patch 0013 (included).</p>
+<div class="usecase"><b>Use case:</b> a screen shows the wrong orders. Open the SQL Log, copy the statement with its values and run it in
+SQL Developer: the <code>:since</code> date is a day off, and the caller shows which method built it.</div>
+
 <h3 id="f-report">Session report</h3>
 <p>Run <b>.NET x86: Export Debug Session Report</b> (or click the button in the Step History view title) to open a Markdown
 summary of the last session: program, start / end time and exit code, every stop with the values that changed, the exceptions
@@ -977,6 +1025,22 @@ summary of the last session: program, start / end time and exit code, every stop
 </svg>
 <figcaption>Save it with the code, or paste it into a bug report or a pull request.</figcaption>
 </figure>
+
+<h3 id="f-evidence">Capture evidence</h3>
+<p>While stopped, run <b>.NET x86: Capture Evidence</b> (Command Palette, Call Stack context menu, or the camera button in the WinForms
+Controls view title). Everything a test report needs from that screen goes into a new folder, <code>evidence/&lt;date-time&gt;/</code>
+in the workspace (<code>dotnetX86.evidence.folder</code>), as <code>evidence.md</code> plus a PNG per form:</p>
+<ul>
+  <li>a <b>picture of every open form</b> — the desktop compositor's last image of the stopped window, shown on top for a moment and
+    copied, so it works when the form is behind VS Code (the form must be on a screen, not minimized);</li>
+  <li>the <b>controls</b> of each form with their text, the value of input controls (checked, selected index, numeric and date values),
+    hidden / disabled state, and the first 20 rows × 10 columns of every DataGridView;</li>
+  <li>where it stopped (with the line of code), the <b>variables</b> of the selected frame and the <b>call stack</b>;</li>
+  <li>the <b>SQL</b> run since the previous capture, with the values filled in (from the SQL log).</li>
+</ul>
+<p>Reading the controls takes a few evaluations each: at most 300 controls are read per form, and the progress notification can cancel it.</p>
+<div class="usecase"><b>Use case:</b> a test case says “save with an empty customer: the error message is shown and nothing is written”.
+Stop on the message, capture evidence: the picture, the field values and the (absent) INSERT are in one Markdown file for the report.</div>
 
 <h3 id="f-sourcemap">Source in another folder</h3>
 <p>To step into your own library whose PDB records source paths that are not on this machine (e.g. a NuGet package you
@@ -1100,6 +1164,16 @@ validated, so the edit was never written back.</div>
 <div class="usecase"><b>Use case:</b> the tree says <code>okButton</code> exists and is visible, yet nobody can see it. Highlight it: the frame
 shows it sitting under another panel, or squeezed to a few pixels at the edge of the form.</div>
 
+<h3 id="f-eventtrace">Event trace</h3>
+<p>Right-click a control in the WinForms Controls view, choose <b>Trace Events...</b> and pick its event handlers (all are picked).
+Continue and use the form: the <b>Event Trace (.NET x86)</b> view lists every firing in order, oldest first — the event, the control
+that fired it (the handler's <code>sender</code>), the handler, the time and the gap to the previous firing. Nothing stops. Click an entry to
+open the handler; <b>Export Event Trace</b> writes the list to a text file; <b>Clear Event Trace</b> also stops tracing. Trace several
+controls to see how their events interleave. A handler you also set a breakpoint on still stops there.</p>
+<div class="usecase"><b>Use case:</b> typing in a field recalculates the total twice. The trace shows <code>TextChanged</code> of
+<code>qtyBox</code>, then <code>Validating</code>, then <code>SelectedIndexChanged</code> of <code>priceCombo</code> set by the first handler — the
+chain that runs the calculation again.</div>
+
 <h3 id="f-attach">Attaching to a running app</h3>
 <p>Use an <code>attach</code> configuration. The process list shows only x86 .NET processes with their window titles; choose
 <b>Show all processes...</b> for everything else.</p>
@@ -1147,6 +1221,9 @@ Debugging waits until the process appears:</p>
   <div class="card"><h4>Turn a stop into a test</h4>Generate Unit Test from Here writes the method call with the current values.</div>
   <div class="card"><h4>A library without source</h4>Decompile it from the Modules view and step through the C#.</div>
   <div class="card"><h4>Library built on another machine</h4>Point <code>sourceSearchPaths</code> at your clone.</div>
+  <div class="card"><h4>Which SQL ran, with which values?</h4>The SQL Log shows every statement with its parameters, also through your own data access layer; copy it with the values filled in.</div>
+  <div class="card"><h4>Evidence for the test report</h4>Capture Evidence saves the form pictures, field values and the SQL in one Markdown file.</div>
+  <div class="card"><h4>Events fire in a strange order</h4>Trace the controls' events and read the order and the gaps without stopping.</div>
 </div>
 
 <h2 id="trouble">Troubleshooting</h2>
@@ -1175,6 +1252,8 @@ Debugging waits until the process appears:</p>
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>(empty)</td><td>Where the source of referenced assemblies is, for every configuration (merged with launch.json).</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>Troubleshooting log of the debugger communication.</td></tr>
   <tr><td><code>dotnetX86.debuggerPath</code></td><td>(empty)</td><td>Use another x86 netcoredbg instead of the bundled one.</td></tr>
+  <tr><td><code>dotnetX86.sqlLog.methods</code></td><td>ODP.NET, SqlClient, OleDb, Odbc</td><td>Provider methods the SQL log reads commands at (<code>Namespace.Type.Method</code>).</td></tr>
+  <tr><td><code>dotnetX86.evidence.folder</code></td><td>evidence</td><td>Where Capture Evidence saves (relative to the workspace folder).</td></tr>
 </table>
 <h3 id="settings-features">Turning features off</h3>
 <p>Every feature is on by default (<code>true</code>). <code>false</code> removes its views, menu entries and commands, and stops the work it does in the background.</p>
@@ -1198,6 +1277,9 @@ Debugging waits until the process appears:</p>
   <tr><td><code>dotnetX86.exceptionLog.enabled</code></td><td>Exception Log view and recording</td></tr>
   <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>PerfTips</td></tr>
   <tr><td><code>dotnetX86.uiFreeze.enabled</code></td><td>UI freeze detection</td></tr>
+  <tr><td><code>dotnetX86.sqlLog.enabled</code></td><td>SQL Log view and recording</td></tr>
+  <tr><td><code>dotnetX86.eventTrace.enabled</code></td><td>Trace Events and the Event Trace view</td></tr>
+  <tr><td><code>dotnetX86.evidence.enabled</code></td><td>Capture Evidence</td></tr>
   <tr><td><code>dotnetX86.sourceLink.enabled</code></td><td>Source Link downloads</td></tr>
 </table>
 <p style="color:var(--muted);font-size:13px;margin-top:40px">.NET x86 Debugger · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>

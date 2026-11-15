@@ -32,6 +32,12 @@ E2E テストには、同梱用の netcoredbg（`scripts\build-netcoredbg.ps1`�
 デスクトップの無い環境では `DOTNETX86_SKIP_UI_TESTS=1` で WinForms のテストを飛ばせます。
 [CI ワークフロー](.github/workflows/ci.yml) が push のたびに両方を実行します。
 
+単体テストは `src/test/unit` にあり、`vscode` モジュールに依存しないモジュール（`*Core.ts` など）をテストします。機能のロジックはそちらに書き、
+VS Code 側を薄く保つと、この形でテストできます。DAP リレー（`dapProxy.ts`）は、台本（`FakeScenario`: 順に起きる停止と、そのフレーム・式の値）どおりに
+DAP を返す netcoredbg の代役 `fakeDebugger.ts` に対してテストし、VS Code 側は `fakeClient.ts` が演じます。リレーが自分で判断すること（隠しブレークポイント、
+ログポイント、マーカー、例外ログ、SQL ログ、イベント トレース）はこれでテストし、VS Code に届いたものと代役に送られたもの（`sentToDebugger()`）を確認します。
+netcoredbg 自体の振る舞い（ブレークポイントの結合、式の評価、ステップ実行）に依存することは E2E テストに書きます。
+
 ## リリース手順
 
 1. `package.json` の `version` と `CHANGELOG.md` を更新してコミットします。

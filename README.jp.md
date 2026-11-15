@@ -195,6 +195,8 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `dotnetX86.stepHistory.enabled` | 停止のたびにステップ履歴ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.captureLocals` | 記録した例外ごとに、コールスタックとローカル変数も記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.enabled` | スローされたすべての例外を、止まらずに例外ログ ビューへ記録します（既定値 `true`）。 |
+| `dotnetX86.sqlLog.methods` | SQL ログがコマンドを読み取るプロバイダーのメソッド（`名前空間.型.メソッド`、既定値は ODP.NET・SqlClient・OleDb・Odbc）。 |
+| `dotnetX86.evidence.folder` | エビデンスの保存先。ワークスペース フォルダーからの相対パス（既定値 `evidence`）。 |
 | `dotnetX86.uiFreeze.enabled` | UI が応答しなくなったらプログラムを一時停止します（既定値 `true`）。 |
 | `dotnetX86.uiFreeze.thresholdMs` | UI スレッドが応答しない状態がこの時間続いたら一時停止します（既定値 `2000` ミリ秒）。 |
 | `dotnetX86.perfTips.enabled` | ステップ実行や続行の後、停止行に経過時間を表示します（既定値 `true`）。 |

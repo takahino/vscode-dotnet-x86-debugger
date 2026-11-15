@@ -121,10 +121,13 @@
         <li><a href="#f-decompile">逆コンパイルしたソースでのデバッグ</a></li>
         <li><a href="#f-objectid">オブジェクト ID</a></li>
         <li><a href="#f-testgen">停止時の状態から単体テストを生成</a></li>
+        <li><a href="#f-sql">SQL ログ</a></li>
         <li><a href="#f-report">セッションの報告書</a></li>
+        <li><a href="#f-evidence">エビデンス取得</a></li>
         <li><a href="#f-sourcemap">ソースが別の場所にある場合</a></li>
         <li><a href="#f-modules">モジュール</a></li>
         <li><a href="#f-winforms">WinForms コントロール</a></li>
+        <li><a href="#f-eventtrace">イベント トレース</a></li>
         <li><a href="#f-attach">アタッチ</a></li>
       </ol>
     </li>
@@ -318,10 +321,14 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr><td><a href="#f-time">区間の時間計測・値の推移</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>止めずに毎回の時間や値を記録してグラフ化</td><td>エディターの右クリック</td></tr>
   <tr><td><a href="#f-time">メモリ / CPU グラフ</a></td><td>Private Bytes・Working Set・CPU の推移</td><td>コマンド パレット</td></tr>
   <tr><td><a href="#f-heap">ヒープ スナップショット</a></td><td>GC ヒープ上の型ごとのオブジェクト数と、2 回の停止の間に増えたもの</td><td>コールスタックの右クリック / コマンド パレット</td></tr>
+  <tr><td><a href="#f-time">GDI / USER オブジェクト・ハンドル・アドレス空間</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>アプリが落ちる前に GDI リークや 32bit アドレス空間の枯渇に気付く</td><td>コマンド パレット</td></tr>
+  <tr><td><a href="#f-heap">GDI リーク候補</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>Dispose されていない Font・Brush・Bitmap・アイコン・ウィンドウと、増え続けているもの</td><td>ヒープ スナップショット パネル</td></tr>
   <tr class="group"><th colspan="3">履歴と記録</th></tr>
   <tr><td><a href="#f-history">ステップ履歴</a></td><td>これまでの停止ごとのローカル変数</td><td>ステップ履歴ビュー</td></tr>
   <tr><td><a href="#f-exceptions">例外ログ</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>握りつぶされた例外も含め、スローされた例外をすべて記録（スロー時のスタックとローカル変数つき）</td><td>例外ログ ビュー</td></tr>
   <tr><td><a href="#f-report">セッションの報告書</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>不具合報告に添える Markdown の要約</td><td>コマンド パレット</td></tr>
+  <tr><td><a href="#f-sql">SQL ログ</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>ODP.NET / SqlClient / OleDb / Odbc で実行されたすべての SQL を、パラメーター値と呼び出し元つきで記録（自作のデータ アクセス部品経由も可）</td><td>SQL ログ ビュー</td></tr>
+  <tr><td><a href="#f-evidence">エビデンス取得</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>開いているフォームの画像・コントロール値・変数・コール スタック・SQL を、テスト報告用に Markdown + PNG で保存</td><td>コマンド パレット / コールスタックの右クリック</td></tr>
   <tr><td><a href="#f-testgen">単体テストの生成</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のメソッド呼び出しを再現するテスト</td><td>コールスタックの右クリック</td></tr>
   <tr class="group"><th colspan="3">ソースとシンボル</th></tr>
   <tr><td><a href="#f-modules">モジュール ビュー</a></td><td>読み込まれたアセンブリとシンボルの有無</td><td>モジュール ビュー</td></tr>
@@ -333,6 +340,8 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr><td><a href="#f-winforms">画面上で強調表示</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のフォーム上でコントロールを枠で示す</td><td>ビューの目のアイコン</td></tr>
   <tr><td><a href="#f-winforms">コントロールのイベントで停止</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>イベントのハンドラーが、コードのどこにあっても止まる</td><td>WinForms コントロールの右クリック</td></tr>
   <tr><td><a href="#f-winforms">コントロールのプロパティ変更</a></td><td>停止中にテキスト・表示・色・位置・サイズを変える</td><td>WinForms コントロールの右クリック</td></tr>
+  <tr><td><a href="#f-winforms">データ バインディング</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>フォームのすべてのバインディングと両側の値。未接続のバインディングや未保存の編集を表示</td><td>WinForms コントロール ビュー</td></tr>
+  <tr><td><a href="#f-eventtrace">イベント トレース</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>どのコントロールのどのイベントがどの順で・どれだけ間隔を空けて発火したかを、止まらずに記録</td><td>WinForms コントロールの右クリック</td></tr>
   <tr class="group"><th colspan="3">セッションを始める</th></tr>
   <tr><td><a href="#f-attach">アタッチ（名前指定も）</a></td><td>実行中の x86 アプリにアタッチ、起動を待ってアタッチ</td><td>launch.json</td></tr>
 </table>
@@ -881,6 +890,42 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </figure>
 <div class="usecase"><b>ユースケース:</b> ある顧客の注文だけ合計が合わない。デバッガーで一度再現して <code>Total()</code> で止め、テストを生成して正しい合計を書けば、不具合が失敗するテストになり、修正後も回帰を防げます。</div>
 
+<h3 id="f-sql">SQL ログ</h3>
+<p><b>SQL ログ (.NET x86)</b> ビューに、プログラムが ADO.NET プロバイダー（ODP.NET のマネージド / アンマネージド、SqlClient、OleDb、Odbc）経由で
+実行したすべての SQL を、止まらずに一覧表示します。SQL・<b>パラメーター値</b>・<b>呼び出し元</b>が並び、展開するとコールスタックが見られます。
+フックするのは自分のコードではなくプロバイダーなので、ODP.NET を包んだ自作のデータ アクセス部品から実行された SQL も、自分のメソッドを呼び出し元として記録されます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 200" role="img" aria-label="SQL ログ">
+  <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ SQL ログ</text>
+    <text x="780" y="26" fill="var(--ui-muted)">⇪  ⌫</text>
+    <text x="28" y="52" fill="var(--ui-text)">▾ 🛢 SELECT * FROM ORDERS WHERE CUSTOMER_ID = :id AND ORDERED &gt;= :since <tspan fill="var(--ui-muted)">  OrderForm.LoadOrders · 10:42:15</tspan></text>
+    <text x="56" y="74" fill="var(--ui-text)">id = 1001 <tspan fill="var(--ui-muted)">  number</tspan></text>
+    <text x="56" y="94" fill="var(--ui-text)">since = 2026-04-01 00:00:00.000 <tspan fill="var(--ui-muted)">  datetime</tspan></text>
+    <text x="56" y="114" fill="var(--ui-text)">⨍ CustomerDal.GetOrders <tspan fill="var(--ui-muted)">  (シンボルなし)</tspan></text>
+    <text x="56" y="134" fill="var(--ui-text)">⨍ OrderForm.LoadOrders <tspan fill="var(--ui-muted)">  OrderForm.cs:58</tspan></text>
+    <rect x="22" y="146" width="820" height="20" fill="var(--ui-sel)"/>
+    <text x="28" y="160" fill="var(--ui-text)">⚠ SELECT NAME FROM ITEMS WHERE ITEM_ID = :id <tspan fill="var(--ui-muted)">  OrderForm.LoadLines · 10:42:16 · ×24</tspan></text>
+    <text x="28" y="186" fill="var(--ui-text)">▸ 🛢 UPDATE ORDERS SET STATUS = :s WHERE ORDER_ID = :id <tspan fill="var(--ui-muted)">  OrderForm.Save · 10:43:02</tspan></text>
+  </g>
+</svg>
+<figcaption>SQL をクリックすると、値を埋めた SQL ドキュメントとして開きます。⚠ と ×24 は、同じ SQL が 24 回実行されたこと（N+1 問題の典型的な形）を示します。</figcaption>
+</figure>
+<ul>
+  <li><b>パラメーター値を埋めた SQL をコピー</b>（右クリック）で、<code>:name</code> / <code>@name</code> / <code>?</code> をリテラル値に置き換えた SQL が得られます。
+    文字列は引用符で囲み、日付は Oracle なら <code>TO_TIMESTAMP(...)</code>、バイナリは <code>HEXTORAW</code> / <code>0x...</code> にするので、
+    SQL Developer や SSMS にそのまま貼り付けて実行できます。文字列リテラルやコメントの中のプレースホルダーは置き換えません。Oracle の
+    <code>BindByName = false</code>（既定値: 位置でバインド）にも対応し、ストアド プロシージャは実行用の <code>BEGIN ... END;</code> / <code>EXEC</code> にします。</li>
+  <li><b>SQL をコピー</b> は、プログラムが送ったままの SQL をコピーします。</li>
+  <li><b>SQL ログを出力</b>（ビューのタイトル）で、すべての SQL を時刻・呼び出し元・値つきで <code>.sql</code> ファイルに書き出します。</li>
+</ul>
+<p>SQL を読み取る間、実行ごとにプログラムが一瞬（数百ミリ秒ほど）止まるため、時間を計測するときはオフにしてください（<code>dotnetX86.sqlLog.enabled</code>）。
+他のプロバイダーを記録するには、その Command 型を <code>dotnetX86.sqlLog.methods</code> に追加します（例: <code>Npgsql.NpgsqlCommand.ExecuteReader</code>）。
+SQL の実行時間は記録しません。<code>...Async</code> メソッドは、プロバイダーが同期メソッドを呼ぶ場合に限って記録されます。netcoredbg のパッチ 0013 が必要です（同梱版に含まれます）。</p>
+<div class="usecase"><b>活用例:</b> 画面に違う受注が表示される。SQL ログから値を埋めた SQL をコピーして SQL Developer で実行すると、
+<code>:since</code> の日付が 1 日ずれていることが分かり、呼び出し元からそれを組み立てたメソッドも分かります。</div>
+
 <h3 id="f-report">セッションの報告書</h3>
 <p><b>.NET x86: デバッグ セッションの報告書を出力</b>（またはステップ履歴ビューのタイトルにあるボタン）で、直前のセッションの要約を Markdown で開きます。プログラム・開始/終了時刻・終了コード、各停止と変化した値、例外（型ごとの件数付き）、区間の時間計測、記録した値、シンボルのあるモジュールが含まれます。</p>
 <figure class="figure">
@@ -897,6 +942,22 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>コードと一緒に保存したり、不具合報告やプル リクエストに貼り付けたりできます。</figcaption>
 </figure>
+
+<h3 id="f-evidence">エビデンス取得</h3>
+<p>停止中に <b>.NET x86: エビデンスを取得</b>（コマンド パレット、コールスタックの右クリック、WinForms コントロール ビューのタイトルのカメラ ボタン）を実行すると、
+その画面からテスト報告に必要なものを、ワークスペースの新しいフォルダー <code>evidence/&lt;日時&gt;/</code>（<code>dotnetX86.evidence.folder</code>）に
+<code>evidence.md</code> とフォームごとの PNG で保存します。</p>
+<ul>
+  <li><b>開いているすべてのフォームの画像</b> — デスクトップ コンポジターが持つ停止中ウィンドウの最後の画像を一瞬だけ最前面に出して撮るため、
+    フォームが VS Code の裏にあっても撮れます（フォームが画面上にあり、最小化されていないことが条件です）。</li>
+  <li>各フォームの<b>コントロール</b>: テキスト、入力コントロールの値（チェック状態・選択位置・数値・日付）、非表示 / 無効の状態、
+    DataGridView の先頭 20 行 × 10 列。</li>
+  <li>停止位置（その行のコード）、選択中フレームの<b>変数</b>、<b>コール スタック</b>。</li>
+  <li>前回の取得以降に実行された <b>SQL</b>（SQL ログから、値を埋めた形で）。</li>
+</ul>
+<p>コントロールの読み取りには 1 個あたり数回の評価がかかるため、フォームごとに最大 300 個まで読み取ります。進捗の通知から取り消せます。</p>
+<div class="usecase"><b>活用例:</b> テスト ケース「顧客を空にして保存すると、エラー メッセージが表示され、何も書き込まれない」。メッセージの表示で止めてエビデンスを取得すると、
+画面の画像・入力値・（実行されていない）INSERT が 1 つの Markdown にまとまり、そのまま報告に使えます。</div>
 
 <h3 id="f-sourcemap">ソースが別の場所にある場合</h3>
 <p>PDB に記録されたソースのパスがこのマシンに無い自作ライブラリ（別の場所でビルドした NuGet パッケージなど）にステップ インするには、launch.json の <code>sourceSearchPaths</code> にソースの親フォルダを追加するか（サブフォルダも探します）、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（例: <code>{ "/_/": "D:\\work\\MyLib\\" }</code>）。どちらも設定（<code>dotnetX86.sourceFileMap</code> / <code>dotnetX86.sourceSearchPaths</code>）で全構成に共通にできます。停止位置のソースが無いときは、どのパスを置き換えればよいかをデバッグ コンソールに表示します。シンボルの無いライブラリは <a href="#f-decompile">逆コンパイル</a> を使います。</p>
@@ -1001,6 +1062,14 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 <div class="usecase"><b>ユースケース:</b> 名前を編集して別のレコードに移ると、編集が消えている。表を見ると、テキスト ボックスが <i>≠ 不一致</i> で、更新モードが <code>OnValidation</code>。検証の前にレコードが切り替わったため、編集が書き戻されていませんでした。</div>
 <div class="usecase"><b>ユースケース:</b> ツリーでは <code>okButton</code> が存在して表示中なのに、誰にも見えない。強調表示すると、別のパネルの下に隠れている、あるいはフォームの端で数ピクセルに縮んでいることが枠で分かります。</div>
 
+<h3 id="f-eventtrace">イベント トレース</h3>
+<p>WinForms コントロール ビューでコントロールを右クリックし、<b>イベントをトレース...</b> でイベント ハンドラーを選びます（最初はすべて選択されています）。
+続行してフォームを操作すると、<b>イベント トレース (.NET x86)</b> ビューに発火が古い順に並びます。イベント・発火したコントロール（ハンドラーの <code>sender</code>）・
+ハンドラー・時刻・前回の発火との間隔が表示され、プログラムは止まりません。項目をクリックするとハンドラーを開きます。<b>イベント トレースを出力</b> でテキスト ファイルに、
+<b>イベント トレースをクリア</b> でトレースも終了します。複数のコントロールをトレースすると、イベントの入り混じり方が分かります。ブレークポイントも置いたハンドラーでは通常どおり止まります。</p>
+<div class="usecase"><b>活用例:</b> 数量を入力すると合計が 2 回計算される。トレースすると、<code>qtyBox</code> の <code>TextChanged</code>、<code>Validating</code>、
+最初のハンドラーが設定した <code>priceCombo</code> の <code>SelectedIndexChanged</code> の順に発火しており、計算をもう一度走らせている連鎖が分かります。</div>
+
 <h3 id="f-attach">実行中のアプリにアタッチする</h3>
 <p><code>attach</code> の構成を使います。プロセスの一覧には x86 の .NET プロセスだけがウィンドウタイトル付きで表示されます。それ以外は
 <b>すべてのプロセスを表示...</b> から選べます。</p>
@@ -1047,6 +1116,9 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <div class="card"><h4>停止状態をテストに</h4>ここから単体テストを生成で、今の値でメソッドを呼ぶテストを書き出します。</div>
   <div class="card"><h4>ソースの無いライブラリ</h4>モジュール ビューから逆コンパイルし、C# でステップ実行します。</div>
   <div class="card"><h4>別のマシンでビルドしたライブラリ</h4><code>sourceSearchPaths</code> に手元のクローンを指定します。</div>
+  <div class="card"><h4>どの SQL がどの値で流れた?</h4>SQL ログに、自作のデータ アクセス層経由も含めてすべての SQL がパラメーターつきで並びます。値を埋めてコピーできます。</div>
+  <div class="card"><h4>テスト報告のエビデンス</h4>エビデンス取得で、フォームの画像・入力値・SQL が 1 つの Markdown に保存されます。</div>
+  <div class="card"><h4>イベントの順序がおかしい</h4>コントロールのイベントをトレースし、順序と間隔を止めずに確認します。</div>
 </div>
 
 <h2 id="trouble">困ったとき</h2>
@@ -1075,6 +1147,8 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
   <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>同梱版の代わりに別の x86 版 netcoredbg を使います。</td></tr>
+  <tr><td><code>dotnetX86.sqlLog.methods</code></td><td>ODP.NET・SqlClient・OleDb・Odbc</td><td>SQL ログがコマンドを読み取るプロバイダーのメソッド（<code>名前空間.型.メソッド</code>）。</td></tr>
+  <tr><td><code>dotnetX86.evidence.folder</code></td><td>evidence</td><td>エビデンスの保存先（ワークスペース フォルダーからの相対パス）。</td></tr>
 </table>
 <h3 id="settings-features">機能のオン / オフ</h3>
 <p>すべての機能は既定でオン（<code>true</code>）です。<code>false</code> にすると、その機能のビュー・メニュー・コマンドが消え、裏で行う処理も止まります。</p>
@@ -1098,6 +1172,9 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.exceptionLog.enabled</code></td><td>例外ログ ビューと記録</td></tr>
   <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>PerfTips</td></tr>
   <tr><td><code>dotnetX86.uiFreeze.enabled</code></td><td>UI フリーズの検知</td></tr>
+  <tr><td><code>dotnetX86.sqlLog.enabled</code></td><td>SQL ログ ビューと記録</td></tr>
+  <tr><td><code>dotnetX86.eventTrace.enabled</code></td><td>イベントのトレースとイベント トレース ビュー</td></tr>
+  <tr><td><code>dotnetX86.evidence.enabled</code></td><td>エビデンスの取得</td></tr>
   <tr><td><code>dotnetX86.sourceLink.enabled</code></td><td>Source Link でのダウンロード</td></tr>
 </table>
 <p style="color:var(--muted);font-size:13px;margin-top:40px">.NET x86 Debugger · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>

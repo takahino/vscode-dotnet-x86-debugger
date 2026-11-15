@@ -196,6 +196,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
+| `dotnetX86.sqlLog.methods` | Provider methods the SQL log reads commands at, as `Namespace.Type.Method` (default: ODP.NET, SqlClient, OleDb, Odbc). |
+| `dotnetX86.evidence.folder` | Where Capture Evidence saves, relative to the workspace folder (default `evidence`). |
 | `dotnetX86.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
 | `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
 | `dotnetX86.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |

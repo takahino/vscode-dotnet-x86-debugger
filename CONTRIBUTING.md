@@ -32,6 +32,13 @@ The E2E tests need the bundled netcoredbg (`scripts\build-netcoredbg.ps1`), the 
 `// @name` markers in the test apps. Set `DOTNETX86_SKIP_UI_TESTS=1` to skip the WinForms test where no desktop is
 available. The [CI workflow](.github/workflows/ci.yml) runs both on every push.
 
+Unit tests live in `src/test/unit` and test the modules that are kept free of the `vscode` module (`*Core.ts` and the like):
+write the logic of a feature there and keep the VS Code side thin, so it can be tested this way. The DAP relay (`dapProxy.ts`) is
+tested against `fakeDebugger.ts`, a stand-in for netcoredbg that answers DAP from a script (`FakeScenario`: the stops in turn, with
+their frames and expression values); `fakeClient.ts` plays VS Code. Use it for anything the relay decides on its own (hidden
+breakpoints, logpoints, markers, the exception log, the SQL log, the event trace) and check what reached VS Code and what the stand-in
+was sent (`sentToDebugger()`). What depends on netcoredbg's own behavior (binding, evaluation, stepping) belongs in the E2E tests.
+
 ## Releasing
 
 1. Update `version` in `package.json` and `CHANGELOG.md`, and commit.
