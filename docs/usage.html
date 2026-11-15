@@ -1081,6 +1081,15 @@ program stopped, with a red frame, the control's name and its size for a few sec
   <li>The form is shown in front as it was when the program stopped, with a red frame, the name and the size.</li>
 </ol>
 </figure>
+<p>The link icon in the view title (<b>Show Data Bindings</b>), or the same command on a control, lists the <b>data bindings</b>
+of the open forms (or of that control and the ones inside it) — which Visual Studio cannot show. Simple bindings show the control
+property, the data source and member, the value in the control and the value in the current item side by side, the position in
+the list, the update mode and the format string; list bindings (ComboBox, ListBox, DataGridView) show DataSource, DisplayMember,
+ValueMember, the selected value and the position. <i>⚠ not connected</i> marks a member that does not exist, <i>≠ differs</i> a
+control that shows something else than its item holds.</p>
+<div class="usecase"><b>Use case:</b> the user edits a name, switches to another record, and the edit is gone. The table shows the
+text box <i>≠ differs</i> from the item with the update mode <code>OnValidation</code>: the record changed before the box was
+validated, so the edit was never written back.</div>
 <div class="usecase"><b>Use case:</b> the tree says <code>okButton</code> exists and is visible, yet nobody can see it. Highlight it: the frame
 shows it sitting under another panel, or squeezed to a few pixels at the edge of the form.</div>
 

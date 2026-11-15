@@ -84,6 +84,7 @@
   "command.highlightControl": "Highlight on Screen",
   "command.editControlProperty": "Change Property...",
   "command.breakOnControlEvent": "Break on Event...",
+  "command.showDataBindings": "Show Data Bindings",
   "command.dumpControl": "Dump Control",
   "command.copyControlExpression": "Copy Expression",
   "command.exportSessionReport": "Export Debug Session Report",

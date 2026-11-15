@@ -5,6 +5,7 @@ import { AutosView } from './autosView';
 import { BreakpointCommands } from './breakpointCommands';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { ControlNode, ControlTree } from './controlTree';
+import { DataBindingsPanel } from './dataBindings';
 import { DapTraceFactory } from './dapTrace';
 import { Decompiler } from './decompiler';
 import { ExceptionLog } from './exceptionLog';
@@ -55,6 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const controlView = vscode.window.createTreeView('dotnetX86.controls', { treeDataProvider: controlTree });
     controlTree.attach(controlView);
     const highlighter = new WindowHighlighter(context.extensionPath, (line) => output.appendLine(line));
+    const dataBindings = new DataBindingsPanel((node) => controlTree.highlight(node, highlighter));
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
@@ -142,6 +144,9 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.editControlProperty', (node?: ControlNode) => controlTree.editProperty(node ?? controlView.selection[0])),
         vscode.commands.registerCommand('dotnetX86.highlightControl', (node?: ControlNode) => controlTree.highlight(node ?? controlView.selection[0], highlighter)),
         vscode.commands.registerCommand('dotnetX86.copyControlExpression', (node: ControlNode) => node && vscode.env.clipboard.writeText(node.expression)),
+        dataBindings,
+        // From a control: that control and the ones inside it; from the view title or the Command Palette: every open form.
+        vscode.commands.registerCommand('dotnetX86.showDataBindings', (node?: ControlNode) => dataBindings.show(node)),
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),

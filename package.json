@@ -51,6 +51,7 @@
     "onCommand:dotnetX86.addWhenChangedBreakpoint",
     "onCommand:dotnetX86.addCallerBreakpoint",
     "onCommand:dotnetX86.highlightControl",
+    "onCommand:dotnetX86.showDataBindings",
     "onCommand:dotnetX86.generateTest",
     "onCommand:dotnetX86.makeObjectId",
     "onCommand:dotnetX86.decompileModule",
@@ -375,6 +376,12 @@
         "icon": "$(eye)"
       },
       {
+        "command": "dotnetX86.showDataBindings",
+        "title": "%command.showDataBindings%",
+        "category": ".NET x86",
+        "icon": "$(link)"
+      },
+      {
         "command": "dotnetX86.dumpControl",
         "title": "%command.dumpControl%",
         "category": ".NET x86"
@@ -676,6 +683,11 @@
           "group": "navigation@2"
         },
         {
+          "command": "dotnetX86.showDataBindings",
+          "when": "view == dotnetX86.controls",
+          "group": "navigation@0"
+        },
+        {
           "command": "dotnetX86.refreshControlTree",
           "when": "view == dotnetX86.controls",
           "group": "navigation"
@@ -734,6 +746,11 @@
         },
         {
           "command": "dotnetX86.breakOnControlEvent",
+          "when": "view == dotnetX86.controls",
+          "group": "z_dotnetX86@0"
+        },
+        {
+          "command": "dotnetX86.showDataBindings",
           "when": "view == dotnetX86.controls",
           "group": "z_dotnetX86@0"
         },

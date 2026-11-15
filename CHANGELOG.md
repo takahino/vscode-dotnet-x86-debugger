@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Show Data Bindings** (WinForms Controls view title / right-click) — a table of the data bindings of the open forms or of a control: simple bindings with the value in the control and in the current item side by side, the position, update mode and format; list bindings (DataSource / DisplayMember / ValueMember) with the selected value. Bindings that are not connected, and controls that show something else than their item holds, are flagged.
 - New: the memory / CPU graph also charts **GDI / USER objects** and **handles** (with the per-process limit once a count passes half of it), and for x86 processes the **32-bit address space** in use against its 2 GB / 4 GB limit with the largest free block. Warnings at 80 % of the GDI / USER limit and when the address space is nearly full. The sampler is now `resources/processSampler.ps1`.
 
 ## 1.0.0

@@ -84,6 +84,7 @@
   "command.highlightControl": "画面上で強調表示",
   "command.editControlProperty": "プロパティを変更...",
   "command.breakOnControlEvent": "イベントで停止...",
+  "command.showDataBindings": "データ バインディングを表示",
   "command.dumpControl": "コントロールをダンプ",
   "command.copyControlExpression": "式をコピー",
   "command.exportSessionReport": "デバッグ セッションの報告書を出力",

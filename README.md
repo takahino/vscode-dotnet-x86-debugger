@@ -82,6 +82,7 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 | [Highlight on screen](#winforms-controls-view) ★ | Frame a control on the stopped form | Eye icon in the view |
 | [Break on a control event](#winforms-controls-view) ★ | Stop in the handlers of a control's event, wherever they are | WinForms Controls right-click |
 | [Change control properties](#winforms-controls-view) | Change text, visibility, colors, position or size while stopped | WinForms Controls right-click |
+| [Data bindings](#winforms-controls-view) ★ | Every binding of a form with the value on each side; unconnected bindings and unsaved edits flagged | WinForms Controls view |
 
 ## Requirements
 
@@ -530,6 +531,19 @@ continues. Enum properties such as `Dock` cannot be changed: netcoredbg cannot p
 Click the eye icon (**Highlight on Screen**) to see where a control is: the form is shown in front, as it was when the
 program stopped, with a red frame and the control's name and size around it for a few seconds. Visual Studio cannot do
 this for WinForms. (The stopped program cannot repaint or come to the front itself; the image comes from the desktop compositor.)
+
+Click the link icon in the view title (**Show Data Bindings**, every open form) or right-click a control (that control and the
+ones inside it) to list its **data bindings** in a table, which Visual Studio cannot show:
+
+- **Simple bindings** (`Control.DataBindings`): the control property, the data source (through a `BindingSource`, with its
+  filter and sort), the member, the **value in the control and the value in the current item** side by side, the position in
+  the list, the update mode and the format string. *⚠ not connected* marks a binding whose member does not exist;
+  *≠ differs* marks a control showing something else than its item holds — typically an edit not written back yet.
+- **List bindings** (`DataSource` of a ComboBox, ListBox or DataGridView): the data source, `DataMember` / `DisplayMember` /
+  `ValueMember`, the selected value and the position.
+
+The values are those of the stop: press **Refresh** after the next one. Each row has a button that highlights its control on
+the screen. A form with many controls takes a few seconds (about 5 evaluations per control); the progress can be cancelled.
 
 ## Limitations
 
