@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
 import { EDITABLE_PROPERTIES, PropertyKind, failedResult, setterExpression, valueExpression } from './controlPropertyCore';
-import { handlerLabel, readEventHandlers, readEventKeys } from './eventHandlersCore';
+import { EVENT_TRACE_REQUEST } from './dapProxy';
+import { EventHandler, handlerLabel, readEventHandlers, readEventKeys } from './eventHandlersCore';
 import { WindowHighlighter } from './windowHighlight';
 
 export interface ControlNode {
@@ -182,26 +183,63 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
      * "Break on Event...": lists the handlers attached to the control's events and adds function breakpoints on the
      * picked ones, so the program stops the next time the event fires - without knowing where the handler is.
      */
-    async breakOnEvent(node: ControlNode | undefined): Promise<void> {
+    /** The handlers attached to the control's events, read from the stopped program; undefined when there is nothing to show (the user was told). */
+    private async readHandlers(node: ControlNode | undefined): Promise<{ label: string; handlers: EventHandler[]; session: vscode.DebugSession } | undefined> {
         const frame = vscode.debug.activeStackItem;
         const evaluate = this.evaluator();
         if (!node || !evaluate || !(frame instanceof vscode.DebugStackFrame)) {
             void vscode.window.showInformationMessage(vscode.l10n.t('Stop the program to see its WinForms controls.'));
-            return;
+            return undefined;
         }
         const label = node.name || shortType(node.typeName);
+        const handlers = await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Reading the event handlers of {0}…', label) },
+            async () => {
+                const keys = await readEventKeys(node.expression, frame.frameId, (command, args) => frame.session.customRequest(command, args));
+                return readEventHandlers(node.expression, keys, evaluate);
+            },
+        );
+        if (handlers.length === 0) {
+            void vscode.window.showInformationMessage(vscode.l10n.t('{0} has no event handlers attached.', label));
+            return undefined;
+        }
+        return { label, handlers, session: frame.session };
+    }
+
+    /**
+     * "Trace Events": records every firing of the handlers of the control's events (which event, which control, in
+     * what order) in the Event Trace view, without stopping. Starts at the next continue.
+     */
+    async traceEvents(node: ControlNode | undefined): Promise<void> {
         try {
-            const handlers = await vscode.window.withProgress(
-                { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Reading the event handlers of {0}…', label) },
-                async () => {
-                    const keys = await readEventKeys(node.expression, frame.frameId, (command, args) => frame.session.customRequest(command, args));
-                    return readEventHandlers(node.expression, keys, evaluate);
-                },
-            );
-            if (handlers.length === 0) {
-                void vscode.window.showInformationMessage(vscode.l10n.t('{0} has no event handlers attached.', label));
+            const read = await this.readHandlers(node);
+            if (!read) {
                 return;
             }
+            const picked = await vscode.window.showQuickPick(
+                read.handlers.map((h) => ({ label: h.event ?? vscode.l10n.t('(event not identified)'), description: handlerLabel(h.declaringType, h.method), picked: true, handler: h })),
+                { canPickMany: true, placeHolder: vscode.l10n.t('Event handlers of {0}: pick the ones to trace', read.label) },
+            );
+            if (!picked?.length) {
+                return;
+            }
+            await read.session.customRequest(EVENT_TRACE_REQUEST, {
+                handlers: picked.map((p) => ({ breakpointName: p.handler.breakpointName, label: p.description, event: p.handler.event, control: read.label })),
+            });
+            void vscode.window.showInformationMessage(vscode.l10n.t('Tracing {0} event handlers of {1}. Continue, then use the form: the firings are listed in the Event Trace view.', picked.length, read.label));
+        } catch (e) {
+            void vscode.window.showErrorMessage(vscode.l10n.t('Could not read the event handlers of {0}: {1}', node?.name ?? '', errorMessage(e)));
+        }
+    }
+
+    async breakOnEvent(node: ControlNode | undefined): Promise<void> {
+        const label = node?.name || (node ? shortType(node.typeName) : '');
+        try {
+            const read = await this.readHandlers(node);
+            if (!read) {
+                return;
+            }
+            const handlers = read.handlers;
             const existing = new Set(vscode.debug.breakpoints.filter((b): b is vscode.FunctionBreakpoint => b instanceof vscode.FunctionBreakpoint).map((b) => b.functionName));
             const picked = await vscode.window.showQuickPick(
                 handlers.map((h) => ({

@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DOTNET_FRAMEWORK_KEY, findX86CoreClr } from './configProvider';
+import { isEnabled } from './features';
 import { DapProxy, ExceptionFilterText, ProxyOptions } from './dapProxy';
 import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
 import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
@@ -127,6 +128,15 @@ function launchedAssemblies(config: vscode.DebugConfiguration): string[] {
     }
 }
 
+/** The provider methods the SQL log stops at (none when the SQL log is off). */
+function sqlMethods(): string[] {
+    if (!isEnabled('sqlLog')) {
+        return [];
+    }
+    const configured = vscode.workspace.getConfiguration('dotnetX86.sqlLog').get<unknown[]>('methods', []);
+    return configured.filter((m): m is string => typeof m === 'string' && /^[\w.]+\.\w+\.\w+$/.test(m.trim())).map((m) => m.trim());
+}
+
 function missingSourceMessage(unresolved: UnresolvedSource): string {
     if (unresolved.candidates.length > 1) {
         return vscode.l10n.t('Several files match the source {0}: {1}. Narrow "sourceSearchPaths", or add a "sourceFileMap" entry for its folder.', unresolved.pdbPath, unresolved.candidates.join(', '));
@@ -158,6 +168,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 preloadModules: sourceMap.preloadModules,
                 missingSourceMessage,
                 breakOnExceptionTypes,
+                sqlMethods: sqlMethods(),
                 freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
                 ...symbols,
             },

@@ -127,5 +127,21 @@
   "config.breakpointCommands.enabled": "Temporary, dependent, when-changed and caller-filtered breakpoints in the editor context menu (the #once, #after, #changed and #caller conditions keep working).",
   "config.variableTools.enabled": "Commands in the Variables / Watch context menu: Dump, View as Table / Image, Copy as C#, View String, snapshots and Make Object ID.",
   "config.generateTest.enabled": "Generate Unit Test from Here in the Call Stack context menu.",
-  "config.sessionReport.enabled": "Export Debug Session Report (Step History view title and Command Palette)."
+  "config.sessionReport.enabled": "Export Debug Session Report (Step History view title and Command Palette).",
+  "view.sqlLog": "SQL Log (.NET x86)",
+  "command.clearSqlLog": "Clear SQL Log",
+  "command.exportSqlLog": "Export SQL Log",
+  "command.copySqlWithValues": "Copy SQL with Parameter Values",
+  "command.copySql": "Copy SQL",
+  "command.openSql": "Open SQL",
+  "config.sqlLog.enabled": "Record every SQL statement the program runs through an ADO.NET provider (ODP.NET, SqlClient, OleDb, Odbc) with its parameter values and caller in the SQL Log view, without stopping. Also for statements run by your own data access component. Applies to new debug sessions. Each statement pauses the program for a moment while it is read. Off: the view is hidden.",
+  "config.sqlLog.methods": "Provider methods the SQL Log stops at, as `Namespace.Type.Method` (every overload of the name). Add the command type of another provider (e.g. `Npgsql.NpgsqlCommand.ExecuteReader`) to log it too. Applies to new debug sessions.",
+  "view.eventTrace": "Event Trace (.NET x86)",
+  "command.traceControlEvents": "Trace Events...",
+  "command.clearEventTrace": "Clear Event Trace",
+  "command.exportEventTrace": "Export Event Trace",
+  "config.eventTrace.enabled": "Trace Events (WinForms Controls view) and the Event Trace view: which control's event fired, in what order, without stopping. Off: the command and the view are hidden.",
+  "command.captureEvidence": "Capture Evidence",
+  "config.evidence.enabled": "Capture Evidence (Command Palette, Call Stack and WinForms Controls views): pictures of the open forms, the control values, the variables, the call stack and the SQL since the previous capture, saved as Markdown and PNG files.",
+  "config.evidence.folder": "Folder where Capture Evidence saves (a new sub folder per capture). A relative path is taken from the workspace folder."
 }

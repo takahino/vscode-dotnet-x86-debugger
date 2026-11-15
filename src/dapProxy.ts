@@ -10,6 +10,7 @@ import { MAKE_OBJECT_ID_REQUEST, requestWithDebuggerObjectIds, responseWithClien
 import { fetchBytes } from './httpFetch';
 import { readPdbInfo } from './pdbDocuments';
 import { SourceLinkEntry, parseSourceLink, resolveSourceLink, sourceCachePath } from './sourceLinkCore';
+import { ExpressionReader, captureSqlCommand } from './sqlLogCore';
 import { findCallTargets } from './stepTargets';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 
@@ -41,6 +42,14 @@ export const TIMER_END_PREFIX = '#timer-end:';
 export const REMOVE_BREAKPOINT_EVENT = 'dotnetX86.removeBreakpoint';
 /** Custom DAP event for every exception thrown while the exception log is on. */
 export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
+/** Custom DAP event for every statement the SQL log reads from a command (see sqlLogCore). */
+export const SQL_EVENT = 'dotnetX86.sqlExecuted';
+/** Custom DAP request: trace the firing of these event handlers (arguments: handlers [{breakpointName, label, event?, control?}], or clear). */
+export const EVENT_TRACE_REQUEST = 'dotnetX86.setEventTrace';
+/** Custom DAP event for every firing of a traced event handler. */
+export const EVENT_TRACE_EVENT = 'dotnetX86.controlEvent';
+/** Frames of the call stack read with each logged statement (the provider's own frame is the first). */
+const SQL_STACK_DEPTH = 12;
 /** Custom DAP request: pause because this UI thread stopped answering for `ms` (arguments: threadId, ms). */
 export const FREEZE_PAUSE_REQUEST = 'dotnetX86.pauseForFreeze';
 /** Custom DAP request: the exception types checked in the Exception Settings view changed (arguments: types). */
@@ -90,6 +99,12 @@ export interface ProxyOptions {
     sourceLink?: { cacheRoot: string; fetch?: (url: string) => Promise<Buffer> };
     /** Folders with symbols by MVID (downloaded / decompiled, see netcoredbg patch 0009), to read their PDBs too. */
     symbolDirs?: string[];
+    /**
+     * SQL log: the provider methods ("Namespace.Type.Method") that run a command. The proxy stops at them without the
+     * client noticing, reads the command (SQL_EVENT) and resumes. Needs netcoredbg patch 0013 ("anyCode" function
+     * breakpoints, which bind in code without symbols).
+     */
+    sqlMethods?: string[];
 }
 
 interface WriteSite {
@@ -213,6 +228,16 @@ export class DapProxy {
     private userFunctionBreakpoints: any[] = [];
     /** A "Step Into Target" in progress: a step over the line with a function breakpoint on the target. */
     private pendingTargetStep: { method: string } | undefined;
+    /** The SQL log's provider methods. Their breakpoints are the proxy's: VS Code never sees them. */
+    private readonly sqlMethods: string[];
+    /** Whether a setFunctionBreakpoints (VS Code's, or the proxy's own for the SQL log) reached netcoredbg. */
+    private functionBreakpointsSent = false;
+    /** VS Code's setFunctionBreakpoints requests by seq -> how many of the breakpoints in the response are VS Code's. */
+    private readonly pendingFunctionBreakpoints = new Map<number, number>();
+    /** Event handlers whose firing is traced, by function breakpoint name. Their breakpoints are the proxy's too. */
+    private readonly eventTraces = new Map<string, { breakpointName: string; labels: Set<string>; events: Set<string>; controls: Set<string> }>();
+    /** Ids of the SQL log's and the event trace's breakpoints: their responses and events are not passed on. */
+    private readonly hiddenBreakpointIds = new Set<number>();
 
     constructor(
         executable: string,
@@ -224,6 +249,7 @@ export class DapProxy {
     ) {
         this.mapper = options.sourceMapper ?? new SourcePathMapper();
         this.checkedExceptionTypes = options.breakOnExceptionTypes ?? [];
+        this.sqlMethods = options.sqlMethods ?? [];
         // Before any message: VS Code sends the breakpoints right after initialize, and they must already carry PDB paths.
         if (this.mapper.enabled) {
             for (const module of options.preloadModules ?? []) {
@@ -280,6 +306,21 @@ export class DapProxy {
         }
         if (message.type === 'request' && message.command === 'setFunctionBreakpoints') {
             this.userFunctionBreakpoints = message.arguments?.breakpoints ?? [];
+            if ((this.sqlMethods.length || this.eventTraces.size) && message.seq !== undefined) {
+                // The SQL log's and the event trace's breakpoints go along; the response is cut back to VS Code's own.
+                this.functionBreakpointsSent = true;
+                this.pendingFunctionBreakpoints.set(message.seq, this.userFunctionBreakpoints.length);
+                message = { ...message, arguments: { ...message.arguments, breakpoints: this.functionBreakpointsForDebugger() } };
+            }
+        }
+        if (message.type === 'request' && message.command === EVENT_TRACE_REQUEST) {
+            void this.setEventTrace(message);
+            return;
+        }
+        if (message.type === 'request' && message.command === 'configurationDone' && this.sqlMethods.length && !this.functionBreakpointsSent) {
+            // VS Code sent no function breakpoints (it has none): the SQL log's still have to be set before the program runs.
+            void this.setSqlBreakpointsThen(message);
+            return;
         }
         if (message.type === 'request' && message.command === 'dataBreakpointInfo') {
             this.respond(message, this.dataBreakpointInfo(message.arguments ?? {}));
@@ -333,6 +374,17 @@ export class DapProxy {
         }
         if (message.type === 'response' && message.command === 'setBreakpoints' && message.request_seq !== undefined) {
             this.recordSpecialBreakpoints(message);
+        }
+        if (message.type === 'response' && message.command === 'setFunctionBreakpoints' && message.request_seq !== undefined) {
+            const userCount = this.pendingFunctionBreakpoints.get(message.request_seq);
+            if (userCount !== undefined) {
+                this.pendingFunctionBreakpoints.delete(message.request_seq);
+                this.recordHiddenBreakpoints(message, userCount);
+                message = { ...message, body: { ...message.body, breakpoints: (message.body?.breakpoints ?? []).slice(0, userCount) } };
+            }
+        }
+        if (message.type === 'event' && message.event === 'breakpoint' && this.hiddenBreakpointIds.has(message.body?.breakpoint?.id)) {
+            return; // a SQL log breakpoint (bound / not bound): not the user's
         }
         if (message.type === 'event' && message.event === 'module' && message.body?.reason === 'new' && (this.mapper.enabled || this.options.sourceLink)) {
             // A module loaded after the session started (attach, or loaded on demand): learn its documents and
@@ -393,6 +445,11 @@ export class DapProxy {
         if (message.type === 'event' && message.event === 'continued' && this.hiddenContinuedCount > 0) {
             this.hiddenContinuedCount--;
             return;
+        }
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && (this.sqlMethods.length || this.eventTraces.size)) {
+            if (await this.handleHookStop(message.body.threadId)) {
+                return;
+            }
         }
         if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'exception' && this.options.exceptionLog) {
             if (await this.handleExceptionStop(message.body.threadId)) {
@@ -914,12 +971,12 @@ export class DapProxy {
             this.write({ ...message, arguments: args });
             return;
         }
-        await this.request('setFunctionBreakpoints', { breakpoints: [...this.userFunctionBreakpoints, { name: method }] });
+        await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger([{ name: method }]) });
         this.pendingTargetStep = { method };
         const r = await this.request('next', { threadId });
         if (!r.success) {
             this.pendingTargetStep = undefined;
-            await this.request('setFunctionBreakpoints', { breakpoints: this.userFunctionBreakpoints });
+            await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger() });
         }
         this.toClient({ type: 'response', seq: this.nextEventSeq++, request_seq: message.seq, command: 'stepIn', success: r.success, message: r.message, body: {} });
     }
@@ -928,7 +985,7 @@ export class DapProxy {
     private async finishTargetStep(stop: DapMessage): Promise<DapMessage> {
         const { method } = this.pendingTargetStep!;
         this.pendingTargetStep = undefined;
-        await this.request('setFunctionBreakpoints', { breakpoints: this.userFunctionBreakpoints });
+        await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger() });
         if (stop.body?.reason !== 'breakpoint') {
             return stop;
         }
@@ -936,6 +993,139 @@ export class DapProxy {
         const top = await this.request('stackTrace', { threadId: stop.body.threadId, startFrame: 0, levels: 1 });
         const name = String(top.body?.stackFrames?.[0]?.name ?? '');
         return frameIsMethod(name, method) ? { ...stop, body: { ...stop.body, reason: 'step' } } : stop;
+    }
+
+    /** The function breakpoints netcoredbg gets: VS Code's, `extra`, and the SQL log's (which also bind without symbols). */
+    private functionBreakpointsForDebugger(extra: any[] = []): any[] {
+        const userNames = new Set(this.userFunctionBreakpoints.map((b) => String(b.name)));
+        // Handlers are code with symbols, so they need no "anyCode"; one the user also has a breakpoint on is that one.
+        const traced = [...this.eventTraces.keys()].filter((name) => !userNames.has(name)).map((name) => ({ name }));
+        return [...this.userFunctionBreakpoints, ...extra, ...this.sqlMethods.map((name) => ({ name, anyCode: true })), ...traced];
+    }
+
+    /** "Trace Events": records the handlers to trace (or forgets them all) and sets their breakpoints. */
+    private async setEventTrace(message: DapMessage): Promise<void> {
+        const args = message.arguments ?? {};
+        if (args.clear) {
+            this.eventTraces.clear();
+        }
+        for (const h of Array.isArray(args.handlers) ? args.handlers : []) {
+            if (typeof h?.breakpointName !== 'string') {
+                continue;
+            }
+            const entry = this.eventTraces.get(h.breakpointName) ?? { breakpointName: h.breakpointName, labels: new Set<string>(), events: new Set<string>(), controls: new Set<string>() };
+            if (h.label) { entry.labels.add(String(h.label)); }
+            if (h.event) { entry.events.add(String(h.event)); }
+            if (h.control) { entry.controls.add(String(h.control)); }
+            this.eventTraces.set(h.breakpointName, entry);
+        }
+        this.functionBreakpointsSent = true;
+        const r = await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger() });
+        this.recordHiddenBreakpoints(r, this.userFunctionBreakpoints.length);
+        this.respond(message, { count: this.eventTraces.size });
+    }
+
+    private recordHiddenBreakpoints(response: DapMessage, userCount: number): void {
+        for (const bp of (response.body?.breakpoints ?? []).slice(userCount)) {
+            if (typeof bp.id === 'number') {
+                this.hiddenBreakpointIds.add(bp.id);
+            }
+        }
+    }
+
+    /** VS Code has no function breakpoints: sets the SQL log's, then passes the held request (configurationDone) on. */
+    private async setSqlBreakpointsThen(held: DapMessage): Promise<void> {
+        this.functionBreakpointsSent = true;
+        const r = await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger() });
+        this.recordHiddenBreakpoints(r, this.userFunctionBreakpoints.length);
+        this.write(held);
+    }
+
+    /**
+     * The program stopped at a function breakpoint. At one of the SQL log's provider methods or a traced event
+     * handler: reads what is needed, reports it and resumes, so VS Code never sees the stop (a step that was running
+     * goes on). Returns false for any other stop, and for a handler the user also has a breakpoint on.
+     */
+    private async handleHookStop(threadId: number): Promise<boolean> {
+        let keepStop = false;
+        try {
+            const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: SQL_STACK_DEPTH });
+            const frames: any[] = stack.body?.stackFrames ?? [];
+            const nameOf = (frame: any) => String(frame?.name ?? '');
+            const isHook = (frame: any) => this.sqlMethods.find((m) => frameIsMethod(nameOf(frame), m));
+            const method = isHook(frames[0]);
+            if (method) {
+                // ExecuteReader() often calls ExecuteReader(behavior): the inner call is the same statement.
+                if (!isHook(frames[1])) {
+                    await this.reportSql(method, threadId, frames);
+                }
+            } else {
+                const traced = [...this.eventTraces.values()].find((t) => frameIsMethod(nameOf(frames[0]), t.breakpointName));
+                if (!traced) {
+                    return false;
+                }
+                await this.reportControlEvent(traced, threadId, frames[0]);
+                keepStop = this.userFunctionBreakpoints.some((b) => frameIsMethod(nameOf(frames[0]), String(b.name)));
+            }
+        } catch (e) {
+            this.log(`[proxy] hook stop: ${e instanceof Error ? e.message : String(e)}`);
+        }
+        if (keepStop) {
+            return false;
+        }
+        await this.resume(threadId);
+        return true;
+    }
+
+    /** A traced handler was entered: who fired it (the `sender` argument's name, when the handler has one). */
+    private async reportControlEvent(traced: { labels: Set<string>; events: Set<string>; controls: Set<string> }, threadId: number, frame: any): Promise<void> {
+        const text = async (expression: string): Promise<string | undefined> => {
+            const r = await this.request('evaluate', { expression, frameId: frame.id, context: 'watch' });
+            return r.success ? String(r.body?.result ?? '').replace(/^"|"$/g, '') : undefined;
+        };
+        let sender = await text('sender.Name');
+        if (!sender) {
+            const type = await text('sender.GetType().Name');
+            sender = type ? `(${type})` : undefined;
+        }
+        this.emitEvent(EVENT_TRACE_EVENT, {
+            time: Date.now(),
+            threadId,
+            events: [...traced.events],
+            labels: [...traced.labels],
+            controls: [...traced.controls],
+            sender,
+            handler: String(frame.name ?? ''),
+            source: frame.source,
+            line: frame.line,
+        });
+    }
+
+    private async reportSql(method: string, threadId: number, frames: any[]): Promise<void> {
+        const frameId = frames[0].id;
+        const reader: ExpressionReader = {
+            evaluate: async (expression) => {
+                const r = await this.request('evaluate', { expression, frameId, context: 'watch' });
+                return r.success
+                    ? { ok: true, result: String(r.body?.result ?? ''), type: r.body?.type, variablesReference: r.body?.variablesReference }
+                    : { ok: false, result: '' };
+            },
+            variables: async (variablesReference) => (await this.request('variables', { variablesReference })).body?.variables ?? [],
+        };
+        const typeName = method.slice(0, method.lastIndexOf('.'));
+        const command = await captureSqlCommand(reader, typeName);
+        if (!command) {
+            return;
+        }
+        this.emitEvent(SQL_EVENT, {
+            time: Date.now(),
+            threadId,
+            method,
+            typeName,
+            ...command,
+            // The frames above the provider's: who ran the statement.
+            frames: frames.slice(1).map((f) => ({ name: String(f.name ?? ''), source: f.source, line: f.line })),
+        });
     }
 
     /** Pauses the program for a UI freeze; the stop that follows is reported on the frozen thread. */

@@ -127,5 +127,21 @@
   "config.breakpointCommands.enabled": "エディターの右クリックの一時・依存・値の変化・呼び出し元のブレークポイントを使います（#once・#after・#changed・#caller の条件はオフでも使えます）。",
   "config.variableTools.enabled": "変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像で表示、C# としてコピー、文字列を表示、スナップショット、オブジェクト ID）を使います。",
   "config.generateTest.enabled": "コールスタックの右クリックの「ここから単体テストを生成」を使います。",
-  "config.sessionReport.enabled": "デバッグ セッション レポートの出力（ステップ履歴ビューのタイトルとコマンド パレット）を使います。"
+  "config.sessionReport.enabled": "デバッグ セッション レポートの出力（ステップ履歴ビューのタイトルとコマンド パレット）を使います。",
+  "view.sqlLog": "SQL ログ (.NET x86)",
+  "command.clearSqlLog": "SQL ログをクリア",
+  "command.exportSqlLog": "SQL ログを出力",
+  "command.copySqlWithValues": "パラメーター値を埋めた SQL をコピー",
+  "command.copySql": "SQL をコピー",
+  "command.openSql": "SQL を開く",
+  "config.sqlLog.enabled": "ADO.NET プロバイダー（ODP.NET・SqlClient・OleDb・Odbc）経由で実行されたすべての SQL を、パラメーター値と呼び出し元つきで、止まらずに SQL ログ ビューへ記録します。自作のデータ アクセス部品から実行された SQL も記録できます。新しいデバッグ セッションから有効です。SQL を読み取る間、実行ごとにプログラムが一瞬止まります。オフにするとビューを隠します。",
+  "config.sqlLog.methods": "SQL ログが停止して読み取るプロバイダーのメソッド（`名前空間.型.メソッド`、同名のオーバーロードすべて）。他のプロバイダーの Command 型（例: `Npgsql.NpgsqlCommand.ExecuteReader`）を足すとそれも記録します。新しいデバッグ セッションから有効です。",
+  "view.eventTrace": "イベント トレース (.NET x86)",
+  "command.traceControlEvents": "イベントをトレース...",
+  "command.clearEventTrace": "イベント トレースをクリア",
+  "command.exportEventTrace": "イベント トレースを出力",
+  "config.eventTrace.enabled": "イベントのトレース（WinForms コントロール ビュー）とイベント トレース ビュー: どのコントロールのどのイベントがどの順で発火したかを、止まらずに記録します。オフにするとコマンドとビューを隠します。",
+  "command.captureEvidence": "エビデンスを取得",
+  "config.evidence.enabled": "エビデンスの取得（コマンド パレット・コール スタック・WinForms コントロール ビュー）: 開いているフォームの画像、コントロールの値、変数、コール スタック、前回の取得以降の SQL を、Markdown と PNG で保存します。",
+  "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。"
 }

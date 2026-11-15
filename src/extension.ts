@@ -22,6 +22,9 @@ import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { makeObjectIdCommand } from './objectIdCommand';
 import { SessionReport } from './sessionReport';
+import { EventTrace } from './eventTrace';
+import { EvidenceCapture } from './evidence';
+import { SqlLog } from './sqlLog';
 import { StepHistory } from './stepHistory';
 import { SymbolServer } from './symbolServer';
 import { generateTestCommand } from './testGenerator';
@@ -61,6 +64,13 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
+    const eventTrace = new EventTrace();
+    const eventTraceView = vscode.window.createTreeView('dotnetX86.eventTrace', { treeDataProvider: eventTrace });
+    eventTrace.attach(eventTraceView);
+    const sqlLog = new SqlLog();
+    const evidence = new EvidenceCapture(context.extensionPath, sqlLog, (line) => output.appendLine(line));
+    const sqlView = vscode.window.createTreeView('dotnetX86.sqlLog', { treeDataProvider: sqlLog });
+    sqlLog.attach(sqlView);
     const exceptionSettings = new ExceptionSettings(context.workspaceState);
     const exceptionSettingsView = vscode.window.createTreeView('dotnetX86.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
     exceptionSettings.attach(exceptionSettingsView);
@@ -151,6 +161,20 @@ export function activate(context: vscode.ExtensionContext): void {
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),
+        evidence,
+        vscode.commands.registerCommand('dotnetX86.captureEvidence', () => evidence.capture()),
+        eventTrace,
+        eventTraceView,
+        vscode.commands.registerCommand('dotnetX86.traceControlEvents', (node?: ControlNode) => controlTree.traceEvents(node ?? controlView.selection[0])),
+        vscode.commands.registerCommand('dotnetX86.clearEventTrace', () => eventTrace.clear()),
+        vscode.commands.registerCommand('dotnetX86.exportEventTrace', () => eventTrace.export()),
+        sqlLog,
+        sqlView,
+        vscode.commands.registerCommand('dotnetX86.clearSqlLog', () => sqlLog.clear()),
+        vscode.commands.registerCommand('dotnetX86.exportSqlLog', () => sqlLog.export()),
+        vscode.commands.registerCommand('dotnetX86.copySqlWithValues', (entry) => sqlLog.copy(entry, true)),
+        vscode.commands.registerCommand('dotnetX86.copySql', (entry) => sqlLog.copy(entry, false)),
+        vscode.commands.registerCommand('dotnetX86.openSql', (entry) => sqlLog.open(entry)),
         exceptionSettings,
         exceptionSettingsView,
         vscode.commands.registerCommand('dotnetX86.addExceptionType', () => exceptionSettings.addType()),

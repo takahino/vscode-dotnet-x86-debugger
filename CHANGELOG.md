@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- New: **SQL Log** view — every SQL statement the program runs through an ADO.NET provider (ODP.NET managed / unmanaged, SqlClient, OleDb, Odbc), without stopping: the statement, its parameter values, the caller and the call stack. **Copy SQL with Parameter Values** gives the statement with the values filled in (Oracle `BindByName = false` honored), **Export SQL Log** writes a `.sql` file, and a statement that runs five times or more is flagged (N+1). It hooks the provider, so statements run by a home-made data access component are logged too. `dotnetX86.sqlLog.enabled`, `dotnetX86.sqlLog.methods`.
+- New: **Trace Events...** (WinForms Controls right-click) and the **Event Trace** view — which control's event fired, in what order and how far apart, without stopping (`sender`, handler, time, gap); export to a text file. `dotnetX86.eventTrace.enabled`.
+- New: **Capture Evidence** — a picture of every open form (the compositor's image of the stopped windows), the control values (including the first cells of DataGridViews), the variables, the call stack and the SQL since the previous capture, saved as `evidence.md` and PNG files in `evidence/<date-time>/`. `dotnetX86.evidence.enabled`, `dotnetX86.evidence.folder`.
+- New (netcoredbg patch 0013): function breakpoints can be set with `anyCode`, which also binds in code without symbols and outside Just My Code (at the method entry); `this` and the arguments can be evaluated there. A stop at one does not end a step in progress.
+
 - New: every feature can be turned off (all on by default) with `dotnetX86.<feature>.enabled`: memoryGraph, inlineValues, autos, modules, exceptionSettings, winforms, heapSnapshot, parallelStacks, valueTrend, pinnedValues, breakpointCommands, variableTools, generateTest, sessionReport. Off removes the views, menu entries and commands, and stops the background work. `stepHistory.enabled` and `exceptionLog.enabled` now hide their views too.
 
 ## 1.1.0

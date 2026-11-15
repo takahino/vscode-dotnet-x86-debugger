@@ -68,7 +68,13 @@
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
     "onCommand:dotnetX86.clearPinnedValues",
-    "onCommand:dotnetX86.exportSessionReport"
+    "onCommand:dotnetX86.exportSessionReport",
+    "onCommand:dotnetX86.clearSqlLog",
+    "onCommand:dotnetX86.exportSqlLog",
+    "onCommand:dotnetX86.traceControlEvents",
+    "onCommand:dotnetX86.clearEventTrace",
+    "onCommand:dotnetX86.exportEventTrace",
+    "onCommand:dotnetX86.captureEvidence"
   ],
   "contributes": {
     "walkthroughs": [
@@ -396,6 +402,57 @@
         "title": "%command.exportSessionReport%",
         "category": ".NET x86",
         "icon": "$(output)"
+      },
+      {
+        "command": "dotnetX86.clearSqlLog",
+        "title": "%command.clearSqlLog%",
+        "category": ".NET x86",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "dotnetX86.exportSqlLog",
+        "title": "%command.exportSqlLog%",
+        "category": ".NET x86",
+        "icon": "$(output)"
+      },
+      {
+        "command": "dotnetX86.copySqlWithValues",
+        "title": "%command.copySqlWithValues%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.copySql",
+        "title": "%command.copySql%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.openSql",
+        "title": "%command.openSql%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.traceControlEvents",
+        "title": "%command.traceControlEvents%",
+        "category": ".NET x86",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "dotnetX86.clearEventTrace",
+        "title": "%command.clearEventTrace%",
+        "category": ".NET x86",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "dotnetX86.exportEventTrace",
+        "title": "%command.exportEventTrace%",
+        "category": ".NET x86",
+        "icon": "$(output)"
+      },
+      {
+        "command": "dotnetX86.captureEvidence",
+        "title": "%command.captureEvidence%",
+        "category": ".NET x86",
+        "icon": "$(device-camera)"
       }
     ],
     "menus": {
@@ -436,6 +493,11 @@
           "command": "dotnetX86.generateTest",
           "when": "debugType == 'dotnet-x86' && callStackItemType == 'stackFrame' && config.dotnetX86.generateTest.enabled",
           "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.captureEvidence",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.evidence.enabled",
+          "group": "z_dotnetX86@5"
         }
       ],
       "debug/variables/context": [
@@ -660,6 +722,42 @@
         {
           "command": "dotnetX86.exportSessionReport",
           "when": "config.dotnetX86.sessionReport.enabled"
+        },
+        {
+          "command": "dotnetX86.clearSqlLog",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.sqlLog.enabled"
+        },
+        {
+          "command": "dotnetX86.exportSqlLog",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.sqlLog.enabled"
+        },
+        {
+          "command": "dotnetX86.copySqlWithValues",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.copySql",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.openSql",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.traceControlEvents",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.clearEventTrace",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.eventTrace.enabled"
+        },
+        {
+          "command": "dotnetX86.exportEventTrace",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.eventTrace.enabled"
+        },
+        {
+          "command": "dotnetX86.captureEvidence",
+          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.evidence.enabled"
         }
       ],
       "editor/context": [
@@ -744,6 +842,31 @@
           "command": "dotnetX86.exportSessionReport",
           "when": "view == dotnetX86.stepHistory && config.dotnetX86.sessionReport.enabled",
           "group": "navigation@0"
+        },
+        {
+          "command": "dotnetX86.exportSqlLog",
+          "when": "view == dotnetX86.sqlLog && config.dotnetX86.sqlLog.enabled",
+          "group": "navigation@0"
+        },
+        {
+          "command": "dotnetX86.clearSqlLog",
+          "when": "view == dotnetX86.sqlLog && config.dotnetX86.sqlLog.enabled",
+          "group": "navigation@1"
+        },
+        {
+          "command": "dotnetX86.exportEventTrace",
+          "when": "view == dotnetX86.eventTrace && config.dotnetX86.eventTrace.enabled",
+          "group": "navigation@0"
+        },
+        {
+          "command": "dotnetX86.clearEventTrace",
+          "when": "view == dotnetX86.eventTrace && config.dotnetX86.eventTrace.enabled",
+          "group": "navigation@1"
+        },
+        {
+          "command": "dotnetX86.captureEvidence",
+          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled && config.dotnetX86.evidence.enabled",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
@@ -811,6 +934,26 @@
           "command": "dotnetX86.copyControlExpression",
           "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
           "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.copySqlWithValues",
+          "when": "view == dotnetX86.sqlLog && viewItem == dotnetX86.sql && config.dotnetX86.sqlLog.enabled",
+          "group": "z_dotnetX86@0"
+        },
+        {
+          "command": "dotnetX86.copySql",
+          "when": "view == dotnetX86.sqlLog && viewItem == dotnetX86.sql && config.dotnetX86.sqlLog.enabled",
+          "group": "z_dotnetX86@1"
+        },
+        {
+          "command": "dotnetX86.openSql",
+          "when": "view == dotnetX86.sqlLog && viewItem == dotnetX86.sql && config.dotnetX86.sqlLog.enabled",
+          "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.traceControlEvents",
+          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled && config.dotnetX86.eventTrace.enabled",
+          "group": "z_dotnetX86@0"
         }
       ]
     },
@@ -984,6 +1127,54 @@
           "type": "boolean",
           "default": true,
           "description": "%config.sessionReport.enabled%"
+        },
+        "dotnetX86.sqlLog.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.sqlLog.enabled%"
+        },
+        "dotnetX86.sqlLog.methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Oracle.ManagedDataAccess.Client.OracleCommand.ExecuteReader",
+            "Oracle.ManagedDataAccess.Client.OracleCommand.ExecuteNonQuery",
+            "Oracle.ManagedDataAccess.Client.OracleCommand.ExecuteScalar",
+            "Oracle.DataAccess.Client.OracleCommand.ExecuteReader",
+            "Oracle.DataAccess.Client.OracleCommand.ExecuteNonQuery",
+            "Oracle.DataAccess.Client.OracleCommand.ExecuteScalar",
+            "System.Data.SqlClient.SqlCommand.ExecuteReader",
+            "System.Data.SqlClient.SqlCommand.ExecuteNonQuery",
+            "System.Data.SqlClient.SqlCommand.ExecuteScalar",
+            "Microsoft.Data.SqlClient.SqlCommand.ExecuteReader",
+            "Microsoft.Data.SqlClient.SqlCommand.ExecuteNonQuery",
+            "Microsoft.Data.SqlClient.SqlCommand.ExecuteScalar",
+            "System.Data.OleDb.OleDbCommand.ExecuteReader",
+            "System.Data.OleDb.OleDbCommand.ExecuteNonQuery",
+            "System.Data.OleDb.OleDbCommand.ExecuteScalar",
+            "System.Data.Odbc.OdbcCommand.ExecuteReader",
+            "System.Data.Odbc.OdbcCommand.ExecuteNonQuery",
+            "System.Data.Odbc.OdbcCommand.ExecuteScalar"
+          ],
+          "markdownDescription": "%config.sqlLog.methods%"
+        },
+        "dotnetX86.eventTrace.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.eventTrace.enabled%"
+        },
+        "dotnetX86.evidence.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.evidence.enabled%"
+        },
+        "dotnetX86.evidence.folder": {
+          "type": "string",
+          "default": "evidence",
+          "scope": "resource",
+          "description": "%config.evidence.folder%"
         }
       }
     },
@@ -1179,6 +1370,11 @@
           "when": "debugType == 'dotnet-x86' && config.dotnetX86.exceptionLog.enabled"
         },
         {
+          "id": "dotnetX86.sqlLog",
+          "name": "%view.sqlLog%",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.sqlLog.enabled"
+        },
+        {
           "id": "dotnetX86.exceptionSettings",
           "name": "%view.exceptionSettings%",
           "when": "debugType == 'dotnet-x86' && config.dotnetX86.exceptionSettings.enabled",
@@ -1193,6 +1389,12 @@
           "id": "dotnetX86.controls",
           "name": "%view.controls%",
           "when": "debugType == 'dotnet-x86' && config.dotnetX86.winforms.enabled",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "dotnetX86.eventTrace",
+          "name": "%view.eventTrace%",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.eventTrace.enabled",
           "visibility": "collapsed"
         },
         {

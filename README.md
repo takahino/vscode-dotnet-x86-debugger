@@ -72,6 +72,9 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 | **History and records** | | |
 | [Step history](#step-history) | The locals of every earlier stop | Step History view |
 | [Exception log](#exception-log) ★ | Every thrown exception, swallowed ones too, with the stack and locals at the throw | Exception Log view |
+| [Event trace](#event-trace) ★ | Which control's event fired, in what order and how far apart, without stopping | WinForms Controls right-click |
+| [Capture evidence](#capture-evidence) ★ | Pictures of the open forms, control values, variables, call stack and SQL as Markdown + PNG for a test report | Command Palette / Call Stack right-click |
+| [SQL log](#sql-log) ★ | Every SQL statement run through ODP.NET / SqlClient / OleDb / Odbc with its parameter values and caller, also from your own data access component | SQL Log view |
 | [Session report](#debug-session-report) ★ | Markdown summary of the session for a bug report | Command Palette |
 | [Generate a unit test](#generate-a-unit-test-from-a-stop) ★ | A test that replays the stopped method call | Call Stack right-click |
 | **Source and symbols** | | |
@@ -205,7 +208,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 
 Every feature is on by default. Set one of these to `false` to remove its views, menu entries and commands, and to stop
 the work it does in the background (sampling, evaluating at each stop). The change applies at once; the memory graph,
-the exception settings, the exception log and UI freeze detection change with the next debug session.
+the exception settings, the exception log, the SQL log and UI freeze detection change with the next debug session.
 
 | Setting | Feature |
 |---|---|
@@ -225,6 +228,9 @@ the exception settings, the exception log and UI freeze detection change with th
 | `dotnetX86.sessionReport.enabled` | Export Debug Session Report |
 | `dotnetX86.stepHistory.enabled` | Step History view and recording |
 | `dotnetX86.exceptionLog.enabled` | Exception Log view and recording |
+| `dotnetX86.sqlLog.enabled` | SQL Log view and recording |
+| `dotnetX86.eventTrace.enabled` | Trace Events and the Event Trace view |
+| `dotnetX86.evidence.enabled` | Capture Evidence |
 | `dotnetX86.perfTips.enabled` | PerfTips |
 | `dotnetX86.uiFreeze.enabled` | UI freeze detection |
 | `dotnetX86.sourceLink.enabled` | Source Link downloads |
@@ -482,6 +488,38 @@ Apps that throw very many exceptions run slower while it is on (`dotnetX86.excep
 Each entry expands into a **snapshot taken at the throw**: the call stack (click a frame to open it) and the locals of the
 first three frames of your code, so you can see the values of an exception you ran through without stopping. Visual
 Studio does not keep them. Objects are not expanded; see `dotnetX86.exceptionLog.captureLocals`.
+
+#### Event trace
+
+Right-click a control in the WinForms Controls view and choose **Trace Events...**, pick its event handlers, and continue. The
+**Event Trace (.NET x86)** view then lists every firing in order — the event, the control that fired it (the handler's
+`sender`), the handler, the time and the gap to the previous one — without stopping, so a chain such as `Validating` →
+`TextChanged` → `SelectedIndexChanged` can be read at a glance. Click an entry to open the handler. **Export Event Trace**
+writes the list to a text file. A handler you also set a breakpoint on still stops. `dotnetX86.eventTrace.enabled`.
+
+#### Capture evidence
+
+**.NET x86: Capture Evidence** (Command Palette, Call Stack context menu, WinForms Controls view title) saves what a test
+report needs from the stopped screen into a new folder (`evidence/<date-time>/`, see `dotnetX86.evidence.folder`): a **picture of
+every open form**, the **values of their controls** (text, checked, selected index, the first cells of each DataGridView and the
+state hidden / disabled), the variables of the selected frame, the call stack and the SQL run since the previous capture,
+as `evidence.md` plus PNG files. The pictures are the desktop compositor's last image of the stopped windows, shown on top for
+a moment, so they work when the form is behind VS Code; a form has to be on a screen (not minimized). At most 300 controls
+are read per form. `dotnetX86.evidence.enabled`.
+
+#### SQL log
+
+The **SQL Log (.NET x86)** view lists every SQL statement the program runs through an ADO.NET provider — ODP.NET (managed and
+unmanaged), SqlClient, OleDb and Odbc — without stopping. Each entry shows the statement, its **parameter values** and the
+**caller** (expand it for the call stack), and **Copy SQL with Parameter Values** gives the statement with every `:name` /
+`@name` / `?` replaced by its literal value, ready to paste into a SQL tool. Oracle's `BindByName = false` (bind by position)
+is honored. A statement that runs five times or more is flagged, the usual shape of an N+1 problem. **Export SQL Log** (view
+title) writes them all to a `.sql` file as evidence of what the program ran.
+
+It hooks the provider, not your code, so statements run by a home-made data access component are logged too. Each
+statement pauses the program for a moment while it is read (`dotnetX86.sqlLog.enabled`, new sessions only). To log another
+provider, add its command type to `dotnetX86.sqlLog.methods` (e.g. `Npgsql.NpgsqlCommand.ExecuteReader`). The time a
+statement took is not recorded, and `Async` methods are only logged where the provider calls its synchronous method.
 
 #### Debug session report
 
