@@ -143,5 +143,15 @@
   "config.eventTrace.enabled": "イベントのトレース（WinForms コントロール ビュー）とイベント トレース ビュー: どのコントロールのどのイベントがどの順で発火したかを、止まらずに記録します。オフにするとコマンドとビューを隠します。",
   "command.captureEvidence": "エビデンスを取得",
   "config.evidence.enabled": "エビデンスの取得（コマンド パレット・コール スタック・WinForms コントロール ビュー）: 開いているフォームの画像、コントロールの値、変数、コール スタック、前回の取得以降の SQL を、Markdown と PNG で保存します。",
-  "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。"
+  "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。",
+  "view.liveWatch": "Live Watch (.NET x86)",
+  "command.addLiveWatch": "Live Watch に式を追加...",
+  "command.editLiveWatch": "式を編集",
+  "command.removeLiveWatch": "式を削除",
+  "command.clearLiveWatch": "Live Watch の式をすべて削除",
+  "command.startLiveWatch": "Live Watch を開始",
+  "command.stopLiveWatch": "Live Watch を止める",
+  "config.liveWatch.enabled": "Live Watch ビュー: プログラムの実行中に式（static フィールド・プロパティと、そこからたどれるもの）を繰り返し読み取ります。オフにするとビューを隠し、そのためにプログラムを止めることもありません。ビューの ▶ / ⏸ ボタンで読み取りをオン / オフできます。",
+  "config.liveWatch.intervalMs": "Live Watch が値を読み取る間隔（ミリ秒、250 以上）。読み取りのたびに UI スレッドが一瞬止まります（式 1 つあたり約 20 ミリ秒）。",
+  "config.liveWatch.hookMethods": "UI スレッドが頻繁に実行するメソッド（`名前空間.型.メソッド`）。Live Watch は、このいずれかが次に呼ばれたとき（式を評価できる位置）に値を読み取ります。既定値は WinForms 向けです。それ以外のプログラムでは、自分のメイン ループのメソッドなどを追加してください。"
 }

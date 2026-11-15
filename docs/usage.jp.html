@@ -107,6 +107,7 @@
         <li><a href="#f-bp-more">一時・依存・値の変化・呼び出し元のブレークポイント</a></li>
         <li><a href="#f-values">値を見る</a></li>
         <li><a href="#f-pins">値のピン止め</a></li>
+        <li><a href="#f-livewatch">Live Watch</a></li>
         <li><a href="#f-returns">戻り値の表示</a></li>
         <li><a href="#f-variables-menu">変数ビューのコマンド</a></li>
         <li><a href="#f-data-bp">値が変わったら停止</a></li>
@@ -314,6 +315,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr class="group"><th colspan="3">値を見る</th></tr>
   <tr><td><a href="#f-values">ホバー・インライン値・DebuggerDisplay・自動変数</a></td><td>コードの横やコンパクトなビューで値を確認</td><td>エディター／自動変数ビュー</td></tr>
   <tr><td><a href="#f-pins">値のピン止め</a></td><td>式の値を行末に表示し続ける</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-livewatch">Live Watch</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>static フィールド・プロパティを、プログラムの実行中に繰り返し読み取って表示</td><td>Live Watch ビュー</td></tr>
   <tr><td><a href="#f-objectid">オブジェクト ID</a></td><td>オブジェクトに名前（$1）を付けてどこからでも参照</td><td>変数／ウォッチの右クリック</td></tr>
   <tr><td><a href="#f-variables-menu">ダンプ・表・画像・C# 初期化子・文字列ビューアー・スナップショット</a></td><td>複雑な値を読む・比べる</td><td>変数ビューの右クリック</td></tr>
   <tr class="group"><th colspan="3">時間とパフォーマンス</th></tr>
@@ -472,6 +474,33 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>30 行目にピン止めした 2 つの式。停止するたびに更新されます。</figcaption>
 </figure>
+
+<h3 id="f-livewatch">Live Watch</h3>
+<p><b>Live Watch (.NET x86)</b> ビューは、プログラムの<b>実行中</b>に式の値を表示し続けます。対象は static フィールド・プロパティと、そこからたどれるもの
+（<code>MyApp.Program.Counter</code>、<code>System.Windows.Forms.Application.OpenForms[0].Text</code>、<code>Session.Current.User.Name</code> など）です。
+<b>+</b> で追加し、行のボタンで編集・削除します。変化した直後の値には ● が付き、数値は値の推移ビューにもグラフ化されます（位置は <i>Live Watch</i>）。
+ビューのタイトルの <b>▶ / ⏸</b> ボタンでオン / オフでき（ワークスペースに保存）、オフの間は Live Watch のためにプログラムを止めることはありません。</p>
+<p>実行中のプログラムは式を評価できません（UI スレッドがネイティブ コードで待機しているため）。そこで、UI スレッドが常に実行するメソッド
+（WinForms では <code>System.Windows.Forms.NativeWindow.Callback</code>）が次に呼ばれた瞬間に、その時だけ置くブレークポイントで値を読み取り、すぐに続行します。
+マネージ コードの安全な位置なので、プロパティの getter も評価できます。ローカル変数は監視できません（読み取るフレームが定まらないため）。
+読み取りのたびに、式 1 つあたり約 20 ミリ秒 UI スレッドが止まります（<code>dotnetX86.liveWatch.intervalMs</code>、既定値 1000）。UI スレッドがウィンドウ メッセージを
+処理していない間は値も変わらないので、ビューに待機中と表示します。停止中・ステップ実行中は読み取りません。WinForms 以外のプログラムでは、
+メイン ループが頻繁に実行するメソッドを <code>dotnetX86.liveWatch.hookMethods</code> に追加してください。Visual Studio にはない機能です。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 150" role="img" aria-label="Live Watch view">
+  <rect x="0" y="0" width="860" height="150" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="12">
+    <text x="16" y="26" fill="var(--ui-text)" font-weight="700">▾ LIVE WATCH (.NET X86)</text>
+    <text x="770" y="26" fill="var(--ui-muted)">⏸  +  ⌫</text>
+    <text x="28" y="54" fill="var(--ui-text)">👁 App.Counter <tspan fill="var(--ui-accent, #4fc1ff)">● 128</tspan></text>
+    <text x="28" y="78" fill="var(--ui-text)">👁 App.Status <tspan fill="var(--ui-muted)">"even"</tspan></text>
+    <text x="28" y="102" fill="var(--ui-text)">👁 System.Windows.Forms.Application.OpenForms[0].Text <tspan fill="var(--ui-accent, #4fc1ff)">● "Orders (128)"</tspan></text>
+    <text x="28" y="126" fill="var(--ui-text)">⚠ OrderForm.total <tspan fill="var(--ui-muted)">error: The name 'OrderForm.total' does not exist in the current context</tspan></text>
+  </g>
+</svg>
+<figcaption>実行中に値が更新され、変化した直後の値に ● が付きます。タイトルの ⏸ で読み取りを止めます。</figcaption>
+</figure>
+<div class="usecase"><b>活用例:</b> しばらく操作しているとカウンターや状態がおかしくなる。止めずに操作しながら値を監視し、変わる瞬間を確認します。</div>
 
 <h3 id="f-returns">戻り値の表示</h3>
 <p><b>ステップ オーバー</b> や <b>ステップ アウト</b> の後、呼び出したメソッドの戻り値が変数ビューと自動変数ビューの先頭に表示されます。戻り値を確認するためだけに一時変数へ代入する必要はありません。1 行で複数のメソッドを呼んだ場合は、それぞれが表示されます。</p>
@@ -1147,6 +1176,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
   <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>同梱版の代わりに別の x86 版 netcoredbg を使います。</td></tr>
+  <tr><td><code>dotnetX86.liveWatch.intervalMs</code> / <code>hookMethods</code></td><td>1000 / WinForms</td><td>Live Watch が読み取る間隔と、読み取りに使う UI スレッドのメソッド。</td></tr>
   <tr><td><code>dotnetX86.sqlLog.methods</code></td><td>ODP.NET・SqlClient・OleDb・Odbc</td><td>SQL ログがコマンドを読み取るプロバイダーのメソッド（<code>名前空間.型.メソッド</code>）。</td></tr>
   <tr><td><code>dotnetX86.evidence.folder</code></td><td>evidence</td><td>エビデンスの保存先（ワークスペース フォルダーからの相対パス）。</td></tr>
 </table>
@@ -1164,6 +1194,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.parallelStacks.enabled</code></td><td>並列スタック、スレッドの凍結・解除</td></tr>
   <tr><td><code>dotnetX86.valueTrend.enabled</code></td><td>値の推移と区間の計測</td></tr>
   <tr><td><code>dotnetX86.pinnedValues.enabled</code></td><td>ピン留めした値（オンに戻すと再表示）</td></tr>
+  <tr><td><code>dotnetX86.liveWatch.enabled</code></td><td>Live Watch ビュー（オフの間はプログラムを止めない）</td></tr>
   <tr><td><code>dotnetX86.breakpointCommands.enabled</code></td><td>エディターの右クリックのブレークポイント コマンド（<code>#once</code> / <code>#after</code> / <code>#changed</code> / <code>#caller</code> の条件は使えます）</td></tr>
   <tr><td><code>dotnetX86.variableTools.enabled</code></td><td>変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像、C# としてコピー、文字列、スナップショット、オブジェクト ID）</td></tr>
   <tr><td><code>dotnetX86.generateTest.enabled</code></td><td>ここから単体テストを生成</td></tr>

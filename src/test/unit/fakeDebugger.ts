@@ -30,6 +30,15 @@ export interface FakeStop {
 export interface FakeScenario {
     stops: FakeStop[];
     variables?: Record<number, { name: string; value: string }[]>;
+    /** Keep running after the last stop instead of ending (a program that runs until the test disconnects). */
+    runForever?: boolean;
+    /**
+     * Function breakpoint name -> the stop it causes as soon as it is set while the program runs (a method the program
+     * calls all the time). Continuing from such a stop goes on running; it does not move on in `stops`.
+     */
+    hits?: Record<string, FakeStop>;
+    /** The stop a "pause" request causes. */
+    pauseStop?: FakeStop;
 }
 
 const DELIMITER = '\r\n\r\n';
@@ -41,6 +50,9 @@ function main(): void {
     let nextId = 1;
     let seq = 1;
     let stopIndex = -1;
+    /** A stop that is not one of scenario.stops (a hit, a pause): stackTrace and evaluate answer from it. */
+    let extraStop: FakeStop | undefined;
+    let running = false;
     let buffer = Buffer.alloc(0);
 
     const send = (message: any) => {
@@ -51,14 +63,22 @@ function main(): void {
     const respond = (request: any, body: any = {}, success = true, message?: string) =>
         send({ type: 'response', request_seq: request.seq, command: request.command, success, message, body });
     const event = (name: string, body: any = {}) => send({ type: 'event', event: name, body });
-    const stop = () => scenario.stops[stopIndex];
+    const stop = () => extraStop ?? scenario.stops[stopIndex];
     const nextStop = () => {
         stopIndex++;
         if (stopIndex < scenario.stops.length) {
+            running = false;
             event('stopped', { reason: stop().reason, threadId: 1, allThreadsStopped: true });
+        } else if (scenario.runForever) {
+            running = true;
         } else {
             event('terminated');
         }
+    };
+    const stopAt = (s: FakeStop) => {
+        extraStop = s;
+        running = false;
+        event('stopped', { reason: s.reason, threadId: 1, allThreadsStopped: true });
     };
 
     const handle = (request: any) => {
@@ -84,6 +104,10 @@ function main(): void {
                 respond(request, { breakpoints });
                 for (const b of breakpoints) {
                     event('breakpoint', { reason: 'changed', breakpoint: { ...b, verified: true } });
+                }
+                const hit = (args.breakpoints ?? []).map((b: any) => scenario.hits?.[b.name]).find(Boolean);
+                if (hit && running) {
+                    setTimeout(() => running && stopAt(hit), 20);
                 }
                 break;
             }
@@ -129,7 +153,27 @@ function main(): void {
             case 'continue':
                 respond(request, { allThreadsContinued: true });
                 event('continued', { threadId: 1, allThreadsContinued: true });
-                nextStop();
+                if (extraStop) {
+                    // Back from a hit or a pause: the program goes on where it was.
+                    extraStop = undefined;
+                    running = true;
+                } else {
+                    nextStop();
+                }
+                break;
+            case 'pause':
+                respond(request);
+                if (scenario.pauseStop) {
+                    stopAt(scenario.pauseStop);
+                }
+                break;
+            case 'next':
+            case 'stepIn':
+            case 'stepOut':
+                // A step that does not end while the test looks (a long-running line).
+                respond(request);
+                event('continued', { threadId: 1 });
+                running = true;
                 break;
             case 'fake.requests':
                 respond(request, { requests: received.slice(0, -1) });

@@ -378,5 +378,13 @@
   "Variables": "変数",
   "Name": "名前",
   "Call stack": "コール スタック",
-  "SQL since the previous capture": "前回の取得以降の SQL"
+  "SQL since the previous capture": "前回の取得以降の SQL",
+  "(not read yet)": "（未取得）",
+  "Read at {0}": "{0} に取得",
+  "changed at {0}": "{0} に変化",
+  "Expression to watch while the program runs, reachable from anywhere (e.g. MyApp.Program.Counter, System.Windows.Forms.Application.OpenForms[0].Text)": "実行中に監視する、どこからでもたどれる式（例: MyApp.Program.Counter、System.Windows.Forms.Application.OpenForms[0].Text）",
+  "Enter an expression.": "式を入力してください。",
+  "Add an expression with +. Static fields and properties, and what is reached from them, are read while the program runs.": "+ で式を追加してください。static フィールド・プロパティと、そこからたどれるものを、実行中に読み取ります。",
+  "Live Watch is off: press ▶ to read the values while the program runs. The last values are kept.": "Live Watch は停止中です。▶ で実行中の値の読み取りを始めます。最後の値は残っています。",
+  "Waiting for the UI thread: it handled no window message since {0} (the values do not change while it is idle).": "UI スレッドを待っています: {0} からウィンドウ メッセージを処理していません（待機中は値も変わりません）。"
 }
