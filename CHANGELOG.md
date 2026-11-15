@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
 - New: **Live Watch** view — static fields and properties (and what is reached from them) read again and again while the program runs, with the values that just changed marked and numbers charted in the Value Trend view. Each sample is taken at a method the UI thread runs often (WinForms: `NativeWindow.Callback`) through a breakpoint set for that moment only, so property getters work; nothing is sampled while stopped or stepping. ▶ / ⏸ in the view title turns it on and off. `dotnetX86.liveWatch.enabled`, `intervalMs`, `hookMethods`.
 - New: **SQL Log** view — every SQL statement the program runs through an ADO.NET provider (ODP.NET managed / unmanaged, SqlClient, OleDb, Odbc), without stopping: the statement, its parameter values, the caller and the call stack. **Copy SQL with Parameter Values** gives the statement with the values filled in (Oracle `BindByName = false` honored), **Export SQL Log** writes a `.sql` file, and a statement that runs five times or more is flagged (N+1). It hooks the provider, so statements run by a home-made data access component are logged too. `dotnetX86.sqlLog.enabled`, `dotnetX86.sqlLog.methods`.
