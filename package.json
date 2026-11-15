@@ -131,6 +131,11 @@
         "category": ".NET x86"
       },
       {
+        "command": "dotnetX86.viewAsImage",
+        "title": "%command.viewAsImage%",
+        "category": ".NET x86"
+      },
+      {
         "command": "dotnetX86.copyModulePath",
         "title": "%command.copyModulePath%",
         "category": ".NET x86"
@@ -246,6 +251,11 @@
     "menus": {
       "debug/watch/context": [
         {
+          "command": "dotnetX86.viewAsImage",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@1"
+        },
+        {
           "command": "dotnetX86.makeObjectId",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@0"
@@ -271,6 +281,11 @@
         },
         {
           "command": "dotnetX86.viewAsTable",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@2"
+        },
+        {
+          "command": "dotnetX86.viewAsImage",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@2"
         },
@@ -338,6 +353,10 @@
         },
         {
           "command": "dotnetX86.viewAsTable",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.viewAsImage",
           "when": "false"
         },
         {

@@ -39,6 +39,7 @@
   "view.stepHistory": "ステップ履歴 (.NET x86)",
   "config.stepHistory.enabled": "停止のたびに、停止位置とローカル変数をステップ履歴ビューに記録します。",
   "command.viewAsTable": "表として表示",
+  "command.viewAsImage": "画像として表示",
   "view.modules": "モジュール (.NET x86)",
   "command.copyModulePath": "パスをコピー",
   "command.revealModule": "エクスプローラーで表示",

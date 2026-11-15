@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **View as Image** (Variables / Watch context menu) — shows a System.Drawing Image / Bitmap / Icon as a picture with zoom, size and pixel format.
 - New: **Exception Settings** view — check the exception types to stop on when thrown, grouped by namespace as in Visual Studio; add your own, or from an Exception Log entry. Applies at once, also while running.
 - Tests: unit tests (`npm test`) and end-to-end tests against the real netcoredbg (`npm run test:e2e`), run by a new CI workflow on every push; the release workflow runs the unit tests before packaging.
 - Fix: a parameter without a modifier no longer carries an empty `modifier` field in the generated test's signature data.

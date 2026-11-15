@@ -348,6 +348,7 @@ UI スレッドがネイティブ コードの中で待っている場合（`Thr
 
 | コマンド | 内容 |
 |---|---|
+| **View as Image（画像として表示）** | `System.Drawing` の `Image`・`Bitmap`・`Icon` を画像として表示します（全体表示・実寸・拡大縮小。透明部分は市松模様）。サイズとピクセル形式も表示します。プログラムが一時的な PNG に保存し、読み取り後すぐに削除します。ウォッチ ビューからも使えます。 |
 | **View as Table（表として表示）** | `List<T>`・配列・`Dictionary`・`DataTable` を表で表示します。列見出しで並べ替え、行の絞り込み、CSV のコピー・保存ができます。要素がオブジェクトの場合はメンバーごとに列になり、日付は `ToString()` で表示します。DataTable は最大 1,000 行まで読み込みます。 |
 | **Copy as C# Initializer** | 値を C# のコード（`var order = new Order { Note = "...", People = new List<Person> { ... } };`）としてコピーします。テストデータ作りに便利です。PascalCase のメンバーだけを出力します。get 専用プロパティも含まれるので、コンパイルが通らない場合は削除してください。 |
 | **View String (JSON / XML / HTML / Text)** | string 型の変数をエディタで開きます。中身が JSON・XML・HTML なら整形して表示します（自動判定、または形式を選択）。 |

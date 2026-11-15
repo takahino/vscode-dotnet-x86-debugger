@@ -18,6 +18,7 @@ import { makeObjectIdCommand } from './objectIdCommand';
 import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
 import { generateTestCommand } from './testGenerator';
+import { viewAsImageCommand } from './imageVisualizer';
 import { viewAsTableCommand } from './tableVisualizer';
 import { UiFreezeDetector } from './uiFreeze';
 import { ValueTracker } from './valueTracker';
@@ -89,6 +90,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, stepHistory),
         vscode.commands.registerCommand('dotnetX86.clearStepHistory', () => stepHistory.clear()),
         vscode.commands.registerCommand('dotnetX86.viewAsTable', viewAsTableCommand),
+        vscode.commands.registerCommand('dotnetX86.viewAsImage', viewAsImageCommand),
         moduleList,
         vscode.window.createTreeView('dotnetX86.modules', { treeDataProvider: moduleList }),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, moduleList),

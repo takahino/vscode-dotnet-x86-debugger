@@ -306,7 +306,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr><td><a href="#f-values">ホバー・インライン値・DebuggerDisplay・自動変数</a></td><td>コードの横やコンパクトなビューで値を確認</td><td>エディター／自動変数ビュー</td></tr>
   <tr><td><a href="#f-pins">値のピン止め</a></td><td>式の値を行末に表示し続ける</td><td>エディターの右クリック</td></tr>
   <tr><td><a href="#f-objectid">オブジェクト ID</a></td><td>オブジェクトに名前（$1）を付けてどこからでも参照</td><td>変数／ウォッチの右クリック</td></tr>
-  <tr><td><a href="#f-variables-menu">ダンプ・表・C# 初期化子・文字列ビューアー・スナップショット</a></td><td>複雑な値を読む・比べる</td><td>変数ビューの右クリック</td></tr>
+  <tr><td><a href="#f-variables-menu">ダンプ・表・画像・C# 初期化子・文字列ビューアー・スナップショット</a></td><td>複雑な値を読む・比べる</td><td>変数ビューの右クリック</td></tr>
   <tr class="group"><th colspan="3">時間とパフォーマンス</th></tr>
   <tr><td><a href="#f-time">PerfTips</a></td><td>直前のステップや続行にかかった時間を行に表示</td><td>自動</td></tr>
   <tr><td><a href="#f-time">区間の時間計測・値の推移</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>止めずに毎回の時間や値を記録してグラフ化</td><td>エディターの右クリック</td></tr>
@@ -504,6 +504,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <table>
   <tr><th>コマンド</th><th>できること</th><th>よくある使い方</th></tr>
   <tr><td><b>変数をダンプ</b></td><td>オブジェクト全体を JSON としてエディタに開きます。<code>List</code> / <code>Dictionary</code> は要素だけを表示します。</td><td>深いオブジェクトを一度に読む。<kbd>Ctrl</kbd>+<kbd>F</kbd> で検索する。不具合報告に貼る。</td></tr>
+  <tr><td><b>画像として表示</b></td><td><code>System.Drawing</code> の Image・Bitmap・Icon を画像で表示します。拡大縮小でき、サイズとピクセル形式も分かります。</td><td>画面に描く前のグラフやスキャン画像が、その時点でどうなっていたかを見る。</td></tr>
   <tr><td><b>表として表示</b></td><td><code>List&lt;T&gt;</code>・配列・<code>Dictionary</code>・<code>DataTable</code> を表で表示します。並べ替え・絞り込みができ、CSV でコピー・保存できます。</td><td>データベースから読んだ 500 行を確認し、金額で並べ替えて異常な行を探す。</td></tr>
   <tr><td><b>C# の初期化子としてコピー</b></td><td>値を C# のコード（<code>new Order { Id = 1, Customer = "A", … }</code>）としてコピーします。</td><td>不具合を起こしたデータを、そのまま単体テストにする。</td></tr>
   <tr><td><b>文字列を表示</b></td><td>文字列を JSON・XML・HTML・テキストとして整形して開きます。</td><td>変数に入っている API の応答や生成した XML を読む。</td></tr>

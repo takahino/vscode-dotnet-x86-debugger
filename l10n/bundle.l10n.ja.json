@@ -177,5 +177,11 @@
   "Full name of the exception type to stop on when thrown": "スローされたら停止する例外の型の完全名",
   "Enter the full name, e.g. System.IO.IOException.": "完全名を入力してください（例: System.IO.IOException）。",
   "The program now stops when {0} is thrown.": "{0} がスローされたら停止するようになりました。",
-  "{0} checked": "{0} 件をチェック中"
+  "{0} checked": "{0} 件をチェック中",
+  "View as Image": "画像として表示",
+  "{0} cannot be shown as an image (type: {1}). Use it on a System.Drawing Image, Bitmap or Icon, while stopped in your code.": "{0} は画像として表示できません（型: {1}）。System.Drawing の Image・Bitmap・Icon に対して、自分のコードで停止中に使ってください。",
+  "Could not read {0} as an image: {1}": "{0} を画像として読み取れませんでした: {1}",
+  "Image: {0}": "画像: {0}",
+  "Fit": "全体を表示",
+  "Actual size": "実寸"
 }

@@ -364,6 +364,7 @@ Apps that throw very many exceptions run slower while it is on (`dotnetX86.excep
 
 | Command | What it does |
 |---|---|
+| **View as Image** | Shows a `System.Drawing` `Image` / `Bitmap` / `Icon` as a picture (fit, actual size, zoom; transparency on a checkerboard) with its size and pixel format. The program saves it to a temporary PNG, which is deleted at once. Also in the Watch view. |
 | **View as Table** | Shows a `List<T>`, array, `Dictionary` or `DataTable` as a table: click a header to sort, filter rows, and copy or save it as CSV. Object items get one column per member; dates are shown with `ToString()`. Up to 1,000 rows of a DataTable are read. |
 | **Copy as C# Initializer** | Copies the value as C# code (`var order = new Order { Note = "...", People = new List<Person> { ... } };`), handy for test data. Only PascalCase members are emitted; get-only properties are included too, so delete them if the code does not compile. |
 | **View String (JSON / XML / HTML / Text)** | Opens a `string` variable in an editor, pretty-printed when it contains JSON, XML or HTML (auto-detected, or pick the format). |
