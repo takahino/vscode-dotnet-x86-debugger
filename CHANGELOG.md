@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - New: **GDI leak candidates** in the Heap Snapshots panel — objects holding native resources (GDI+ fonts, brushes, pens, images, graphics, regions, paths; icons, cursors, windows) per type, how many are not disposed, and the change between two snapshots; growing ones are marked as leak candidates. .NET and .NET Framework (netcoredbg patch 0012, `dotnetX86.handleStats`).
 - New: **Show Data Bindings** (WinForms Controls view title / right-click) — a table of the data bindings of the open forms or of a control: simple bindings with the value in the control and in the current item side by side, the position, update mode and format; list bindings (DataSource / DisplayMember / ValueMember) with the selected value. Bindings that are not connected, and controls that show something else than their item holds, are flagged.
