@@ -12,6 +12,7 @@ import { ExceptionSettings } from './exceptionSettings';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
 import { ParallelStacks } from './parallelStacks';
+import { HeapSnapshots } from './heapSnapshots';
 import { PerfTips } from './perfTips';
 import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
@@ -61,6 +62,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const decompiler = new Decompiler(context.extensionPath, path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
     const symbolServer = new SymbolServer(path.join(context.globalStorageUri.fsPath, 'symbols'), path.join(context.globalStorageUri.fsPath, 'sources'), output);
     const parallelStacks = new ParallelStacks();
+    const heapSnapshots = new HeapSnapshots();
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
 
     context.subscriptions.push(
@@ -79,6 +81,9 @@ export function activate(context: vscode.ExtensionContext): void {
         parallelStacks,
         vscode.commands.registerCommand('dotnetX86.showParallelStacks', () => parallelStacks.show()),
         vscode.commands.registerCommand('dotnetX86.freezeThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, true)),
+        heapSnapshots,
+        vscode.commands.registerCommand('dotnetX86.showHeapSnapshots', () => heapSnapshots.show()),
+        vscode.commands.registerCommand('dotnetX86.takeHeapSnapshot', () => heapSnapshots.take()),
         vscode.commands.registerCommand('dotnetX86.thawThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, false)),
         vscode.commands.registerCommand('dotnetX86.downloadSymbols', (module?: { name?: string; path?: string }) => symbolServer.download(module)),
         vscode.commands.registerCommand('dotnetX86.clearDownloadedSymbols', () => symbolServer.clearCache()),

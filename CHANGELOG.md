@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Heap Snapshots** — objects and bytes per type on the GC heap while stopped, and the change between any two snapshots (sort, filter, increases only), as in Visual Studio's Memory Usage. A garbage collection runs first (`dotnetX86.heapSnapshot.collectGarbage`); netcoredbg patch 0011.
 - New: **Parallel Stacks** — all threads' call stacks merged into boxes, as in Visual Studio (Call Stack context menu / Command Palette).
 - New: **Freeze / Thaw Thread** — a frozen thread stays suspended when the program continues, also across expression evaluation; shown as `[frozen]` (netcoredbg patch 0010).
 - New: **Source Link** — when the program stops in a file that is not on this machine, it is downloaded through the PDB's Source Link map and opened (`dotnetX86.sourceLink.enabled`).

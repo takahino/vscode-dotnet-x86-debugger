@@ -126,6 +126,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
 | `dotnetX86.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
 | `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
+| `dotnetX86.heapSnapshot.collectGarbage` | Run a garbage collection right before each heap snapshot (default `true`). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
 
@@ -319,6 +320,14 @@ Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotn
 to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
 in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
 and open *Data table* for the latest samples.
+
+### Heap snapshots
+
+While stopped, right-click in the Call Stack view and choose **Take Heap Snapshot** (or run it from the Command Palette):
+the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
+Take another one at a later stop to see what changed per type (**Δ Count**, **Δ Size**); pick any two snapshots to compare,
+sort by a column, filter by name, or show **Increases only**. A garbage collection runs right before each snapshot so that
+only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`). Needs netcoredbg patch 0011.
 
 ### Break on Value Change
 

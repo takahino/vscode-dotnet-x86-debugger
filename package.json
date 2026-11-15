@@ -48,6 +48,8 @@
     "onCommand:dotnetX86.clearDecompiled",
     "onCommand:dotnetX86.downloadSymbols",
     "onCommand:dotnetX86.showParallelStacks",
+    "onCommand:dotnetX86.showHeapSnapshots",
+    "onCommand:dotnetX86.takeHeapSnapshot",
     "onCommand:dotnetX86.clearDownloadedSymbols",
     "onCommand:dotnetX86.addExceptionType",
     "onCommand:dotnetX86.pinValue",
@@ -82,6 +84,16 @@
         "title": "%command.showParallelStacks%",
         "category": ".NET x86",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "dotnetX86.showHeapSnapshots",
+        "title": "%command.showHeapSnapshots%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.takeHeapSnapshot",
+        "title": "%command.takeHeapSnapshot%",
+        "category": ".NET x86"
       },
       {
         "command": "dotnetX86.freezeThread",
@@ -316,6 +328,11 @@
           "command": "dotnetX86.showParallelStacks",
           "when": "debugType == 'dotnet-x86'",
           "group": "z_dotnetX86@3"
+        },
+        {
+          "command": "dotnetX86.takeHeapSnapshot",
+          "when": "debugType == 'dotnet-x86'",
+          "group": "z_dotnetX86@4"
         },
         {
           "command": "dotnetX86.generateTest",
@@ -726,6 +743,11 @@
           "default": 2000,
           "minimum": 500,
           "description": "%config.uiFreeze.thresholdMs%"
+        },
+        "dotnetX86.heapSnapshot.collectGarbage": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.heapSnapshot.collectGarbage%"
         },
         "dotnetX86.exceptionLog.enabled": {
           "type": "boolean",

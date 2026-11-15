@@ -321,6 +321,7 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
   <tr><td><a href="#f-time">PerfTips</a></td><td>Time of the last step or continue at the line</td><td>Automatic</td></tr>
   <tr><td><a href="#f-time">Section timing, value trend</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Time a section or chart values on every pass, without stopping</td><td>Editor right-click</td></tr>
   <tr><td><a href="#f-time">Memory / CPU graph</a></td><td>Private Bytes, Working Set and CPU over time</td><td>Command Palette</td></tr>
+  <tr><td><a href="#f-heap">Heap snapshots</a></td><td>Objects per type on the GC heap, and what grew between two stops</td><td>Call Stack right-click / Command Palette</td></tr>
   <tr class="group"><th colspan="3">History and records</th></tr>
   <tr><td><a href="#f-history">Step history</a></td><td>The locals of every earlier stop</td><td>Step History view</td></tr>
   <tr><td><a href="#f-exceptions">Exception log</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Every thrown exception, also the swallowed ones, with the stack and locals at the throw</td><td>Exception Log view</td></tr>
@@ -743,6 +744,33 @@ Stopped periods are shaded. Set <code>dotnetX86.memoryGraph.autoOpen</code> to o
 </figure>
 <div class="usecase"><b>Use case:</b> memory grows each time a form is opened and closed. Watch Private Bytes while repeating the action;
 if it never comes down, look for event handlers that are not removed.</div>
+<h4 id="f-heap">Heap snapshots</h4>
+<p>While stopped, right-click in the <b>Call Stack</b> view and choose <b>Take Heap Snapshot</b> (or run <b>.NET x86: Take Heap Snapshot</b>):
+the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
+Take another snapshot at a later stop to see the change of each type (<b>Δ Count</b>, <b>Δ Size</b>); pick any two snapshots to compare,
+sort by a column, filter by name or show <b>Increases only</b>. A garbage collection runs right before each snapshot so that only
+objects still in use are counted (<code>dotnetX86.heapSnapshot.collectGarbage</code>, or the checkbox in the panel). Needs netcoredbg patch 0011.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 200" role="img" aria-label="Heap Snapshots">
+  <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <text x="16" y="24" font-size="13" font-weight="700" fill="var(--ui-text)">Heap Snapshots</text>
+  <rect x="16" y="36" width="250" height="22" rx="3" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="51" font-size="11" fill="var(--ui-text)">#2 10:42:15 — 4,120 objects, 236 KB</text>
+  <rect x="276" y="36" width="250" height="22" rx="3" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="284" y="51" font-size="11" fill="var(--ui-text)">#1 10:41:58 — 3,963 objects, 220 KB</text>
+  <text x="540" y="51" font-size="11" fill="var(--ui-text)">☑ Increases only</text>
+  <g font-size="11" font-weight="700" fill="var(--ui-text)"><text x="20" y="76">Type</text><text x="560" y="76" text-anchor="end">Count</text><text x="650" y="76" text-anchor="end">Δ Count</text><text x="740" y="76" text-anchor="end">Size</text><text x="836" y="76" text-anchor="end">Δ Size ▼</text></g>
+  <line x1="16" y1="82" x2="844" y2="82" stroke="var(--ui-line)"/>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="100" font-family="Consolas, monospace">System.Windows.Forms.Button</text><text x="560" y="100" text-anchor="end">18</text><text x="650" y="100" text-anchor="end" fill="var(--ui-bp)">+15</text><text x="740" y="100" text-anchor="end">5.3 KB</text><text x="836" y="100" text-anchor="end" fill="var(--ui-bp)">+4.4 KB</text></g>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="122" font-family="Consolas, monospace">string</text><text x="560" y="122" text-anchor="end">1,329</text><text x="650" y="122" text-anchor="end" fill="var(--ui-bp)">+42</text><text x="740" y="122" text-anchor="end">93.6 KB</text><text x="836" y="122" text-anchor="end" fill="var(--ui-bp)">+2.1 KB</text></g>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="144" font-family="Consolas, monospace">MyApp.OrderForm</text><text x="560" y="144" text-anchor="end">6</text><text x="650" y="144" text-anchor="end" fill="var(--ui-bp)">+5</text><text x="740" y="144" text-anchor="end">1.9 KB</text><text x="836" y="144" text-anchor="end" fill="var(--ui-bp)">+1.6 KB</text></g>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="166" font-family="Consolas, monospace">System.EventHandler</text><text x="560" y="166" text-anchor="end">31</text><text x="650" y="166" text-anchor="end" fill="var(--ui-bp)">+5</text><text x="740" y="166" text-anchor="end">1.2 KB</text><text x="836" y="166" text-anchor="end" fill="var(--ui-bp)">+200 B</text></g>
+</svg>
+<figcaption>After opening and closing the form five times, five more OrderForm instances are still on the heap: they are not released.</figcaption>
+</figure>
+<div class="usecase"><b>Use case:</b> the memory graph keeps rising. Stop, take a snapshot, open and close a form a few times, stop and
+take another. With <b>Increases only</b>, the form type is there once per time it was opened — something (often an event handler
+on a long-lived object) still holds it.</div>
 
 <h3 id="f-history">Step history</h3>
 <p>The <b>Step History</b> view keeps the locals of every stop (newest first). Values that changed since the previous stop in the
@@ -1116,6 +1144,7 @@ Debugging waits until the process appears:</p>
   <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>true</td><td>Show the elapsed time after steps.</td></tr>
   <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>true</td><td>Record every stop in Step History.</td></tr>
   <tr><td><code>dotnetX86.memoryGraph.autoOpen</code></td><td>false</td><td>Open the memory / CPU graph when debugging starts.</td></tr>
+  <tr><td><code>dotnetX86.heapSnapshot.collectGarbage</code></td><td>true</td><td>Run a garbage collection before each heap snapshot.</td></tr>
   <tr><td><code>dotnetX86.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>Limits of Dump Variable and related commands.</td></tr>
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>(empty)</td><td>Where the source of referenced assemblies is, for every configuration (merged with launch.json).</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>Troubleshooting log of the debugger communication.</td></tr>

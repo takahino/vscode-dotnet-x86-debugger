@@ -314,6 +314,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr><td><a href="#f-time">PerfTips</a></td><td>直前のステップや続行にかかった時間を行に表示</td><td>自動</td></tr>
   <tr><td><a href="#f-time">区間の時間計測・値の推移</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>止めずに毎回の時間や値を記録してグラフ化</td><td>エディターの右クリック</td></tr>
   <tr><td><a href="#f-time">メモリ / CPU グラフ</a></td><td>Private Bytes・Working Set・CPU の推移</td><td>コマンド パレット</td></tr>
+  <tr><td><a href="#f-heap">ヒープ スナップショット</a></td><td>GC ヒープ上の型ごとのオブジェクト数と、2 回の停止の間に増えたもの</td><td>コールスタックの右クリック / コマンド パレット</td></tr>
   <tr class="group"><th colspan="3">履歴と記録</th></tr>
   <tr><td><a href="#f-history">ステップ履歴</a></td><td>これまでの停止ごとのローカル変数</td><td>ステップ履歴ビュー</td></tr>
   <tr><td><a href="#f-exceptions">例外ログ</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>握りつぶされた例外も含め、スローされた例外をすべて記録（スロー時のスタックとローカル変数つき）</td><td>例外ログ ビュー</td></tr>
@@ -696,6 +697,27 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <figcaption>上がメモリ、下が CPU。灰色の帯はブレークポイントで停止していた区間です。</figcaption>
 </figure>
 <div class="usecase"><b>ユースケース:</b> フォームを開いて閉じるたびにメモリが増える。操作を繰り返しながら Private Bytes を見て、下がらないなら解除し忘れたイベントハンドラを疑います。</div>
+<h4 id="f-heap">ヒープ スナップショット</h4>
+<p>停止中に <b>コールスタック</b> ビューで右クリックして <b>ヒープ スナップショットを取得</b> を選ぶと（コマンド パレットの <b>.NET x86: ヒープ スナップショットを取得</b> も可）、GC ヒープ上の型ごとのオブジェクト数とバイト数が大きい順に表示されます（Visual Studio のメモリ使用量に相当）。あとの停止でもう一度取ると、型ごとの増減（<b>Δ 個数</b>・<b>Δ サイズ</b>）がわかります。比べる 2 つのスナップショットは自由に選べ、列で並べ替え、型名で絞り込み、<b>増えたものだけ</b> の表示ができます。取得の直前にガベージ コレクションを実行し、まだ使われているオブジェクトだけを数えます（<code>dotnetX86.heapSnapshot.collectGarbage</code>、またはパネルのチェックボックス）。netcoredbg のパッチ 0011 が必要です（同梱版に含まれます）。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 200" role="img" aria-label="ヒープ スナップショット">
+  <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <text x="16" y="24" font-size="13" font-weight="700" fill="var(--ui-text)">ヒープ スナップショット</text>
+  <rect x="16" y="36" width="250" height="22" rx="3" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="51" font-size="11" fill="var(--ui-text)">#2 10:42:15 — 4,120 個, 236 KB</text>
+  <rect x="276" y="36" width="250" height="22" rx="3" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="284" y="51" font-size="11" fill="var(--ui-text)">#1 10:41:58 — 3,963 個, 220 KB</text>
+  <text x="540" y="51" font-size="11" fill="var(--ui-text)">☑ 増えたものだけ</text>
+  <g font-size="11" font-weight="700" fill="var(--ui-text)"><text x="20" y="76">型</text><text x="560" y="76" text-anchor="end">個数</text><text x="650" y="76" text-anchor="end">Δ 個数</text><text x="740" y="76" text-anchor="end">サイズ</text><text x="836" y="76" text-anchor="end">Δ サイズ ▼</text></g>
+  <line x1="16" y1="82" x2="844" y2="82" stroke="var(--ui-line)"/>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="100" font-family="Consolas, monospace">System.Windows.Forms.Button</text><text x="560" y="100" text-anchor="end">18</text><text x="650" y="100" text-anchor="end" fill="var(--ui-bp)">+15</text><text x="740" y="100" text-anchor="end">5.3 KB</text><text x="836" y="100" text-anchor="end" fill="var(--ui-bp)">+4.4 KB</text></g>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="122" font-family="Consolas, monospace">string</text><text x="560" y="122" text-anchor="end">1,329</text><text x="650" y="122" text-anchor="end" fill="var(--ui-bp)">+42</text><text x="740" y="122" text-anchor="end">93.6 KB</text><text x="836" y="122" text-anchor="end" fill="var(--ui-bp)">+2.1 KB</text></g>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="144" font-family="Consolas, monospace">MyApp.OrderForm</text><text x="560" y="144" text-anchor="end">6</text><text x="650" y="144" text-anchor="end" fill="var(--ui-bp)">+5</text><text x="740" y="144" text-anchor="end">1.9 KB</text><text x="836" y="144" text-anchor="end" fill="var(--ui-bp)">+1.6 KB</text></g>
+  <g font-size="11" fill="var(--ui-text)"><text x="20" y="166" font-family="Consolas, monospace">System.EventHandler</text><text x="560" y="166" text-anchor="end">31</text><text x="650" y="166" text-anchor="end" fill="var(--ui-bp)">+5</text><text x="740" y="166" text-anchor="end">1.2 KB</text><text x="836" y="166" text-anchor="end" fill="var(--ui-bp)">+200 B</text></g>
+</svg>
+<figcaption>フォームを 5 回開いて閉じたあとも、OrderForm が 5 個増えたまま残っています。解放されていません。</figcaption>
+</figure>
+<div class="usecase"><b>ユースケース:</b> メモリ グラフが下がらない。停止してスナップショットを取り、フォームを何度か開いて閉じてから、もう一度停止して取ります。<b>増えたものだけ</b> にすると、閉じたはずのフォームの型が開いた回数分残っている。長生きするオブジェクトのイベント ハンドラなどが、まだ参照を握っています。</div>
 
 <h3 id="f-history">ステップ履歴</h3>
 <p><b>ステップ履歴</b> ビューには、停止のたびのローカル変数が新しい順に残ります。同じメソッド内の直前の停止から変わった値には「変化」「新規」と表示されます。項目をクリックするとその位置を開きます。履歴を見返すための機能で、実行を巻き戻すわけではありません。</p>
@@ -1039,6 +1061,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>true</td><td>ステップ後に経過時間を表示します。</td></tr>
   <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>true</td><td>停止のたびにステップ履歴へ記録します。</td></tr>
   <tr><td><code>dotnetX86.memoryGraph.autoOpen</code></td><td>false</td><td>デバッグ開始時にメモリ / CPU グラフを開きます。</td></tr>
+  <tr><td><code>dotnetX86.heapSnapshot.collectGarbage</code></td><td>true</td><td>ヒープ スナップショットの直前にガベージ コレクションを実行します。</td></tr>
   <tr><td><code>dotnetX86.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>変数をダンプなどのコマンドの上限。</td></tr>
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
