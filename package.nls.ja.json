@@ -1,6 +1,6 @@
 {
   "displayName": ".NET x86 Debugger",
-  "description": "x86 版 netcoredbg を同梱し、x86 の WinForms アプリなど 32bit の .NET アプリケーションを VS Code でデバッグします。",
+  "description": "32bit (x86) の .NET / .NET Framework アプリを WinForms も含めてデバッグします。例外設定・並列スタック・ヒープ スナップショット・WinForms コントロールの操作など Visual Studio 流の機能つき。x86 版 netcoredbg を同梱。",
   "command.dumpVariable": "変数をダンプ",
   "command.dumpExpression": "式をダンプ...",
   "command.copyAsCSharp": "C# の初期化子としてコピー",

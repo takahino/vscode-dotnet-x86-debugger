@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: extension **icon**, and a rewritten README (Marketplace page): quick start, highlights, a feature table by category with pictures; the feature descriptions are grouped the same way. Building, tests and releasing moved to CONTRIBUTING.md.
 - New: **Getting Started** walkthrough (Welcome page / **.NET x86: Getting Started**) — check the environment, make the project x86, create launch.json, start debugging.
 - New: **Check Environment** — the x86 .NET Runtime / Desktop Runtime, the .NET SDK, and whether each project builds as x86 with a Portable PDB, with one-click fixes of the project file.
 - New: **Generate launch.json** — launch configurations from the `.csproj` files (per project and target framework, with the real output path), an attach configuration and a `build` task. F5 without a launch.json does the same instead of inserting a template.

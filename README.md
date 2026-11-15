@@ -1,11 +1,86 @@
-# .NET x86 Debugger for VS Code
+<p align="center"><img src="media/icon.png" width="128" alt=""></p>
 
-Debug **32-bit (x86) .NET and .NET Framework 4.x applications** — for example WinForms apps built with `<PlatformTarget>x86</PlatformTarget>` — in Visual Studio Code.
+<h1 align="center">.NET x86 Debugger</h1>
 
-The C# extension's debugger (vsdbg) is shipped only for x64 / arm64, so it cannot debug 32-bit processes.
-This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg)** (MIT) and registers it as the `dotnet-x86` debug type.
+<p align="center"><b>Debug 32-bit (x86) .NET and .NET Framework apps — WinForms included — in Visual Studio Code.</b></p>
 
-[日本語](README.jp.md) · **New to it? Read the [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html)** ([docs/usage.html](docs/usage.html))
+<p align="center"><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-dotnet-x86-debugger" alt="Release"></a> <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+
+<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
+
+![Debugging a WinForms app: breakpoints, variables, call stack, exception log, step history](media/readme/debugging.png)
+
+The C# extension's debugger (vsdbg) ships only for x64 and arm64, so an app built with `<PlatformTarget>x86</PlatformTarget>`
+cannot be debugged in VS Code. This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg)** (MIT),
+extended with patches, behind a relay that adds the Visual Studio features you miss — and a few Visual Studio does not have.
+
+## Quick start
+
+1. Install the **.NET Desktop Runtime x86** (8 or later) from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet), and a .NET SDK.
+2. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
+3. Open your project folder and run **.NET x86: Getting Started** — or just press **F5**: launch.json and the build task are made from your `.csproj`.
+
+**.NET x86: Check Environment** tells you what is missing, and fixes the project file (x86, Portable PDB) with one click.
+
+## Highlights
+
+- **The Visual Studio debugger you know** — Exception Settings, Parallel Stacks and freezing threads, Set Next Statement,
+  Step Into Specific, return values, Object IDs, DebuggerDisplay, PerfTips, the memory / CPU graph and heap snapshots.
+- **…and more (★)** — breakpoints filtered by caller, UI freeze detection, a log of every exception with the locals at the throw,
+  a unit test generated from a stop, value trends and section timings without stopping, a session report.
+- **Made for WinForms** — the control tree of the stopped program, highlight a control on screen, stop in a control's event
+  handlers, change its properties while stopped.
+- **Into code that is not yours** — Source Link, symbol servers, and decompiling assemblies without symbols to step into them.
+- **.NET 5+ and .NET Framework 4.x**, launch or attach (also by process name, waiting for it to start).
+
+| | |
+|---|---|
+| ![Highlight a control of the stopped form](media/readme/winforms.png) | ![UI freeze detection](media/readme/ui-freeze.png) |
+
+![Heap snapshots](media/readme/heap-snapshots.png)
+
+## Features
+
+★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
+
+| Feature | What it does | Where |
+|---|---|---|
+| **Stopping where you want** | | |
+| [Conditions, hit counts, logpoints](#hit-count-breakpoints) | Stop on a condition or the n-th pass; print without stopping | Gutter right-click |
+| [Temporary / dependent / when-changed breakpoints](#temporary-dependent-when-changed-and-caller-filtered-breakpoints) | Stop once, after another breakpoint, or when a value changed | Editor right-click |
+| [Caller-filtered breakpoints](#temporary-dependent-when-changed-and-caller-filtered-breakpoints) ★ | Stop only when a given method is a caller | Editor right-click |
+| [Break on value change](#break-on-value-change) | Stop at the line that changes a field or variable | Variables right-click |
+| [Exception breakpoints and settings](#exception-settings) | Stop on thrown / unhandled exceptions, by type or from a checklist | Breakpoints / Exception Settings view |
+| [UI freeze detection](#ui-freeze-detection) ★ | Pause where the UI thread is stuck | Automatic |
+| **Moving through code** | | |
+| [Parallel Stacks, freezing threads](#parallel-stacks-and-freezing-threads) | All threads' stacks merged; keep a thread suspended | Call Stack right-click |
+| [Step Into Target](#step-into-specific) | Step into one chosen call of the line | Editor right-click |
+| [Set next statement](#set-next-statement) | Run a line again or skip lines | Editor right-click |
+| [Return values](#return-values) | See what the methods you stepped over returned | Variables / Autos |
+| **Looking at values** | | |
+| [Inline values, DebuggerDisplay, Autos](#inline-values) | Values next to the code and in compact views | Editor / Autos view |
+| [Pinned values](#pinned-values) | Keep an expression at the end of a line | Editor right-click |
+| [Object IDs](#object-ids) | Name an object ($1) and reach it from anywhere | Variables / Watch right-click |
+| [Dump, table, image, C# initializer, string viewer, snapshots](#more-commands-in-the-variables-view-context-menu) | Read and compare complex values | Variables right-click |
+| **Time, memory and performance** | | |
+| [PerfTips](#perftips) | Time of the last step or continue at the line | Automatic |
+| [Section timing, value trend](#section-timing) ★ | Time a section or chart values on every pass, without stopping | Editor right-click |
+| [Memory / CPU graph](#memory--cpu-graph) | Private Bytes, Working Set and CPU over time | Command Palette |
+| [Heap snapshots](#heap-snapshots) | Objects per type on the GC heap, and what grew between two stops | Call Stack right-click |
+| **History and records** | | |
+| [Step history](#step-history) | The locals of every earlier stop | Step History view |
+| [Exception log](#exception-log) ★ | Every thrown exception, swallowed ones too, with the stack and locals at the throw | Exception Log view |
+| [Session report](#debug-session-report) ★ | Markdown summary of the session for a bug report | Command Palette |
+| [Generate a unit test](#generate-a-unit-test-from-a-stop) ★ | A test that replays the stopped method call | Call Stack right-click |
+| **Source and symbols** | | |
+| [Source in another folder](#debugging-referenced-assemblies-source-in-another-folder) | Find source whose PDB path is not on this machine | launch.json / settings |
+| [Source Link and symbol servers](#source-link-and-symbol-servers) | Download the sources and PDBs of NuGet packages | Automatic / Modules right-click |
+| [Debug decompiled assemblies](#debugging-decompiled-assemblies) | Step into DLLs without symbols as C# | Modules right-click |
+| **WinForms** | | |
+| [WinForms Controls view](#winforms-controls-view) | The control tree of the open forms | WinForms Controls view |
+| [Highlight on screen](#winforms-controls-view) ★ | Frame a control on the stopped form | Eye icon in the view |
+| [Break on a control event](#winforms-controls-view) ★ | Stop in the handlers of a control's event, wherever they are | WinForms Controls right-click |
+| [Change control properties](#winforms-controls-view) | Change text, visibility, colors, position or size while stopped | WinForms Controls right-click |
 
 ## Requirements
 
@@ -29,16 +104,9 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
 
 3. Reload VS Code (**Developer: Reload Window**).
 
-## Usage
+## Setting up by hand
 
-The quickest way: open your project folder and run **.NET x86: Getting Started** from the Command Palette. It walks through
-
-- **.NET x86: Check Environment** — whether the x86 .NET runtimes and the .NET SDK are installed, and whether each project
-  builds as x86 with a Portable PDB; a button fixes the project file;
-- **.NET x86: Generate launch.json** — launch configurations from your `.csproj` files (per project and target framework, with
-  the real output path), an attach configuration and a `build` task. Pressing **F5** without a launch.json does the same.
-
-Or set it up by hand:
+**.NET x86: Generate launch.json** (or F5 without a launch.json) writes this for you. To do it yourself:
 
 1. Make your project 32-bit:
 
@@ -94,16 +162,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 [`samples/WinFormsNet48X86`](samples/WinFormsNet48X86) for the same with .NET Framework 4.8.
 **[`samples/FeatureTour`](samples/FeatureTour)** is a WinForms app with one button per feature, for .NET 10 and .NET Framework 4.8.
 
-### .NET Framework 4.x
-
-`.NET Framework` apps (`net48`, `net472`, ...) are debugged the same way: point `program` at the x86 `.exe`
-(e.g. `bin/x86/Debug/net48/MyApp.exe`). The extension recognizes the .NET Framework exe and starts it with the
-.NET Framework runtime; attaching works too.
-
-- The project must produce **Portable PDBs**. SDK-style projects do; old-style projects write Windows PDBs by default —
-  add `<DebugType>portable</DebugType>` (the extension warns when it finds a Windows PDB).
-- Only .NET Framework 4.x is supported (not 2.0 / 3.5).
-- The x86 .NET runtime 8 or later must be installed, even though the app does not use it.
+## Configuration
 
 ### Launch options
 
@@ -139,7 +198,158 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
 
-### Dump Variable
+### .NET Framework 4.x
+
+`.NET Framework` apps (`net48`, `net472`, ...) are debugged the same way: point `program` at the x86 `.exe`
+(e.g. `bin/x86/Debug/net48/MyApp.exe`). The extension recognizes the .NET Framework exe and starts it with the
+.NET Framework runtime; attaching works too.
+
+- The project must produce **Portable PDBs**. SDK-style projects do; old-style projects write Windows PDBs by default —
+  add `<DebugType>portable</DebugType>` (the extension warns when it finds a Windows PDB).
+- Only .NET Framework 4.x is supported (not 2.0 / 3.5).
+- The x86 .NET runtime 8 or later must be installed, even though the app does not use it.
+
+### Display language
+
+Menus, settings and messages are shown in English, or in Japanese when VS Code's display language is Japanese
+(e.g. with the Japanese Language Pack).
+
+## Feature guide
+
+The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
+
+### Stopping where you want
+
+#### Hit count breakpoints
+
+Edit a breakpoint and choose **Hit Count**, then enter `5` or `==5` (stop on the 5th hit), `>=5` / `>5`
+(from the 5th / after the 5th hit) or `%5` (every 5th hit). It can be combined with a condition (hits are counted
+only when the condition is true) and with a log message.
+
+#### Logpoints
+
+Right-click the editor gutter and choose **Add Logpoint...**, then enter a message such as
+`i={i} total={total} in $FUNCTION`. Each time the line runs, the message is written to the Debug Console
+and execution continues without stopping. `{expression}` is evaluated in the current frame;
+`$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
+
+#### Temporary, dependent, when-changed and caller-filtered breakpoints
+
+Right-click a line in a C# editor:
+
+- **Add Temporary Breakpoint** — stops once, then the breakpoint removes itself (condition `#once`).
+- **Add Dependent Breakpoint...** — active only after the program has stopped at another breakpoint you pick (condition `#after File.cs:12`).
+- **Add Breakpoint When Value Changes...** — stops only when an expression has a different value than the last time the line ran; the old and new values are written to the Debug Console (condition `#changed expr`).
+- **Add Breakpoint Filtered by Caller...** — stops only when the line is reached through one of the methods you pick
+  (while stopped, the methods of the current call stack are offered); `!Name` stops unless called from it
+  (condition `#caller Orders.Save, Import.Run`). Names match from the end: `Save`, `Orders.Save` or `MyApp.Orders.Save`.
+  Visual Studio has no such filter.
+
+You can also type these markers as the condition of any breakpoint. They can be combined with a hit count.
+
+#### Break on Value Change
+
+Right-click a field, property or local variable in the Variables view and choose **Break on Value Change**.
+Execution stops right after the value changes, showing `old → new`. netcoredbg has no data breakpoints, so this is
+emulated: the extension finds the lines of the workspace's C# files that assign that name (`x = …`, `x += …`, `x++`, …),
+checks the value before and after each of them, and stops only when it changed. Writes through `ref` / `out`,
+from other objects (`other.x = …`) or from code outside the workspace are not detected.
+
+#### Exception breakpoints
+
+The Breakpoints view shows **All Exceptions (when thrown)** and **User-Unhandled Exceptions**. Right-click one and
+choose **Edit Condition** to limit it to exception types, e.g. `System.NullReferenceException, System.InvalidOperationException`;
+start with `!` to break on every type except those.
+
+#### Exception settings
+
+The **Exception Settings (.NET x86)** view lists common exception types by namespace, as Visual Studio's Exception Settings
+window does: check a type (or a whole namespace) to stop whenever it is thrown, even when it is caught later. Add your own
+types with **+**, or right-click an entry of the Exception Log and choose **Break When This Type Is Thrown**. The checks are
+kept with the workspace and apply at once, also while the program runs. They add to the exception breakpoints of the
+Breakpoints view.
+
+#### UI freeze detection
+
+When the program's UI stops responding — a UI thread does not process window messages for 2 seconds
+(`dotnetX86.uiFreeze.thresholdMs`) — the program is paused on that thread, so the Call Stack shows the code that holds
+the UI up, and the pause is labeled *UI not responding for 2.0 s*. Steps and stops at breakpoints never count as freezes.
+Visual Studio has no such option. Turn it off with `dotnetX86.uiFreeze.enabled`.
+
+If the UI thread is waiting inside native code (e.g. `Thread.Sleep`, a lock), the top frames are framework / native ones:
+look a few frames down for your code. Expressions cannot be evaluated in such a frame (pick one of your own frames).
+
+### Moving through code
+
+#### Step Into Specific
+
+On a line with several calls, such as `Outer(Inner1(), Inner2())`, right-click and choose **Step Into Target** (or run it
+from the Command Palette) and pick the call to step into; the others run without stopping. The calls are listed in the
+order they run (arguments first). netcoredbg has no step-in targets, so the step goes over the line with a temporary
+function breakpoint on the picked method: if the line does not call it after all, the step ends on the next line.
+Constructors (`new T(...)`) are not listed.
+
+#### Set Next Statement
+
+While stopped, right-click a line of the method that is executing and choose **Jump to Cursor** (Set Next Statement)
+to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
+or moving into / out of a catch / finally block, are refused.
+
+#### Return values
+
+After **Step Over** (or Step Into a line that calls no code of yours) and **Step Out**, the values returned by the
+methods that were called are shown at the top of the Variables and Autos views, e.g. `Program.Square returned = 9`.
+A line with several calls shows each of them. Objects can be expanded; their text is the type name
+(`DebuggerDisplay` is not applied to them). The values disappear at the next step or continue.
+Methods that return `decimal`, `DateTime`, `Nullable<T>` or a struct larger than 4 bytes pass the value through a hidden
+buffer on x86, and their return values are not shown.
+
+#### Parallel Stacks and freezing threads
+
+Right-click in the Call Stack view and choose **Show Parallel Stacks** (or run it from the Command Palette): the call stacks of
+all threads are merged into boxes, as in Visual Studio — callers at the bottom, a box per path the threads share, with the
+number of threads. Click a frame to open it; the panel follows every stop.
+
+Right-click a thread in the Call Stack view and choose **Freeze Thread** (or use the buttons in the panel): a frozen thread
+stays suspended when the program continues, also across expression evaluation, until **Thaw Thread**. Its name shows
+`[frozen]`. Use it to let one thread run alone, or to hold one back to provoke a race. Needs netcoredbg patch 0010.
+
+### Looking at values
+
+#### Inline values
+
+While stopped, values are shown at the end of the lines of the current method, like Visual Studio's inline values:
+locals and parameters, and fields (`_count`, `this._count`). Properties are not shown, since reading them runs getters.
+Turn this off with the VS Code setting `debug.inlineValues`.
+
+#### DebuggerDisplay
+
+Types with `[DebuggerDisplay("Name = {Name}, Age = {Age}")]` are shown with that text in the Variables view,
+hovers and the Watch view, as in Visual Studio (`List<T>` shows `Count = 3`). Member access and method calls work,
+`,nq` removes the quotes around strings, and the attribute is inherited. Expressions are evaluated relative to the
+object, so complex expressions (operators, casts) fall back to the default `{Type}` text.
+
+#### Autos and Modules views
+
+- **Autos (.NET x86)**: the variables used on the current and the previous line of the selected frame, as in Visual Studio.
+- **Modules (.NET x86)**: the loaded assemblies and whether their symbols (PDB) were loaded; right-click to copy the path
+  or reveal the file.
+
+#### Pinned values
+
+Right-click a line and choose **Pin Value to Line...** to show an expression at the end of that line. It is evaluated
+again in the selected stack frame every time the program stops, and the pins are kept with the workspace.
+Use **Unpin Value from Line** or **Clear All Pinned Values** to remove them.
+
+#### Object IDs
+
+Right-click an object in the Variables or Watch view and choose **Make Object ID**: it gets a name, `$1`, `$2`, ..., that
+reaches that very object from any method and any later stop — in Watch, the Debug Console, hovers and breakpoint conditions
+(e.g. `$1.Count`, `order == $2`). Values that are that object show `{$1}` in the Variables view. As in Visual Studio, an object ID
+does not keep its object alive: once it is garbage collected, `$1` is `null`. IDs last until the debug session ends.
+Objects only (not numbers, strings, structs or null). Needs netcoredbg patch 0008, included in the bundled build.
+
+#### Dump Variable
 
 While stopped, right-click a variable in the **Variables** view and choose **Dump Variable**,
 or run **.NET x86: Dump Expression...** from the Command Palette, to open the whole object as JSON in an editor.
@@ -160,67 +370,135 @@ or run **.NET x86: Dump Expression...** from the Command Palette, to open the wh
 - Property getters run while dumping, as in the Variables view. Large objects such as a `Form` hit the limits above
   (a notification tells you so); raise them in the settings if needed.
 
-### Inline values
+#### More commands in the Variables view context menu
 
-While stopped, values are shown at the end of the lines of the current method, like Visual Studio's inline values:
-locals and parameters, and fields (`_count`, `this._count`). Properties are not shown, since reading them runs getters.
-Turn this off with the VS Code setting `debug.inlineValues`.
+| Command | What it does |
+|---|---|
+| **View as Image** | Shows a `System.Drawing` `Image` / `Bitmap` / `Icon` as a picture (fit, actual size, zoom; transparency on a checkerboard) with its size and pixel format. The program saves it to a temporary PNG, which is deleted at once. Also in the Watch view. |
+| **View as Table** | Shows a `List<T>`, array, `Dictionary` or `DataTable` as a table: click a header to sort, filter rows, and copy or save it as CSV. Object items get one column per member; dates are shown with `ToString()`. Up to 1,000 rows of a DataTable are read. |
+| **Copy as C# Initializer** | Copies the value as C# code (`var order = new Order { Note = "...", People = new List<Person> { ... } };`), handy for test data. Only PascalCase members are emitted; get-only properties are included too, so delete them if the code does not compile. |
+| **View String (JSON / XML / HTML / Text)** | Opens a `string` variable in an editor, pretty-printed when it contains JSON, XML or HTML (auto-detected, or pick the format). |
+| **Take Snapshot** / **Compare with Snapshot** | Records the variable, then shows a diff against its current value after you step or continue — find out what changed and where. |
 
-### DebuggerDisplay
+### Time, memory and performance
 
-Types with `[DebuggerDisplay("Name = {Name}, Age = {Age}")]` are shown with that text in the Variables view,
-hovers and the Watch view, as in Visual Studio (`List<T>` shows `Count = 3`). Member access and method calls work,
-`,nq` removes the quotes around strings, and the attribute is inherited. Expressions are evaluated relative to the
-object, so complex expressions (operators, casts) fall back to the default `{Type}` text.
+#### PerfTips
 
-### Logpoints
+After a step or continue, the stopped line shows the elapsed time (e.g. `≤ 12 ms elapsed`). It includes the debugger's
+own overhead, hence "≤".
 
-Right-click the editor gutter and choose **Add Logpoint...**, then enter a message such as
-`i={i} total={total} in $FUNCTION`. Each time the line runs, the message is written to the Debug Console
-and execution continues without stopping. `{expression}` is evaluated in the current frame;
-`$FUNCTION` and `$TID` are replaced with the method name and thread id. A condition can be combined with a logpoint.
+#### Section timing
 
-### Step history
+Right-click a line and choose **Start Timer Here...**, then right-click a later line and choose **End Timer Here...**.
+Each pass from start to end is measured without stopping and charted in the **Value Trend** view (`⏱ name (ms)`),
+also written to the Debug Console. Each pass includes a few milliseconds of debugger overhead.
 
-The **Step History (.NET x86)** view in Run and Debug records the location and the local variables at every stop,
-newest first. Values that changed since the previous stop in the same method are marked *changed* / *new*, so you can
-look back at "the value three steps ago" (it is a history to browse; execution does not run backwards).
-Click an entry to open its location. Turn it off with `dotnetX86.stepHistory.enabled`.
-
-### Value trend
+#### Value trend
 
 Right-click a line in a C# file and choose **Track Value at This Line...**, then enter expressions separated by `;`
 (e.g. `total; items.Count`). Each time the line runs, the values are recorded without stopping and charted hit by hit,
 one small chart per expression (**.NET x86: Show Value Trend**). It is a logpoint whose message starts with `#track:`,
 so it is removed like any breakpoint.
 
-### Hit count breakpoints
+#### Memory / CPU graph
 
-Edit a breakpoint and choose **Hit Count**, then enter `5` or `==5` (stop on the 5th hit), `>=5` / `>5`
-(from the 5th / after the 5th hit) or `%5` (every 5th hit). It can be combined with a condition (hits are counted
-only when the condition is true) and with a log message.
+Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)
+to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
+in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
+and open *Data table* for the latest samples.
 
-### Temporary, dependent, when-changed and caller-filtered breakpoints
+#### Heap snapshots
 
-Right-click a line in a C# editor:
+While stopped, right-click in the Call Stack view and choose **Take Heap Snapshot** (or run it from the Command Palette):
+the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
+Take another one at a later stop to see what changed per type (**Δ Count**, **Δ Size**); pick any two snapshots to compare,
+sort by a column, filter by name, or show **Increases only**. A garbage collection runs right before each snapshot so that
+only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`). Needs netcoredbg patch 0011.
 
-- **Add Temporary Breakpoint** — stops once, then the breakpoint removes itself (condition `#once`).
-- **Add Dependent Breakpoint...** — active only after the program has stopped at another breakpoint you pick (condition `#after File.cs:12`).
-- **Add Breakpoint When Value Changes...** — stops only when an expression has a different value than the last time the line ran; the old and new values are written to the Debug Console (condition `#changed expr`).
-- **Add Breakpoint Filtered by Caller...** — stops only when the line is reached through one of the methods you pick
-  (while stopped, the methods of the current call stack are offered); `!Name` stops unless called from it
-  (condition `#caller Orders.Save, Import.Run`). Names match from the end: `Save`, `Orders.Save` or `MyApp.Orders.Save`.
-  Visual Studio has no such filter.
+### History and records
 
-You can also type these markers as the condition of any breakpoint. They can be combined with a hit count.
+#### Step history
 
-### Pinned values
+The **Step History (.NET x86)** view in Run and Debug records the location and the local variables at every stop,
+newest first. Values that changed since the previous stop in the same method are marked *changed* / *new*, so you can
+look back at "the value three steps ago" (it is a history to browse; execution does not run backwards).
+Click an entry to open its location. Turn it off with `dotnetX86.stepHistory.enabled`.
 
-Right-click a line and choose **Pin Value to Line...** to show an expression at the end of that line. It is evaluated
-again in the selected stack frame every time the program stops, and the pins are kept with the workspace.
-Use **Unpin Value from Line** or **Clear All Pinned Values** to remove them.
+#### Exception log
 
-### WinForms Controls view
+The **Exception Log (.NET x86)** view lists every exception thrown in the debuggee, including ones that are caught
+and swallowed, with type, message and the first location in your code (click to open it). They are also written to the
+Debug Console like Visual Studio's `Exception thrown: …` lines. Execution only stops where your exception settings say so.
+Apps that throw very many exceptions run slower while it is on (`dotnetX86.exceptionLog.enabled`).
+
+Each entry expands into a **snapshot taken at the throw**: the call stack (click a frame to open it) and the locals of the
+first three frames of your code, so you can see the values of an exception you ran through without stopping. Visual
+Studio does not keep them. Objects are not expanded; see `dotnetX86.exceptionLog.captureLocals`.
+
+#### Debug session report
+
+Run **.NET x86: Export Debug Session Report** (or the button in the Step History view title) to open a Markdown report of
+the last session: program, start / end time and exit code, every stop with the values that changed, the exceptions
+(with a count per type), section timings (min / avg / max), tracked values and the modules with symbols. Save it or paste
+it into a bug report.
+
+#### Generate a unit test from a stop
+
+Right-click a frame in the Call Stack view and choose **Generate Unit Test from Here**: a test that calls that method again
+with the arguments — and, for an instance method, the object — it has now opens beside the editor (unsaved). The test
+framework is the one the workspace's projects reference (xUnit, NUnit or MSTest); you are asked when there is none or several.
+Fill in `expected` and save it in your test project. Async methods work too; lambdas, local functions and constructors cannot
+be called from a test, so pick the method that uses them. The values are those at the stopped line: stop at the first line
+of the method to capture the arguments as they came in. Visual Studio has no such command.
+
+#### Debug.WriteLine
+
+Output from `Debug.WriteLine`, `Trace.WriteLine` and `Debugger.Log` appears in the Debug Console, with a link to the source line.
+
+### Source and symbols
+
+#### Debugging referenced assemblies (source in another folder)
+
+To step into your own library (e.g. a NuGet package you build) whose PDB records paths that do not exist on this
+machine, tell the debugger where the source is:
+
+```jsonc
+"justMyCode": false,                          // when the library is built Release (optimized)
+"sourceSearchPaths": ["D:\\work"],             // searched with subfolders; the best match of the trailing folders wins
+"sourceFileMap": { "/_/": "D:\\work\\MyLib\\" } // or replace a path prefix exactly (deterministic builds record /_/)
+```
+
+- The library's PDB must be readable: embedded in the .dll or next to it (Portable PDB).
+- The PDBs of the assemblies next to the launched program are read before the session starts, so breakpoints in the
+  library work from the beginning; assemblies loaded later (and attach) get their breakpoints moved when they load.
+- Both can also be set for every configuration with `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths`.
+- When a stop has no source on this machine, the Debug Console says which PDB path to map.
+
+#### Source Link and symbol servers
+
+Most NuGet packages built from GitHub carry a **Source Link** map in their PDB (the .NET 8+ SDK adds one by default).
+When the program stops in a file that is not on this machine, the extension downloads it from the URL the map gives
+(e.g. raw.githubusercontent.com) into its storage and opens it; breakpoints in it work. Turn it off with
+`dotnetX86.sourceLink.enabled`.
+
+For an assembly without symbols, right-click it in the **Modules** view and choose **Download Symbols**: its PDB is fetched
+from the NuGet and Microsoft symbol servers (`dotnetX86.symbolServers`), and applies from the next debug session (a button
+restarts the current one). With Source Link, its sources follow. When no server has the PDB, decompile it instead (below).
+**Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *.NET x86 Debugger* output.
+
+#### Debugging decompiled assemblies
+
+For an assembly without symbols (e.g. a NuGet package, or a DLL whose source you do not have), right-click it in the
+**Modules** view and choose **Decompile for Debugging...** (or run it from the Command Palette and pick the file). The
+bundled ILSpy engine decompiles it into C# with matching symbols; from the next debug session (a button restarts the
+current one) you can step into it, see its locals and set breakpoints in the decompiled files, with Just My Code on.
+The result is kept in the extension's storage, keyed by the exact build of the assembly, and the assembly's own folder
+is not touched. **Delete Decompiled Symbols** removes them. Needs a .NET 8 or later runtime to run the decompiler, and
+netcoredbg patch 0009 (included in the bundled build). Names of locals are the decompiler's, not the original ones.
+
+### WinForms
+
+#### WinForms Controls view
 
 While stopped, the **WinForms Controls** view in Run and Debug lists `Application.OpenForms` and their controls as a tree
 (name, type and text; hidden controls are greyed out). Hover a control for its bounds, enabled state, dock and tab index.
@@ -241,247 +519,16 @@ Click the eye icon (**Highlight on Screen**) to see where a control is: the form
 program stopped, with a red frame and the control's name and size around it for a few seconds. Visual Studio cannot do
 this for WinForms. (The stopped program cannot repaint or come to the front itself; the image comes from the desktop compositor.)
 
-### Generate a unit test from a stop
-
-Right-click a frame in the Call Stack view and choose **Generate Unit Test from Here**: a test that calls that method again
-with the arguments — and, for an instance method, the object — it has now opens beside the editor (unsaved). The test
-framework is the one the workspace's projects reference (xUnit, NUnit or MSTest); you are asked when there is none or several.
-Fill in `expected` and save it in your test project. Async methods work too; lambdas, local functions and constructors cannot
-be called from a test, so pick the method that uses them. The values are those at the stopped line: stop at the first line
-of the method to capture the arguments as they came in. Visual Studio has no such command.
-
-### Source Link and symbol servers
-
-Most NuGet packages built from GitHub carry a **Source Link** map in their PDB (the .NET 8+ SDK adds one by default).
-When the program stops in a file that is not on this machine, the extension downloads it from the URL the map gives
-(e.g. raw.githubusercontent.com) into its storage and opens it; breakpoints in it work. Turn it off with
-`dotnetX86.sourceLink.enabled`.
-
-For an assembly without symbols, right-click it in the **Modules** view and choose **Download Symbols**: its PDB is fetched
-from the NuGet and Microsoft symbol servers (`dotnetX86.symbolServers`), and applies from the next debug session (a button
-restarts the current one). With Source Link, its sources follow. When no server has the PDB, decompile it instead (below).
-**Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *.NET x86 Debugger* output.
-
-### Debugging decompiled assemblies
-
-For an assembly without symbols (e.g. a NuGet package, or a DLL whose source you do not have), right-click it in the
-**Modules** view and choose **Decompile for Debugging...** (or run it from the Command Palette and pick the file). The
-bundled ILSpy engine decompiles it into C# with matching symbols; from the next debug session (a button restarts the
-current one) you can step into it, see its locals and set breakpoints in the decompiled files, with Just My Code on.
-The result is kept in the extension's storage, keyed by the exact build of the assembly, and the assembly's own folder
-is not touched. **Delete Decompiled Symbols** removes them. Needs a .NET 8 or later runtime to run the decompiler, and
-netcoredbg patch 0009 (included in the bundled build). Names of locals are the decompiler's, not the original ones.
-
-### Object IDs
-
-Right-click an object in the Variables or Watch view and choose **Make Object ID**: it gets a name, `$1`, `$2`, ..., that
-reaches that very object from any method and any later stop — in Watch, the Debug Console, hovers and breakpoint conditions
-(e.g. `$1.Count`, `order == $2`). Values that are that object show `{$1}` in the Variables view. As in Visual Studio, an object ID
-does not keep its object alive: once it is garbage collected, `$1` is `null`. IDs last until the debug session ends.
-Objects only (not numbers, strings, structs or null). Needs netcoredbg patch 0008, included in the bundled build.
-
-### Debug session report
-
-Run **.NET x86: Export Debug Session Report** (or the button in the Step History view title) to open a Markdown report of
-the last session: program, start / end time and exit code, every stop with the values that changed, the exceptions
-(with a count per type), section timings (min / avg / max), tracked values and the modules with symbols. Save it or paste
-it into a bug report.
-
-### Return values
-
-After **Step Over** (or Step Into a line that calls no code of yours) and **Step Out**, the values returned by the
-methods that were called are shown at the top of the Variables and Autos views, e.g. `Program.Square returned = 9`.
-A line with several calls shows each of them. Objects can be expanded; their text is the type name
-(`DebuggerDisplay` is not applied to them). The values disappear at the next step or continue.
-Methods that return `decimal`, `DateTime`, `Nullable<T>` or a struct larger than 4 bytes pass the value through a hidden
-buffer on x86, and their return values are not shown.
-
-### Debugging referenced assemblies (source in another folder)
-
-To step into your own library (e.g. a NuGet package you build) whose PDB records paths that do not exist on this
-machine, tell the debugger where the source is:
-
-```jsonc
-"justMyCode": false,                          // when the library is built Release (optimized)
-"sourceSearchPaths": ["D:\\work"],             // searched with subfolders; the best match of the trailing folders wins
-"sourceFileMap": { "/_/": "D:\\work\\MyLib\\" } // or replace a path prefix exactly (deterministic builds record /_/)
-```
-
-- The library's PDB must be readable: embedded in the .dll or next to it (Portable PDB).
-- The PDBs of the assemblies next to the launched program are read before the session starts, so breakpoints in the
-  library work from the beginning; assemblies loaded later (and attach) get their breakpoints moved when they load.
-- Both can also be set for every configuration with `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths`.
-- When a stop has no source on this machine, the Debug Console says which PDB path to map.
-
-### Debug.WriteLine
-
-Output from `Debug.WriteLine`, `Trace.WriteLine` and `Debugger.Log` appears in the Debug Console, with a link to the source line.
-
-### Exception breakpoints
-
-The Breakpoints view shows **All Exceptions (when thrown)** and **User-Unhandled Exceptions**. Right-click one and
-choose **Edit Condition** to limit it to exception types, e.g. `System.NullReferenceException, System.InvalidOperationException`;
-start with `!` to break on every type except those.
-
-### Memory / CPU graph
-
-Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)
-to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
-in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
-and open *Data table* for the latest samples.
-
-### Heap snapshots
-
-While stopped, right-click in the Call Stack view and choose **Take Heap Snapshot** (or run it from the Command Palette):
-the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
-Take another one at a later stop to see what changed per type (**Δ Count**, **Δ Size**); pick any two snapshots to compare,
-sort by a column, filter by name, or show **Increases only**. A garbage collection runs right before each snapshot so that
-only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`). Needs netcoredbg patch 0011.
-
-### Break on Value Change
-
-Right-click a field, property or local variable in the Variables view and choose **Break on Value Change**.
-Execution stops right after the value changes, showing `old → new`. netcoredbg has no data breakpoints, so this is
-emulated: the extension finds the lines of the workspace's C# files that assign that name (`x = …`, `x += …`, `x++`, …),
-checks the value before and after each of them, and stops only when it changed. Writes through `ref` / `out`,
-from other objects (`other.x = …`) or from code outside the workspace are not detected.
-
-### Set Next Statement
-
-While stopped, right-click a line of the method that is executing and choose **Jump to Cursor** (Set Next Statement)
-to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
-or moving into / out of a catch / finally block, are refused.
-
-### Parallel Stacks and freezing threads
-
-Right-click in the Call Stack view and choose **Show Parallel Stacks** (or run it from the Command Palette): the call stacks of
-all threads are merged into boxes, as in Visual Studio — callers at the bottom, a box per path the threads share, with the
-number of threads. Click a frame to open it; the panel follows every stop.
-
-Right-click a thread in the Call Stack view and choose **Freeze Thread** (or use the buttons in the panel): a frozen thread
-stays suspended when the program continues, also across expression evaluation, until **Thaw Thread**. Its name shows
-`[frozen]`. Use it to let one thread run alone, or to hold one back to provoke a race. Needs netcoredbg patch 0010.
-
-### Step Into Specific
-
-On a line with several calls, such as `Outer(Inner1(), Inner2())`, right-click and choose **Step Into Target** (or run it
-from the Command Palette) and pick the call to step into; the others run without stopping. The calls are listed in the
-order they run (arguments first). netcoredbg has no step-in targets, so the step goes over the line with a temporary
-function breakpoint on the picked method: if the line does not call it after all, the step ends on the next line.
-Constructors (`new T(...)`) are not listed.
-
-### UI freeze detection
-
-When the program's UI stops responding — a UI thread does not process window messages for 2 seconds
-(`dotnetX86.uiFreeze.thresholdMs`) — the program is paused on that thread, so the Call Stack shows the code that holds
-the UI up, and the pause is labeled *UI not responding for 2.0 s*. Steps and stops at breakpoints never count as freezes.
-Visual Studio has no such option. Turn it off with `dotnetX86.uiFreeze.enabled`.
-
-If the UI thread is waiting inside native code (e.g. `Thread.Sleep`, a lock), the top frames are framework / native ones:
-look a few frames down for your code. Expressions cannot be evaluated in such a frame (pick one of your own frames).
-
-### PerfTips
-
-After a step or continue, the stopped line shows the elapsed time (e.g. `≤ 12 ms elapsed`). It includes the debugger's
-own overhead, hence "≤".
-
-### Section timing
-
-Right-click a line and choose **Start Timer Here...**, then right-click a later line and choose **End Timer Here...**.
-Each pass from start to end is measured without stopping and charted in the **Value Trend** view (`⏱ name (ms)`),
-also written to the Debug Console. Each pass includes a few milliseconds of debugger overhead.
-
-### Exception settings
-
-The **Exception Settings (.NET x86)** view lists common exception types by namespace, as Visual Studio's Exception Settings
-window does: check a type (or a whole namespace) to stop whenever it is thrown, even when it is caught later. Add your own
-types with **+**, or right-click an entry of the Exception Log and choose **Break When This Type Is Thrown**. The checks are
-kept with the workspace and apply at once, also while the program runs. They add to the exception breakpoints of the
-Breakpoints view.
-
-### Exception log
-
-Each entry expands into a **snapshot taken at the throw**: the call stack (click a frame to open it) and the locals of the
-first three frames of your code, so you can see the values of an exception you ran through without stopping. Visual
-Studio does not keep them. Objects are not expanded; see `dotnetX86.exceptionLog.captureLocals`.
-
-The **Exception Log (.NET x86)** view lists every exception thrown in the debuggee, including ones that are caught
-and swallowed, with type, message and the first location in your code (click to open it). They are also written to the
-Debug Console like Visual Studio's `Exception thrown: …` lines. Execution only stops where your exception settings say so.
-Apps that throw very many exceptions run slower while it is on (`dotnetX86.exceptionLog.enabled`).
-
-### Autos and Modules views
-
-- **Autos (.NET x86)**: the variables used on the current and the previous line of the selected frame, as in Visual Studio.
-- **Modules (.NET x86)**: the loaded assemblies and whether their symbols (PDB) were loaded; right-click to copy the path
-  or reveal the file.
-
-### More commands in the Variables view context menu
-
-| Command | What it does |
-|---|---|
-| **View as Image** | Shows a `System.Drawing` `Image` / `Bitmap` / `Icon` as a picture (fit, actual size, zoom; transparency on a checkerboard) with its size and pixel format. The program saves it to a temporary PNG, which is deleted at once. Also in the Watch view. |
-| **View as Table** | Shows a `List<T>`, array, `Dictionary` or `DataTable` as a table: click a header to sort, filter rows, and copy or save it as CSV. Object items get one column per member; dates are shown with `ToString()`. Up to 1,000 rows of a DataTable are read. |
-| **Copy as C# Initializer** | Copies the value as C# code (`var order = new Order { Note = "...", People = new List<Person> { ... } };`), handy for test data. Only PascalCase members are emitted; get-only properties are included too, so delete them if the code does not compile. |
-| **View String (JSON / XML / HTML / Text)** | Opens a `string` variable in an editor, pretty-printed when it contains JSON, XML or HTML (auto-detected, or pick the format). |
-| **Take Snapshot** / **Compare with Snapshot** | Records the variable, then shows a diff against its current value after you step or continue — find out what changed and where. |
-
-### Display language
-
-Menus, settings and messages are shown in English, or in Japanese when VS Code's display language is Japanese
-(e.g. with the Japanese Language Pack).
-
 ## Limitations
 
 - **.NET Framework**: 4.x only, with Portable PDBs (see above).
 - The debuggee always runs with its output in the Debug Console (`console: integratedTerminal` is not available).
 - Windows only.
 
-## Building from source
+## Contributing
 
-Prerequisites: Node.js, Git, a .NET SDK, and Visual Studio 2022 or later with the *Desktop development with C++* workload.
-
-```powershell
-# Build netcoredbg for x86 (into debugger\netcoredbg-x86), compile, package the VSIX and install it into VS Code
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-
-# Only create the VSIX (out\dotnet-x86-debugger.vsix)
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
-```
-
-`scripts\build-netcoredbg.ps1` clones netcoredbg (pinned tag) and only the required parts of `dotnet/runtime`
-into a short working directory (`%LOCALAPPDATA%\ncdbg` by default) to stay under the Windows `MAX_PATH` limit.
-Local fixes to netcoredbg are kept in [`patches/netcoredbg`](patches/netcoredbg) and applied automatically.
-
-To debug the extension itself, open this folder in VS Code and run **Run Extension** (F5).
-
-### Tests
-
-```powershell
-npm test          # unit tests of the logic that needs no debugger (fast)
-npm run test:e2e  # end-to-end tests: the real netcoredbg debugs the apps in test\apps
-```
-
-The E2E tests need the bundled netcoredbg (`scripts\build-netcoredbg.ps1`), the decompiler helper
-(`scripts\build-decompiler.ps1`), the .NET SDK and the x86 .NET (Desktop) runtime. They find the lines they stop at by
-`// @name` markers in the test apps. Set `DOTNETX86_SKIP_UI_TESTS=1` to skip the WinForms test where no desktop is
-available. The [CI workflow](.github/workflows/ci.yml) runs both on every push.
-
-## Releasing
-
-1. Update `version` in `package.json` and `CHANGELOG.md`, and commit.
-2. Push a tag that matches the version:
-
-   ```powershell
-   git tag v0.1.0
-   git push origin v0.1.0
-   ```
-
-The [Release workflow](.github/workflows/release.yml) builds netcoredbg (x86), packages the VSIX and creates a GitHub Release
-with `dotnet-x86-debugger-<version>.vsix` and `install-vsix.ps1`.
-Running the workflow manually (*workflow_dispatch*) only uploads the files as a build artifact.
+Building from source, the tests and the release steps are described in [CONTRIBUTING.md](CONTRIBUTING.md). Issues and pull requests are welcome.
 
 ## License
 
 [MIT](LICENSE). Bundled third-party components are listed in [ThirdPartyNotices.txt](ThirdPartyNotices.txt).
-
