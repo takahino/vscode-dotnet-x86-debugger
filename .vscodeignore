@@ -13,3 +13,5 @@ tools/**
 patches/**
 .gitattributes
 docs/**
+out/test/**
+test/**

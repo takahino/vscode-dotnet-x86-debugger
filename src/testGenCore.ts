@@ -270,7 +270,8 @@ function parseParameter(text: string): Parameter | undefined {
         }
         return true;
     });
-    return { name, type: typeWords.join(' '), modifier };
+    const type = typeWords.join(' ');
+    return modifier ? { name, type, modifier } : { name, type };
 }
 
 /** Splits at `separator` outside of <>, (), [], {} and string literals. */

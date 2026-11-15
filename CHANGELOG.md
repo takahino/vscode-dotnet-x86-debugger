@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Tests: unit tests (`npm test`) and end-to-end tests against the real netcoredbg (`npm run test:e2e`), run by a new CI workflow on every push; the release workflow runs the unit tests before packaging.
+- Fix: a parameter without a modifier no longer carries an empty `modifier` field in the generated test's signature data.
+
 ## 0.9.0
 
 - New: **Decompile for Debugging** (Modules view) — an assembly without symbols is decompiled with the bundled ILSpy engine into C# with matching symbols, so you can step into it and set breakpoints in it from the next session. Kept in the extension's storage by assembly MVID (netcoredbg patch 0009 loads them from there).

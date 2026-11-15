@@ -50,6 +50,15 @@ jobs:
         # dotnet/runtime のソースは MAX_PATH を超えやすいので短い作業パスを使う
         run: ./scripts/build-netcoredbg.ps1 -WorkDir C:\ncdbg
 
+      # 壊れた VSIX を公開しないよう、パッケージ前に単体テストを通す（E2E は CI ワークフローで実行）
+      - name: Unit tests
+        shell: pwsh
+        run: |
+          npm ci --no-fund --no-audit
+          if ($LASTEXITCODE -ne 0) { throw "npm ci に失敗しました (exit code $LASTEXITCODE)。" }
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw "単体テストが失敗しました (exit code $LASTEXITCODE)。" }
+
       - name: Package VSIX
         shell: pwsh
         run: ./scripts/install.ps1 -SkipInstall

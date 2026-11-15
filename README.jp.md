@@ -375,6 +375,18 @@ netcoredbg への独自修正は [`patches/netcoredbg`](patches/netcoredbg) に�
 
 拡張機能自体をデバッグするには、このフォルダを VS Code で開き **Run Extension**（F5）を実行します。
 
+### テスト
+
+```powershell
+npm test          # デバッガーを使わないロジックの単体テスト（高速）
+npm run test:e2e  # E2E テスト: 本物の netcoredbg で test\apps のアプリをデバッグする
+```
+
+E2E テストには、同梱用の netcoredbg（`scripts\build-netcoredbg.ps1`）、逆コンパイル ヘルパー（`scripts\build-decompiler.ps1`）、
+.NET SDK、x86 版 .NET（Desktop）ランタイムが必要です。停止する行はテスト アプリの `// @名前` マーカーで探します。
+デスクトップの無い環境では `DOTNETX86_SKIP_UI_TESTS=1` で WinForms のテストを飛ばせます。
+[CI ワークフロー](.github/workflows/ci.yml) が push のたびに両方を実行します。
+
 ## リリース手順
 
 1. `package.json` の `version` と `CHANGELOG.md` を更新してコミットします。

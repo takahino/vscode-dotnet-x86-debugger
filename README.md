@@ -390,6 +390,18 @@ Local fixes to netcoredbg are kept in [`patches/netcoredbg`](patches/netcoredbg)
 
 To debug the extension itself, open this folder in VS Code and run **Run Extension** (F5).
 
+### Tests
+
+```powershell
+npm test          # unit tests of the logic that needs no debugger (fast)
+npm run test:e2e  # end-to-end tests: the real netcoredbg debugs the apps in test\apps
+```
+
+The E2E tests need the bundled netcoredbg (`scripts\build-netcoredbg.ps1`), the decompiler helper
+(`scripts\build-decompiler.ps1`), the .NET SDK and the x86 .NET (Desktop) runtime. They find the lines they stop at by
+`// @name` markers in the test apps. Set `DOTNETX86_SKIP_UI_TESTS=1` to skip the WinForms test where no desktop is
+available. The [CI workflow](.github/workflows/ci.yml) runs both on every push.
+
 ## Releasing
 
 1. Update `version` in `package.json` and `CHANGELOG.md`, and commit.

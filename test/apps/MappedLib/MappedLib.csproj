@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Its PDB records C:\fake\src\MappedLib\... (as if built on another machine), for the source mapping tests. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <PathMap>$(MSBuildProjectDirectory)=C:\fake\src\MappedLib</PathMap>
+  </PropertyGroup>
+
+</Project>

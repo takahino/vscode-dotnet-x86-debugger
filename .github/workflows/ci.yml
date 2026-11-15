@@ -1,0 +1,65 @@
+name: CI
+
+# push / pull request ごとに単体テストと E2E テスト（本物の netcoredbg を使う）を実行する。
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    env:
+      # E2E のテストアプリ（x86）を動かす x86 版 .NET ランタイムの場所
+      DOTNET_ROOT(x86): C:\Program Files (x86)\dotnet
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # テストアプリ・netcoredbg の ManagedPart・逆コンパイル ヘルパーのビルドに使う
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # x86 アプリを動かすための x86 版ランタイム（WinForms のテストアプリ用に Windows Desktop も）
+      - name: Install the x86 .NET runtime
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
+          Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installer
+          foreach ($runtime in 'dotnet', 'windowsdesktop') {
+            & $installer -Channel 10.0 -Runtime $runtime -Architecture x86 -InstallDir 'C:\Program Files (x86)\dotnet' -NoPath
+            if ($LASTEXITCODE -ne 0) { throw "x86 版 $runtime ランタイムのインストールに失敗しました (exit code $LASTEXITCODE)。" }
+          }
+
+      - name: Install dependencies
+        run: npm ci --no-fund --no-audit
+
+      - name: Unit tests
+        run: npm test
+
+      # netcoredbg のビルドは時間がかかるため、リリースと同じキーでキャッシュする
+      - name: Restore netcoredbg (x86) cache
+        id: netcoredbg-cache
+        uses: actions/cache@v4
+        with:
+          path: debugger/netcoredbg-x86
+          key: netcoredbg-x86-${{ runner.os }}-${{ hashFiles('scripts/build-netcoredbg.ps1', 'patches/netcoredbg/**') }}
+
+      - name: Build netcoredbg (x86)
+        if: steps.netcoredbg-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        # dotnet/runtime のソースは MAX_PATH を超えやすいので短い作業パスを使う
+        run: ./scripts/build-netcoredbg.ps1 -WorkDir C:\ncdbg
+
+      - name: Build the decompiler helper
+        shell: pwsh
+        run: ./scripts/build-decompiler.ps1
+
+      - name: E2E tests
+        run: npm run test:e2e

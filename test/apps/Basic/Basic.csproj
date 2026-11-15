@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- E2E test app (x86 console). Lines the tests stop at are marked with "// @name" comments. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MappedLib\MappedLib.csproj" />
+    <ProjectReference Include="..\NoPdbLib\NoPdbLib.csproj" />
+    <ProjectReference Include="..\EmbeddedLib\EmbeddedLib.csproj" />
+  </ItemGroup>
+
+</Project>

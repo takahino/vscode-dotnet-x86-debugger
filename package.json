@@ -786,6 +786,8 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "test": "tsc -p ./ && node --test \"out/test/unit/**/*.test.js\"",
+    "test:e2e": "tsc -p ./ && node --test --test-concurrency=1 \"out/test/e2e/**/*.test.js\"",
     "vscode:prepublish": "npm run compile",
     "package": "vsce package --target win32-x64 -o out/dotnet-x86-debugger.vsix"
   },
