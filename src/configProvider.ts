@@ -3,12 +3,39 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { inspectPe } from './peInfo';
 import { listX86DotnetProcesses } from './processPicker';
+import { configurationsForFolder } from './launchSetup';
+import { compareVersions } from './projectSetupCore';
 
 export const DEBUG_TYPE = 'dotnet-x86';
 /** Set on a launch configuration whose program is a .NET Framework exe (not written by users). */
 export const DOTNET_FRAMEWORK_KEY = '__dotnetFramework';
 
+/** launch.json content when no executable project is found: the usual layout of a WinForms project. */
+const TEMPLATE_CONFIGURATION: vscode.DebugConfiguration = {
+    name: '.NET x86 Launch',
+    type: DEBUG_TYPE,
+    request: 'launch',
+    preLaunchTask: 'build',
+    program: '${workspaceFolder}/bin/x86/Debug/net10.0-windows/${workspaceFolderBasename}.exe',
+    args: [],
+    cwd: '${workspaceFolder}',
+    stopAtEntry: false,
+};
+
 export class X86ConfigurationProvider implements vscode.DebugConfigurationProvider {
+    /** F5 without launch.json (or "Add Configuration..."): configurations made from the folder's projects. */
+    async provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined): Promise<vscode.DebugConfiguration[]> {
+        if (!folder) {
+            return [TEMPLATE_CONFIGURATION];
+        }
+        try {
+            const { configs } = await configurationsForFolder(folder);
+            return configs.length ? configs : [TEMPLATE_CONFIGURATION];
+        } catch {
+            return [TEMPLATE_CONFIGURATION];
+        }
+    }
+
     resolveDebugConfiguration(
         _folder: vscode.WorkspaceFolder | undefined,
         config: vscode.DebugConfiguration,
@@ -143,7 +170,7 @@ async function waitForProcess(processName: string, timeoutSeconds: number): Prom
     );
 }
 
-function x86DotnetRoots(): string[] {
+export function x86DotnetRoots(): string[] {
     return [
         process.env['DOTNET_ROOT(x86)'],
         process.env['ProgramFiles(x86)'] && path.join(process.env['ProgramFiles(x86)'], 'dotnet'),
@@ -173,19 +200,6 @@ export function findX86CoreClr(): string {
     throw new Error(
         vscode.l10n.t("Debugging a .NET Framework app needs the x86 .NET runtime (8 or later) for the debugger itself, but it was not found. Install the .NET Runtime x86, or set DOTNET_ROOT(x86)."),
     );
-}
-
-/** Compares "10.0.5" style versions numerically ("10.0.5" > "9.0.12"; prerelease suffixes are ignored). */
-function compareVersions(a: string, b: string): number {
-    const pa = a.split(/[.-]/).map((x) => parseInt(x, 10) || 0);
-    const pb = b.split(/[.-]/).map((x) => parseInt(x, 10) || 0);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-        const d = (pa[i] ?? 0) - (pb[i] ?? 0);
-        if (d !== 0) {
-            return d;
-        }
-    }
-    return 0;
 }
 
 export function findX86DotnetHost(): string {

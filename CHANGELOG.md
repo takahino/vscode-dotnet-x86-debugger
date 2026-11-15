@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- New: **Getting Started** walkthrough (Welcome page / **.NET x86: Getting Started**) — check the environment, make the project x86, create launch.json, start debugging.
+- New: **Check Environment** — the x86 .NET Runtime / Desktop Runtime, the .NET SDK, and whether each project builds as x86 with a Portable PDB, with one-click fixes of the project file.
+- New: **Generate launch.json** — launch configurations from the `.csproj` files (per project and target framework, with the real output path), an attach configuration and a `build` task. F5 without a launch.json does the same instead of inserting a template.
 - New: **Heap Snapshots** — objects and bytes per type on the GC heap while stopped, and the change between any two snapshots (sort, filter, increases only), as in Visual Studio's Memory Usage. A garbage collection runs first (`dotnetX86.heapSnapshot.collectGarbage`); netcoredbg patch 0011.
 - New: **Parallel Stacks** — all threads' call stacks merged into boxes, as in Visual Studio (Call Stack context menu / Command Palette).
 - New: **Freeze / Thaw Thread** — a frozen thread stays suspended when the program continues, also across expression evaluation; shown as `[frozen]` (netcoredbg patch 0010).

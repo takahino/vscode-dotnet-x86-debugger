@@ -161,6 +161,9 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <p>メニューやメッセージは VS Code の表示言語に従います。Japanese Language Pack を入れていれば日本語、それ以外は英語で表示されます。</p>
 
 <h2 id="first">はじめてのデバッグ</h2>
+<div class="note"><b>いちばん簡単な方法:</b> プロジェクトのフォルダーを開き、コマンド パレットで <b>.NET x86: はじめに</b> を実行します。
+<b>.NET x86: 環境を確認</b> で x86 の .NET ランタイム・.NET SDK・プロジェクトの準備ができているかを確認でき（プロジェクト ファイルはボタンで直せます）、
+<b>.NET x86: launch.json を生成</b> が <code>.csproj</code> から下の手順 1〜2 を代わりに行います。launch.json がない状態で <kbd>F5</kbd> を押しても同じです。以下は、これらが行う内容です。</div>
 <h3>1. プロジェクトを 32bit にする</h3>
 <pre><code>&lt;PropertyGroup&gt;
   &lt;OutputType&gt;WinExe&lt;/OutputType&gt;

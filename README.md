@@ -31,6 +31,15 @@ This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung
 
 ## Usage
 
+The quickest way: open your project folder and run **.NET x86: Getting Started** from the Command Palette. It walks through
+
+- **.NET x86: Check Environment** — whether the x86 .NET runtimes and the .NET SDK are installed, and whether each project
+  builds as x86 with a Portable PDB; a button fixes the project file;
+- **.NET x86: Generate launch.json** — launch configurations from your `.csproj` files (per project and target framework, with
+  the real output path), an attach configuration and a `build` task. Pressing **F5** without a launch.json does the same.
+
+Or set it up by hand:
+
 1. Make your project 32-bit:
 
    ```xml

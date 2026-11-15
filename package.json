@@ -49,6 +49,9 @@
     "onCommand:dotnetX86.downloadSymbols",
     "onCommand:dotnetX86.showParallelStacks",
     "onCommand:dotnetX86.showHeapSnapshots",
+    "onCommand:dotnetX86.checkEnvironment",
+    "onCommand:dotnetX86.generateLaunchJson",
+    "onCommand:dotnetX86.gettingStarted",
     "onCommand:dotnetX86.takeHeapSnapshot",
     "onCommand:dotnetX86.clearDownloadedSymbols",
     "onCommand:dotnetX86.addExceptionType",
@@ -58,7 +61,86 @@
     "onCommand:dotnetX86.exportSessionReport"
   ],
   "contributes": {
+    "walkthroughs": [
+      {
+        "id": "dotnetX86.gettingStarted",
+        "title": "%walkthrough.title%",
+        "description": "%walkthrough.description%",
+        "steps": [
+          {
+            "id": "environment",
+            "title": "%walkthrough.environment.title%",
+            "description": "%walkthrough.environment.description%",
+            "media": {
+              "markdown": "%walkthrough.environment.media%"
+            },
+            "completionEvents": [
+              "onCommand:dotnetX86.checkEnvironment"
+            ]
+          },
+          {
+            "id": "project",
+            "title": "%walkthrough.project.title%",
+            "description": "%walkthrough.project.description%",
+            "media": {
+              "markdown": "%walkthrough.project.media%"
+            },
+            "completionEvents": [
+              "onCommand:dotnetX86.checkEnvironment"
+            ]
+          },
+          {
+            "id": "launch",
+            "title": "%walkthrough.launch.title%",
+            "description": "%walkthrough.launch.description%",
+            "media": {
+              "markdown": "%walkthrough.launch.media%"
+            },
+            "completionEvents": [
+              "onCommand:dotnetX86.generateLaunchJson"
+            ]
+          },
+          {
+            "id": "debug",
+            "title": "%walkthrough.debug.title%",
+            "description": "%walkthrough.debug.description%",
+            "media": {
+              "markdown": "%walkthrough.debug.media%"
+            },
+            "completionEvents": [
+              "onDebugStart"
+            ]
+          },
+          {
+            "id": "features",
+            "title": "%walkthrough.features.title%",
+            "description": "%walkthrough.features.description%",
+            "media": {
+              "markdown": "%walkthrough.features.media%"
+            },
+            "completionEvents": [
+              "onLink:https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html"
+            ]
+          }
+        ]
+      }
+    ],
     "commands": [
+      {
+        "command": "dotnetX86.gettingStarted",
+        "title": "%command.gettingStarted%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.checkEnvironment",
+        "title": "%command.checkEnvironment%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.generateLaunchJson",
+        "title": "%command.generateLaunchJson%",
+        "category": ".NET x86"
+      },
       {
         "command": "dotnetX86.dumpVariable",
         "title": "%command.dumpVariable%",
@@ -901,18 +983,6 @@
             }
           }
         },
-        "initialConfigurations": [
-          {
-            "name": ".NET x86 Launch",
-            "type": "dotnet-x86",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/x86/Debug/net10.0-windows/${workspaceFolderBasename}.exe",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false
-          }
-        ],
         "configurationSnippets": [
           {
             "label": "%snippet.launch.label%",

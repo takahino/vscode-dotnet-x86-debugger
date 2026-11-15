@@ -162,6 +162,10 @@ the open-source debugger <a href="https://github.com/Samsung/netcoredbg">netcore
 <p>Menus and messages follow VS Code's display language: English, or Japanese with the Japanese Language Pack.</p>
 
 <h2 id="first">Your first debug session</h2>
+<div class="note"><b>Quickest:</b> open the project folder and run <b>.NET x86: Getting Started</b> from the Command Palette.
+<b>.NET x86: Check Environment</b> shows whether the x86 .NET runtimes, the .NET SDK and your projects are ready (with a button that
+fixes the project file), and <b>.NET x86: Generate launch.json</b> writes steps 1–2 below for you from your <code>.csproj</code> files —
+pressing <kbd>F5</kbd> without a launch.json does the same. The steps below are what they do.</div>
 <h3>1. Make the project 32-bit</h3>
 <pre><code>&lt;PropertyGroup&gt;
   &lt;OutputType&gt;WinExe&lt;/OutputType&gt;

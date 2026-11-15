@@ -13,6 +13,8 @@ import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
 import { ParallelStacks } from './parallelStacks';
 import { HeapSnapshots } from './heapSnapshots';
+import { EnvironmentCheck } from './environmentCheck';
+import { generateLaunchJsonCommand } from './launchSetup';
 import { PerfTips } from './perfTips';
 import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
@@ -63,6 +65,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const symbolServer = new SymbolServer(path.join(context.globalStorageUri.fsPath, 'symbols'), path.join(context.globalStorageUri.fsPath, 'sources'), output);
     const parallelStacks = new ParallelStacks();
     const heapSnapshots = new HeapSnapshots();
+    const environmentCheck = new EnvironmentCheck(context.extensionPath);
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
 
     context.subscriptions.push(
@@ -82,6 +85,11 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.showParallelStacks', () => parallelStacks.show()),
         vscode.commands.registerCommand('dotnetX86.freezeThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, true)),
         heapSnapshots,
+        environmentCheck,
+        vscode.commands.registerCommand('dotnetX86.checkEnvironment', () => environmentCheck.show()),
+        vscode.commands.registerCommand('dotnetX86.generateLaunchJson', generateLaunchJsonCommand),
+        vscode.commands.registerCommand('dotnetX86.gettingStarted', () =>
+            vscode.commands.executeCommand('workbench.action.openWalkthrough', `${context.extension.id}#dotnetX86.gettingStarted`, false)),
         vscode.commands.registerCommand('dotnetX86.showHeapSnapshots', () => heapSnapshots.show()),
         vscode.commands.registerCommand('dotnetX86.takeHeapSnapshot', () => heapSnapshots.take()),
         vscode.commands.registerCommand('dotnetX86.thawThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, false)),
