@@ -63,6 +63,9 @@
   .card h4 { margin: 0 0 4px; font-size: 15px; }
   .steps { padding-left: 22px; }
   .steps li { margin: 6px 0; }
+  table.features td:first-child { white-space: nowrap; }
+  table.features tr.group th { background: var(--accent-soft); color: var(--text); font-size: 13px; padding-top: 6px; padding-bottom: 6px; }
+  .badge { color: var(--s2); font-weight: 700; }
   /* mock UI text inside SVGs */
   svg text { font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif; }
   svg .mono { font-family: Consolas, "Cascadia Mono", monospace; }
@@ -99,6 +102,7 @@
     <li><a href="#tour">画面の見取り図</a></li>
     <li><a href="#features">機能</a>
       <ol>
+        <li><a href="#f-list">機能一覧</a></li>
         <li><a href="#f-breakpoints">ブレークポイント・ログポイント・ヒットカウント</a></li>
         <li><a href="#f-bp-more">一時・依存・値の変化・呼び出し元のブレークポイント</a></li>
         <li><a href="#f-values">値を見る</a></li>
@@ -283,6 +287,46 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h2 id="features">機能</h2>
 
+<h3 id="f-list">機能一覧</h3>
+<p>やりたいこと別にまとめています。★ は Visual Studio に無い機能です。</p>
+<table class="features">
+  <tr><th>機能</th><th>できること</th><th>使う場所</th></tr>
+  <tr class="group"><th colspan="3">止めたいところで止める</th></tr>
+  <tr><td><a href="#f-breakpoints">条件・ヒットカウント・ログポイント</a></td><td>条件や n 回目で停止、止めずにログ出力</td><td>行番号の左を右クリック</td></tr>
+  <tr><td><a href="#f-bp-more">一時・依存・値の変化ブレークポイント</a></td><td>1 回だけ／別の場所の後だけ／値が変わったときだけ停止</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-bp-more">呼び出し元で絞るブレークポイント</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>特定のメソッドから呼ばれたときだけ停止</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-data-bp">値が変わったら停止</a></td><td>フィールドや変数を変更した行で停止</td><td>変数ビューの右クリック</td></tr>
+  <tr><td><a href="#f-exceptions">例外ブレークポイント</a></td><td>スロー時・未処理時に停止（型で絞り込み）</td><td>ブレークポイント ビュー</td></tr>
+  <tr><td><a href="#f-freeze">UI フリーズの自動検知</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>UI スレッドが止まっている場所で一時停止</td><td>自動</td></tr>
+  <tr class="group"><th colspan="3">コードを進める</th></tr>
+  <tr><td><a href="#f-stepinto">Step Into Target</a></td><td>行の中の選んだ呼び出しにステップ イン</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-goto">次のステートメントの設定</a></td><td>行をやり直す・行を飛ばす</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-returns">戻り値の表示</a></td><td>ステップ オーバーしたメソッドの戻り値を確認</td><td>変数／自動変数ビュー</td></tr>
+  <tr class="group"><th colspan="3">値を見る</th></tr>
+  <tr><td><a href="#f-values">ホバー・インライン値・DebuggerDisplay・自動変数</a></td><td>コードの横やコンパクトなビューで値を確認</td><td>エディター／自動変数ビュー</td></tr>
+  <tr><td><a href="#f-pins">値のピン止め</a></td><td>式の値を行末に表示し続ける</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-objectid">オブジェクト ID</a></td><td>オブジェクトに名前（$1）を付けてどこからでも参照</td><td>変数／ウォッチの右クリック</td></tr>
+  <tr><td><a href="#f-variables-menu">ダンプ・表・C# 初期化子・文字列ビューアー・スナップショット</a></td><td>複雑な値を読む・比べる</td><td>変数ビューの右クリック</td></tr>
+  <tr class="group"><th colspan="3">時間とパフォーマンス</th></tr>
+  <tr><td><a href="#f-time">PerfTips</a></td><td>直前のステップや続行にかかった時間を行に表示</td><td>自動</td></tr>
+  <tr><td><a href="#f-time">区間の時間計測・値の推移</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>止めずに毎回の時間や値を記録してグラフ化</td><td>エディターの右クリック</td></tr>
+  <tr><td><a href="#f-time">メモリ / CPU グラフ</a></td><td>Private Bytes・Working Set・CPU の推移</td><td>コマンド パレット</td></tr>
+  <tr class="group"><th colspan="3">履歴と記録</th></tr>
+  <tr><td><a href="#f-history">ステップ履歴</a></td><td>これまでの停止ごとのローカル変数</td><td>ステップ履歴ビュー</td></tr>
+  <tr><td><a href="#f-exceptions">例外ログ</a></td><td>握りつぶされた例外も含め、スローされた例外をすべて記録</td><td>例外ログ ビュー</td></tr>
+  <tr><td><a href="#f-report">セッションの報告書</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>不具合報告に添える Markdown の要約</td><td>コマンド パレット</td></tr>
+  <tr><td><a href="#f-testgen">単体テストの生成</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のメソッド呼び出しを再現するテスト</td><td>コールスタックの右クリック</td></tr>
+  <tr class="group"><th colspan="3">ソースとシンボル</th></tr>
+  <tr><td><a href="#f-modules">モジュール ビュー</a></td><td>読み込まれたアセンブリとシンボルの有無</td><td>モジュール ビュー</td></tr>
+  <tr><td><a href="#f-sourcemap">ソースが別の場所にある場合</a></td><td>PDB のパスに無いソースを見つける</td><td>launch.json／設定</td></tr>
+  <tr><td><a href="#f-decompile">逆コンパイルしたソースでのデバッグ</a></td><td>シンボルの無い DLL に C# でステップ イン</td><td>モジュール ビューの右クリック</td></tr>
+  <tr class="group"><th colspan="3">WinForms</th></tr>
+  <tr><td><a href="#f-winforms">WinForms コントロール ビュー</a></td><td>開いているフォームのコントロール ツリー</td><td>WinForms コントロール ビュー</td></tr>
+  <tr><td><a href="#f-winforms">画面上で強調表示</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のフォーム上でコントロールを枠で示す</td><td>ビューの目のアイコン</td></tr>
+  <tr class="group"><th colspan="3">セッションを始める</th></tr>
+  <tr><td><a href="#f-attach">アタッチ（名前指定も）</a></td><td>実行中の x86 アプリにアタッチ、起動を待ってアタッチ</td><td>launch.json</td></tr>
+</table>
+
 <h3 id="f-breakpoints">ブレークポイント・ログポイント・ヒットカウント</h3>
 <p>行番号の左を右クリックすると、<b>ブレークポイント</b>、<b>条件付きブレークポイント</b>、<b>ログポイント</b> を追加できます。すでにあるものを変えるには、赤い丸を右クリックして <b>ブレークポイントの編集</b> を選びます。</p>
 <figure class="figure">
@@ -322,25 +366,25 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <h3 id="f-bp-more">一時・依存・値の変化・呼び出し元のブレークポイント</h3>
 <p>C# エディターの行を右クリックします。条件欄にマーカーを書いた普通のブレークポイントなので、ブレークポイント ビューに表示され、ほかのブレークポイントと同じように編集・削除できます。</p>
 <figure class="figure">
-<svg viewBox="0 0 860 190" role="img" aria-label="ブレークポイントのコマンドがあるエディターの右クリックメニュー">
-  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+<svg viewBox="0 0 860 212" role="img" aria-label="ブレークポイントのコマンドがあるエディターの右クリックメニュー">
+  <rect x="0" y="0" width="860" height="212" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
   <g class="mono" font-size="12">
     <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">21</text>
     <text x="56" y="34" fill="var(--ui-text)">order.Status = Recalculate(order);</text>
     <text x="40" y="54" fill="var(--ui-muted)" text-anchor="end">22</text>
     <text x="56" y="54" fill="var(--ui-text)">Save(order);</text>
   </g>
-  <rect x="300" y="24" width="420" height="152" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="300" y="24" width="420" height="174" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
   <g font-size="12" fill="var(--ui-muted)">
     <text x="316" y="46">定義へ移動</text><text x="316" y="66">すべての参照を検索</text>
   </g>
   <line x1="306" y1="76" x2="714" y2="76" stroke="var(--ui-frame)"/>
   <rect x="306" y="82" width="408" height="20" fill="var(--ui-sel)"/>
   <g font-size="12" fill="var(--ui-text)">
-    <text x="316" y="96">一時ブレークポイントを追加</text><text x="316" y="118">依存ブレークポイントを追加...</text><text x="316" y="140">値が変化したときのブレークポイントを追加...</text>
+    <text x="316" y="96">一時ブレークポイントを追加</text><text x="316" y="118">依存ブレークポイントを追加...</text><text x="316" y="140">値が変化したときのブレークポイントを追加...</text><text x="316" y="162">呼び出し元で絞るブレークポイントを追加...</text>
   </g>
-  <line x1="306" y1="150" x2="714" y2="150" stroke="var(--ui-frame)"/>
-  <text x="316" y="168" font-size="12" fill="var(--ui-text)">値を行にピン止め...</text>
+  <line x1="306" y1="172" x2="714" y2="172" stroke="var(--ui-frame)"/>
+  <text x="316" y="190" font-size="12" fill="var(--ui-text)">値を行にピン止め...</text>
 </svg>
 <figcaption>コマンドはエディターの右クリックメニューの下の方にあります。</figcaption>
 </figure>
@@ -354,6 +398,30 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <p>マーカーは任意のブレークポイントの条件に直接入力でき、ヒット カウントとも組み合わせられます。</p>
 <div class="usecase"><b>ユースケース:</b> <code>Save()</code> はあちこちから呼ばれるが、不具合はインポートの後だけで起きる。インポート処理にブレークポイントを置き、
 <code>Save()</code> にはそれに<b>依存</b>するブレークポイントを置けば、インポートの後の保存でだけ停止します。</div>
+
+<figure class="figure">
+<svg viewBox="0 0 860 170" role="img" aria-label="Orders.Save の #caller Import.Run ブレークポイントは Import.Run 経由の呼び出しでだけ止まる">
+  <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="16" y="14" width="250" height="26" rx="4" fill="var(--ui-menu)" stroke="var(--ui-accent)"/>
+  <text x="26" y="31" font-size="12" class="mono" fill="var(--ui-text)">#caller Import.Run</text>
+  <text x="280" y="31" font-size="12" fill="var(--ui-muted)">← Orders.Save に置いたブレークポイントの条件</text>
+  <g font-size="12" class="mono">
+    <rect x="16" y="62" width="170" height="30" rx="4" fill="var(--ui-sel)"/><text x="28" y="82" fill="var(--ui-text)">Import.Run()</text>
+    <rect x="236" y="62" width="170" height="30" rx="4" fill="var(--ui-sel)"/><text x="248" y="82" fill="var(--ui-text)">Orders.Save()</text>
+    <rect x="16" y="116" width="170" height="30" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/><text x="28" y="136" fill="var(--ui-text)">MainForm.OnSave()</text>
+    <rect x="236" y="116" width="170" height="30" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/><text x="248" y="136" fill="var(--ui-text)">Orders.Save()</text>
+  </g>
+  <g stroke="var(--ui-muted)" stroke-width="1.5" fill="none"><path d="M186 77 h44"/><path d="M224 72 l6 5 -6 5"/><path d="M186 131 h44"/><path d="M224 126 l6 5 -6 5"/></g>
+  <circle cx="436" cy="77" r="7" fill="var(--ui-bp)"/>
+  <text x="452" y="82" font-size="12.5" fill="var(--ui-text)" font-weight="600">停止する</text>
+  <circle cx="436" cy="131" r="7" fill="none" stroke="var(--ui-muted)" stroke-width="1.5"/>
+  <text x="452" y="136" font-size="12.5" fill="var(--ui-muted)">止まらずに進む</text>
+  <text x="640" y="82" font-size="11.5" fill="var(--ui-muted)">コールスタックに Import.Run がある</text>
+  <text x="640" y="136" font-size="11.5" fill="var(--ui-muted)">コールスタックに Import.Run が無い</text>
+</svg>
+<figcaption>同じ行に 2 か所から来ても、<code>Import.Run</code> を経由した呼び出しでだけ止まります。</figcaption>
+</figure>
+<div class="usecase"><b>ユースケース:</b> 共通処理の <code>Save()</code> は画面を開くだけで何百回も呼ばれるが、不具合はインポート時だけ。先に通過させる必要がある依存ブレークポイントの代わりに、<code>Save()</code> の行へ <code>#caller Import.Run</code> を置けば、インポートからの呼び出しでだけ止まります。</div>
 
 <h3 id="f-values">値を見る</h3>
 <ul>
@@ -493,6 +561,31 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <h3 id="f-stepinto">特定の呼び出しへのステップ イン</h3>
 <p><code>Outer(Inner1(), Inner2())</code> のような行で右クリックし、<b>Step Into Target</b> を選んで呼び出しを選びます。ほかの呼び出しは止まらずに実行されます。候補は実行される順に並び、選んだ呼び出しが結局呼ばれなかった場合は次の行で止まります。</p>
 
+<figure class="figure">
+<svg viewBox="0 0 860 170" role="img" aria-label="Step Into Target が行の呼び出しを実行順に並べる">
+  <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g class="mono" font-size="12">
+    <rect x="44" y="21" width="816" height="18" fill="var(--ui-current)"/>
+    <polygon points="10,24 18,30 10,36" fill="var(--ui-arrow)"/>
+    <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">7</text>
+    <text x="56" y="34" fill="var(--ui-kw)">var <tspan fill="var(--ui-text)">total = </tspan><tspan fill="var(--ui-text)" text-decoration="underline">Outer</tspan><tspan fill="var(--ui-text)">(</tspan><tspan fill="var(--ui-text)" text-decoration="underline">Inner1</tspan><tspan fill="var(--ui-text)">(1), </tspan><tspan fill="var(--ui-text)" text-decoration="underline">Inner2</tspan><tspan fill="var(--ui-text)">(2));</tspan></text>
+  </g>
+  <rect x="200" y="50" width="420" height="108" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="210" y="58" width="400" height="22" rx="2" fill="var(--ui-editor)" stroke="var(--ui-accent)"/>
+  <text x="218" y="73" font-size="12" fill="var(--ui-muted)">Step Into Target</text>
+  <g font-size="12" class="mono" fill="var(--ui-text)">
+    <text x="218" y="100">Inner1</text>
+    <rect x="210" y="108" width="400" height="22" fill="var(--ui-sel)"/>
+    <text x="218" y="123">Inner2</text>
+    <text x="218" y="148">Outer</text>
+  </g>
+  <g font-size="11" fill="var(--ui-muted)"><text x="600" y="100" text-anchor="end">1 番目に実行</text><text x="600" y="123" text-anchor="end">2 番目に実行</text><text x="600" y="148" text-anchor="end">3 番目（最後）</text></g>
+  <text x="640" y="123" font-size="12" fill="var(--ui-text)">→ Inner2 の先頭で止まる</text>
+</svg>
+<figcaption>呼び出しは実行される順（引数が先）に並びます。<code>Inner2</code> を選ぶと、<code>Inner1</code> は止まらずに実行されます。</figcaption>
+</figure>
+<div class="usecase"><b>ユースケース:</b> <code>Save(Validate(order), BuildAudit(user))</code> で誤ったデータが保存され、<code>Save</code> が怪しい。<b>ステップ イン</b> だと先に <code>Validate</code> と <code>BuildAudit</code> に入ってはステップ アウトする必要がありますが、<b>Step Into Target</b> → <code>Save</code> なら直接入れます。</div>
+
 <h3 id="f-exceptions">例外</h3>
 <ul>
   <li><b>ブレークポイント</b> ビューで <b>すべての例外（スロー時）</b> または <b>ユーザーコードで未処理の例外</b> にチェックを入れます。右クリックして <b>条件の編集</b> を選ぶと、
@@ -504,6 +597,42 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h3 id="f-freeze">UI フリーズの自動検知</h3>
 <p>プログラムの実行中、UI スレッドがウィンドウ メッセージを処理しているかを 1 秒に数回確認します。2 秒（<code>dotnetX86.uiFreeze.thresholdMs</code>）処理しないと、そのスレッドでプログラムを一時停止します。コールスタックに UI を止めているコードが表示され、停止理由は「UI が 2.0 秒応答していません」になります。ブレークポイントでの停止やステップ実行はフリーズとみなしません。上のフレームがフレームワークのコード（<code>Thread.Sleep</code> やロック待ちなど）のときは、数フレーム下の自分のコードを選んでください。<code>dotnetX86.uiFreeze.enabled</code> で無効にできます。</p>
+<figure class="figure">
+<svg viewBox="0 0 860 230" role="img" aria-label="UI スレッドが応答しなくなり、2 秒後にそのスレッドで一時停止してコールスタックに原因のコードが表示される">
+  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <text x="16" y="26" font-size="12" font-weight="700" fill="var(--ui-text)">UI スレッド: ウィンドウ メッセージに応答するか（0.25 秒ごとに確認）</text>
+  <g font-size="12">
+    <text x="40" y="70" text-anchor="middle" fill="var(--s3)">✓</text><text x="72" y="70" text-anchor="middle" fill="var(--s3)">✓</text><text x="104" y="70" text-anchor="middle" fill="var(--s3)">✓</text>
+    <text x="150" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="182" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="214" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="246" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="278" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="310" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="342" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="374" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="406" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text>
+  </g>
+  <rect x="24" y="82" width="104" height="16" rx="3" fill="var(--s3)" fill-opacity="0.75"/>
+  <rect x="136" y="82" width="290" height="16" rx="3" fill="var(--s2)" fill-opacity="0.8"/>
+  <text x="30" y="116" font-size="11" fill="var(--ui-muted)">応答あり</text>
+  <text x="142" y="116" font-size="11" fill="var(--ui-muted)">処理中: 応答なし</text>
+  <line x1="420" y1="44" x2="420" y2="128" stroke="var(--ui-bp)" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="420" y="40" font-size="11" text-anchor="middle" fill="var(--ui-bp)">2.0 s</text>
+  <text x="16" y="150" font-size="11.5" fill="var(--ui-muted)">ブレークポイントでの停止中やステップ中は確認しないので、フリーズとはみなしません。</text>
+  <path d="M430 90 h36" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M460 84 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="480" y="16" width="364" height="198" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="492" y="36" font-size="11" font-weight="700" fill="var(--ui-text)">▾ CALL STACK</text>
+  <text x="836" y="36" font-size="10.5" text-anchor="end" fill="var(--ui-accent)">一時停止: UI が 2.0 秒応答していません</text>
+  <g font-size="11.5" class="mono">
+    <text x="500" y="60" fill="var(--ui-muted)">System.Threading.Thread.Sleep()</text>
+    <rect x="490" y="68" width="346" height="18" fill="var(--ui-sel)"/>
+    <text x="500" y="81" fill="var(--ui-text)">OrderForm.LoadCustomers()  OrderForm.cs 88</text>
+    <text x="500" y="102" fill="var(--ui-text)">OrderForm.OnRefreshClick()  OrderForm.cs 41</text>
+    <text x="500" y="123" fill="var(--ui-muted)">System.Windows.Forms.Control.OnClick()</text>
+    <text x="500" y="144" fill="var(--ui-muted)">[Native Frames]</text>
+  </g>
+  <use href="#c1" x="440" y="58" width="20" height="20"/>
+  <use href="#c2" x="812" y="70" width="20" height="20"/>
+</svg>
+<figcaption>クリック処理が UI スレッドでデータを読み込み、2 秒応答しなかった時点でそこで止まります。</figcaption>
+<ol class="callouts">
+  <li>UI スレッドが <code>dotnetX86.uiFreeze.thresholdMs</code>（2 秒）応答しないと、そのスレッドでプログラムを一時停止します。</li>
+  <li>フレームワークのフレームの下にある、最初の自分のコードのフレームを選びます。そこが UI を止めている処理です。</li>
+</ol>
+</figure>
 <div class="usecase"><b>ユースケース:</b> ときどきウィンドウが白くなる（応答なし）。デバッガーで実行しておくだけで、起きた瞬間に UI スレッドのループやブロックしている呼び出しが表示されます。</div>
 
 <h3 id="f-time">時間とパフォーマンス</h3>
@@ -562,11 +691,150 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <h3 id="f-decompile">逆コンパイルしたソースでのデバッグ</h3>
 <p>シンボルの無い DLL を <b>モジュール</b> ビューで右クリックし、<b>逆コンパイルしてデバッグ可能にする...</b> を選びます。次のデバッグ セッションから（ボタンで今のセッションを再起動できます）、逆コンパイルした C# へのステップ インやブレークポイントが使えます。DLL のフォルダには何も書き込みません。<b>逆コンパイルしたシンボルを削除</b> で生成物をすべて消せます。</p>
 
+<figure class="figure">
+<svg viewBox="0 0 860 230" role="img" aria-label="シンボルの無いモジュールを逆コンパイルし、逆コンパイルした C# でデバッグする">
+  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <!-- 1: Modules view -->
+  <rect x="12" y="12" width="250" height="206" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="32" font-size="11" font-weight="700" fill="var(--ui-text)">▾ MODULES (.NET X86)</text>
+  <g font-size="11.5">
+    <text x="30" y="54" fill="var(--ui-text)">◈ OrderApp.dll <tspan fill="var(--ui-muted)">シンボル読み込み済み</tspan></text>
+    <rect x="20" y="62" width="234" height="18" fill="var(--ui-sel)"/>
+    <text x="30" y="75" fill="var(--ui-text)">▤ Pricing.Engine.dll <tspan fill="var(--ui-muted)">シンボルなし</tspan></text>
+  </g>
+  <rect x="44" y="88" width="210" height="62" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="48" y="94" width="202" height="20" fill="var(--ui-sel)"/>
+  <g font-size="11.5" fill="var(--ui-text)"><text x="56" y="108">逆コンパイルしてデバッグ可能に...</text><text x="56" y="134" fill="var(--ui-muted)">パスをコピー</text></g>
+  <!-- 2: what is generated -->
+  <path d="M268 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M302 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="318" y="58" width="200" height="114" rx="6" fill="var(--accent-soft)" stroke="var(--ui-accent)"/>
+  <text x="330" y="80" font-size="12" font-weight="700" fill="var(--ui-text)">ILSpy エンジン（同梱）</text>
+  <g font-size="11" class="mono" fill="var(--ui-text)"><text x="330" y="102">symbols.pdb</text><text x="330" y="120">src\Pricing\TaxRule.cs …</text></g>
+  <text x="330" y="144" font-size="10.5" fill="var(--ui-muted)">拡張機能の保存領域に、</text>
+  <text x="330" y="160" font-size="10.5" fill="var(--ui-muted)">アセンブリのビルドごとに保存</text>
+  <path d="M524 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M558 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <!-- 3: debugging in the decompiled file -->
+  <rect x="574" y="12" width="274" height="206" rx="4" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="574" y="12" width="274" height="22" rx="4" fill="var(--ui-bar)"/>
+  <text x="584" y="27" font-size="11.5" fill="var(--ui-text)">TaxRule.cs <tspan fill="var(--ui-muted)">(逆コンパイル)</tspan></text>
+  <g font-size="11" class="mono">
+    <text x="590" y="56" fill="var(--ui-kw)">public decimal <tspan fill="var(--ui-text)">Apply(decimal num)</tspan></text>
+    <text x="590" y="74" fill="var(--ui-text)">{</text>
+    <rect x="578" y="82" width="266" height="16" fill="var(--ui-current)"/>
+    <circle cx="583" cy="90" r="4" fill="var(--ui-bp)"/>
+    <text x="600" y="94" fill="var(--ui-text)">decimal num2 = num * _rate;</text>
+    <text x="600" y="112" fill="var(--ui-kw)">if <tspan fill="var(--ui-text)">(num2 &lt; 0m)</tspan></text>
+    <text x="616" y="130" fill="var(--ui-kw)">throw new <tspan fill="var(--ui-text)">…</tspan></text>
+    <text x="600" y="148" fill="var(--ui-kw)">return <tspan fill="var(--ui-text)">num + num2;</tspan></text>
+    <text x="590" y="166" fill="var(--ui-text)">}</text>
+  </g>
+  <text x="588" y="204" font-size="11" fill="var(--ui-hint)" font-style="italic">num = 100   _rate = 0.1</text>
+  <use href="#c1" x="236" y="94" width="20" height="20"/>
+  <use href="#c2" x="494" y="62" width="20" height="20"/>
+  <use href="#c3" x="822" y="82" width="20" height="20"/>
+</svg>
+<figcaption>DLL のフォルダには何も書き込みません。</figcaption>
+<ol class="callouts">
+  <li>モジュール ビューで、シンボルの無いモジュールを右クリックします。</li>
+  <li>対応するシンボル付きの C# に逆コンパイルされます（数秒）。案内に従ってデバッグを再起動します。</li>
+  <li>自分のコードと同じように、ステップ イン・ブレークポイント・ローカル変数の確認ができます。</li>
+</ol>
+</figure>
+<div class="usecase"><b>ユースケース:</b> 他社製の NuGet パッケージが奥深くから <code>ArgumentException</code> を投げるが、メッセージからはどの値が悪いのか分からない。パッケージを逆コンパイルして再起動し、<code>throw</code> の行で止めれば、ローカル変数で値が分かります。</div>
+
 <h3 id="f-objectid">オブジェクト ID</h3>
 <p><b>変数</b> ビューか <b>ウォッチ</b> ビューでオブジェクトを右クリックし、<b>オブジェクト ID を作成</b> を選びます。オブジェクトに <code>$1</code> という名前が付き、ほかのメソッドや後の停止でも、ウォッチ・デバッグ コンソール・ブレークポイントの条件から参照できます（<code>$1.Count</code>、<code>order == $2</code>）。そのオブジェクトである値には <code>{$1}</code> と表示されます。Visual Studio と同じく、ID はオブジェクトを生かし続けません。</p>
 
+<figure class="figure">
+<svg viewBox="0 0 860 200" role="img" aria-label="オブジェクト ID でリストに $1 という名前を付け、後でウォッチとブレークポイントの条件で使う">
+  <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="12" y="12" width="400" height="176" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="32" font-size="11" fill="var(--ui-muted)">停止 1 — Orders.Total()</text>
+  <text x="24" y="54" font-size="11" font-weight="700" fill="var(--ui-text)">▾ VARIABLES</text>
+  <g font-size="11.5" class="mono">
+    <rect x="20" y="62" width="384" height="18" fill="var(--ui-sel)"/>
+    <text x="34" y="75" fill="var(--ui-text)">lines = Count = 2 <tspan fill="var(--ui-accent)" font-weight="700">{$1}</tspan></text>
+    <text x="34" y="96" fill="var(--ui-text)">rate = 0.1</text>
+  </g>
+  <rect x="180" y="104" width="220" height="44" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="184" y="110" width="212" height="20" fill="var(--ui-sel)"/>
+  <text x="194" y="124" font-size="11.5" fill="var(--ui-text)">オブジェクト ID を作成</text>
+  <text x="194" y="142" font-size="11" fill="var(--ui-muted)">値のコピー</text>
+  <path d="M418 100 h30" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M442 94 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="458" y="12" width="390" height="176" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="470" y="32" font-size="11" fill="var(--ui-muted)">停止 2 — 後で Cart.Add()</text>
+  <text x="470" y="54" font-size="11" font-weight="700" fill="var(--ui-text)">▾ WATCH</text>
+  <g font-size="11.5" class="mono" fill="var(--ui-text)">
+    <text x="480" y="76">$1.Count: 3</text>
+    <text x="480" y="96">$1[2].Sku: "C-9"</text>
+  </g>
+  <text x="470" y="124" font-size="11" font-weight="700" fill="var(--ui-text)">▾ BREAKPOINTS</text>
+  <circle cx="480" cy="140" r="4" fill="var(--ui-bp)"/>
+  <text x="490" y="144" font-size="11.5" fill="var(--ui-text)">Cart.cs 52  <tspan class="mono" fill="var(--ui-muted)">items == $1</tspan></text>
+  <use href="#c1" x="384" y="62" width="20" height="20"/>
+  <use href="#c2" x="820" y="66" width="20" height="20"/>
+  <use href="#c3" x="820" y="132" width="20" height="20"/>
+</svg>
+<figcaption>名前を付けたオブジェクトは、ほかのメソッドや後の停止でも参照できます。</figcaption>
+<ol class="callouts">
+  <li>そのオブジェクトは、どこに表示されても <code>{$1}</code> と付きます。</li>
+  <li>どのフレームからでも <code>$1</code> をウォッチできます（この時点では 3 件に増えている）。</li>
+  <li>条件に使えば、<code>Add</code> がまさにこのリストに追加するときだけ止まります。</li>
+</ol>
+</figure>
+<div class="usecase"><b>ユースケース:</b> カートが多数あり、そのうち 1 つに入るはずのない商品が入る。最初に見つけたときにそのカートのオブジェクト ID を作り、商品を追加する行に <code>items == $1</code> を置けば、そのカートのときだけ止まります。</div>
+
 <h3 id="f-testgen">停止時の状態から単体テストを生成</h3>
 <p><b>コールスタック</b> ビューでフレームを右クリックし、<b>ここから単体テストを生成</b> を選びます。そのメソッドを今の引数（とオブジェクト）でもう一度呼ぶテストが、プロジェクトで使っているフレームワーク（xUnit・NUnit・MSTest）で横に開きます。<code>expected</code> を埋めてテスト プロジェクトに保存してください。渡された引数そのものを使いたいときは、メソッドの先頭行で止めます。</p>
+
+<figure class="figure">
+<svg viewBox="0 0 860 270" role="img" aria-label="コールスタックのフレームで「ここから単体テストを生成」を選ぶと、今の引数でテストが開く">
+  <rect x="0" y="0" width="860" height="270" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="12" y="12" width="250" height="246" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="32" font-size="11" font-weight="700" fill="var(--ui-text)">▾ CALL STACK</text>
+  <g font-size="11" class="mono">
+    <rect x="20" y="40" width="234" height="18" fill="var(--ui-sel)"/>
+    <text x="28" y="53" fill="var(--ui-text)">Orders.Total()  Orders.cs 17</text>
+    <text x="28" y="74" fill="var(--ui-text)">Program.Main()  Program.cs 9</text>
+  </g>
+  <rect x="40" y="84" width="214" height="46" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="44" y="90" width="206" height="20" fill="var(--ui-sel)"/>
+  <text x="52" y="104" font-size="11.5" fill="var(--ui-text)">ここから単体テストを生成</text>
+  <text x="52" y="124" font-size="11" fill="var(--ui-muted)">呼び出し履歴のコピー</text>
+  <text x="24" y="160" font-size="11" fill="var(--ui-muted)">フレームワーク: プロジェクトから判定</text>
+  <text x="24" y="178" font-size="11" fill="var(--ui-muted)">（xUnit / NUnit / MSTest）</text>
+  <path d="M268 120 h16" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M278 114 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="290" y="12" width="558" height="246" rx="4" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="290" y="12" width="558" height="22" rx="4" fill="var(--ui-bar)"/>
+  <text x="300" y="27" font-size="11.5" fill="var(--ui-text)">Untitled-1 <tspan fill="var(--ui-muted)">(C#)</tspan></text>
+  <g font-size="11">
+    <text x="300.0" y="54" fill="var(--ui-kw)" class="mono">public class <tspan fill="var(--ui-text)">OrdersTests</tspan></text>
+    <text x="300.0" y="69" fill="var(--ui-text)" class="mono">{</text>
+    <text x="324.2" y="84" fill="var(--ui-text)" class="mono">[Fact]</text>
+    <text x="324.2" y="99" fill="var(--ui-kw)" class="mono">public void <tspan fill="var(--ui-text)">Total_ReplaysDebugSession()</tspan></text>
+    <text x="324.2" y="114" fill="var(--ui-text)" class="mono">{</text>
+    <text x="348.4" y="129" fill="var(--ui-hint)" class="mono">// Arrange</text>
+    <text x="348.4" y="144" fill="var(--ui-text)" class="mono">var sut = new Shop.Orders { Currency = "JPY" };</text>
+    <text x="348.4" y="159" fill="var(--ui-text)" class="mono">var lines = new List&lt;Shop.Line&gt; { new Shop.Line { … } };</text>
+    <text x="348.4" y="174" fill="var(--ui-text)" class="mono">var rate = 0.1M;</text>
+    <text x="348.4" y="189" fill="var(--ui-hint)" class="mono">// Act</text>
+    <text x="348.4" y="204" fill="var(--ui-text)" class="mono">var result = sut.Total(lines, rate);</text>
+    <text x="348.4" y="219" fill="var(--ui-hint)" class="mono">// Assert</text>
+    <text x="348.4" y="234" fill="var(--ui-text)" class="mono">var expected = default(decimal); // TODO</text>
+    <text x="348.4" y="249" fill="var(--ui-text)" class="mono">Assert.Equal(expected, result);</text>
+  </g>
+  <use href="#c1" x="236" y="90" width="20" height="20"/>
+  <use href="#c2" x="818" y="137" width="20" height="20"/>
+  <use href="#c3" x="818" y="227" width="20" height="20"/>
+</svg>
+<figcaption>テストは未保存のドキュメントとして横に開きます。</figcaption>
+<ol class="callouts">
+  <li>テストしたいメソッドのフレームを右クリックします。</li>
+  <li>オブジェクトと引数が、今の値の C# コードになります。</li>
+  <li>期待値を埋めて、テスト プロジェクトに保存します。</li>
+</ol>
+</figure>
+<div class="usecase"><b>ユースケース:</b> ある顧客の注文だけ合計が合わない。デバッガーで一度再現して <code>Total()</code> で止め、テストを生成して正しい合計を書けば、不具合が失敗するテストになり、修正後も回帰を防げます。</div>
 
 <h3 id="f-report">セッションの報告書</h3>
 <p><b>.NET x86: デバッグ セッションの報告書を出力</b>（またはステップ履歴ビューのタイトルにあるボタン）で、直前のセッションの要約を Markdown で開きます。プログラム・開始/終了時刻・終了コード、各停止と変化した値、例外（型ごとの件数付き）、区間の時間計測、記録した値、シンボルのあるモジュールが含まれます。</p>
@@ -587,6 +855,35 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h3 id="f-sourcemap">ソースが別の場所にある場合</h3>
 <p>PDB に記録されたソースのパスがこのマシンに無い自作ライブラリ（別の場所でビルドした NuGet パッケージなど）にステップ インするには、launch.json の <code>sourceSearchPaths</code> にソースの親フォルダを追加するか（サブフォルダも探します）、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（例: <code>{ "/_/": "D:\\work\\MyLib\\" }</code>）。どちらも設定（<code>dotnetX86.sourceFileMap</code> / <code>dotnetX86.sourceSearchPaths</code>）で全構成に共通にできます。停止位置のソースが無いときは、どのパスを置き換えればよいかをデバッグ コンソールに表示します。シンボルの無いライブラリは <a href="#f-decompile">逆コンパイル</a> を使います。</p>
+
+<figure class="figure">
+<svg viewBox="0 0 860 190" role="img" aria-label="PDB にはビルド サーバーのパスが記録されているが、sourceSearchPaths か sourceFileMap で手元のファイルにたどり着く">
+  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="16" y="20" width="300" height="70" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="28" y="42" font-size="11.5" font-weight="700" fill="var(--ui-text)">PDB に記録されたパス</text>
+  <text x="28" y="64" font-size="11" class="mono" fill="var(--ui-text)">C:\agent\_work\3\s\MyLib\Calc.cs</text>
+  <text x="28" y="80" font-size="10.5" fill="var(--ui-bp)">このマシンには無い</text>
+  <path d="M322 55 h50" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M366 49 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="380" y="14" width="190" height="82" rx="6" fill="var(--accent-soft)" stroke="var(--ui-accent)"/>
+  <text x="392" y="36" font-size="11" class="mono" fill="var(--ui-text)">sourceSearchPaths</text>
+  <text x="392" y="52" font-size="10.5" fill="var(--ui-muted)">親フォルダの下を探す</text>
+  <text x="392" y="72" font-size="11" class="mono" fill="var(--ui-text)">sourceFileMap</text>
+  <text x="392" y="88" font-size="10.5" fill="var(--ui-muted)">パスの接頭辞を置き換える</text>
+  <path d="M576 55 h50" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M620 49 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="634" y="20" width="210" height="70" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="646" y="42" font-size="11.5" font-weight="700" fill="var(--ui-text)">手元のクローン</text>
+  <text x="646" y="64" font-size="11" class="mono" fill="var(--ui-text)">D:\work\MyLib\Calc.cs</text>
+  <text x="646" y="80" font-size="10.5" fill="var(--s3)">エディターで開く</text>
+  <rect x="16" y="112" width="828" height="62" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="11.5" class="mono">
+    <text x="28" y="134" fill="var(--ui-text)">"sourceSearchPaths": ["D:\\work"],</text>
+    <text x="28" y="156" fill="var(--ui-text)">"sourceFileMap": { "C:\\agent\\_work\\3\\s": "D:\\work" }</text>
+  </g>
+  <text x="836" y="134" font-size="11" text-anchor="end" fill="var(--ui-muted)">どちらか一方</text>
+</svg>
+<figcaption>手元のファイルに置いたブレークポイントは PDB のパスでデバッガーに渡り、停止位置は手元のファイルで表示されます。</figcaption>
+</figure>
+<div class="usecase"><b>ユースケース:</b> 社内の共通ライブラリが CI サーバーでビルドされた NuGet パッケージとして配られている。リポジトリをクローンして <code>sourceSearchPaths</code> に追加すれば、本物のソースでライブラリにステップ インできます。</div>
 
 <h3 id="f-modules">モジュール</h3>
 <p><b>モジュール</b> ビューには、読み込まれたアセンブリと、シンボル（PDB）が見つかったかどうかが並びます。ブレークポイントが白抜きのままのときは、自分のアセンブリが「シンボル読み込み済み」になっているかをここで確認します。</p>
@@ -620,6 +917,40 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 </figure>
 <div class="usecase"><b>ユースケース:</b> ボタンが「表示されない」。ツリーを見れば、存在するか、どのパネルに入っているか、非表示なのか親の範囲外に置かれているのかが分かります。</div>
 <p>目のアイコン（<b>画面上で強調表示</b>）をクリックすると、コントロールを画面上で枠で示します。停止した時点のフォームが手前に表示され、赤い枠と名前・サイズが数秒間表示されます。</p>
+
+<figure class="figure">
+<svg viewBox="0 0 860 230" role="img" aria-label="画面上で強調表示が、停止中のフォームで選んだコントロールを枠で示す">
+  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="16" y="26" font-size="11" font-weight="700" fill="var(--ui-text)">▾ WINFORMS CONTROLS</text>
+  <g font-size="11.5">
+    <text x="28" y="50" fill="var(--ui-text)">▾ 🗔 mainForm <tspan fill="var(--ui-muted)">  Form</tspan></text>
+    <text x="48" y="72" fill="var(--ui-text)">▾ ▭ panel1 <tspan fill="var(--ui-muted)">  Panel</tspan></text>
+    <rect x="62" y="80" width="250" height="18" fill="var(--ui-sel)"/>
+    <text x="68" y="93" fill="var(--ui-text)">  ▭ okButton <tspan fill="var(--ui-muted)">  Button "OK"</tspan></text>
+    <text x="296" y="94" font-size="13" text-anchor="end" fill="var(--ui-accent)">👁</text>
+  </g>
+  <path d="M320 89 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M354 83 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <!-- the stopped form, shown in front -->
+  <rect x="380" y="16" width="440" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="380" y="16" width="440" height="28" rx="6" fill="var(--ui-bar)"/>
+  <text x="394" y="35" font-size="12" fill="var(--ui-text)">Orders</text>
+  <text x="806" y="35" font-size="12" text-anchor="end" fill="var(--ui-muted)">—  ☐  ✕</text>
+  <rect x="400" y="60" width="300" height="130" fill="none" stroke="var(--ui-muted)"/>
+  <rect x="430" y="110" width="80" height="26" rx="3" fill="var(--ui-bar)" stroke="var(--ui-muted)"/>
+  <text x="470" y="128" font-size="12" text-anchor="middle" fill="var(--ui-text)">OK</text>
+  <rect x="426" y="106" width="88" height="34" fill="none" stroke="#e51400" stroke-width="3"/>
+  <rect x="424" y="84" width="178" height="20" fill="#e51400"/>
+  <text x="430" y="98" font-size="11.5" fill="#ffffff">okButton  Button  75×23</text>
+  <use href="#c1" x="300" y="64" width="20" height="20"/>
+  <use href="#c2" x="606" y="84" width="20" height="20"/>
+</svg>
+<figcaption>プログラムの停止中に使えます。フォームが VS Code の後ろにあっても表示されます。</figcaption>
+<ol class="callouts">
+  <li>WinForms コントロール ビューで、コントロールの目のアイコンをクリックします。</li>
+  <li>停止した時点のフォームが手前に表示され、赤い枠と名前・サイズが出ます。</li>
+</ol>
+</figure>
+<div class="usecase"><b>ユースケース:</b> ツリーでは <code>okButton</code> が存在して表示中なのに、誰にも見えない。強調表示すると、別のパネルの下に隠れている、あるいはフォームの端で数ピクセルに縮んでいることが枠で分かります。</div>
 
 <h3 id="f-attach">実行中のアプリにアタッチする</h3>
 <p><code>attach</code> の構成を使います。プロセスの一覧には x86 の .NET プロセスだけがウィンドウタイトル付きで表示されます。それ以外は
@@ -660,6 +991,13 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <div class="card"><h4>どの呼び出しが false を返した?</h4>条件の行をステップ オーバーし、変数ビューで戻り値を読みます。</div>
   <div class="card"><h4>コントロールはどこへ?</h4>WinForms コントロール ビューで親・位置・表示状態が分かります。</div>
   <div class="card"><h4>不具合をまとめる</h4>セッションの報告書を出力して添付。停止・変化した値・例外が 1 つのファイルに。</div>
+  <div class="card"><h4>ときどき画面が固まる</h4>UI フリーズの自動検知が、UI スレッドを止めているコードで一時停止します。</div>
+  <div class="card"><h4>この呼び出し元のときだけ</h4><code>#caller</code> で、共通メソッドを特定のメソッドから呼ばれたときだけ止めます。</div>
+  <div class="card"><h4>見たい呼び出しへ直行</h4>Step Into Target で、行の中の 1 つの呼び出しにだけ入ります。</div>
+  <div class="card"><h4>1 つのオブジェクトを追う</h4>オブジェクト ID を作り、<code>$1</code> をどこでもウォッチや条件に使います。</div>
+  <div class="card"><h4>停止状態をテストに</h4>ここから単体テストを生成で、今の値でメソッドを呼ぶテストを書き出します。</div>
+  <div class="card"><h4>ソースの無いライブラリ</h4>モジュール ビューから逆コンパイルし、C# でステップ実行します。</div>
+  <div class="card"><h4>別のマシンでビルドしたライブラリ</h4><code>sourceSearchPaths</code> に手元のクローンを指定します。</div>
 </div>
 
 <h2 id="trouble">困ったとき</h2>

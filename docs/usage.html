@@ -63,6 +63,9 @@
   .card h4 { margin: 0 0 4px; font-size: 15px; }
   .steps { padding-left: 22px; }
   .steps li { margin: 6px 0; }
+  table.features td:first-child { white-space: nowrap; }
+  table.features tr.group th { background: var(--accent-soft); color: var(--text); font-size: 13px; padding-top: 6px; padding-bottom: 6px; }
+  .badge { color: var(--s2); font-weight: 700; }
   /* mock UI text inside SVGs */
   svg text { font-family: "Segoe UI", system-ui, sans-serif; }
   svg .mono { font-family: Consolas, "Cascadia Mono", monospace; }
@@ -99,6 +102,7 @@
     <li><a href="#tour">A tour of the screen</a></li>
     <li><a href="#features">Features</a>
       <ol>
+        <li><a href="#f-list">Feature list</a></li>
         <li><a href="#f-breakpoints">Breakpoints, logpoints, hit counts</a></li>
         <li><a href="#f-bp-more">Temporary, dependent, when-changed and caller breakpoints</a></li>
         <li><a href="#f-values">Seeing values</a></li>
@@ -290,6 +294,46 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
 
 <h2 id="features">Features</h2>
 
+<h3 id="f-list">Feature list</h3>
+<p>Grouped by what you want to do. ★ marks features Visual Studio does not have.</p>
+<table class="features">
+  <tr><th>Feature</th><th>What it does</th><th>Where</th></tr>
+  <tr class="group"><th colspan="3">Stopping where you want</th></tr>
+  <tr><td><a href="#f-breakpoints">Conditions, hit counts, logpoints</a></td><td>Stop on a condition or the n-th pass; print without stopping</td><td>Gutter right-click</td></tr>
+  <tr><td><a href="#f-bp-more">Temporary / dependent / when-changed breakpoints</a></td><td>Stop once, after another breakpoint, or when a value changed</td><td>Editor right-click</td></tr>
+  <tr><td><a href="#f-bp-more">Caller-filtered breakpoints</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Stop only when a given method is a caller</td><td>Editor right-click</td></tr>
+  <tr><td><a href="#f-data-bp">Break on value change</a></td><td>Stop at the line that changes a field or variable</td><td>Variables right-click</td></tr>
+  <tr><td><a href="#f-exceptions">Exception breakpoints</a></td><td>Stop on thrown / unhandled exceptions, filtered by type</td><td>Breakpoints view</td></tr>
+  <tr><td><a href="#f-freeze">UI freeze detection</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Pause where the UI thread is stuck</td><td>Automatic</td></tr>
+  <tr class="group"><th colspan="3">Moving through code</th></tr>
+  <tr><td><a href="#f-stepinto">Step Into Target</a></td><td>Step into one chosen call of the line</td><td>Editor right-click</td></tr>
+  <tr><td><a href="#f-goto">Set next statement</a></td><td>Run a line again or skip lines</td><td>Editor right-click</td></tr>
+  <tr><td><a href="#f-returns">Return values</a></td><td>See what the methods you stepped over returned</td><td>Variables / Autos</td></tr>
+  <tr class="group"><th colspan="3">Looking at values</th></tr>
+  <tr><td><a href="#f-values">Hovers, inline values, DebuggerDisplay, Autos</a></td><td>Values next to the code and in compact views</td><td>Editor / Autos view</td></tr>
+  <tr><td><a href="#f-pins">Pinned values</a></td><td>Keep an expression at the end of a line</td><td>Editor right-click</td></tr>
+  <tr><td><a href="#f-objectid">Object IDs</a></td><td>Name an object ($1) and reach it from anywhere</td><td>Variables / Watch right-click</td></tr>
+  <tr><td><a href="#f-variables-menu">Dump, table, C# initializer, string viewer, snapshots</a></td><td>Read and compare complex values</td><td>Variables right-click</td></tr>
+  <tr class="group"><th colspan="3">Time and performance</th></tr>
+  <tr><td><a href="#f-time">PerfTips</a></td><td>Time of the last step or continue at the line</td><td>Automatic</td></tr>
+  <tr><td><a href="#f-time">Section timing, value trend</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Time a section or chart values on every pass, without stopping</td><td>Editor right-click</td></tr>
+  <tr><td><a href="#f-time">Memory / CPU graph</a></td><td>Private Bytes, Working Set and CPU over time</td><td>Command Palette</td></tr>
+  <tr class="group"><th colspan="3">History and records</th></tr>
+  <tr><td><a href="#f-history">Step history</a></td><td>The locals of every earlier stop</td><td>Step History view</td></tr>
+  <tr><td><a href="#f-exceptions">Exception log</a></td><td>Every thrown exception, also the swallowed ones</td><td>Exception Log view</td></tr>
+  <tr><td><a href="#f-report">Session report</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Markdown summary of the session for a bug report</td><td>Command Palette</td></tr>
+  <tr><td><a href="#f-testgen">Generate a unit test</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>A test that replays the stopped method call</td><td>Call Stack right-click</td></tr>
+  <tr class="group"><th colspan="3">Source and symbols</th></tr>
+  <tr><td><a href="#f-modules">Modules view</a></td><td>Loaded assemblies and whether symbols were found</td><td>Modules view</td></tr>
+  <tr><td><a href="#f-sourcemap">Source in another folder</a></td><td>Find source whose PDB path is not on this machine</td><td>launch.json / settings</td></tr>
+  <tr><td><a href="#f-decompile">Debug decompiled assemblies</a></td><td>Step into DLLs without symbols as C#</td><td>Modules right-click</td></tr>
+  <tr class="group"><th colspan="3">WinForms</th></tr>
+  <tr><td><a href="#f-winforms">WinForms Controls view</a></td><td>The control tree of the open forms</td><td>WinForms Controls view</td></tr>
+  <tr><td><a href="#f-winforms">Highlight on screen</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Frame a control on the stopped form</td><td>Eye icon in the view</td></tr>
+  <tr class="group"><th colspan="3">Starting a session</th></tr>
+  <tr><td><a href="#f-attach">Attach, by name too</a></td><td>Attach to a running x86 app, or wait for it to start</td><td>launch.json</td></tr>
+</table>
+
 <h3 id="f-breakpoints">Breakpoints, logpoints and hit counts</h3>
 <p>Right-click the gutter (left of the line numbers) to add a <b>breakpoint</b>, a <b>conditional breakpoint</b> or a
 <b>logpoint</b>. To change an existing one, right-click its dot and choose <b>Edit Breakpoint</b>.</p>
@@ -332,25 +376,25 @@ of pressing F5 three hundred times, or add a logpoint to print each order's tota
 <p>Right-click a line in a C# editor. These are ordinary breakpoints with a marker in their condition, so they show in the
 Breakpoints view and can be edited or removed like any other.</p>
 <figure class="figure">
-<svg viewBox="0 0 860 190" role="img" aria-label="Editor context menu with the breakpoint commands">
-  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+<svg viewBox="0 0 860 212" role="img" aria-label="Editor context menu with the breakpoint commands">
+  <rect x="0" y="0" width="860" height="212" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
   <g class="mono" font-size="12">
     <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">21</text>
     <text x="56" y="34" fill="var(--ui-text)">order.Status = Recalculate(order);</text>
     <text x="40" y="54" fill="var(--ui-muted)" text-anchor="end">22</text>
     <text x="56" y="54" fill="var(--ui-text)">Save(order);</text>
   </g>
-  <rect x="300" y="24" width="420" height="152" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="300" y="24" width="420" height="174" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
   <g font-size="12" fill="var(--ui-muted)">
     <text x="316" y="46">Go to Definition</text><text x="316" y="66">Find All References</text>
   </g>
   <line x1="306" y1="76" x2="714" y2="76" stroke="var(--ui-frame)"/>
   <rect x="306" y="82" width="408" height="20" fill="var(--ui-sel)"/>
   <g font-size="12" fill="var(--ui-text)">
-    <text x="316" y="96">Add Temporary Breakpoint</text><text x="316" y="118">Add Dependent Breakpoint...</text><text x="316" y="140">Add Breakpoint When Value Changes...</text>
+    <text x="316" y="96">Add Temporary Breakpoint</text><text x="316" y="118">Add Dependent Breakpoint...</text><text x="316" y="140">Add Breakpoint When Value Changes...</text><text x="316" y="162">Add Breakpoint Filtered by Caller...</text>
   </g>
-  <line x1="306" y1="150" x2="714" y2="150" stroke="var(--ui-frame)"/>
-  <text x="316" y="168" font-size="12" fill="var(--ui-text)">Pin Value to Line...</text>
+  <line x1="306" y1="172" x2="714" y2="172" stroke="var(--ui-frame)"/>
+  <text x="316" y="190" font-size="12" fill="var(--ui-text)">Pin Value to Line...</text>
 </svg>
 <figcaption>The commands are at the bottom of the editor context menu.</figcaption>
 </figure>
@@ -365,6 +409,32 @@ Breakpoints view and can be edited or removed like any other.</p>
 <div class="usecase"><b>Use case:</b> <code>Save()</code> is called from many places, but the bug only happens after an import.
 Put a breakpoint in the import, then a <b>dependent</b> breakpoint in <code>Save()</code> on it: you stop only in the saves that
 follow an import.</div>
+
+<figure class="figure">
+<svg viewBox="0 0 860 170" role="img" aria-label="A breakpoint in Orders.Save with #caller Import.Run stops only on the call through Import.Run">
+  <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="16" y="14" width="250" height="26" rx="4" fill="var(--ui-menu)" stroke="var(--ui-accent)"/>
+  <text x="26" y="31" font-size="12" class="mono" fill="var(--ui-text)">#caller Import.Run</text>
+  <text x="280" y="31" font-size="12" fill="var(--ui-muted)">← the breakpoint's condition in Orders.Save</text>
+  <g font-size="12" class="mono">
+    <rect x="16" y="62" width="170" height="30" rx="4" fill="var(--ui-sel)"/><text x="28" y="82" fill="var(--ui-text)">Import.Run()</text>
+    <rect x="236" y="62" width="170" height="30" rx="4" fill="var(--ui-sel)"/><text x="248" y="82" fill="var(--ui-text)">Orders.Save()</text>
+    <rect x="16" y="116" width="170" height="30" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/><text x="28" y="136" fill="var(--ui-text)">MainForm.OnSave()</text>
+    <rect x="236" y="116" width="170" height="30" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/><text x="248" y="136" fill="var(--ui-text)">Orders.Save()</text>
+  </g>
+  <g stroke="var(--ui-muted)" stroke-width="1.5" fill="none"><path d="M186 77 h44"/><path d="M224 72 l6 5 -6 5"/><path d="M186 131 h44"/><path d="M224 126 l6 5 -6 5"/></g>
+  <circle cx="436" cy="77" r="7" fill="var(--ui-bp)"/>
+  <text x="452" y="82" font-size="12.5" fill="var(--ui-text)" font-weight="600">stops</text>
+  <circle cx="436" cy="131" r="7" fill="none" stroke="var(--ui-muted)" stroke-width="1.5"/>
+  <text x="452" y="136" font-size="12.5" fill="var(--ui-muted)">runs on without stopping</text>
+  <text x="640" y="82" font-size="11.5" fill="var(--ui-muted)">Import.Run is on the call stack</text>
+  <text x="640" y="136" font-size="11.5" fill="var(--ui-muted)">Import.Run is not on the call stack</text>
+</svg>
+<figcaption>The same line, reached from two places: only the call that comes through <code>Import.Run</code> stops.</figcaption>
+</figure>
+<div class="usecase"><b>Use case:</b> a shared helper such as <code>Save()</code> runs hundreds of times when the screen opens, but
+the bug is in the import. Instead of a dependent breakpoint you would have to arm first, put <code>#caller Import.Run</code> on the
+line in <code>Save()</code>: it stops only in the calls the import makes.</div>
 
 <h3 id="f-values">Seeing values</h3>
 <ul>
@@ -519,6 +589,33 @@ to the calculation line, and step over it again — no restart needed.</div>
 other calls run without stopping. The calls are listed in the order they run; if the picked one is not called after all, the
 step ends on the next line.</p>
 
+<figure class="figure">
+<svg viewBox="0 0 860 170" role="img" aria-label="Step Into Target lists the calls on the line in the order they run">
+  <rect x="0" y="0" width="860" height="170" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <g class="mono" font-size="12">
+    <rect x="44" y="21" width="816" height="18" fill="var(--ui-current)"/>
+    <polygon points="10,24 18,30 10,36" fill="var(--ui-arrow)"/>
+    <text x="40" y="34" fill="var(--ui-muted)" text-anchor="end">7</text>
+    <text x="56" y="34" fill="var(--ui-kw)">var <tspan fill="var(--ui-text)">total = </tspan><tspan fill="var(--ui-text)" text-decoration="underline">Outer</tspan><tspan fill="var(--ui-text)">(</tspan><tspan fill="var(--ui-text)" text-decoration="underline">Inner1</tspan><tspan fill="var(--ui-text)">(1), </tspan><tspan fill="var(--ui-text)" text-decoration="underline">Inner2</tspan><tspan fill="var(--ui-text)">(2));</tspan></text>
+  </g>
+  <rect x="200" y="50" width="420" height="108" rx="5" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="210" y="58" width="400" height="22" rx="2" fill="var(--ui-editor)" stroke="var(--ui-accent)"/>
+  <text x="218" y="73" font-size="12" fill="var(--ui-muted)">Step Into Target</text>
+  <g font-size="12" class="mono" fill="var(--ui-text)">
+    <text x="218" y="100">Inner1</text>
+    <rect x="210" y="108" width="400" height="22" fill="var(--ui-sel)"/>
+    <text x="218" y="123">Inner2</text>
+    <text x="218" y="148">Outer</text>
+  </g>
+  <g font-size="11" fill="var(--ui-muted)"><text x="600" y="100" text-anchor="end">runs 1st</text><text x="600" y="123" text-anchor="end">runs 2nd</text><text x="600" y="148" text-anchor="end">runs 3rd (last)</text></g>
+  <text x="640" y="123" font-size="12" fill="var(--ui-text)">→ stops at the first line of Inner2</text>
+</svg>
+<figcaption>The calls are listed in the order they run (arguments first). Picking <code>Inner2</code> runs <code>Inner1</code> without stopping.</figcaption>
+</figure>
+<div class="usecase"><b>Use case:</b> <code>Save(Validate(order), BuildAudit(user))</code> saves wrong data and you suspect
+<code>Save</code>. With <b>Step Into</b> you would first walk through <code>Validate</code> and <code>BuildAudit</code> and step out of each;
+<b>Step Into Target</b> → <code>Save</code> takes you straight there.</div>
+
 <h3 id="f-exceptions">Exceptions</h3>
 <ul>
   <li>In the <b>Breakpoints</b> view, tick <b>All Exceptions (when thrown)</b> or <b>User-Unhandled Exceptions</b>. Right-click one and
@@ -537,6 +634,42 @@ When one has not for 2 seconds (<code>dotnetX86.uiFreeze.thresholdMs</code>), th
 shows the code that holds the UI up, and the pause reads <i>UI not responding for 2.0 s</i>. Stops at breakpoints and steps never
 count. If the top frames are framework code (e.g. <code>Thread.Sleep</code>, a lock), select your own frame further down.
 Turn it off with <code>dotnetX86.uiFreeze.enabled</code>.</p>
+<figure class="figure">
+<svg viewBox="0 0 860 230" role="img" aria-label="The UI thread stops answering; after 2 seconds the program is paused on it and the Call Stack shows the blocking code">
+  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <text x="16" y="26" font-size="12" font-weight="700" fill="var(--ui-text)">UI thread: does it answer window messages? (checked every 0.25 s)</text>
+  <g font-size="12">
+    <text x="40" y="70" text-anchor="middle" fill="var(--s3)">✓</text><text x="72" y="70" text-anchor="middle" fill="var(--s3)">✓</text><text x="104" y="70" text-anchor="middle" fill="var(--s3)">✓</text>
+    <text x="150" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="182" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="214" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="246" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="278" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="310" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="342" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="374" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text><text x="406" y="70" font-size="12" text-anchor="middle" fill="var(--s2)">✗</text>
+  </g>
+  <rect x="24" y="82" width="104" height="16" rx="3" fill="var(--s3)" fill-opacity="0.75"/>
+  <rect x="136" y="82" width="290" height="16" rx="3" fill="var(--s2)" fill-opacity="0.8"/>
+  <text x="30" y="116" font-size="11" fill="var(--ui-muted)">answering</text>
+  <text x="142" y="116" font-size="11" fill="var(--ui-muted)">busy: no answer</text>
+  <line x1="420" y1="44" x2="420" y2="128" stroke="var(--ui-bp)" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="420" y="40" font-size="11" text-anchor="middle" fill="var(--ui-bp)">2.0 s</text>
+  <text x="16" y="150" font-size="11.5" fill="var(--ui-muted)">Breakpoint stops and steps are not checked, so they never count as freezes.</text>
+  <path d="M430 90 h36" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M460 84 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="480" y="16" width="364" height="198" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="492" y="36" font-size="11" font-weight="700" fill="var(--ui-text)">▾ CALL STACK</text>
+  <text x="836" y="36" font-size="10.5" text-anchor="end" fill="var(--ui-accent)">PAUSED: UI NOT RESPONDING FOR 2.0 S</text>
+  <g font-size="11.5" class="mono">
+    <text x="500" y="60" fill="var(--ui-muted)">System.Threading.Thread.Sleep()</text>
+    <rect x="490" y="68" width="346" height="18" fill="var(--ui-sel)"/>
+    <text x="500" y="81" fill="var(--ui-text)">OrderForm.LoadCustomers()  OrderForm.cs 88</text>
+    <text x="500" y="102" fill="var(--ui-text)">OrderForm.OnRefreshClick()  OrderForm.cs 41</text>
+    <text x="500" y="123" fill="var(--ui-muted)">System.Windows.Forms.Control.OnClick()</text>
+    <text x="500" y="144" fill="var(--ui-muted)">[Native Frames]</text>
+  </g>
+  <use href="#c1" x="440" y="58" width="20" height="20"/>
+  <use href="#c2" x="812" y="70" width="20" height="20"/>
+</svg>
+<figcaption>A click handler loads data on the UI thread; after 2 seconds without an answer the program pauses there.</figcaption>
+<ol class="callouts">
+  <li>When the UI thread has not answered for <code>dotnetX86.uiFreeze.thresholdMs</code> (2 s), the program is paused on that thread.</li>
+  <li>Pick the first frame of your own code below the framework frames: that is what holds the UI up.</li>
+</ol>
+</figure>
 <div class="usecase"><b>Use case:</b> the window turns white ("Not Responding") now and then. Just run the app under the debugger;
 when it happens, you are shown the loop or the blocking call on the UI thread.</div>
 
@@ -604,15 +737,157 @@ to run backwards.</p>
 session (a button restarts the current one) you can step into it and set breakpoints in the decompiled C#. The DLL's folder is
 not touched; <b>Delete Decompiled Symbols</b> removes everything generated.</p>
 
+<figure class="figure">
+<svg viewBox="0 0 860 230" role="img" aria-label="Decompiling a module without symbols, then debugging its decompiled C#">
+  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <!-- 1: Modules view -->
+  <rect x="12" y="12" width="250" height="206" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="32" font-size="11" font-weight="700" fill="var(--ui-text)">▾ MODULES (.NET X86)</text>
+  <g font-size="11.5">
+    <text x="30" y="54" fill="var(--ui-text)">◈ OrderApp.dll <tspan fill="var(--ui-muted)">symbols loaded</tspan></text>
+    <rect x="20" y="62" width="234" height="18" fill="var(--ui-sel)"/>
+    <text x="30" y="75" fill="var(--ui-text)">▤ Pricing.Engine.dll <tspan fill="var(--ui-muted)">no symbols</tspan></text>
+  </g>
+  <rect x="44" y="88" width="210" height="62" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="48" y="94" width="202" height="20" fill="var(--ui-sel)"/>
+  <g font-size="11.5" fill="var(--ui-text)"><text x="56" y="108">Decompile for Debugging...</text><text x="56" y="134" fill="var(--ui-muted)">Copy Path</text></g>
+  <!-- 2: what is generated -->
+  <path d="M268 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M302 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="318" y="58" width="200" height="114" rx="6" fill="var(--accent-soft)" stroke="var(--ui-accent)"/>
+  <text x="330" y="80" font-size="12" font-weight="700" fill="var(--ui-text)">ILSpy engine (bundled)</text>
+  <g font-size="11" class="mono" fill="var(--ui-text)"><text x="330" y="102">symbols.pdb</text><text x="330" y="120">src\Pricing\TaxRule.cs …</text></g>
+  <text x="330" y="144" font-size="10.5" fill="var(--ui-muted)">kept in the extension's storage,</text>
+  <text x="330" y="160" font-size="10.5" fill="var(--ui-muted)">by the assembly's exact build</text>
+  <path d="M524 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M558 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <!-- 3: debugging in the decompiled file -->
+  <rect x="574" y="12" width="274" height="206" rx="4" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="574" y="12" width="274" height="22" rx="4" fill="var(--ui-bar)"/>
+  <text x="584" y="27" font-size="11.5" fill="var(--ui-text)">TaxRule.cs <tspan fill="var(--ui-muted)">(decompiled)</tspan></text>
+  <g font-size="11" class="mono">
+    <text x="590" y="56" fill="var(--ui-kw)">public decimal <tspan fill="var(--ui-text)">Apply(decimal num)</tspan></text>
+    <text x="590" y="74" fill="var(--ui-text)">{</text>
+    <rect x="578" y="82" width="266" height="16" fill="var(--ui-current)"/>
+    <circle cx="583" cy="90" r="4" fill="var(--ui-bp)"/>
+    <text x="600" y="94" fill="var(--ui-text)">decimal num2 = num * _rate;</text>
+    <text x="600" y="112" fill="var(--ui-kw)">if <tspan fill="var(--ui-text)">(num2 &lt; 0m)</tspan></text>
+    <text x="616" y="130" fill="var(--ui-kw)">throw new <tspan fill="var(--ui-text)">…</tspan></text>
+    <text x="600" y="148" fill="var(--ui-kw)">return <tspan fill="var(--ui-text)">num + num2;</tspan></text>
+    <text x="590" y="166" fill="var(--ui-text)">}</text>
+  </g>
+  <text x="588" y="204" font-size="11" fill="var(--ui-hint)" font-style="italic">num = 100   _rate = 0.1</text>
+  <use href="#c1" x="236" y="94" width="20" height="20"/>
+  <use href="#c2" x="494" y="62" width="20" height="20"/>
+  <use href="#c3" x="822" y="82" width="20" height="20"/>
+</svg>
+<figcaption>The DLL's own folder is never written to.</figcaption>
+<ol class="callouts">
+  <li>Right-click a module without symbols in the Modules view.</li>
+  <li>It is decompiled into C# with matching symbols (a few seconds). Restart debugging when asked.</li>
+  <li>Step into it, set breakpoints and read locals in the decompiled C#, as if it were your code.</li>
+</ol>
+</figure>
+<div class="usecase"><b>Use case:</b> a third-party NuGet package throws <code>ArgumentException</code> from deep inside, and the message
+does not say which value it rejects. Decompile the package, restart, and stop on the <code>throw</code> line: the locals show the value.</div>
+
 <h3 id="f-objectid">Object IDs</h3>
 <p>Right-click an object in <b>Variables</b> or <b>Watch</b> and choose <b>Make Object ID</b>. The object gets a name, <code>$1</code>, that reaches it
 from any method and any later stop: in Watch, the Debug Console and breakpoint conditions (<code>$1.Count</code>, <code>order == $2</code>).
 Values that are that object show <code>{$1}</code>. Like in Visual Studio, the ID does not keep the object alive.</p>
 
+<figure class="figure">
+<svg viewBox="0 0 860 200" role="img" aria-label="Make Object ID gives a list the name $1; it is used later in Watch and in a breakpoint condition">
+  <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="12" y="12" width="400" height="176" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="32" font-size="11" fill="var(--ui-muted)">Stop 1 — Orders.Total()</text>
+  <text x="24" y="54" font-size="11" font-weight="700" fill="var(--ui-text)">▾ VARIABLES</text>
+  <g font-size="11.5" class="mono">
+    <rect x="20" y="62" width="384" height="18" fill="var(--ui-sel)"/>
+    <text x="34" y="75" fill="var(--ui-text)">lines = Count = 2 <tspan fill="var(--ui-accent)" font-weight="700">{$1}</tspan></text>
+    <text x="34" y="96" fill="var(--ui-text)">rate = 0.1</text>
+  </g>
+  <rect x="180" y="104" width="220" height="44" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="184" y="110" width="212" height="20" fill="var(--ui-sel)"/>
+  <text x="194" y="124" font-size="11.5" fill="var(--ui-text)">Make Object ID</text>
+  <text x="194" y="142" font-size="11" fill="var(--ui-muted)">Copy Value</text>
+  <path d="M418 100 h30" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M442 94 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="458" y="12" width="390" height="176" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="470" y="32" font-size="11" fill="var(--ui-muted)">Stop 2 — Cart.Add(), later</text>
+  <text x="470" y="54" font-size="11" font-weight="700" fill="var(--ui-text)">▾ WATCH</text>
+  <g font-size="11.5" class="mono" fill="var(--ui-text)">
+    <text x="480" y="76">$1.Count: 3</text>
+    <text x="480" y="96">$1[2].Sku: "C-9"</text>
+  </g>
+  <text x="470" y="124" font-size="11" font-weight="700" fill="var(--ui-text)">▾ BREAKPOINTS</text>
+  <circle cx="480" cy="140" r="4" fill="var(--ui-bp)"/>
+  <text x="490" y="144" font-size="11.5" fill="var(--ui-text)">Cart.cs 52  <tspan class="mono" fill="var(--ui-muted)">items == $1</tspan></text>
+  <use href="#c1" x="384" y="62" width="20" height="20"/>
+  <use href="#c2" x="820" y="66" width="20" height="20"/>
+  <use href="#c3" x="820" y="132" width="20" height="20"/>
+</svg>
+<figcaption>The name reaches the same object from another method and a later stop.</figcaption>
+<ol class="callouts">
+  <li>The object now shows <code>{$1}</code> wherever it appears.</li>
+  <li>Watch <code>$1</code> from any frame — here it has grown to 3 items.</li>
+  <li>Use it in a condition: stop in <code>Add</code> only when it adds to this very list.</li>
+</ol>
+</figure>
+<div class="usecase"><b>Use case:</b> many carts exist, and one of them gets an item it should not. Make an object ID for the wrong
+cart when you first see it, then put <code>items == $1</code> on the line that adds items: you stop only for that cart.</div>
+
 <h3 id="f-testgen">Generate a unit test from a stop</h3>
 <p>Right-click a frame in the <b>Call Stack</b> view and choose <b>Generate Unit Test from Here</b>. A test that calls the method again with
 its current arguments (and object) opens beside the editor, in the framework your projects use (xUnit, NUnit or MSTest). Fill in
 <code>expected</code> and save it in your test project. Stop at the first line of the method to capture the arguments as they came in.</p>
+
+<figure class="figure">
+<svg viewBox="0 0 860 270" role="img" aria-label="Generate Unit Test from Here on a Call Stack frame opens a test with the current arguments">
+  <rect x="0" y="0" width="860" height="270" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="12" y="12" width="250" height="246" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="24" y="32" font-size="11" font-weight="700" fill="var(--ui-text)">▾ CALL STACK</text>
+  <g font-size="11" class="mono">
+    <rect x="20" y="40" width="234" height="18" fill="var(--ui-sel)"/>
+    <text x="28" y="53" fill="var(--ui-text)">Orders.Total()  Orders.cs 17</text>
+    <text x="28" y="74" fill="var(--ui-text)">Program.Main()  Program.cs 9</text>
+  </g>
+  <rect x="40" y="84" width="214" height="46" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
+  <rect x="44" y="90" width="206" height="20" fill="var(--ui-sel)"/>
+  <text x="52" y="104" font-size="11.5" fill="var(--ui-text)">Generate Unit Test from Here</text>
+  <text x="52" y="124" font-size="11" fill="var(--ui-muted)">Copy Call Stack</text>
+  <text x="24" y="160" font-size="11" fill="var(--ui-muted)">Framework: from your projects</text>
+  <text x="24" y="178" font-size="11" fill="var(--ui-muted)">(xUnit / NUnit / MSTest)</text>
+  <path d="M268 120 h16" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M278 114 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="290" y="12" width="558" height="246" rx="4" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="290" y="12" width="558" height="22" rx="4" fill="var(--ui-bar)"/>
+  <text x="300" y="27" font-size="11.5" fill="var(--ui-text)">Untitled-1 <tspan fill="var(--ui-muted)">(C#)</tspan></text>
+  <g font-size="11">
+    <text x="300.0" y="54" fill="var(--ui-kw)" class="mono">public class <tspan fill="var(--ui-text)">OrdersTests</tspan></text>
+    <text x="300.0" y="69" fill="var(--ui-text)" class="mono">{</text>
+    <text x="324.2" y="84" fill="var(--ui-text)" class="mono">[Fact]</text>
+    <text x="324.2" y="99" fill="var(--ui-kw)" class="mono">public void <tspan fill="var(--ui-text)">Total_ReplaysDebugSession()</tspan></text>
+    <text x="324.2" y="114" fill="var(--ui-text)" class="mono">{</text>
+    <text x="348.4" y="129" fill="var(--ui-hint)" class="mono">// Arrange</text>
+    <text x="348.4" y="144" fill="var(--ui-text)" class="mono">var sut = new Shop.Orders { Currency = "JPY" };</text>
+    <text x="348.4" y="159" fill="var(--ui-text)" class="mono">var lines = new List&lt;Shop.Line&gt; { new Shop.Line { … } };</text>
+    <text x="348.4" y="174" fill="var(--ui-text)" class="mono">var rate = 0.1M;</text>
+    <text x="348.4" y="189" fill="var(--ui-hint)" class="mono">// Act</text>
+    <text x="348.4" y="204" fill="var(--ui-text)" class="mono">var result = sut.Total(lines, rate);</text>
+    <text x="348.4" y="219" fill="var(--ui-hint)" class="mono">// Assert</text>
+    <text x="348.4" y="234" fill="var(--ui-text)" class="mono">var expected = default(decimal); // TODO</text>
+    <text x="348.4" y="249" fill="var(--ui-text)" class="mono">Assert.Equal(expected, result);</text>
+  </g>
+  <use href="#c1" x="236" y="90" width="20" height="20"/>
+  <use href="#c2" x="818" y="137" width="20" height="20"/>
+  <use href="#c3" x="818" y="227" width="20" height="20"/>
+</svg>
+<figcaption>The test opens unsaved beside the editor.</figcaption>
+<ol class="callouts">
+  <li>Right-click the frame of the method to test.</li>
+  <li>The object and the arguments are written as C# with the values they have now.</li>
+  <li>Fill in the expected value and save the test in your test project.</li>
+</ol>
+</figure>
+<div class="usecase"><b>Use case:</b> a customer's order totals wrong. Reproduce it once under the debugger, stop in <code>Total()</code>,
+generate the test and fill in the right total: the bug is now a failing test, and stays covered after the fix.</div>
 
 <h3 id="f-report">Session report</h3>
 <p>Run <b>.NET x86: Export Debug Session Report</b> (or click the button in the Step History view title) to open a Markdown
@@ -639,6 +914,36 @@ build elsewhere), add a parent folder of its source to <code>sourceSearchPaths</
 or replace a path prefix with <code>sourceFileMap</code> (e.g. <code>{ "/_/": "D:\\work\\MyLib\\" }</code>). Both can also be set for
 every configuration in the settings (<code>dotnetX86.sourceFileMap</code> / <code>dotnetX86.sourceSearchPaths</code>). When a stop has
 no source here, the Debug Console says which path to map. For a library without symbols, see <a href="#f-decompile">decompiling</a>.</p>
+
+<figure class="figure">
+<svg viewBox="0 0 860 190" role="img" aria-label="The PDB records a build-server path; sourceSearchPaths or sourceFileMap leads to the local file">
+  <rect x="0" y="0" width="860" height="190" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="16" y="20" width="300" height="70" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="28" y="42" font-size="11.5" font-weight="700" fill="var(--ui-text)">Path recorded in the PDB</text>
+  <text x="28" y="64" font-size="11" class="mono" fill="var(--ui-text)">C:\agent\_work\3\s\MyLib\Calc.cs</text>
+  <text x="28" y="80" font-size="10.5" fill="var(--ui-bp)">not on this machine</text>
+  <path d="M322 55 h50" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M366 49 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="380" y="14" width="190" height="82" rx="6" fill="var(--accent-soft)" stroke="var(--ui-accent)"/>
+  <text x="392" y="36" font-size="11" class="mono" fill="var(--ui-text)">sourceSearchPaths</text>
+  <text x="392" y="52" font-size="10.5" fill="var(--ui-muted)">search under parent folders</text>
+  <text x="392" y="72" font-size="11" class="mono" fill="var(--ui-text)">sourceFileMap</text>
+  <text x="392" y="88" font-size="10.5" fill="var(--ui-muted)">replace a path prefix</text>
+  <path d="M576 55 h50" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M620 49 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <rect x="634" y="20" width="210" height="70" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="646" y="42" font-size="11.5" font-weight="700" fill="var(--ui-text)">Your clone</text>
+  <text x="646" y="64" font-size="11" class="mono" fill="var(--ui-text)">D:\work\MyLib\Calc.cs</text>
+  <text x="646" y="80" font-size="10.5" fill="var(--s3)">opens in the editor</text>
+  <rect x="16" y="112" width="828" height="62" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <g font-size="11.5" class="mono">
+    <text x="28" y="134" fill="var(--ui-text)">"sourceSearchPaths": ["D:\\work"],</text>
+    <text x="28" y="156" fill="var(--ui-text)">"sourceFileMap": { "C:\\agent\\_work\\3\\s": "D:\\work" }</text>
+  </g>
+  <text x="836" y="134" font-size="11" text-anchor="end" fill="var(--ui-muted)">either one</text>
+</svg>
+<figcaption>Breakpoints you set in your clone are sent to the debugger under the PDB's path, and stops show your file.</figcaption>
+</figure>
+<div class="usecase"><b>Use case:</b> your company's shared library comes as a NuGet package built on the CI server. Clone its
+repository, add the clone to <code>sourceSearchPaths</code>, and step into the library with its real source.</div>
 
 <h3 id="f-modules">Modules</h3>
 <p>The <b>Modules</b> view lists the loaded assemblies and whether their symbols (PDB) were found. If a breakpoint stays hollow,
@@ -676,6 +981,41 @@ Right-click it to <b>Dump Control</b> or <b>Copy Expression</b>; the expression 
 whether it is hidden or placed outside its parent's bounds.</div>
 <p>Click the eye icon (<b>Highlight on Screen</b>) to frame a control on the screen: the form is shown in front, as it was when the
 program stopped, with a red frame, the control's name and its size for a few seconds.</p>
+
+<figure class="figure">
+<svg viewBox="0 0 860 230" role="img" aria-label="Highlight on Screen frames the selected control on the stopped form">
+  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
+  <text x="16" y="26" font-size="11" font-weight="700" fill="var(--ui-text)">▾ WINFORMS CONTROLS</text>
+  <g font-size="11.5">
+    <text x="28" y="50" fill="var(--ui-text)">▾ 🗔 mainForm <tspan fill="var(--ui-muted)">  Form</tspan></text>
+    <text x="48" y="72" fill="var(--ui-text)">▾ ▭ panel1 <tspan fill="var(--ui-muted)">  Panel</tspan></text>
+    <rect x="62" y="80" width="250" height="18" fill="var(--ui-sel)"/>
+    <text x="68" y="93" fill="var(--ui-text)">  ▭ okButton <tspan fill="var(--ui-muted)">  Button "OK"</tspan></text>
+    <text x="296" y="94" font-size="13" text-anchor="end" fill="var(--ui-accent)">👁</text>
+  </g>
+  <path d="M320 89 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M354 83 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
+  <!-- the stopped form, shown in front -->
+  <rect x="380" y="16" width="440" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
+  <rect x="380" y="16" width="440" height="28" rx="6" fill="var(--ui-bar)"/>
+  <text x="394" y="35" font-size="12" fill="var(--ui-text)">Orders</text>
+  <text x="806" y="35" font-size="12" text-anchor="end" fill="var(--ui-muted)">—  ☐  ✕</text>
+  <rect x="400" y="60" width="300" height="130" fill="none" stroke="var(--ui-muted)"/>
+  <rect x="430" y="110" width="80" height="26" rx="3" fill="var(--ui-bar)" stroke="var(--ui-muted)"/>
+  <text x="470" y="128" font-size="12" text-anchor="middle" fill="var(--ui-text)">OK</text>
+  <rect x="426" y="106" width="88" height="34" fill="none" stroke="#e51400" stroke-width="3"/>
+  <rect x="424" y="84" width="178" height="20" fill="#e51400"/>
+  <text x="430" y="98" font-size="11.5" fill="#ffffff">okButton  Button  75×23</text>
+  <use href="#c1" x="300" y="64" width="20" height="20"/>
+  <use href="#c2" x="606" y="84" width="20" height="20"/>
+</svg>
+<figcaption>Works while the program is stopped, even when the form is behind VS Code.</figcaption>
+<ol class="callouts">
+  <li>Click the eye icon of a control in the WinForms Controls view.</li>
+  <li>The form is shown in front as it was when the program stopped, with a red frame, the name and the size.</li>
+</ol>
+</figure>
+<div class="usecase"><b>Use case:</b> the tree says <code>okButton</code> exists and is visible, yet nobody can see it. Highlight it: the frame
+shows it sitting under another panel, or squeezed to a few pixels at the edge of the form.</div>
 
 <h3 id="f-attach">Attaching to a running app</h3>
 <p>Use an <code>attach</code> configuration. The process list shows only x86 .NET processes with their window titles; choose
@@ -717,6 +1057,13 @@ Debugging waits until the process appears:</p>
   <div class="card"><h4>Which call returned false?</h4>Step over the condition and read the return values in Variables.</div>
   <div class="card"><h4>Where did my control go?</h4>The WinForms Controls view shows its parent, bounds and visibility.</div>
   <div class="card"><h4>Write up a bug</h4>Export the session report and attach it: stops, changed values and exceptions in one file.</div>
+  <div class="card"><h4>UI freezes now and then</h4>UI freeze detection pauses the program in the code that holds the UI thread.</div>
+  <div class="card"><h4>Only from this caller</h4><code>#caller</code> stops a shared method only when a given method called it.</div>
+  <div class="card"><h4>Skip to the call you care about</h4>Step Into Target enters one call of a line and runs the others.</div>
+  <div class="card"><h4>Follow one object</h4>Make Object ID, then use <code>$1</code> in Watch and conditions anywhere.</div>
+  <div class="card"><h4>Turn a stop into a test</h4>Generate Unit Test from Here writes the method call with the current values.</div>
+  <div class="card"><h4>A library without source</h4>Decompile it from the Modules view and step through the C#.</div>
+  <div class="card"><h4>Library built on another machine</h4>Point <code>sourceSearchPaths</code> at your clone.</div>
 </div>
 
 <h2 id="trouble">Troubleshooting</h2>
