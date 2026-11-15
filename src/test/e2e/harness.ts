@@ -121,10 +121,12 @@ export class DapSession {
         return next;
     }
 
+    /** Ends the debuggee and netcoredbg, and waits until netcoredbg has exited (so its files can be deleted). */
     async close(): Promise<void> {
         await this.request('disconnect', { terminateDebuggee: true }, 5_000).catch(() => undefined);
         // Only the netcoredbg this session started (never by process name: the user may be debugging too).
         this.proxy.dispose();
+        await Promise.race([this.proxy.whenExited(), new Promise((resolve) => setTimeout(resolve, 10_000))]);
     }
 
     private receive(m: Message): void {

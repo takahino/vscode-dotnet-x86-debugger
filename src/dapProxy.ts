@@ -268,6 +268,14 @@ export class DapProxy {
         }
     }
 
+    /** Resolves once netcoredbg has exited (its files, e.g. loaded PDBs, are released then). */
+    whenExited(): Promise<void> {
+        if (this.exited) {
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => this.child.once('exit', () => resolve()));
+    }
+
     private async fromDebugger(message: DapMessage): Promise<void> {
         if (message.type === 'response' && message.command === 'initialize' && message.success) {
             message.body = this.extendCapabilities(message.body ?? {});

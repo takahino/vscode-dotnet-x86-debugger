@@ -154,7 +154,12 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
             assert.ok(frame.source.path.toLowerCase().startsWith(cache.toLowerCase()), frame.source.path);
             await s.close();
         } finally {
-            fs.rmSync(cache, { recursive: true, force: true });
+            // Windows may hold a just-closed file for a moment: retry, and never fail the test over a temporary folder.
+            try {
+                fs.rmSync(cache, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
+            } catch (e) {
+                console.warn(`could not delete ${cache}: ${e instanceof Error ? e.message : String(e)}`);
+            }
         }
     });
 });
