@@ -12,9 +12,11 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 ```
 
-`scripts\build-netcoredbg.ps1` clones netcoredbg (pinned tag) and only the required parts of `dotnet/runtime`
+`scripts\build-netcoredbg.ps1` fetches netcoredbg and only the required parts of `dotnet/runtime`, both pinned to a commit,
 into a short working directory (`%LOCALAPPDATA%\ncdbg` by default) to stay under the Windows `MAX_PATH` limit.
 Local fixes to netcoredbg are kept in [`patches/netcoredbg`](patches/netcoredbg) and applied automatically.
+To move to a newer netcoredbg or runtime, change `-Commit` / `-RuntimeCommit` (and `-Tag` / `-RuntimeBranch`) at the top of
+the script and run the E2E tests; the CI cache key changes with the script, so CI rebuilds and tests it too.
 
 To debug the extension itself, open this folder in VS Code and run **Run Extension** (F5).
 

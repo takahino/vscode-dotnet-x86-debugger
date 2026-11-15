@@ -8,15 +8,27 @@
     ソース取得とビルドの作業ディレクトリ。dotnet/runtime のソースはパスが深く MAX_PATH (260) を超えやすいため、
     短いパスを指定すること。
 .PARAMETER Tag
-    netcoredbg のタグ。
+    netcoredbg のタグ（表示用）。実際に取得するのは Commit で指定したコミット。
+.PARAMETER Commit
+    netcoredbg のコミット。Tag が指すコミットと一致させること。
+.PARAMETER RuntimeBranch
+    dotnet/runtime のブランチ（表示用）。実際に取得するのは RuntimeCommit で指定したコミット。
+.PARAMETER RuntimeCommit
+    dotnet/runtime のコミット。netcoredbg はこのヘッダーを使ってビルドされる。
 .PARAMETER Clean
     作業ディレクトリのビルド結果を削除してからビルドする。
+.NOTES
+    ソースはタグやブランチではなくコミットで固定する。release/10.0 はサービシングで毎月進むため、ブランチ指定だと
+    リポジトリが変わらなくてもビルドのたびに中身が変わり、CI キャッシュ（キーはこのスクリプトとパッチのハッシュ）が
+    切れたときに未検証のバイナリができてしまう。更新するときは、ここのコミットを書き換えて E2E テストを通すこと。
 #>
 [CmdletBinding()]
 param(
     [string]$WorkDir = (Join-Path $env:LOCALAPPDATA 'ncdbg'),
     [string]$Tag = '3.2.0-1092',
+    [string]$Commit = '9744e1f051866215611b8440c638042aa2aa2f72',
     [string]$RuntimeBranch = 'release/10.0',
+    [string]$RuntimeCommit = '56d5bb652aced6bb4fed74ab43fbdd4c39b6b7ed',
     [switch]$Clean
 )
 
@@ -76,16 +88,31 @@ $buildDir = Join-Path $WorkDir 'build'
 $installDir = Join-Path $WorkDir 'install'
 New-Item -ItemType Directory -Force $WorkDir | Out-Null
 
-if (-not (Test-Path $srcDir)) {
-    Invoke-Step "netcoredbg $Tag の取得" { git clone --depth 1 -b $Tag https://github.com/Samsung/netcoredbg.git $srcDir }
-}
-if (-not (Test-Path $runtimeDir)) {
-    # dotnet/runtime は巨大なため、netcoredbg のビルドに必要なディレクトリだけを取得する
-    Invoke-Step "dotnet/runtime ($RuntimeBranch) の取得" {
-        git -c core.longpaths=true clone --depth 1 --filter=blob:none --sparse -b $RuntimeBranch https://github.com/dotnet/runtime $runtimeDir
+# $Dir を $Url の $Sha の状態にする。作業ディレクトリを再利用した場合も、コミットが違えば取得し直す。
+# $SparseDirs を指定すると、そのディレクトリだけをチェックアウトする（blob は必要な分だけ取得する）。
+function Sync-Source([string]$Title, [string]$Dir, [string]$Url, [string]$Sha, [string[]]$SparseDirs) {
+    if (Test-Path (Join-Path $Dir '.git')) {
+        # 壊れたクローンでも止めずに取得し直す（stderr を Stop で例外にしない）
+        $head = try { git -C $Dir rev-parse HEAD 2>$null } catch { $null }
+        if ($head -eq $Sha) { return }
+    } else {
+        Invoke-Step "$Title の準備" { git init -q $Dir }
+        Invoke-Step "$Title のリモート設定" { git -C $Dir remote add origin $Url }
     }
-    Invoke-Step 'sparse-checkout の設定' { git -C $runtimeDir sparse-checkout set src/coreclr src/native eng }
+    # if 式の結果に入れると 1 要素の配列が文字列に戻ってしまうため、引数は配列に足していく
+    $fetchArgs = @('-C', $Dir, '-c', 'core.longpaths=true', 'fetch', '--depth', '1')
+    if ($SparseDirs) { $fetchArgs += '--filter=blob:none' }
+    $fetchArgs += @('origin', $Sha)
+    Invoke-Step "$Title の取得 ($Sha)" { git $fetchArgs }
+    if ($SparseDirs) {
+        Invoke-Step "$Title の sparse-checkout の設定" { git -C $Dir sparse-checkout set $SparseDirs }
+    }
+    Invoke-Step "$Title のチェックアウト" { git -C $Dir -c core.longpaths=true checkout -q --force --detach FETCH_HEAD }
 }
+
+Sync-Source "netcoredbg $Tag" $srcDir 'https://github.com/Samsung/netcoredbg.git' $Commit
+# dotnet/runtime は巨大なため、netcoredbg のビルドに必要なディレクトリだけを取得する
+Sync-Source "dotnet/runtime ($RuntimeBranch)" $runtimeDir 'https://github.com/dotnet/runtime' $RuntimeCommit @('src/coreclr', 'src/native', 'eng')
 
 # netcoredbg への独自修正 (patches\netcoredbg\*.patch) を番号順に当てる。
 # 後のパッチが前のパッチの近くを変更するため「適用済みか」の個別判定はできない。作業ディレクトリを再利用した場合も
@@ -113,5 +140,5 @@ if (Test-Path $destDir) { Remove-Item -Recurse -Force $destDir }
 New-Item -ItemType Directory -Force $destDir | Out-Null
 Copy-Item (Join-Path $installDir '*') $destDir -Recurse
 Copy-Item (Join-Path $srcDir 'LICENSE') (Join-Path $destDir 'LICENSE.netcoredbg.txt')
-"netcoredbg $Tag (x86) / runtime $RuntimeBranch" | Out-File -Encoding ascii (Join-Path $destDir 'VERSION.txt')
+"netcoredbg $Tag ($Commit) (x86) / runtime $RuntimeBranch ($RuntimeCommit)" | Out-File -Encoding ascii (Join-Path $destDir 'VERSION.txt')
 Write-Host "配置しました: $destDir" -ForegroundColor Green
