@@ -2,11 +2,14 @@ import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
 import { HEAP_STATS_REQUEST, HeapType, diffHeap, formatBytes, heapTotals } from './heapSnapshotCore';
+import { HANDLE_STATS_REQUEST, ResourceType, diffResources, handleStatsArguments, withKinds } from './resourceLeakCore';
 
 interface Snapshot {
     id: number;
     time: string;
     types: HeapType[];
+    /** Objects holding native resources and how many are not disposed; undefined when netcoredbg cannot tell. */
+    resources?: ResourceType[];
     /** Whether a garbage collection ran right before it. */
     collected: boolean;
 }
@@ -68,7 +71,10 @@ export class HeapSnapshots implements vscode.Disposable {
                 }
             }
             const types: HeapType[] = (await session.customRequest(HEAP_STATS_REQUEST, {}))?.types ?? [];
-            this.snapshots.push({ id: (this.snapshots.at(-1)?.id ?? 0) + 1, time: new Date().toLocaleTimeString(), types, collected });
+            // GDI leak candidates, from the same stop. Optional: the snapshot is still useful without them.
+            const resources = await session.customRequest(HANDLE_STATS_REQUEST, handleStatsArguments())
+                .then((r: { types?: ResourceType[] }) => withKinds(r?.types ?? []), () => undefined);
+            this.snapshots.push({ id: (this.snapshots.at(-1)?.id ?? 0) + 1, time: new Date().toLocaleTimeString(), types, resources, collected });
             this.render();
         } catch (e) {
             void vscode.window.showErrorMessage(vscode.l10n.t('Could not take a heap snapshot: {0}', e instanceof Error ? e.message : String(e)));
@@ -86,7 +92,7 @@ export class HeapSnapshots implements vscode.Disposable {
         }
         const list = this.snapshots.map((s) => {
             const totals = heapTotals(s.types);
-            return { id: s.id, types: s.types, label: vscode.l10n.t('#{0} {1} — {2} objects, {3}{4}', s.id, s.time, totals.count.toLocaleString(), formatBytes(totals.size), s.collected ? '' : vscode.l10n.t(' (no GC)')) };
+            return { id: s.id, types: s.types, resources: s.resources, label: vscode.l10n.t('#{0} {1} — {2} objects, {3}{4}', s.id, s.time, totals.count.toLocaleString(), formatBytes(totals.size), s.collected ? '' : vscode.l10n.t(' (no GC)')) };
         });
         const t = {
             take: vscode.l10n.t('Take Heap Snapshot'),
@@ -105,6 +111,14 @@ export class HeapSnapshots implements vscode.Disposable {
             added: vscode.l10n.t('new'),
             more: vscode.l10n.t('{0} more types; narrow down with the filter.'),
             empty: vscode.l10n.t('Stop the program and take a snapshot. Take another one later to see which types grew in between.'),
+            resources: vscode.l10n.t('GDI leak candidates (native resources)'),
+            resourcesHint: vscode.l10n.t('Objects that hold a GDI+ object, an icon, a cursor or a window. "Not disposed" still hold it: Dispose was not called (or the window is not destroyed). Take a snapshot, repeat an action a few times, take another: a count that keeps growing is a leak.'),
+            kind: vscode.l10n.t('Kind'),
+            instances: vscode.l10n.t('Instances'),
+            notDisposed: vscode.l10n.t('Not disposed'),
+            notDisposedDelta: vscode.l10n.t('Δ Not disposed'),
+            candidate: vscode.l10n.t('leak candidate'),
+            noResources: vscode.l10n.t('No objects holding native resources.'),
         };
         const collect = vscode.workspace.getConfiguration('dotnetX86').get<boolean>('heapSnapshot.collectGarbage', true);
         this.panel.webview.html = page({ snapshots: list, text: t, collect });
@@ -134,6 +148,10 @@ function page(data: unknown): string {
   .up { color: var(--vscode-charts-red, #e51400); }
   .down { color: var(--vscode-charts-green, #388a34); }
   .badge { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); border-radius: 8px; padding: 0 6px; margin-left: 6px; font-family: var(--vscode-font-family); }
+  h2 { font-size: 13px; margin: 12px 0 4px; }
+  #resources { margin-bottom: 14px; }
+  #resources table { width: auto; min-width: 60%; }
+  .warn::first-letter { color: var(--vscode-editorWarning-foreground); }
 </style></head><body>
 <div class="bar">
   <button id="take"></button>
@@ -146,6 +164,7 @@ function page(data: unknown): string {
   <input type="text" id="filter">
   <label><input type="checkbox" id="increases"> <span id="incLabel"></span></label>
 </div>
+<div id="resources"></div>
 <div id="content"></div>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
@@ -155,6 +174,7 @@ function page(data: unknown): string {
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   // The unit-tested functions of heapSnapshotCore.ts, as compiled.
   const diff = ${diffHeap.toString()};
+  const diffResources = ${diffResources.toString()};
   const bytes = ${formatBytes.toString()};
   const signed = (n, f) => n > 0 ? '+' + f(n) : n < 0 ? '-' + f(-n) : '';
   const MAX_ROWS = 500;
@@ -195,6 +215,7 @@ function page(data: unknown): string {
     const snap = snaps[Number($('snap').value)];
     const baseIndex = Number($('base').value);
     const base = baseIndex >= 0 ? snaps[baseIndex] : undefined;
+    drawResources(snap, base);
     const filter = state.filter.toLowerCase();
     let rows = diff(snap.types, base && base.types).filter((r) => (!filter || r.name.toLowerCase().includes(filter)) && (!state.increases || r.countDelta > 0 || r.sizeDelta > 0));
     const key = state.sort;
@@ -215,6 +236,21 @@ function page(data: unknown): string {
       state.sort = k;
       draw();
     });
+  }
+
+  // GDI leak candidates: a short table of its own, above all the types (the snapshot has none with an older netcoredbg).
+  function drawResources(snap, base) {
+    if (!snap.resources) { $('resources').innerHTML = ''; return; }
+    const rows = diffResources(snap.resources, base && base.resources);
+    const cls = (n) => n > 0 ? 'num up' : n < 0 ? 'num down' : 'num';
+    const body = rows.map((r) => '<tr><td class="name">' + esc(r.name) + '</td><td>' + esc(r.kind || '?') + '</td>' +
+      '<td class="num">' + r.count.toLocaleString() + '</td><td class="num">' + r.live.toLocaleString() + '</td>' +
+      '<td class="' + cls(r.liveDelta) + '">' + signed(r.liveDelta, (n) => n.toLocaleString()) + '</td>' +
+      '<td>' + (r.liveDelta > 0 ? '<span class="warn">⚠ ' + esc(t.candidate) + '</span>' : '') + '</td></tr>').join('');
+    $('resources').innerHTML = '<h2>' + esc(t.resources) + '</h2><p class="hint">' + esc(t.resourcesHint) + '</p>' +
+      (rows.length ? '<table><thead><tr><th>' + esc(t.type) + '</th><th>' + esc(t.kind) + '</th><th class="num">' + esc(t.instances) + '</th>' +
+        '<th class="num">' + esc(t.notDisposed) + '</th><th class="num">' + esc(t.notDisposedDelta) + '</th><th></th></tr></thead><tbody>' + body + '</tbody></table>'
+        : '<p class="hint">' + esc(t.noResources) + '</p>');
   }
 </script></body></html>`;
 }

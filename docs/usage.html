@@ -778,6 +778,13 @@ objects still in use are counted (<code>dotnetX86.heapSnapshot.collectGarbage</c
 </svg>
 <figcaption>After opening and closing the form five times, five more OrderForm instances are still on the heap: they are not released.</figcaption>
 </figure>
+<p>Above the types, <b>GDI leak candidates</b> lists the objects that hold a native resource (GDI+ fonts, brushes, pens, images,
+graphics, regions, paths; icons, cursors, windows), how many are <b>not disposed</b> — they still hold their handle — and the
+change since the snapshot compared with. A type whose <i>Not disposed</i> keeps growing is marked <i>⚠ leak candidate</i>.
+Visual Studio cannot tell a disposed object from one that was not. Needs netcoredbg patch 0012.</p>
+<div class="usecase"><b>Use case:</b> the GDI graph climbs while reports are printed. Take a snapshot, print three reports, take
+another: <code>System.Drawing.Font</code> shows <i>Δ Not disposed +3</i>. The print handler creates a font per page and never
+disposes it; a <code>using</code> fixes it.</div>
 <div class="usecase"><b>Use case:</b> the memory graph keeps rising. Stop, take a snapshot, open and close a form a few times, stop and
 take another. With <b>Increases only</b>, the form type is there once per time it was opened — something (often an event handler
 on a long-lived object) still holds it.</div>

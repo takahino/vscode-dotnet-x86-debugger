@@ -722,6 +722,8 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>フォームを 5 回開いて閉じたあとも、OrderForm が 5 個増えたまま残っています。解放されていません。</figcaption>
 </figure>
+<p>型の一覧の上には <b>GDI リーク候補</b> を表示します。ネイティブ リソースを持つオブジェクト（GDI+ の Font・Brush・Pen・Image・Graphics・Region・GraphicsPath、アイコン・カーソル・ウィンドウ）を型ごとに数え、<b>未 Dispose</b>（まだハンドルを持っているもの）の数と、比較対象からの増減を並べます。<i>未 Dispose</i> が増え続けている型には <i>⚠ リーク候補</i> が付きます。Visual Studio では、Dispose 済みかどうかは区別できません。netcoredbg のパッチ 0012 が必要です（同梱版に含まれます）。</p>
+<div class="usecase"><b>ユースケース:</b> 帳票を印刷するたびに GDI のグラフが上がる。スナップショットを取り、3 回印刷してからもう一度取ると、<code>System.Drawing.Font</code> が <i>Δ 未 Dispose +3</i>。印刷処理でページごとに作った Font を Dispose していませんでした。<code>using</code> で直ります。</div>
 <div class="usecase"><b>ユースケース:</b> メモリ グラフが下がらない。停止してスナップショットを取り、フォームを何度か開いて閉じてから、もう一度停止して取ります。<b>増えたものだけ</b> にすると、閉じたはずのフォームの型が開いた回数分残っている。長生きするオブジェクトのイベント ハンドラなどが、まだ参照を握っています。</div>
 
 <h3 id="f-history">ステップ履歴</h3>

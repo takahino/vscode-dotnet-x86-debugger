@@ -68,6 +68,7 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 | [Memory / CPU graph](#memory--cpu-graph) | Private Bytes, Working Set and CPU over time | Command Palette |
 | [GDI / USER objects, handles, address space](#memory--cpu-graph) ★ | Catch GDI leaks and a full 32-bit address space before the app crashes | Command Palette |
 | [Heap snapshots](#heap-snapshots) | Objects per type on the GC heap, and what grew between two stops | Call Stack right-click |
+| [GDI leak candidates](#heap-snapshots) ★ | Fonts, brushes, bitmaps, icons and windows that were not disposed, and which keep growing | Heap Snapshots panel |
 | **History and records** | | |
 | [Step history](#step-history) | The locals of every earlier stop | Step History view |
 | [Exception log](#exception-log) ★ | Every thrown exception, swallowed ones too, with the stack and locals at the throw | Exception Log view |
@@ -427,6 +428,12 @@ the number of objects and their bytes per type on the GC heap are listed, larges
 Take another one at a later stop to see what changed per type (**Δ Count**, **Δ Size**); pick any two snapshots to compare,
 sort by a column, filter by name, or show **Increases only**. A garbage collection runs right before each snapshot so that
 only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`). Needs netcoredbg patch 0011.
+
+Above the types, **GDI leak candidates** lists the objects that hold a native resource — GDI+ fonts, brushes, pens, images,
+graphics, regions and paths; icons, cursors and windows — with how many are **not disposed** (they still hold their handle)
+and how that changed since the snapshot compared with. Take a snapshot, repeat an action a few times (open and close a
+form, print a report), take another: a type whose *Not disposed* keeps growing is marked *⚠ leak candidate*. Visual Studio
+cannot tell a disposed object from one that was not. Works for .NET and .NET Framework; needs netcoredbg patch 0012.
 
 ### History and records
 

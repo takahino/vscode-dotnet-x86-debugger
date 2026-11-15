@@ -338,5 +338,13 @@
   "Update": "更新モード",
   "Format": "書式",
   "List bindings (DataSource)": "リスト バインディング（DataSource）",
-  "Members": "メンバー"
+  "Members": "メンバー",
+  "GDI leak candidates (native resources)": "GDI リーク候補（ネイティブ リソース）",
+  "Objects that hold a GDI+ object, an icon, a cursor or a window. \"Not disposed\" still hold it: Dispose was not called (or the window is not destroyed). Take a snapshot, repeat an action a few times, take another: a count that keeps growing is a leak.": "GDI+ オブジェクト・アイコン・カーソル・ウィンドウを持っているオブジェクトです。「未 Dispose」は、まだそれを持っているもの（Dispose が呼ばれていない、またはウィンドウが破棄されていない）です。スナップショットを取り、同じ操作を何度か繰り返してから、もう一度取ってください。増え続ける数がリークです。",
+  "Kind": "種類",
+  "Instances": "インスタンス",
+  "Not disposed": "未 Dispose",
+  "Δ Not disposed": "Δ 未 Dispose",
+  "leak candidate": "リーク候補",
+  "No objects holding native resources.": "ネイティブ リソースを持つオブジェクトはありません。"
 }
