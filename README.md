@@ -118,6 +118,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
+| `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
 | `dotnetX86.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
 | `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
@@ -357,6 +358,10 @@ kept with the workspace and apply at once, also while the program runs. They add
 Breakpoints view.
 
 ### Exception log
+
+Each entry expands into a **snapshot taken at the throw**: the call stack (click a frame to open it) and the locals of the
+first three frames of your code, so you can see the values of an exception you ran through without stopping. Visual
+Studio does not keep them. Objects are not expanded; see `dotnetX86.exceptionLog.captureLocals`.
 
 The **Exception Log (.NET x86)** view lists every exception thrown in the debuggee, including ones that are caught
 and swallowed, with type, message and the first location in your code (click to open it). They are also written to the

@@ -151,6 +151,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 env,
                 exceptionFilters: exceptionFilterTexts(),
                 exceptionLog: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('enabled', true),
+                exceptionSnapshot: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('captureLocals', true),
                 findWriteSites,
                 gotoFailedMessage: vscode.l10n.t('The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.'),
                 sourceMapper: sourceMap.mapper,

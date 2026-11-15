@@ -58,6 +58,7 @@
   "command.uncheckExceptionTypes": "すべてのチェックを外す",
   "command.breakOnExceptionType": "この型がスローされたら停止",
   "command.clearExceptionLog": "例外ログをクリア",
+  "config.exceptionLog.captureLocals": "例外ログが有効なとき、例外ごとにコールスタックと自分のコードの先頭のフレームのローカル変数も記録します（1 セッション 200 件まで）。例外を大量にスローするアプリで遅すぎる場合は無効にしてください。",
   "config.exceptionLog.enabled": "デバッグ対象でスローされたすべての例外（catch されたものも含む）を、止まらずに例外ログ ビューとデバッグコンソールに記録します。新しいデバッグセッションから有効です。例外を大量にスローするアプリでは、有効にすると動作が遅くなります。",
   "command.startTimer": "ここから時間を計測...",
   "command.endTimer": "ここまでの時間を計測...",

@@ -313,7 +313,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr><td><a href="#f-time">メモリ / CPU グラフ</a></td><td>Private Bytes・Working Set・CPU の推移</td><td>コマンド パレット</td></tr>
   <tr class="group"><th colspan="3">履歴と記録</th></tr>
   <tr><td><a href="#f-history">ステップ履歴</a></td><td>これまでの停止ごとのローカル変数</td><td>ステップ履歴ビュー</td></tr>
-  <tr><td><a href="#f-exceptions">例外ログ</a></td><td>握りつぶされた例外も含め、スローされた例外をすべて記録</td><td>例外ログ ビュー</td></tr>
+  <tr><td><a href="#f-exceptions">例外ログ</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>握りつぶされた例外も含め、スローされた例外をすべて記録（スロー時のスタックとローカル変数つき）</td><td>例外ログ ビュー</td></tr>
   <tr><td><a href="#f-report">セッションの報告書</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>不具合報告に添える Markdown の要約</td><td>コマンド パレット</td></tr>
   <tr><td><a href="#f-testgen">単体テストの生成</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のメソッド呼び出しを再現するテスト</td><td>コールスタックの右クリック</td></tr>
   <tr class="group"><th colspan="3">ソースとシンボル</th></tr>
@@ -594,7 +594,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <li><b>ブレークポイント</b> ビューで <b>すべての例外（スロー時）</b> または <b>ユーザーコードで未処理の例外</b> にチェックを入れます。右クリックして <b>条件の編集</b> を選ぶと、
     型で絞り込めます（例: <code>System.NullReferenceException, System.InvalidOperationException</code>。<code>!System.OperationCanceledException</code> なら「これ以外すべて」）。</li>
   <li><b>例外設定</b> ビューに、よく使う例外の型が名前空間ごとに並びます（Visual Studio 相当）。スローされたら止めたい型にチェックを付けます。<b>+</b> で独自の型を追加でき、例外ログの項目を右クリックして <b>この型がスローされたら停止</b> を選んでも追加できます。</li>
-  <li><b>例外ログ</b> ビューには、catch されて無視されたものも含めて <i>すべての</i> スローされた例外が、型・メッセージ・自分のコード内の最初の行とともに、止まらずに並びます。
+  <li><b>例外ログ</b> ビューには、catch されて無視されたものも含めて <i>すべての</i> スローされた例外が、型・メッセージ・自分のコード内の最初の行とともに、止まらずに並びます。項目を展開すると、<b>スローされた時点のスナップショット</b>（コールスタックと、自分のコードの先頭のフレームのローカル変数）が見られます。
     項目をクリックするとその行を開きます。デバッグコンソールにも Visual Studio と同じ <code>Exception thrown: …</code> の行が出ます。</li>
 </ul>
 <div class="usecase"><b>ユースケース:</b> 画面のデータが空なのにエラーが出ない。例外ログを見ると、空の <code>catch</code> で握りつぶされた <code>FormatException</code> が見つかります。</div>

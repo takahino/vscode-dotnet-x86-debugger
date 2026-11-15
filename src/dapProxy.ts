@@ -3,6 +3,7 @@
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
+import { SNAPSHOT_LIMITS, SnapshotFrame, snapshotFrames, snapshotLocals } from './exceptionSnapshotCore';
 import { breaksOnThrow, ExceptionSettings, exceptionFiltersForDebugger } from './exceptionFilterCore';
 import { MAKE_OBJECT_ID_REQUEST, requestWithDebuggerObjectIds, responseWithClientObjectIds } from './objectIds';
 import { readPdbDocuments } from './pdbDocuments';
@@ -75,6 +76,8 @@ export interface ProxyOptions {
     freezeDescription?: (ms: number) => string;
     /** Exception types to stop on when thrown, as checked in the Exception Settings view when the session starts. */
     breakOnExceptionTypes?: string[];
+    /** Record the call stack and locals with each logged exception (default true). */
+    exceptionSnapshot?: boolean;
 }
 
 interface WriteSite {
@@ -168,6 +171,8 @@ export class DapProxy {
     private userExceptionArgs: any = {};
     /** Exception types checked in the Exception Settings view: stop when one of them is thrown. */
     private checkedExceptionTypes: string[];
+    /** Exception snapshots taken in this session (bounded by SNAPSHOT_LIMITS.perSession). */
+    private snapshotsTaken = 0;
     private readonly mapper: SourcePathMapper;
     /** Assemblies whose PDB documents were already given to the mapper (pathKey). */
     private readonly scannedModules = new Set<string>();
@@ -581,14 +586,37 @@ export class DapProxy {
     }
 
     /** Logs the exception; returns true when the stop was only for the log and execution resumed. */
+    /**
+     * The call stack and the locals of the first frames of the user's code, while the program is stopped at the throw:
+     * the exception log keeps them, so values can be looked at later although the program did not stop.
+     */
+    private async exceptionSnapshot(stackFrames: any[], stackTrace: unknown): Promise<{ frames: SnapshotFrame[]; stackTrace?: string } | undefined> {
+        if (this.options.exceptionSnapshot === false || this.snapshotsTaken >= SNAPSHOT_LIMITS.perSession) {
+            return undefined;
+        }
+        this.snapshotsTaken++;
+        const frames = snapshotFrames(stackFrames);
+        for (const frame of frames.filter((f) => f.readLocals)) {
+            try {
+                const scopes = (await this.request('scopes', { frameId: frame.frameId })).body?.scopes ?? [];
+                const locals = scopes[0]?.variablesReference ? (await this.request('variables', { variablesReference: scopes[0].variablesReference })).body?.variables ?? [] : [];
+                frame.locals = snapshotLocals(locals);
+            } catch {
+                frame.locals = []; // a frame whose locals cannot be read (e.g. optimized code) still shows in the stack
+            }
+        }
+        return { frames, stackTrace: typeof stackTrace === 'string' ? stackTrace : undefined };
+    }
+
     private async handleExceptionStop(threadId: number): Promise<boolean> {
         try {
             const info = await this.request('exceptionInfo', { threadId });
             const typeName: string = info.body?.details?.fullTypeName ?? info.body?.exceptionId ?? '?';
             const breakMode: string = info.body?.breakMode ?? 'always';
-            const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: 20 });
+            const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: SNAPSHOT_LIMITS.frames });
+            const stackFrames: any[] = stack.body?.stackFrames ?? [];
             // Exceptions thrown inside the framework have no source on the top frame: report the first user frame.
-            const frame = (stack.body?.stackFrames ?? []).find((f: any) => f.source?.path);
+            const frame = stackFrames.find((f: any) => f.source?.path);
             const stops = breakMode !== 'always' || breaksOnThrow(this.userExceptionSettings, this.checkedExceptionTypes, typeName);
             this.emitEvent(EXCEPTION_EVENT, {
                 time: Date.now(),
@@ -599,6 +627,7 @@ export class DapProxy {
                 functionName: frame?.name,
                 source: frame?.source,
                 line: frame?.line,
+                snapshot: await this.exceptionSnapshot(stackFrames, info.body?.details?.stackTrace),
             });
             const where = frame?.source?.path ? ` at ${frame.source.path.split(/[\\/]/).pop()}:${frame.line}` : '';
             this.emitEvent('output', { category: 'console', output: `${info.body?.description ?? typeName}${where}\n`, source: frame?.source, line: frame?.line });

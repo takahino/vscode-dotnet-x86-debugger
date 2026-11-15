@@ -58,6 +58,7 @@
   "command.uncheckExceptionTypes": "Uncheck All",
   "command.breakOnExceptionType": "Break When This Type Is Thrown",
   "command.clearExceptionLog": "Clear Exception Log",
+  "config.exceptionLog.captureLocals": "With the exception log on, also record the call stack and the locals of the first frames of your code with each exception (up to 200 per session). Turn off if an app that throws very many exceptions runs too slowly.",
   "config.exceptionLog.enabled": "Record every exception thrown in the debuggee (including caught ones) in the Exception Log view and the Debug Console, without stopping. Applies to new debug sessions. Apps that throw very many exceptions run slower while it is on.",
   "command.startTimer": "Start Timer Here...",
   "command.endTimer": "End Timer Here...",

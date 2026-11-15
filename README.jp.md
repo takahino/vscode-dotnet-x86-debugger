@@ -117,6 +117,7 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | 全構成に共通の `sourceFileMap` / `sourceSearchPaths`（`${workspaceFolder}` が使えます）。 |
 | `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、netcoredbg のログファイルも出力します（パスは同パネルに表示）。 |
 | `dotnetX86.stepHistory.enabled` | 停止のたびにステップ履歴ビューへ記録します（既定値 `true`）。 |
+| `dotnetX86.exceptionLog.captureLocals` | 記録した例外ごとに、コールスタックとローカル変数も記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.enabled` | スローされたすべての例外を、止まらずに例外ログ ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.uiFreeze.enabled` | UI が応答しなくなったらプログラムを一時停止します（既定値 `true`）。 |
 | `dotnetX86.uiFreeze.thresholdMs` | UI スレッドが応答しない状態がこの時間続いたら一時停止します（既定値 `2000` ミリ秒）。 |
@@ -340,6 +341,10 @@ UI スレッドがネイティブ コードの中で待っている場合（`Thr
 チェックはワークスペースに保存され、実行中でもすぐに反映されます。ブレークポイント ビューの例外ブレークポイントと合わせて使えます。
 
 ### 例外ログ
+
+各項目を展開すると、**スローされた時点のスナップショット**（コールスタックと、自分のコードの先頭 3 フレームのローカル変数）が見られます。
+止まらずに通り過ぎた例外でも、そのときの値を後から確認できます（Visual Studio は保存しません）。フレームをクリックするとその場所を開きます。
+オブジェクトは展開しません。`dotnetX86.exceptionLog.captureLocals` で無効にできます。
 
 **例外ログ (.NET x86)** ビューに、デバッグ対象でスローされたすべての例外（catch して握りつぶされたものも含む）を、型・メッセージ・
 自分のコード内の発生場所とともに一覧表示します（クリックでその場所を開きます）。デバッグコンソールにも Visual Studio の
