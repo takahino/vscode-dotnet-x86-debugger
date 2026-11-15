@@ -116,6 +116,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 |---|---|
 | `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
+| `dotnetX86.sourceLink.enabled` | Download sources through the PDB's Source Link map (default `true`). |
+| `dotnetX86.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
@@ -237,6 +239,18 @@ framework is the one the workspace's projects reference (xUnit, NUnit or MSTest)
 Fill in `expected` and save it in your test project. Async methods work too; lambdas, local functions and constructors cannot
 be called from a test, so pick the method that uses them. The values are those at the stopped line: stop at the first line
 of the method to capture the arguments as they came in. Visual Studio has no such command.
+
+### Source Link and symbol servers
+
+Most NuGet packages built from GitHub carry a **Source Link** map in their PDB (the .NET 8+ SDK adds one by default).
+When the program stops in a file that is not on this machine, the extension downloads it from the URL the map gives
+(e.g. raw.githubusercontent.com) into its storage and opens it; breakpoints in it work. Turn it off with
+`dotnetX86.sourceLink.enabled`.
+
+For an assembly without symbols, right-click it in the **Modules** view and choose **Download Symbols**: its PDB is fetched
+from the NuGet and Microsoft symbol servers (`dotnetX86.symbolServers`), and applies from the next debug session (a button
+restarts the current one). With Source Link, its sources follow. When no server has the PDB, decompile it instead (below).
+**Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *.NET x86 Debugger* output.
 
 ### Debugging decompiled assemblies
 

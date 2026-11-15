@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- New: **Source Link** — when the program stops in a file that is not on this machine, it is downloaded through the PDB's Source Link map and opened (`dotnetX86.sourceLink.enabled`).
+- New: **Download Symbols** (Modules view) — fetches the PDB of an assembly without symbols from the NuGet / Microsoft symbol servers (`dotnetX86.symbolServers`).
+- Fix: symbols from **Decompile for Debugging** were not found by the debugger in a real session (the cache folder was given to netcoredbg after it had started).
 - New: **Exception snapshots** — each Exception Log entry expands into the call stack and the locals of the first frames of your code at the throw (`dotnetX86.exceptionLog.captureLocals`).
 - New: **Break on Event...** in the WinForms Controls view — lists the handlers attached to a control's events (lambdas too) and adds function breakpoints on the picked ones.
 - New: **Change Property...** in the WinForms Controls view — change a control's text, visibility, colors, position or size (or any property with a C# expression) in the stopped program. Enum properties cannot be changed (netcoredbg cannot pass enum values).

@@ -204,5 +204,14 @@
   "A breakpoint is already set here.": "ここには既にブレークポイントがあります。",
   "Event handlers of {0}: pick the ones to stop in": "{0} のイベント ハンドラー: 停止するものを選んでください",
   "Breakpoints were added on {0}. The program stops there the next time the event fires (continue, then use the form).": "{0} にブレークポイントを追加しました。次にイベントが発生したときに停止します（続行してフォームを操作してください）。",
-  "Could not read the event handlers of {0}: {1}": "{0} のイベント ハンドラーを読み取れませんでした: {1}"
+  "Could not read the event handlers of {0}: {1}": "{0} のイベント ハンドラーを読み取れませんでした: {1}",
+  "Downloading the symbols of {0}…": "{0} のシンボルをダウンロードしています…",
+  "{0} is not a .NET assembly.": "{0} は .NET アセンブリではありません。",
+  "{0} was built without a PDB, so no symbol server has one. Use \"Decompile for Debugging\" instead.": "{0} は PDB なしでビルドされているため、どのシンボル サーバーにもありません。代わりに「逆コンパイルしてデバッグ可能にする」を使ってください。",
+  "{0} was built with a Windows PDB, which this debugger cannot read. Use \"Decompile for Debugging\" instead.": "{0} は Windows PDB でビルドされていて、このデバッガーでは読めません。代わりに「逆コンパイルしてデバッグ可能にする」を使ってください。",
+  "No symbol server has the symbols of {0} (details in the \".NET x86 Debugger\" output). Use \"Decompile for Debugging\" instead.": "{0} のシンボルはどのシンボル サーバーにもありませんでした（詳細は出力パネル「.NET x86 Debugger」）。代わりに「逆コンパイルしてデバッグ可能にする」を使ってください。",
+  "The symbols of {0} were downloaded. Restart debugging to step into it (symbols are read when the module loads).": "{0} のシンボルをダウンロードしました。ステップ インするにはデバッグを再起動してください（シンボルはモジュールの読み込み時に読まれます）。",
+  "The symbols of {0} were downloaded. The next debug session can step into it.": "{0} のシンボルをダウンロードしました。次のデバッグ セッションからステップ インできます。",
+  "Delete all downloaded symbols and Source Link sources? They are downloaded again when needed.": "ダウンロードしたシンボルと Source Link のソースをすべて削除しますか？ 必要になれば再びダウンロードされます。",
+  "Downloaded symbols and sources were deleted.": "ダウンロードしたシンボルとソースを削除しました。"
 }

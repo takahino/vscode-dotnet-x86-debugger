@@ -46,6 +46,8 @@
     "onCommand:dotnetX86.makeObjectId",
     "onCommand:dotnetX86.decompileModule",
     "onCommand:dotnetX86.clearDecompiled",
+    "onCommand:dotnetX86.downloadSymbols",
+    "onCommand:dotnetX86.clearDownloadedSymbols",
     "onCommand:dotnetX86.addExceptionType",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
@@ -72,6 +74,16 @@
       {
         "command": "dotnetX86.decompileModule",
         "title": "%command.decompileModule%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.downloadSymbols",
+        "title": "%command.downloadSymbols%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.clearDownloadedSymbols",
+        "title": "%command.clearDownloadedSymbols%",
         "category": ".NET x86"
       },
       {
@@ -543,6 +555,11 @@
           "group": "z_dotnetX86@1"
         },
         {
+          "command": "dotnetX86.downloadSymbols",
+          "when": "view == dotnetX86.modules && viewItem == dotnetX86.module.noSymbols",
+          "group": "z_dotnetX86@0"
+        },
+        {
           "command": "dotnetX86.decompileModule",
           "when": "view == dotnetX86.modules && viewItem == dotnetX86.module.noSymbols",
           "group": "z_dotnetX86@0"
@@ -596,6 +613,23 @@
           "type": "boolean",
           "default": false,
           "description": "%config.trace%"
+        },
+        "dotnetX86.sourceLink.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%config.sourceLink.enabled%"
+        },
+        "dotnetX86.symbolServers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "https://symbols.nuget.org/download/symbols",
+            "https://msdl.microsoft.com/download/symbols"
+          ],
+          "description": "%config.symbolServers%"
         },
         "dotnetX86.sourceFileMap": {
           "type": "object",

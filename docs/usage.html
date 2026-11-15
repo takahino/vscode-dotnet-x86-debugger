@@ -116,6 +116,7 @@
         <li><a href="#f-freeze">UI freeze detection</a></li>
         <li><a href="#f-time">Time and performance</a></li>
         <li><a href="#f-history">Step history</a></li>
+        <li><a href="#f-sourcelink">Source Link and symbol servers</a></li>
         <li><a href="#f-decompile">Debugging decompiled assemblies</a></li>
         <li><a href="#f-objectid">Object IDs</a></li>
         <li><a href="#f-testgen">Generate a unit test from a stop</a></li>
@@ -326,6 +327,7 @@ VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step i
   <tr class="group"><th colspan="3">Source and symbols</th></tr>
   <tr><td><a href="#f-modules">Modules view</a></td><td>Loaded assemblies and whether symbols were found</td><td>Modules view</td></tr>
   <tr><td><a href="#f-sourcemap">Source in another folder</a></td><td>Find source whose PDB path is not on this machine</td><td>launch.json / settings</td></tr>
+  <tr><td><a href="#f-sourcelink">Source Link and symbol servers</a></td><td>Download the sources and PDBs of NuGet packages</td><td>Automatic / Modules right-click</td></tr>
   <tr><td><a href="#f-decompile">Debug decompiled assemblies</a></td><td>Step into DLLs without symbols as C#</td><td>Modules right-click</td></tr>
   <tr class="group"><th colspan="3">WinForms</th></tr>
   <tr><td><a href="#f-winforms">WinForms Controls view</a></td><td>The control tree of the open forms</td><td>WinForms Controls view</td></tr>
@@ -737,6 +739,14 @@ if it never comes down, look for event handlers that are not removed.</div>
 <p>The <b>Step History</b> view keeps the locals of every stop (newest first). Values that changed since the previous stop in the
 same method are marked <i>changed</i> / <i>new</i>. Click an entry to open its location. It is a history to look at, not a way
 to run backwards.</p>
+
+<h3 id="f-sourcelink">Source Link and symbol servers</h3>
+<p>When the program stops in a file that is not on this machine and the PDB has a <b>Source Link</b> map — most NuGet packages
+built from GitHub do — the file is downloaded and opened, so you can step through the package's real source. For a DLL
+without symbols, right-click it in <b>Modules</b> and choose <b>Download Symbols</b> to fetch its PDB from the NuGet / Microsoft
+symbol servers (from the next session). If no server has it, <a href="#f-decompile">decompile</a> it.</p>
+<div class="usecase"><b>Use case:</b> a popular JSON library throws deep inside. Download its symbols, restart, and step into
+its code on GitHub at the exact commit the package was built from.</div>
 
 <h3 id="f-decompile">Debugging decompiled assemblies</h3>
 <p>For a DLL without symbols, right-click it in the <b>Modules</b> view and choose <b>Decompile for Debugging...</b>. From the next debug

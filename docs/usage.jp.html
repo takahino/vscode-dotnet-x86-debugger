@@ -116,6 +116,7 @@
         <li><a href="#f-freeze">UI フリーズの自動検知</a></li>
         <li><a href="#f-time">時間とパフォーマンス</a></li>
         <li><a href="#f-history">ステップ履歴</a></li>
+        <li><a href="#f-sourcelink">Source Link とシンボル サーバー</a></li>
         <li><a href="#f-decompile">逆コンパイルしたソースでのデバッグ</a></li>
         <li><a href="#f-objectid">オブジェクト ID</a></li>
         <li><a href="#f-testgen">停止時の状態から単体テストを生成</a></li>
@@ -319,6 +320,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr class="group"><th colspan="3">ソースとシンボル</th></tr>
   <tr><td><a href="#f-modules">モジュール ビュー</a></td><td>読み込まれたアセンブリとシンボルの有無</td><td>モジュール ビュー</td></tr>
   <tr><td><a href="#f-sourcemap">ソースが別の場所にある場合</a></td><td>PDB のパスに無いソースを見つける</td><td>launch.json／設定</td></tr>
+  <tr><td><a href="#f-sourcelink">Source Link とシンボル サーバー</a></td><td>NuGet パッケージのソースと PDB をダウンロード</td><td>自動／モジュール ビューの右クリック</td></tr>
   <tr><td><a href="#f-decompile">逆コンパイルしたソースでのデバッグ</a></td><td>シンボルの無い DLL に C# でステップ イン</td><td>モジュール ビューの右クリック</td></tr>
   <tr class="group"><th colspan="3">WinForms</th></tr>
   <tr><td><a href="#f-winforms">WinForms コントロール ビュー</a></td><td>開いているフォームのコントロール ツリー</td><td>WinForms コントロール ビュー</td></tr>
@@ -691,6 +693,10 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h3 id="f-history">ステップ履歴</h3>
 <p><b>ステップ履歴</b> ビューには、停止のたびのローカル変数が新しい順に残ります。同じメソッド内の直前の停止から変わった値には「変化」「新規」と表示されます。項目をクリックするとその位置を開きます。履歴を見返すための機能で、実行を巻き戻すわけではありません。</p>
+
+<h3 id="f-sourcelink">Source Link とシンボル サーバー</h3>
+<p>このマシンに無いファイルで停止し、PDB に <b>Source Link</b> の対応表がある場合（GitHub からビルドされた NuGet パッケージの多くが該当）、そのファイルをダウンロードして開きます。パッケージの本物のソースでステップ実行できます。シンボルの無い DLL は、<b>モジュール</b> ビューで右クリックして <b>シンボルをダウンロード</b> を選ぶと、NuGet / Microsoft のシンボル サーバーから PDB を取得します（次のセッションから有効）。どのサーバーにも無い場合は <a href="#f-decompile">逆コンパイル</a> します。</p>
+<div class="usecase"><b>ユースケース:</b> よく使う JSON ライブラリが奥深くで例外を投げる。シンボルをダウンロードして再起動すれば、パッケージがビルドされたまさにそのコミットの GitHub 上のコードにステップ インできます。</div>
 
 <h3 id="f-decompile">逆コンパイルしたソースでのデバッグ</h3>
 <p>シンボルの無い DLL を <b>モジュール</b> ビューで右クリックし、<b>逆コンパイルしてデバッグ可能にする...</b> を選びます。次のデバッグ セッションから（ボタンで今のセッションを再起動できます）、逆コンパイルした C# へのステップ インやブレークポイントが使えます。DLL のフォルダには何も書き込みません。<b>逆コンパイルしたシンボルを削除</b> で生成物をすべて消せます。</p>

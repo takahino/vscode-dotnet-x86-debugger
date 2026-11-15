@@ -1,5 +1,5 @@
-// Reads the source file paths ("documents") recorded in an assembly's Portable PDB, embedded or next to it.
-// Used to map those paths to local files before netcoredbg reports them. Kept free of the vscode module.
+// Reads what an assembly's Portable PDB records (source file paths, the Source Link map), embedded, next to it or in
+// a symbol cache, and the assembly's identity (MVID, PDB id) for symbol servers. Kept free of the vscode module.
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -18,13 +18,157 @@ const DOCUMENT_TABLE = 0x30;
  * Paths of the source files in the assembly's PDB. Empty when the file is not a managed PE image, has no
  * Portable PDB (none at all, or a Windows PDB), or cannot be read: the caller then simply learns nothing.
  */
-export function readPdbDocuments(assemblyPath: string): string[] {
+export function readPdbDocuments(assemblyPath: string, symbolDirs: string[] = []): string[] {
+    return readPdbInfo(assemblyPath, symbolDirs).documents;
+}
+
+/**
+ * The documents and the Source Link map (JSON) of the assembly's PDB: from `<symbolDir>/<MVID>/symbols.pdb` first
+ * (symbols downloaded or generated for it, as netcoredbg patch 0009 looks there too), then embedded or next to it.
+ */
+export function readPdbInfo(assemblyPath: string, symbolDirs: string[] = []): { documents: string[]; sourceLink?: string } {
     try {
-        const pdb = loadPortablePdb(assemblyPath);
-        return pdb ? readDocumentNames(pdb) : [];
+        const pdb = loadFromSymbolDirs(assemblyPath, symbolDirs) ?? loadPortablePdb(assemblyPath);
+        return pdb ? { documents: readDocumentNames(pdb), sourceLink: findSourceLinkJson(pdb) } : { documents: [] };
     } catch {
-        return [];
+        return { documents: [] };
     }
+}
+
+function loadFromSymbolDirs(assemblyPath: string, symbolDirs: string[]): Buffer | undefined {
+    if (symbolDirs.length === 0) {
+        return undefined;
+    }
+    const mvid = readAssemblyIdentity(assemblyPath)?.mvid;
+    for (const dir of mvid ? symbolDirs : []) {
+        try {
+            const buf = fs.readFileSync(path.join(dir, mvid!, 'symbols.pdb'));
+            if (buf.length >= 4 && buf.readUInt32LE(0) === METADATA_SIGNATURE) {
+                return buf;
+            }
+        } catch {
+            // not in this folder
+        }
+    }
+    return undefined;
+}
+
+/**
+ * The Source Link map stored in the PDB (custom debug information, UTF-8 JSON in the blob heap). Found by its
+ * opening `{"documents"` rather than through the custom debug information table, which would need the row sizes of
+ * every Portable PDB table; the JSON is read up to its matching closing brace.
+ */
+export function findSourceLinkJson(pdb: Buffer): string | undefined {
+    const start = pdb.indexOf('{"documents"', 0, 'utf8');
+    if (start < 0) {
+        return undefined;
+    }
+    let depth = 0;
+    let inString = false;
+    for (let i = start; i < pdb.length; i++) {
+        const c = pdb[i];
+        if (inString) {
+            if (c === 0x5c) {
+                i++; // escaped character
+            } else if (c === 0x22) {
+                inString = false;
+            }
+        } else if (c === 0x22) {
+            inString = true;
+        } else if (c === 0x7b) {
+            depth++;
+        } else if (c === 0x7d && --depth === 0) {
+            return pdb.toString('utf8', start, i + 1);
+        }
+    }
+    return undefined;
+}
+
+export interface AssemblyIdentity {
+    /** Module version id ("d"-formatted GUID), which identifies this exact build. */
+    mvid?: string;
+    /** What the compiler recorded about the PDB: its file name and id (for symbol servers). */
+    codeView?: { pdbName: string; guid: string; age: number; portable: boolean };
+}
+
+/** The MVID and the CodeView record of an assembly, or undefined when it is not a managed PE image. */
+export function readAssemblyIdentity(assemblyPath: string): AssemblyIdentity | undefined {
+    let image: Buffer;
+    try {
+        image = fs.readFileSync(assemblyPath);
+    } catch {
+        return undefined;
+    }
+    const pe = parsePeHeader(image);
+    if (!pe || !pe.managed || !pe.clrDirectory) {
+        return undefined;
+    }
+    const identity: AssemblyIdentity = {};
+    const clr = rvaToOffset(image, pe.sectionTable, pe.sectionCount, pe.clrDirectory.rva);
+    const metadata = clr === undefined ? undefined : rvaToOffset(image, pe.sectionTable, pe.sectionCount, image.readUInt32LE(clr + 8));
+    if (metadata !== undefined) {
+        identity.mvid = readMvid(image, metadata);
+    }
+    const dir = pe.debugDirectory && rvaToOffset(image, pe.sectionTable, pe.sectionCount, pe.debugDirectory.rva);
+    for (let entry = dir ?? 0; dir !== undefined && entry + 28 <= dir + pe.debugDirectory!.size; entry += 28) {
+        const pointer = image.readUInt32LE(entry + 24);
+        if (image.readUInt32LE(entry + 12) !== IMAGE_DEBUG_TYPE_CODEVIEW || pointer + 24 > image.length || image.toString('latin1', pointer, pointer + 4) !== 'RSDS') {
+            continue;
+        }
+        const end = image.indexOf(0, pointer + 24);
+        const pdbPath = image.toString('utf8', pointer + 24, end < 0 ? pointer + image.readUInt32LE(entry + 16) : end);
+        const codeView = {
+            pdbName: path.win32.basename(pdbPath),
+            guid: formatGuid(image.subarray(pointer + 4, pointer + 20)),
+            age: image.readUInt32LE(pointer + 20),
+            // Portable PDBs mark their CodeView entry with minor version 0x504d ("PM").
+            portable: image.readUInt16LE(entry + 10) === 0x504d,
+        };
+        // A ReadyToRun image has a second entry for its native code (a Windows "*.ni.pdb"): the IL's portable one wins.
+        if (!identity.codeView || (codeView.portable && !identity.codeView.portable)) {
+            identity.codeView = codeView;
+        }
+    }
+    return identity;
+}
+
+/** The Mvid of the Module table's only row (#~ stream, table 0), from the #GUID heap. */
+function readMvid(image: Buffer, root: number): string | undefined {
+    if (image.readUInt32LE(root) !== METADATA_SIGNATURE) {
+        return undefined;
+    }
+    const streams = readStreamHeaders(image, root);
+    const tables = streams.get('#~') ?? streams.get('#-');
+    const guids = streams.get('#GUID');
+    if (!tables || !guids) {
+        return undefined;
+    }
+    const at = root + tables.offset;
+    const heapSizes = image.readUInt8(at + 6);
+    const valid = image.readBigUInt64LE(at + 8);
+    let present = 0;
+    for (let t = 0; t < 64; t++) {
+        if ((valid >> BigInt(t)) & 1n) {
+            present++;
+        }
+    }
+    // Module row: Generation (2), Name (#Strings index), Mvid (#GUID index), ...
+    const row = at + 24 + present * 4;
+    const stringIndexSize = heapSizes & 0x01 ? 4 : 2;
+    const guidIndex = heapSizes & 0x02 ? image.readUInt32LE(row + 2 + stringIndexSize) : image.readUInt16LE(row + 2 + stringIndexSize);
+    if (guidIndex === 0) {
+        return undefined;
+    }
+    return formatGuid(image.subarray(root + guids.offset + (guidIndex - 1) * 16, root + guids.offset + guidIndex * 16));
+}
+
+/** .NET's "d" format of a GUID stored as bytes (the first three fields little-endian). */
+function formatGuid(bytes: Buffer): string {
+    const hex = (from: number, to: number, reverse: boolean) => {
+        const part = [...bytes.subarray(from, to)];
+        return (reverse ? part.reverse() : part).map((b) => b.toString(16).padStart(2, '0')).join('');
+    };
+    return `${hex(0, 4, true)}-${hex(4, 6, true)}-${hex(6, 8, true)}-${hex(8, 10, false)}-${hex(10, 16, false)}`;
 }
 
 function loadPortablePdb(assemblyPath: string): Buffer | undefined {
@@ -92,6 +236,7 @@ interface PeHeader {
     sectionTable: number;
     sectionCount: number;
     debugDirectory?: { rva: number; size: number };
+    clrDirectory?: { rva: number; size: number };
 }
 
 function parsePeHeader(buf: Buffer): PeHeader | undefined {
@@ -120,10 +265,28 @@ function parsePeHeader(buf: Buffer): PeHeader | undefined {
     };
     return {
         managed: directory(CLR_DIRECTORY_INDEX) !== undefined,
+        clrDirectory: directory(CLR_DIRECTORY_INDEX),
         sectionTable: opt + sizeOfOptionalHeader,
         sectionCount,
         debugDirectory: directory(DEBUG_DIRECTORY_INDEX),
     };
+}
+
+/** The stream headers of an ECMA-335 metadata root at `root` (offsets are relative to the root). */
+function readStreamHeaders(buf: Buffer, root: number): Map<string, { offset: number; size: number }> {
+    const versionLength = buf.readUInt32LE(root + 12);
+    let at = root + 16 + versionLength + 2; // + flags
+    const streamCount = buf.readUInt16LE(at);
+    at += 2;
+    const streams = new Map<string, { offset: number; size: number }>();
+    for (let i = 0; i < streamCount; i++) {
+        const offset = buf.readUInt32LE(at);
+        const size = buf.readUInt32LE(at + 4);
+        const nameEnd = buf.indexOf(0, at + 8);
+        streams.set(buf.toString('latin1', at + 8, nameEnd), { offset, size });
+        at = root + ((nameEnd - root + 1 + 3) & ~3); // names are padded to 4 bytes (from the root)
+    }
+    return streams;
 }
 
 /** Document table names of a Portable PDB (ECMA-335 metadata with the Portable PDB tables). */
@@ -131,19 +294,7 @@ function readDocumentNames(pdb: Buffer): string[] {
     if (pdb.readUInt32LE(0) !== METADATA_SIGNATURE) {
         return [];
     }
-    const versionLength = pdb.readUInt32LE(12);
-    let at = 16 + versionLength + 2; // + flags
-    const streamCount = pdb.readUInt16LE(at);
-    at += 2;
-    const streams = new Map<string, { offset: number; size: number }>();
-    for (let i = 0; i < streamCount; i++) {
-        const offset = pdb.readUInt32LE(at);
-        const size = pdb.readUInt32LE(at + 4);
-        const nameEnd = pdb.indexOf(0, at + 8);
-        const name = pdb.toString('latin1', at + 8, nameEnd);
-        streams.set(name, { offset, size });
-        at = (nameEnd + 1 + 3) & ~3; // names are padded to 4 bytes
-    }
+    const streams = readStreamHeaders(pdb, 0);
     const tables = streams.get('#~');
     const blob = streams.get('#Blob');
     if (!tables || !blob) {

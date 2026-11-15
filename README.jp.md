@@ -115,6 +115,8 @@ C# 拡張のデバッガ (vsdbg) は x64 / arm64 版しか配布されていな�
 |---|---|
 | `dotnetX86.debuggerPath` | 同梱版の代わりに、別の x86 版 `netcoredbg.exe` を使います。 |
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | 全構成に共通の `sourceFileMap` / `sourceSearchPaths`（`${workspaceFolder}` が使えます）。 |
+| `dotnetX86.sourceLink.enabled` | PDB の Source Link の対応表からソースをダウンロードします（既定値 `true`）。 |
+| `dotnetX86.symbolServers` | **シンボルをダウンロード** が使うシンボル サーバー（既定は NuGet と Microsoft）。 |
 | `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、netcoredbg のログファイルも出力します（パスは同パネルに表示）。 |
 | `dotnetX86.stepHistory.enabled` | 停止のたびにステップ履歴ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.captureLocals` | 記録した例外ごとに、コールスタックとローカル変数も記録します（既定値 `true`）。 |
@@ -229,6 +231,17 @@ C# エディターの行を右クリックします。
 見つからないか複数あるときは選択肢を出します。`expected` を埋めてテスト プロジェクトに保存してください。async メソッドにも対応しています。
 ラムダ・ローカル関数・コンストラクターはテストから呼べないため、それを使うメソッドのフレームを選んでください。値は停止した行の時点のものです。
 渡された引数そのものを使いたいときは、メソッドの先頭行で止めてください。Visual Studio にはない機能です。
+
+### Source Link とシンボル サーバー
+
+GitHub からビルドされた NuGet パッケージの多くは、PDB に **Source Link** の対応表を持っています（.NET 8 以降の SDK は既定で追加します）。
+このマシンに無いファイルで停止すると、対応表が示す URL（raw.githubusercontent.com など）からファイルをダウンロードして
+拡張機能の保存領域に置き、そのまま開きます。そのファイルへのブレークポイントも使えます。`dotnetX86.sourceLink.enabled` で無効にできます。
+
+シンボルの無いアセンブリは、**モジュール** ビューで右クリックして **シンボルをダウンロード** を選ぶと、NuGet と Microsoft の
+シンボル サーバー（`dotnetX86.symbolServers`）から PDB を取得します。次のデバッグ セッションから有効です（ボタンで今のセッションを再起動できます）。
+Source Link があればソースも付いてきます。どのサーバーにも無い場合は、逆コンパイル（下記）を使ってください。
+**ダウンロードしたシンボルとソースを削除** で両方のキャッシュを消せます。ダウンロードの記録は出力パネル「.NET x86 Debugger」に出ます。
 
 ### 逆コンパイルしたソースでのデバッグ
 

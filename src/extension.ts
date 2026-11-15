@@ -17,6 +17,7 @@ import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { makeObjectIdCommand } from './objectIdCommand';
 import { SessionReport } from './sessionReport';
 import { StepHistory } from './stepHistory';
+import { SymbolServer } from './symbolServer';
 import { generateTestCommand } from './testGenerator';
 import { viewAsImageCommand } from './imageVisualizer';
 import { viewAsTableCommand } from './tableVisualizer';
@@ -57,12 +58,13 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionSettingsView = vscode.window.createTreeView('dotnetX86.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
     exceptionSettings.attach(exceptionSettingsView);
     const decompiler = new Decompiler(context.extensionPath, path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
+    const symbolServer = new SymbolServer(path.join(context.globalStorageUri.fsPath, 'symbols'), path.join(context.globalStorageUri.fsPath, 'sources'), output);
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
 
     context.subscriptions.push(
         output,
         vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new X86ConfigurationProvider()),
-        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, decompiler.cacheRoot, () => exceptionSettings.checkedTypes())),
+        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, { decompiled: decompiler.cacheRoot, symbols: symbolServer.symbolCache, sources: symbolServer.sourceCache }, () => exceptionSettings.checkedTypes())),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new DapTraceFactory(output)),
         vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
@@ -72,6 +74,8 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.generateTest', generateTestCommand),
         vscode.commands.registerCommand('dotnetX86.decompileModule', (module?: { name?: string; path?: string }) => decompiler.decompile(module)),
         vscode.commands.registerCommand('dotnetX86.clearDecompiled', () => decompiler.clearCache()),
+        vscode.commands.registerCommand('dotnetX86.downloadSymbols', (module?: { name?: string; path?: string }) => symbolServer.download(module)),
+        vscode.commands.registerCommand('dotnetX86.clearDownloadedSymbols', () => symbolServer.clearCache()),
         vscode.commands.registerCommand('dotnetX86.viewString', viewStringCommand),
         vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
         vscode.commands.registerCommand('dotnetX86.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),

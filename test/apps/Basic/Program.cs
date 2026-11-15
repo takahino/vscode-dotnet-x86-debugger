@@ -67,6 +67,8 @@ public static class Program
         Console.WriteLine(MappedLib.Calc.Add(1, 2)); // @call-mapped
         Console.WriteLine(NoPdbLib.Pricing.WithTax(100m, 0.1m)); // @call-nopdb
         Console.WriteLine(EmbeddedLib.Greeter.Hello("e2e"));
+        // Source Link and symbol servers (LinkedLib's PDB maps its sources to a local test server).
+        Console.WriteLine(LinkedLib.Shapes.Area.Circle(2)); // @call-linked
 
         Console.WriteLine($"{total} {nested}");
     }

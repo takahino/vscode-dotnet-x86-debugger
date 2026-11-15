@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Source Link test library: its PDB records C:\fake\linked\... (not on any machine) and a Source Link map that sends
+    those paths to a local HTTP server the E2E tests start (port 43117).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <PathMap>$(MSBuildProjectDirectory)=C:\fake\linked</PathMap>
+    <!-- The SDK would put a Source Link map of this repository on GitHub instead (.NET 8+ does that by default). -->
+    <EnableSourceLink>false</EnableSourceLink>
+    <SourceLink>$(MSBuildProjectDirectory)\sourcelink.json</SourceLink>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="sourcelink.json" />
+  </ItemGroup>
+
+</Project>

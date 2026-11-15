@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DOTNET_FRAMEWORK_KEY, findX86CoreClr } from './configProvider';
-import { DapProxy, ExceptionFilterText } from './dapProxy';
+import { DapProxy, ExceptionFilterText, ProxyOptions } from './dapProxy';
 import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
 import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { findWriteLines } from './writeSites';
@@ -140,7 +140,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
     readonly onDidSendMessage = this.emitter.event;
     private readonly proxy: DapProxy;
 
-    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>, sourceMap: SourceMapSetup, breakOnExceptionTypes: string[]) {
+    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>, sourceMap: SourceMapSetup, breakOnExceptionTypes: string[], symbols: Pick<ProxyOptions, 'symbolDirs' | 'sourceLink'>) {
         this.proxy = new DapProxy(
             executable,
             args,
@@ -159,6 +159,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 missingSourceMessage,
                 breakOnExceptionTypes,
                 freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
+                ...symbols,
             },
         );
     }
@@ -200,8 +201,8 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         private readonly extensionPath: string,
         private readonly logDir: string,
         private readonly output: vscode.OutputChannel,
-        /** Where "Decompile for Debugging" leaves its symbols (see Decompiler). */
-        private readonly decompiledCache: string,
+        /** Caches in the extension's storage: decompiled and downloaded symbols (by MVID), Source Link downloads. */
+        private readonly caches: { decompiled: string; symbols: string; sources: string },
         /** Exception types checked in the Exception Settings view. */
         private readonly checkedExceptionTypes: () => string[] = () => [],
     ) {}
@@ -219,8 +220,23 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             this.output.appendLine(`[trace] netcoredbg log: ${logFile}`);
         }
         const sourceMap = sourceMapSetup(session, this.output);
+        // Decompiled and downloaded symbols: netcoredbg (patch 0009) loads them from these folders by MVID. The variable
+        // must be set before netcoredbg starts (in the ProxyAdapter constructor).
+        const symbolDirs = [this.caches.decompiled, this.caches.symbols].filter((dir) => hasEntries(dir));
+        if (symbolDirs.length) {
+            env[SYMBOL_DIRS_ENV] = symbolDirs.join(path.delimiter);
+        }
+        // Decompiled PDBs name their documents relatively ("Namespace/Type.cs"): map them to the extracted files.
+        const decompiled = readDecompiledAssemblies(this.caches.decompiled);
+        if (decompiled.length) {
+            sourceMap.mapper.addFilePairs(decompiled.flatMap((a) => a.documents.map((d) => ({ pdbPath: d.name, local: d.file }))));
+            this.output.appendLine(`[decompiler] symbols of ${decompiled.length} decompiled assemblies are available`);
+        }
+        const sourceLink = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri).get<boolean>('sourceLink.enabled', true)
+            ? { cacheRoot: this.caches.sources }
+            : undefined;
         // netcoredbg runs behind a DAP relay that adds logpoints (see DapProxy).
-        const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap, this.checkedExceptionTypes());
+        const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap, this.checkedExceptionTypes(), { symbolDirs, sourceLink });
         if (sourceMap.mapper.enabled) {
             // Generated files under obj\ are never on another machine's disk and are not worth reporting.
             const unresolved = sourceMap.mapper.unresolvedAll().filter((u) => !/[\\/]obj[\\/]/i.test(u.pdbPath));
@@ -228,14 +244,6 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             for (const u of unresolved) {
                 this.output.appendLine(`[source map]   not found: ${u.pdbPath}${u.candidates.length > 1 ? ` (ambiguous: ${u.candidates.join(', ')})` : ''}`);
             }
-        }
-        // Decompiled assemblies: netcoredbg (patch 0009) loads their symbols from the cache by MVID, and the PDB names
-        // documents relatively ("Namespace/Type.cs"), so the relay maps them to the extracted files.
-        const decompiled = readDecompiledAssemblies(this.decompiledCache);
-        if (decompiled.length) {
-            env[SYMBOL_DIRS_ENV] = this.decompiledCache;
-            sourceMap.mapper.addFilePairs(decompiled.flatMap((a) => a.documents.map((d) => ({ pdbPath: d.name, local: d.file }))));
-            this.output.appendLine(`[decompiler] symbols of ${decompiled.length} decompiled assemblies are available`);
         }
         return new vscode.DebugAdapterInlineImplementation(adapter);
     }
@@ -257,5 +265,14 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             );
         }
         return bundled;
+    }
+}
+
+/** Whether a cache folder exists and holds anything. */
+function hasEntries(dir: string): boolean {
+    try {
+        return fs.readdirSync(dir).length > 0;
+    } catch {
+        return false;
     }
 }

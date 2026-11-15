@@ -3,10 +3,13 @@
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 import { SNAPSHOT_LIMITS, SnapshotFrame, snapshotFrames, snapshotLocals } from './exceptionSnapshotCore';
 import { breaksOnThrow, ExceptionSettings, exceptionFiltersForDebugger } from './exceptionFilterCore';
 import { MAKE_OBJECT_ID_REQUEST, requestWithDebuggerObjectIds, responseWithClientObjectIds } from './objectIds';
-import { readPdbDocuments } from './pdbDocuments';
+import { fetchBytes } from './httpFetch';
+import { readPdbInfo } from './pdbDocuments';
+import { SourceLinkEntry, parseSourceLink, resolveSourceLink, sourceCachePath } from './sourceLinkCore';
 import { findCallTargets } from './stepTargets';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 
@@ -78,6 +81,13 @@ export interface ProxyOptions {
     breakOnExceptionTypes?: string[];
     /** Record the call stack and locals with each logged exception (default true). */
     exceptionSnapshot?: boolean;
+    /**
+     * Source Link: download the source of a stop whose file is not on this machine into this cache, when the PDB maps
+     * it to a URL. Undefined: off.  replaces the HTTP download (tests).
+     */
+    sourceLink?: { cacheRoot: string; fetch?: (url: string) => Promise<Buffer> };
+    /** Folders with symbols by MVID (downloaded / decompiled, see netcoredbg patch 0009), to read their PDBs too. */
+    symbolDirs?: string[];
 }
 
 interface WriteSite {
@@ -173,6 +183,10 @@ export class DapProxy {
     private checkedExceptionTypes: string[];
     /** Exception snapshots taken in this session (bounded by SNAPSHOT_LIMITS.perSession). */
     private snapshotsTaken = 0;
+    /** Source Link maps of the modules loaded so far. */
+    private sourceLinks: SourceLinkEntry[] = [];
+    /** Source Link downloads by URL (each file is downloaded once; a failed URL is not tried again). */
+    private readonly downloads = new Map<string, Promise<string | undefined>>();
     private readonly mapper: SourcePathMapper;
     /** Assemblies whose PDB documents were already given to the mapper (pathKey). */
     private readonly scannedModules = new Set<string>();
@@ -312,7 +326,7 @@ export class DapProxy {
         if (message.type === 'response' && message.command === 'setBreakpoints' && message.request_seq !== undefined) {
             this.recordSpecialBreakpoints(message);
         }
-        if (message.type === 'event' && message.event === 'module' && message.body?.reason === 'new' && this.mapper.enabled) {
+        if (message.type === 'event' && message.event === 'module' && message.body?.reason === 'new' && (this.mapper.enabled || this.options.sourceLink)) {
             // A module loaded after the session started (attach, or loaded on demand): learn its documents and
             // move breakpoints set under a path it records differently.
             const modulePath = message.body.module?.path;
@@ -331,6 +345,7 @@ export class DapProxy {
             }
         }
         if (message.type === 'response' && message.command === 'stackTrace' && message.success) {
+            await this.fetchSourceLinkFiles(message);
             for (const frame of message.body?.stackFrames ?? []) {
                 if (typeof frame.id === 'number' && frame.source?.path && typeof frame.line === 'number') {
                     this.frameLocations.set(frame.id, { path: frame.source.path, line: frame.line });
@@ -419,7 +434,62 @@ export class DapProxy {
             return [];
         }
         this.scannedModules.add(key);
-        return this.mapper.addDocuments(readPdbDocuments(modulePath));
+        const info = readPdbInfo(modulePath, this.options.symbolDirs);
+        if (info.sourceLink) {
+            this.sourceLinks.push(...parseSourceLink(info.sourceLink));
+        }
+        return this.mapper.addDocuments(info.documents);
+    }
+
+    /**
+     * Frames whose file is not on this machine but has a Source Link URL: downloads the file into the cache (once) and
+     * maps the PDB path to it, so VS Code opens it like a local file and breakpoints in it work.
+     */
+    private async fetchSourceLinkFiles(response: DapMessage): Promise<void> {
+        if (!this.options.sourceLink || this.sourceLinks.length === 0) {
+            return;
+        }
+        const pending: Promise<void>[] = [];
+        for (const frame of response.body?.stackFrames ?? []) {
+            const pdbPath: unknown = frame.source?.path;
+            if (typeof pdbPath !== 'string' || fs.existsSync(this.mapper.toLocal(pdbPath))) {
+                continue;
+            }
+            const url = resolveSourceLink(this.sourceLinks, pdbPath);
+            if (url) {
+                pending.push(this.download(url).then((file) => {
+                    if (file) {
+                        this.mapper.addFilePairs([{ pdbPath, local: file }]);
+                    }
+                }));
+            }
+        }
+        await Promise.all(pending);
+    }
+
+    private download(url: string): Promise<string | undefined> {
+        let download = this.downloads.get(url);
+        if (!download) {
+            const { cacheRoot, fetch } = this.options.sourceLink!;
+            const file = sourceCachePath(cacheRoot, url);
+            download = (async () => {
+                if (fs.existsSync(file)) {
+                    return file;
+                }
+                try {
+                    const bytes = await (fetch ?? fetchBytes)(url);
+                    fs.mkdirSync(path.dirname(file), { recursive: true });
+                    fs.writeFileSync(file, bytes);
+                    this.log(`[source link] ${url}`);
+                    return file;
+                } catch (e) {
+                    this.log(`[source link] could not download ${url}: ${e instanceof Error ? e.message : String(e)}`);
+                    return undefined;
+                }
+            })();
+            this.downloads.set(url, download);
+        }
+        return download;
     }
 
     /** Sends the breakpoints given for `fromPath` again under `toPath` (removing them from the old path). */
