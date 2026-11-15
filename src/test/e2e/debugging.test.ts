@@ -138,11 +138,14 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
 
     it('steps into a decompiled assembly', { timeout: TIMEOUT, skip: fs.existsSync(DECOMPILER) ? false : 'the decompiler helper is not built' }, async () => {
         const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-decompiled-'));
+        // The temp folder may be given in its short 8.3 form (C:\Users\RUNNER~1\...) while paths come back long.
+        const realPath = (p: string) => fs.realpathSync.native(p).toLowerCase();
+        let s: DapSession | undefined;
         try {
             await decompileAssembly('dotnet', DECOMPILER, path.join(path.dirname(program), 'NoPdbLib.dll'), cache);
             const mapper = new SourcePathMapper();
             mapper.addFilePairs(readDecompiledAssemblies(cache).flatMap((a) => a.documents.map((d) => ({ pdbPath: d.name, local: d.file }))));
-            const s = session({ sourceMapper: mapper, env: { [SYMBOL_DIRS_ENV]: cache } });
+            s = session({ sourceMapper: mapper, env: { [SYMBOL_DIRS_ENV]: cache } });
             const first = s.nextStop();
             await s.launch(program, { [PROGRAM_CS]: [{ line: line('call-nopdb') }] });
             const stop = await first;
@@ -151,9 +154,10 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
             const arrived = await stepped;
             const frame = await s.topFrame(arrived.body.threadId);
             assert.match(frame.name, /NoPdbLib\.Pricing\.WithTax\(/);
-            assert.ok(frame.source.path.toLowerCase().startsWith(cache.toLowerCase()), frame.source.path);
-            await s.close();
+            assert.ok(realPath(frame.source.path).startsWith(realPath(cache)), frame.source.path);
         } finally {
+            // netcoredbg holds the generated PDB until it exits, also when an assertion failed above.
+            await s?.close();
             // Windows may hold a just-closed file for a moment: retry, and never fail the test over a temporary folder.
             try {
                 fs.rmSync(cache, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
