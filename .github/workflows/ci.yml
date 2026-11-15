@@ -32,10 +32,16 @@ jobs:
         run: |
           $installer = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
           Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installer
-          foreach ($runtime in 'dotnet', 'windowsdesktop') {
-            & $installer -Channel 10.0 -Runtime $runtime -Architecture x86 -InstallDir 'C:\Program Files (x86)\dotnet' -NoPath
-            if ($LASTEXITCODE -ne 0) { throw "x86 版 $runtime ランタイムのインストールに失敗しました (exit code $LASTEXITCODE)。" }
+          $root = 'C:\Program Files (x86)\dotnet'
+          # dotnet-install.ps1 はスクリプトなので $LASTEXITCODE を設定しない（失敗時は例外になる）。
+          # 念のため、インストール先にランタイムができたかを確かめる。
+          foreach ($runtime in @{ name = 'dotnet'; folder = 'Microsoft.NETCore.App' }, @{ name = 'windowsdesktop'; folder = 'Microsoft.WindowsDesktop.App' }) {
+            & $installer -Channel 10.0 -Runtime $runtime.name -Architecture x86 -InstallDir $root -NoPath
+            if (-not (Test-Path (Join-Path $root "shared\$($runtime.folder)"))) {
+              throw "x86 版 $($runtime.name) ランタイムが $root にインストールされていません。上のログを確認してください。"
+            }
           }
+          Get-ChildItem (Join-Path $root 'shared') -Directory | ForEach-Object { "$($_.Name): $((Get-ChildItem $_.FullName -Directory).Name -join ', ')" }
 
       - name: Install dependencies
         run: npm ci --no-fund --no-audit
