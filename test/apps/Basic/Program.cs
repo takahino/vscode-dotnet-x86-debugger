@@ -41,6 +41,15 @@ public static class Program
             total += i; // @loop
         }
 
+        // Exception settings: a FormatException thrown and caught.
+        try
+        {
+            int.Parse("not a number"); // @throw-format
+        }
+        catch (FormatException)
+        {
+        }
+
         // Caller-filtered breakpoints: Log is reached from A, B, A.
         A(); B(); A();
 

@@ -8,6 +8,7 @@ import { ControlNode, ControlTree } from './controlTree';
 import { DapTraceFactory } from './dapTrace';
 import { Decompiler } from './decompiler';
 import { ExceptionLog } from './exceptionLog';
+import { ExceptionSettings } from './exceptionSettings';
 import { CSharpInlineValuesProvider } from './inlineValues';
 import { MemoryMonitor } from './memoryMonitor';
 import { PerfTips } from './perfTips';
@@ -51,13 +52,16 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
+    const exceptionSettings = new ExceptionSettings(context.workspaceState);
+    const exceptionSettingsView = vscode.window.createTreeView('dotnetX86.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
+    exceptionSettings.attach(exceptionSettingsView);
     const decompiler = new Decompiler(context.extensionPath, path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
 
     context.subscriptions.push(
         output,
         vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new X86ConfigurationProvider()),
-        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, decompiler.cacheRoot)),
+        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, decompiler.cacheRoot, () => exceptionSettings.checkedTypes())),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new DapTraceFactory(output)),
         vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
@@ -114,6 +118,12 @@ export function activate(context: vscode.ExtensionContext): void {
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),
+        exceptionSettings,
+        exceptionSettingsView,
+        vscode.commands.registerCommand('dotnetX86.addExceptionType', () => exceptionSettings.addType()),
+        vscode.commands.registerCommand('dotnetX86.removeExceptionType', (node) => exceptionSettings.removeType(node)),
+        vscode.commands.registerCommand('dotnetX86.uncheckExceptionTypes', () => exceptionSettings.uncheckAll()),
+        vscode.commands.registerCommand('dotnetX86.breakOnExceptionType', (entry?: { typeName?: string }) => entry?.typeName && exceptionSettings.addType(entry.typeName)),
         sessionReport,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, sessionReport),
         vscode.commands.registerCommand('dotnetX86.exportSessionReport', () => sessionReport.export()),

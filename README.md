@@ -339,6 +339,14 @@ Right-click a line and choose **Start Timer Here...**, then right-click a later 
 Each pass from start to end is measured without stopping and charted in the **Value Trend** view (`⏱ name (ms)`),
 also written to the Debug Console. Each pass includes a few milliseconds of debugger overhead.
 
+### Exception settings
+
+The **Exception Settings (.NET x86)** view lists common exception types by namespace, as Visual Studio's Exception Settings
+window does: check a type (or a whole namespace) to stop whenever it is thrown, even when it is caught later. Add your own
+types with **+**, or right-click an entry of the Exception Log and choose **Break When This Type Is Thrown**. The checks are
+kept with the workspace and apply at once, also while the program runs. They add to the exception breakpoints of the
+Breakpoints view.
+
 ### Exception log
 
 The **Exception Log (.NET x86)** view lists every exception thrown in the debuggee, including ones that are caught

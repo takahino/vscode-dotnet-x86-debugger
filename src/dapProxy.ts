@@ -3,6 +3,7 @@
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
+import { breaksOnThrow, ExceptionSettings, exceptionFiltersForDebugger } from './exceptionFilterCore';
 import { MAKE_OBJECT_ID_REQUEST, requestWithDebuggerObjectIds, responseWithClientObjectIds } from './objectIds';
 import { readPdbDocuments } from './pdbDocuments';
 import { findCallTargets } from './stepTargets';
@@ -38,6 +39,8 @@ export const REMOVE_BREAKPOINT_EVENT = 'dotnetX86.removeBreakpoint';
 export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
 /** Custom DAP request: pause because this UI thread stopped answering for `ms` (arguments: threadId, ms). */
 export const FREEZE_PAUSE_REQUEST = 'dotnetX86.pauseForFreeze';
+/** Custom DAP request: the exception types checked in the Exception Settings view changed (arguments: types). */
+export const EXCEPTION_TYPES_REQUEST = 'dotnetX86.setExceptionTypes';
 
 export interface ExceptionFilterText {
     label: string;
@@ -70,6 +73,8 @@ export interface ProxyOptions {
     missingSourceMessage?: (unresolved: UnresolvedSource) => string;
     /** Reason shown for a pause caused by a UI freeze ("UI not responding for 2.3 s"). */
     freezeDescription?: (ms: number) => string;
+    /** Exception types to stop on when thrown, as checked in the Exception Settings view when the session starts. */
+    breakOnExceptionTypes?: string[];
 }
 
 interface WriteSite {
@@ -158,7 +163,11 @@ export class DapProxy {
     /** Start times of running timers, by "timer name:thread id". */
     private readonly timerStarts = new Map<string, number>();
     /** The exception settings the user chose; with the exception log on, netcoredbg always gets "all" on top. */
-    private userExceptionSettings: { filters: string[]; filterOptions: { filterId: string; condition?: string }[] } = { filters: [], filterOptions: [] };
+    private userExceptionSettings: ExceptionSettings = { filters: [], filterOptions: [] };
+    /** The last setExceptionBreakpoints arguments from VS Code (sent again when the checked types change). */
+    private userExceptionArgs: any = {};
+    /** Exception types checked in the Exception Settings view: stop when one of them is thrown. */
+    private checkedExceptionTypes: string[];
     private readonly mapper: SourcePathMapper;
     /** Assemblies whose PDB documents were already given to the mapper (pathKey). */
     private readonly scannedModules = new Set<string>();
@@ -190,6 +199,7 @@ export class DapProxy {
         private readonly options: ProxyOptions = {},
     ) {
         this.mapper = options.sourceMapper ?? new SourcePathMapper();
+        this.checkedExceptionTypes = options.breakOnExceptionTypes ?? [];
         // Before any message: VS Code sends the breakpoints right after initialize, and they must already carry PDB paths.
         if (this.mapper.enabled) {
             for (const module of options.preloadModules ?? []) {
@@ -216,8 +226,18 @@ export class DapProxy {
         if (message.type === 'request' && message.command === 'stackTrace' && message.seq !== undefined && !message.arguments?.startFrame) {
             this.pendingStackTraces.add(message.seq);
         }
-        if (message.type === 'request' && message.command === 'setExceptionBreakpoints' && this.options.exceptionLog) {
-            message = { ...message, arguments: this.withExceptionLogFilter(message.arguments ?? {}) };
+        if (message.type === 'request' && message.command === 'setExceptionBreakpoints') {
+            const args = message.arguments ?? {};
+            this.userExceptionArgs = args;
+            this.userExceptionSettings = {
+                filters: Array.isArray(args.filters) ? args.filters : [],
+                filterOptions: Array.isArray(args.filterOptions) ? args.filterOptions : [],
+            };
+            message = { ...message, arguments: this.exceptionArgsForDebugger() };
+        }
+        if (message.type === 'request' && message.command === EXCEPTION_TYPES_REQUEST) {
+            void this.setCheckedExceptionTypes(message);
+            return;
         }
         if (message.type === 'request' && message.command === FREEZE_PAUSE_REQUEST) {
             void this.pauseForFreeze(message);
@@ -541,39 +561,23 @@ export class DapProxy {
         return true;
     }
 
-    /** Keeps the user's settings for later decisions and adds an unconditional "all" filter for the log. */
-    private withExceptionLogFilter(args: any): any {
-        const filters: string[] = Array.isArray(args.filters) ? args.filters : [];
-        const filterOptions: { filterId: string; condition?: string }[] = Array.isArray(args.filterOptions) ? args.filterOptions : [];
-        this.userExceptionSettings = { filters, filterOptions };
-        return {
-            ...args,
-            filters: [...new Set([...filters, 'all'])],
-            filterOptions: filterOptions.filter((o) => o.filterId !== 'all'),
-        };
+    /**
+     * The user's exception breakpoints merged with the types checked in the Exception Settings view. With the exception
+     * log on, netcoredbg reports every thrown exception and handleExceptionStop decides whether to stop.
+     */
+    private exceptionArgsForDebugger(): any {
+        const merged = exceptionFiltersForDebugger(this.userExceptionSettings, this.checkedExceptionTypes, Boolean(this.options.exceptionLog));
+        return { ...this.userExceptionArgs, ...merged };
     }
 
-    /** Whether the user's own "All Exceptions" setting (with its type condition, if any) covers this exception type. */
-    private userBreaksOnThrow(typeName: string): boolean {
-        if (this.userExceptionSettings.filters.includes('all')) {
-            return true;
+    /** The Exception Settings view changed: takes effect at once, also while the program runs. */
+    private async setCheckedExceptionTypes(message: DapMessage): Promise<void> {
+        const types = message.arguments?.types;
+        this.checkedExceptionTypes = Array.isArray(types) ? types.filter((t): t is string => typeof t === 'string') : [];
+        if (!this.options.exceptionLog) {
+            await this.request('setExceptionBreakpoints', this.exceptionArgsForDebugger());
         }
-        return this.userExceptionSettings.filterOptions.some((o) => {
-            if (o.filterId !== 'all') {
-                return false;
-            }
-            let condition = (o.condition ?? '').trim();
-            if (!condition) {
-                return true;
-            }
-            // Same syntax as netcoredbg: "A, B" breaks on those types, "!A, B" on every type except those.
-            const negate = condition.startsWith('!');
-            if (negate) {
-                condition = condition.slice(1);
-            }
-            const types = condition.split(/[\s,]+/).filter(Boolean);
-            return types.includes(typeName) !== negate;
-        });
+        this.respond(message, {});
     }
 
     /** Logs the exception; returns true when the stop was only for the log and execution resumed. */
@@ -585,7 +589,7 @@ export class DapProxy {
             const stack = await this.request('stackTrace', { threadId, startFrame: 0, levels: 20 });
             // Exceptions thrown inside the framework have no source on the top frame: report the first user frame.
             const frame = (stack.body?.stackFrames ?? []).find((f: any) => f.source?.path);
-            const stops = breakMode !== 'always' || this.userBreaksOnThrow(typeName);
+            const stops = breakMode !== 'always' || breaksOnThrow(this.userExceptionSettings, this.checkedExceptionTypes, typeName);
             this.emitEvent(EXCEPTION_EVENT, {
                 time: Date.now(),
                 typeName,

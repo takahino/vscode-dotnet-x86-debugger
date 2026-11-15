@@ -55,6 +55,26 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
         assert.equal((await s.continueTo(stop.body.threadId)).event, 'terminated');
     });
 
+    for (const exceptionLog of [false, true]) {
+        it(`stops when a checked exception type is thrown (exception log ${exceptionLog ? 'on' : 'off'})`, { timeout: TIMEOUT }, async () => {
+            const s = session({ exceptionLog, breakOnExceptionTypes: ['System.FormatException'] });
+            const first = s.nextStopOrEnd();
+            await s.launch(program);
+            const stop = await first;
+            assert.equal(stop.event, 'stopped');
+            assert.equal(stop.body.reason, 'exception');
+            const names = (await s.frames(stop.body.threadId)).map((f) => f.name);
+            assert.ok(names.some((n) => /Program\.Main/.test(n)), names.join(', '));
+        });
+
+        it(`runs through an exception type that is not checked (exception log ${exceptionLog ? 'on' : 'off'})`, { timeout: TIMEOUT }, async () => {
+            const s = session({ exceptionLog, breakOnExceptionTypes: ['System.IO.IOException'] });
+            const first = s.nextStopOrEnd();
+            await s.launch(program);
+            assert.equal((await first).event, 'terminated');
+        });
+    }
+
     it('stops at a #caller breakpoint only when the method is a caller', { timeout: TIMEOUT }, async () => {
         const s = session();
         const first = s.nextStop();

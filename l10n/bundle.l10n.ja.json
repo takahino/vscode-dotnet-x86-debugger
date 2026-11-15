@@ -173,5 +173,9 @@
   "Delete": "削除",
   "Delete all decompiled symbols and sources? Debugging then works as before for those assemblies.": "逆コンパイルしたシンボルとソースをすべて削除しますか？ それらのアセンブリは元どおりのデバッグに戻ります。",
   "Decompiled symbols were deleted. This applies from the next debug session.": "逆コンパイルしたシンボルを削除しました。次のデバッグ セッションから反映されます。",
-  "Could not delete {0}: {1}": "{0} を削除できませんでした: {1}"
+  "Could not delete {0}: {1}": "{0} を削除できませんでした: {1}",
+  "Full name of the exception type to stop on when thrown": "スローされたら停止する例外の型の完全名",
+  "Enter the full name, e.g. System.IO.IOException.": "完全名を入力してください（例: System.IO.IOException）。",
+  "The program now stops when {0} is thrown.": "{0} がスローされたら停止するようになりました。",
+  "{0} checked": "{0} 件をチェック中"
 }

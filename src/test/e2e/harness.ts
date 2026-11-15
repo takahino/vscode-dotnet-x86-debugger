@@ -88,8 +88,8 @@ export class DapSession {
         return this.waitFor((m) => m.type === 'event' && (m.event === 'stopped' || m.event === 'terminated'), timeoutMs, 'a stop or the end');
     }
 
-    /** initialize, launch, the breakpoints by file, configurationDone; resolves with the first stop (if `waitForStop`). */
-    async launch(program: string, breakpoints: Record<string, any[]> = {}, extra: Record<string, unknown> = {}): Promise<void> {
+    /** initialize, launch, the breakpoints by file and the exception filters, then configurationDone (as VS Code does). */
+    async launch(program: string, breakpoints: Record<string, any[]> = {}, extra: Record<string, unknown> = {}, exceptionFilters: Record<string, unknown> = { filters: [] }): Promise<void> {
         await this.request('initialize', { adapterID: 'dotnet-x86', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
         const launched = await this.request('launch', { program, cwd: path.dirname(program), args: [], ...extra });
         if (!launched.success) {
@@ -98,6 +98,7 @@ export class DapSession {
         for (const [file, list] of Object.entries(breakpoints)) {
             await this.request('setBreakpoints', { source: { path: file }, breakpoints: list });
         }
+        await this.request('setExceptionBreakpoints', exceptionFilters);
         await this.request('configurationDone');
     }
 

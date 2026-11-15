@@ -140,7 +140,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
     readonly onDidSendMessage = this.emitter.event;
     private readonly proxy: DapProxy;
 
-    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>, sourceMap: SourceMapSetup) {
+    constructor(executable: string, args: string[], output: vscode.OutputChannel, env: Record<string, string>, sourceMap: SourceMapSetup, breakOnExceptionTypes: string[]) {
         this.proxy = new DapProxy(
             executable,
             args,
@@ -156,6 +156,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 sourceMapper: sourceMap.mapper,
                 preloadModules: sourceMap.preloadModules,
                 missingSourceMessage,
+                breakOnExceptionTypes,
                 freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
             },
         );
@@ -200,6 +201,8 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         private readonly output: vscode.OutputChannel,
         /** Where "Decompile for Debugging" leaves its symbols (see Decompiler). */
         private readonly decompiledCache: string,
+        /** Exception types checked in the Exception Settings view. */
+        private readonly checkedExceptionTypes: () => string[] = () => [],
     ) {}
 
     createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.DebugAdapterDescriptor {
@@ -216,7 +219,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         }
         const sourceMap = sourceMapSetup(session, this.output);
         // netcoredbg runs behind a DAP relay that adds logpoints (see DapProxy).
-        const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap);
+        const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap, this.checkedExceptionTypes());
         if (sourceMap.mapper.enabled) {
             // Generated files under obj\ are never on another machine's disk and are not worth reporting.
             const unresolved = sourceMap.mapper.unresolvedAll().filter((u) => !/[\\/]obj[\\/]/i.test(u.pdbPath));

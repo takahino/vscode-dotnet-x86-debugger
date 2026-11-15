@@ -46,6 +46,7 @@
     "onCommand:dotnetX86.makeObjectId",
     "onCommand:dotnetX86.decompileModule",
     "onCommand:dotnetX86.clearDecompiled",
+    "onCommand:dotnetX86.addExceptionType",
     "onCommand:dotnetX86.pinValue",
     "onCommand:dotnetX86.unpinValue",
     "onCommand:dotnetX86.clearPinnedValues",
@@ -137,6 +138,29 @@
       {
         "command": "dotnetX86.revealModule",
         "title": "%command.revealModule%",
+        "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.addExceptionType",
+        "title": "%command.addExceptionType%",
+        "category": ".NET x86",
+        "icon": "$(add)"
+      },
+      {
+        "command": "dotnetX86.removeExceptionType",
+        "title": "%command.removeExceptionType%",
+        "category": ".NET x86",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "dotnetX86.uncheckExceptionTypes",
+        "title": "%command.uncheckExceptionTypes%",
+        "category": ".NET x86",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "dotnetX86.breakOnExceptionType",
+        "title": "%command.breakOnExceptionType%",
         "category": ".NET x86"
       },
       {
@@ -329,6 +353,14 @@
           "when": "debugType == 'dotnet-x86'"
         },
         {
+          "command": "dotnetX86.removeExceptionType",
+          "when": "false"
+        },
+        {
+          "command": "dotnetX86.breakOnExceptionType",
+          "when": "false"
+        },
+        {
           "command": "dotnetX86.startTimer",
           "when": "resourceLangId == csharp"
         },
@@ -436,6 +468,16 @@
           "group": "navigation"
         },
         {
+          "command": "dotnetX86.addExceptionType",
+          "when": "view == dotnetX86.exceptionSettings",
+          "group": "navigation@1"
+        },
+        {
+          "command": "dotnetX86.uncheckExceptionTypes",
+          "when": "view == dotnetX86.exceptionSettings",
+          "group": "navigation@2"
+        },
+        {
           "command": "dotnetX86.refreshControlTree",
           "when": "view == dotnetX86.controls",
           "group": "navigation"
@@ -447,6 +489,16 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "dotnetX86.removeExceptionType",
+          "when": "view == dotnetX86.exceptionSettings && viewItem == dotnetX86.exceptionType.custom",
+          "group": "inline"
+        },
+        {
+          "command": "dotnetX86.breakOnExceptionType",
+          "when": "view == dotnetX86.exceptions && viewItem == dotnetX86.exception",
+          "group": "z_dotnetX86@1"
+        },
         {
           "command": "dotnetX86.copyModulePath",
           "when": "view == dotnetX86.modules",
@@ -762,6 +814,12 @@
           "id": "dotnetX86.exceptions",
           "name": "%view.exceptions%",
           "when": "debugType == 'dotnet-x86'"
+        },
+        {
+          "id": "dotnetX86.exceptionSettings",
+          "name": "%view.exceptionSettings%",
+          "when": "debugType == 'dotnet-x86'",
+          "visibility": "collapsed"
         },
         {
           "id": "dotnetX86.stepHistory",
