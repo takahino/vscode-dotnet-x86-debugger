@@ -1,5 +1,6 @@
 import * as cp from 'child_process';
 import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 interface Sample {
@@ -9,12 +10,30 @@ interface Sample {
     workingSet: number;
     /** CPU usage over the last interval, as % of all logical cores (like Task Manager); null for the first sample. */
     cpu: number | null;
+    /** GDI / USER objects of the process (the per-process limit is 10,000 by default) and kernel handles. */
+    gdi: number;
+    user: number;
+    handles: number;
+    /** Reserved + committed 32-bit address space, and its largest free block; null when not a 32-bit process. */
+    addressUsed: number | null;
+    largestFree: number | null;
+}
+
+/** Facts about the process sent once by the sampler. */
+interface ProcessInfo {
+    /** A 32-bit process on 64-bit Windows: its address space is measured. */
+    wow64: boolean;
+    /** 2 GB, or 4 GB for a large-address-aware exe. */
+    addressLimit: number;
+    gdiQuota: number;
+    userQuota: number;
 }
 
 interface SessionMemory {
     name: string;
     pid: number;
     startedAt: number;
+    info?: ProcessInfo;
     samples: Sample[];
     /** Periods the debuggee was stopped at a breakpoint / step (end undefined while still stopped). */
     breaks: { start: number; end?: number }[];
@@ -27,14 +46,16 @@ const SAMPLE_INTERVAL_MS = 1000;
 
 /**
  * Samples the debuggee's memory (Private Bytes / Working Set) and CPU usage while debugging and draws them in a
- * webview, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools.
+ * webview, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. It also draws what Visual Studio
+ * does not: GDI / USER objects and handles (WinForms apps crash at 10,000 GDI objects), and how full the 32-bit
+ * address space is (an x86 app runs out of it long before the machine runs out of memory).
  */
 export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.Disposable {
     private current: SessionMemory | undefined;
     private sampler: cp.ChildProcess | undefined;
     private panel: vscode.WebviewPanel | undefined;
 
-    constructor(private readonly output: vscode.OutputChannel) {}
+    constructor(private readonly extensionPath: string, private readonly output: vscode.OutputChannel) {}
 
     createDebugAdapterTracker(session: vscode.DebugSession): vscode.DebugAdapterTracker {
         return {
@@ -82,13 +103,14 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
             this.show();
         }
 
-        // One long-running PowerShell is much cheaper than spawning a process per sample.
-        const script =
-            `$p = Get-Process -Id ${pid} -ErrorAction Stop; ` +
-            `while (-not $p.HasExited) { $p.Refresh(); ` +
-            `[Console]::Out.WriteLine(('{0},{1},{2}' -f $p.PrivateMemorySize64, $p.WorkingSet64, [int64]$p.TotalProcessorTime.TotalMilliseconds)); ` +
-            `[Console]::Out.Flush(); Start-Sleep -Milliseconds ${SAMPLE_INTERVAL_MS} }`;
-        const sampler = cp.spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true });
+        // One long-running helper is much cheaper than spawning a process per sample.
+        const script = path.join(this.extensionPath, 'resources', 'processSampler.ps1');
+        const sampler = cp.spawn(
+            'powershell.exe',
+            ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-ProcessId', String(pid), '-IntervalMs', String(SAMPLE_INTERVAL_MS)],
+            { windowsHide: true },
+        );
+        sampler.on('error', (e) => this.output.appendLine(`[memory] could not start PowerShell: ${e.message}`));
         const session = this.current;
         const cores = Math.max(1, os.cpus().length);
         let previous: { wall: number; cpuMs: number } | undefined;
@@ -98,16 +120,26 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
             const lines = pending.split(/\r?\n/);
             pending = lines.pop() ?? '';
             for (const line of lines) {
-                const [privateBytes, workingSet, cpuMs] = line.split(',').map(Number);
-                if (!Number.isFinite(privateBytes) || !Number.isFinite(workingSet) || !Number.isFinite(cpuMs)) {
+                const [kind, ...fields] = line.trim().split(' ');
+                const n = fields.map(Number);
+                if (kind === 'info' && n.length === 4 && n.every(Number.isFinite)) {
+                    session.info = { wow64: n[0] === 1, addressLimit: n[1], gdiQuota: n[2], userQuota: n[3] };
                     continue;
                 }
+                if (kind !== 's' || n.length !== 8 || !n.every(Number.isFinite)) {
+                    continue;
+                }
+                const [privateBytes, workingSet, cpuMs, gdi, user, handles, addressUsed, largestFree] = n;
                 const wall = Date.now();
                 const cpu = previous && wall > previous.wall
                     ? Math.min(100, Math.max(0, ((cpuMs - previous.cpuMs) / ((wall - previous.wall) * cores)) * 100))
                     : null;
                 previous = { wall, cpuMs };
-                session.samples.push({ t: wall - session.startedAt, privateBytes, workingSet, cpu });
+                session.samples.push({
+                    t: wall - session.startedAt, privateBytes, workingSet, cpu, gdi, user, handles,
+                    addressUsed: addressUsed < 0 ? null : addressUsed,
+                    largestFree: largestFree < 0 ? null : largestFree,
+                });
                 if (session.samples.length > MAX_SAMPLES) {
                     session.samples.shift();
                 }
@@ -154,7 +186,7 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
 /** Webview texts, localized in the extension host (the webview has no access to vscode.l10n). */
 function localizedStrings() {
     return {
-        title: vscode.l10n.t('Process memory and CPU'),
+        title: vscode.l10n.t('Process memory, CPU and handles'),
         waiting: vscode.l10n.t('Start debugging with the dotnet-x86 debugger to see memory.'),
         privateNow: vscode.l10n.t('Private Bytes (now)'),
         privatePeak: vscode.l10n.t('Private Bytes (peak)'),
@@ -168,6 +200,24 @@ function localizedStrings() {
         time: vscode.l10n.t('Elapsed'),
         exited: vscode.l10n.t('process exited'),
         stopped: vscode.l10n.t('stopped'),
+        gdiNow: vscode.l10n.t('GDI objects (now)'),
+        userNow: vscode.l10n.t('USER objects (now)'),
+        handlesNow: vscode.l10n.t('Handles (now)'),
+        objectsChart: vscode.l10n.t('GDI / USER objects'),
+        handlesChart: vscode.l10n.t('Handles'),
+        gdiObjects: vscode.l10n.t('GDI objects'),
+        userObjects: vscode.l10n.t('USER objects'),
+        quota: vscode.l10n.t('limit {0}'),
+        addressNow: vscode.l10n.t('Address space used (now)'),
+        largestFreeNow: vscode.l10n.t('Largest free block (now)'),
+        addressChart: vscode.l10n.t('32-bit address space (reserved + committed)'),
+        addressUsed: vscode.l10n.t('Used'),
+        largestFree: vscode.l10n.t('Largest free block'),
+        addressLimit: vscode.l10n.t('Limit {0}'),
+        largeAddressAware: vscode.l10n.t('large address aware'),
+        warnGdi: vscode.l10n.t('GDI objects are at {0} % of the per-process limit ({1}). Past it, drawing fails and the app usually crashes: look for Font / Brush / Pen / Bitmap / Icon objects that are not disposed.'),
+        warnUser: vscode.l10n.t('USER objects are at {0} % of the per-process limit ({1}). Past it, windows and menus cannot be created: look for forms and controls that are not disposed.'),
+        warnAddress: vscode.l10n.t('The 32-bit address space is {0} % full, and its largest free block is {1}. Large allocations will fail with OutOfMemoryException even with free memory on the machine.'),
     };
 }
 
@@ -188,8 +238,15 @@ function renderHtml(t: Strings): string {
 <style>
   /* Series colors validated (dataviz validate_palette.js) against #ffffff / #1f1f1f surfaces.
      --series-3 is below 3:1 on light, so the CPU chart is backed by its title, value tiles and the data table. */
-  :root { --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; }
-  body.vscode-dark, body.vscode-high-contrast { --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; }
+  :root { --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --warning: #fab219; }
+  body.vscode-dark, body.vscode-high-contrast { --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #0ca30c; --series-7: #9085e9; }
+  /* Each measure keeps its own slot across the charts (slots 4 and 5 are also below 3:1 on light: end labels, tiles and the table carry them). */
+  .limit { stroke: var(--vscode-descriptionForeground); stroke-dasharray: 4 3; stroke-width: 1px; }
+  .limit-label { font-size: 11px; fill: var(--vscode-descriptionForeground); }
+  .warning { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; padding: 6px 8px; border-radius: 4px;
+             border: 1px solid var(--warning); }
+  .warning .icon { color: var(--warning); font-weight: 700; }
+  body:not(.wow64) .address { display: none; }
   body { font-family: var(--vscode-font-family); font-size: var(--vscode-font-size); color: var(--vscode-foreground);
          background: var(--vscode-editor-background); margin: 0; padding: 12px 16px; }
   h1 { font-size: 1.1em; font-weight: 600; margin: 0 0 2px; }
@@ -230,6 +287,14 @@ function renderHtml(t: Strings): string {
   <div class="tile"><div class="label">${escapeHtml(t.cpuNow)}</div><div class="value" id="cpuNow">-</div></div>
   <div class="tile"><div class="label">${escapeHtml(t.cpuPeak)}</div><div class="value" id="cpuPeak">-</div></div>
 </div>
+<div class="tiles">
+  <div class="tile"><div class="label">${escapeHtml(t.gdiNow)}</div><div class="value" id="gdiNow">-</div></div>
+  <div class="tile"><div class="label">${escapeHtml(t.userNow)}</div><div class="value" id="userNow">-</div></div>
+  <div class="tile"><div class="label">${escapeHtml(t.handlesNow)}</div><div class="value" id="handlesNow">-</div></div>
+  <div class="tile address"><div class="label">${escapeHtml(t.addressNow)}</div><div class="value" id="addrNow">-</div></div>
+  <div class="tile address"><div class="label">${escapeHtml(t.largestFreeNow)}</div><div class="value" id="freeNow">-</div></div>
+</div>
+<div id="warnings"></div>
 <h2>${escapeHtml(t.memoryChart)}</h2>
 <div class="legend">
   <span><span class="swatch" style="background: var(--series-1)"></span>Private Bytes</span>
@@ -239,13 +304,28 @@ function renderHtml(t: Strings): string {
 <div class="chart"><svg id="memSvg" height="220" role="img" aria-label="${escapeHtml(t.memoryChart)}"></svg><div class="tooltip" id="memTip"></div></div>
 <h2>${escapeHtml(t.cpuChart)}</h2>
 <div class="chart"><svg id="cpuSvg" height="160" role="img" aria-label="${escapeHtml(t.cpuChart)}"></svg><div class="tooltip" id="cpuTip"></div></div>
+<h2>${escapeHtml(t.objectsChart)}</h2>
+<div class="legend">
+  <span><span class="swatch" style="background: var(--series-4)"></span>${escapeHtml(t.gdiObjects)}</span>
+  <span><span class="swatch" style="background: var(--series-5)"></span>${escapeHtml(t.userObjects)}</span>
+  <span><span class="band-swatch"></span>${escapeHtml(t.stoppedLegend)}</span>
+</div>
+<div class="chart"><svg id="objSvg" height="160" role="img" aria-label="${escapeHtml(t.objectsChart)}"></svg><div class="tooltip" id="objTip"></div></div>
+<h2>${escapeHtml(t.handlesChart)}</h2>
+<div class="chart"><svg id="handleSvg" height="140" role="img" aria-label="${escapeHtml(t.handlesChart)}"></svg><div class="tooltip" id="handleTip"></div></div>
+<section class="address">
+<h2>${escapeHtml(t.addressChart)} <span class="sub" id="addrSub"></span></h2>
+<div class="chart"><svg id="addrSvg" height="180" role="img" aria-label="${escapeHtml(t.addressChart)}"></svg><div class="tooltip" id="addrTip"></div></div>
+</section>
 <details><summary>${escapeHtml(t.tableSummary)}</summary><table id="table"></table></details>
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
 const T = ${JSON.stringify(t).replace(/</g, '\\u003c')};
 let state;
-const MB = 1024 * 1024;
-const fmtMB = (b) => (b / MB).toFixed(1) + ' MB';
+const MB = 1024 * 1024, GB = 1024 * MB;
+const fmtMB = (b) => (b == null ? '-' : (b / MB).toFixed(1) + ' MB');
+const fmtGB = (b) => +(b / GB).toFixed(2) + ' GB';
+const fmtCount = (v) => (v == null ? '-' : Number(v).toLocaleString());
 const fmtPct = (v) => (v == null ? '-' : v.toFixed(1) + ' %');
 const fmtTime = (ms) => { const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 const el = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
@@ -264,6 +344,26 @@ const charts = [
     svg: document.getElementById('cpuSvg'), tip: document.getElementById('cpuTip'), unit: (v) => v + ' %', fmt: fmtPct, scale: 1, minMax: 10, maxMax: 100,
     series: [{ key: 'cpu', name: 'CPU', color: 'var(--series-3)' }],
   },
+  {
+    // The 10,000 limit flattens the lines while far from it: it joins the scale only from half of it on.
+    svg: document.getElementById('objSvg'), tip: document.getElementById('objTip'), unit: fmtCount, fmt: fmtCount, scale: 1, minMax: 10,
+    limit: () => state.session.info && { value: state.session.info.gdiQuota, label: T.quota.replace('{0}', fmtCount(state.session.info.gdiQuota)) },
+    series: [
+      { key: 'gdi', name: T.gdiObjects, color: 'var(--series-4)' },
+      { key: 'user', name: T.userObjects, color: 'var(--series-5)' },
+    ],
+  },
+  {
+    svg: document.getElementById('handleSvg'), tip: document.getElementById('handleTip'), unit: fmtCount, fmt: fmtCount, scale: 1, minMax: 10,
+    series: [{ key: 'handles', name: T.handlesChart, color: 'var(--series-6)' }],
+  },
+  {
+    // Always drawn up to the limit: how much room is left is the point of this chart.
+    svg: document.getElementById('addrSvg'), tip: document.getElementById('addrTip'), unit: (v) => v + ' GB', fmt: fmtMB, scale: GB, minMax: 0.5,
+    limit: () => state.session.info && { value: state.session.info.addressLimit, label: T.addressLimit.replace('{0}', fmtGB(state.session.info.addressLimit)), always: true },
+    tipExtra: (p) => p.largestFree == null ? '' : '<br>' + T.largestFree + ': ' + fmtMB(p.largestFree),
+    series: [{ key: 'addressUsed', name: T.addressUsed, color: 'var(--series-7)' }],
+  },
 ];
 
 function niceStep(max) {
@@ -278,7 +378,10 @@ function drawChart(c) {
   const H = Number(svg.getAttribute('height')), W = svg.clientWidth, w = W - M.left - M.right, h = H - M.top - M.bottom;
   const t0 = samples[0].t, t1 = Math.max(samples[samples.length - 1].t, t0 + 1);
   const values = samples.flatMap((p) => c.series.map((s) => p[s.key])).filter((v) => v != null);
-  const rawMax = Math.max(c.minMax, ...values.map((v) => v / c.scale));
+  let rawMax = Math.max(c.minMax, ...values.map((v) => v / c.scale));
+  let limit = c.limit ? c.limit() : null;
+  if (limit && (limit.always || rawMax >= (limit.value / c.scale) * 0.5)) rawMax = Math.max(rawMax, limit.value / c.scale);
+  else limit = null;
   const step = niceStep(rawMax), yMax = Math.min(c.maxMax ?? Infinity, Math.ceil(rawMax / step) * step);
   const x = (t) => M.left + ((t - t0) / (t1 - t0)) * w;
   const y = (v) => M.top + h - (v / c.scale / yMax) * h;
@@ -298,6 +401,11 @@ function drawChart(c) {
     const t = el('text', { x: x(tt), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === ticks ? 'end' : 'middle' }); t.textContent = fmtTime(tt); axis.appendChild(t);
   }
   svg.appendChild(grid); svg.appendChild(axis);
+  if (limit) {
+    svg.appendChild(el('line', { class: 'limit', x1: M.left, x2: M.left + w, y1: y(limit.value), y2: y(limit.value) }));
+    // Under the line at the right: above it would collide with the top tick label and the heading.
+    const t = el('text', { class: 'limit-label', x: M.left + w - 4, y: y(limit.value) + 13, 'text-anchor': 'end' }); t.textContent = limit.label; svg.appendChild(t);
+  }
 
   const ends = [];
   for (const s of c.series) {
@@ -334,7 +442,7 @@ function drawChart(c) {
     hover.setAttribute('visibility', 'visible');
     const stopped = breaks.some((b) => p.t >= b.start && p.t <= (b.end ?? state.now));
     c.tip.innerHTML = '<b>' + fmtTime(p.t) + '</b>' + (stopped ? ' (' + T.stopped + ')' : '') +
-      c.series.map((s) => '<br>' + s.name + ': ' + c.fmt(p[s.key])).join('');
+      c.series.map((s) => '<br>' + s.name + ': ' + c.fmt(p[s.key])).join('') + (c.tipExtra ? c.tipExtra(p) : '');
     c.tip.style.display = 'block';
     c.tip.style.left = Math.min(x(p.t) + 12, W - c.tip.offsetWidth - 4) + 'px'; c.tip.style.top = M.top + 'px';
   });
@@ -355,9 +463,42 @@ function update() {
   document.getElementById('wsNow').textContent = last ? fmtMB(last.workingSet) : '-';
   document.getElementById('cpuNow').textContent = last ? fmtPct(last.cpu) : '-';
   document.getElementById('cpuPeak').textContent = cpuValues.length ? fmtPct(Math.max(...cpuValues)) : '-';
-  const rows = samples.slice(-30).reverse().map((p) => '<tr><td>' + fmtTime(p.t) + '</td><td>' + fmtMB(p.privateBytes) + '</td><td>' + fmtMB(p.workingSet) + '</td><td>' + fmtPct(p.cpu) + '</td></tr>');
-  document.getElementById('table').innerHTML = '<tr><th>' + T.time + '</th><th>Private Bytes</th><th>Working Set</th><th>CPU</th></tr>' + rows.join('');
+  const info = s.info, wow64 = !!(info && info.wow64);
+  document.body.classList.toggle('wow64', wow64);
+  document.getElementById('gdiNow').textContent = last ? fmtCount(last.gdi) : '-';
+  document.getElementById('userNow').textContent = last ? fmtCount(last.user) : '-';
+  document.getElementById('handlesNow').textContent = last ? fmtCount(last.handles) : '-';
+  document.getElementById('addrNow').textContent = last && wow64 ? fmtMB(last.addressUsed) : '-';
+  document.getElementById('freeNow').textContent = last && wow64 ? fmtMB(last.largestFree) : '-';
+  if (wow64) document.getElementById('addrSub').textContent = '(' + T.addressLimit.replace('{0}', fmtGB(info.addressLimit)) + (info.addressLimit > 2 * GB ? ', ' + T.largeAddressAware : '') + ')';
+  showWarnings(last, info);
+  const rows = samples.slice(-30).reverse().map((p) => '<tr><td>' + fmtTime(p.t) + '</td><td>' + fmtMB(p.privateBytes) + '</td><td>' + fmtMB(p.workingSet) + '</td><td>' + fmtPct(p.cpu) +
+    '</td><td>' + fmtCount(p.gdi) + '</td><td>' + fmtCount(p.user) + '</td><td>' + fmtCount(p.handles) + '</td>' +
+    (wow64 ? '<td>' + fmtMB(p.addressUsed) + '</td><td>' + fmtMB(p.largestFree) + '</td>' : '') + '</tr>');
+  document.getElementById('table').innerHTML = '<tr><th>' + T.time + '</th><th>Private Bytes</th><th>Working Set</th><th>CPU</th><th>GDI</th><th>USER</th><th>' + T.handlesChart + '</th>' +
+    (wow64 ? '<th>' + T.addressUsed + '</th><th>' + T.largestFree + '</th>' : '') + '</tr>' + rows.join('');
   draw();
+}
+
+// Status, not identity: an icon and a sentence, with the reserved warning color only on the icon and border.
+function showWarnings(last, info) {
+  const list = [];
+  if (last && info) {
+    const pct = (v, of) => Math.round((v / of) * 100);
+    if (last.gdi >= info.gdiQuota * 0.8) list.push(T.warnGdi.replace('{0}', pct(last.gdi, info.gdiQuota)).replace('{1}', fmtCount(info.gdiQuota)));
+    if (last.user >= info.userQuota * 0.8) list.push(T.warnUser.replace('{0}', pct(last.user, info.userQuota)).replace('{1}', fmtCount(info.userQuota)));
+    if (info.wow64 && last.addressUsed != null && (last.addressUsed >= info.addressLimit * 0.85 || last.largestFree < 128 * MB)) {
+      list.push(T.warnAddress.replace('{0}', pct(last.addressUsed, info.addressLimit)).replace('{1}', fmtMB(last.largestFree)));
+    }
+  }
+  const box = document.getElementById('warnings');
+  box.innerHTML = '';
+  for (const text of list) {
+    const row = document.createElement('div'); row.className = 'warning'; row.setAttribute('role', 'status');
+    const icon = document.createElement('span'); icon.className = 'icon'; icon.textContent = '\\u26a0';
+    const msg = document.createElement('span'); msg.textContent = text;
+    row.append(icon, msg); box.appendChild(row);
+  }
 }
 
 window.addEventListener('message', (e) => { if (e.data.type === 'data') { state = e.data; update(); } });

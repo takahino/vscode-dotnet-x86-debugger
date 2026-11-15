@@ -43,7 +43,7 @@ import {
 export function activate(context: vscode.ExtensionContext): void {
     const output = vscode.window.createOutputChannel('.NET x86 Debugger');
     const snapshots = new SnapshotStore();
-    const memory = new MemoryMonitor(output);
+    const memory = new MemoryMonitor(context.extensionPath, output);
     const valueTracker = new ValueTracker();
     const stepHistory = new StepHistory();
     const moduleList = new ModuleList();

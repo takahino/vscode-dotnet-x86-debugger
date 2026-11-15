@@ -677,6 +677,8 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </figure>
 <h4>メモリ / CPU グラフ</h4>
 <p>コマンドパレットで <b>.NET x86: メモリ / CPU グラフを表示</b> を実行すると、Private Bytes・Working Set・CPU 使用率を 1 秒ごとに表示します。停止していた区間は網掛けになります。<code>dotnetX86.memoryGraph.autoOpen</code> を有効にすると、デバッグ開始時に自動で開きます。</p>
+<p>その下には、Visual Studio にはないグラフが 2 つあります。<b>GDI / USER オブジェクト数とハンドル数</b>（オブジェクトは種類ごとに 1 プロセス 10,000 個まで。数が上限の半分を超えると上限の線を表示します）と、<b>32bit アドレス空間</b>の使用量（2GB / 4GB の上限と、最大の空きブロック）です。GDI / USER が上限の 80 % に達したとき、アドレス空間の 85 % が埋まったとき、最大の空きブロックが 128MB を切ったときは警告を表示します。</p>
+<div class="usecase"><b>ユースケース:</b> 1 時間ほど使うと、画面に赤い × が出て落ちる。帳票を印刷するたびに GDI のグラフが数個ずつ増えている。印刷処理で作った <code>Font</code> を Dispose していませんでした。</div>
 <figure class="figure">
 <svg viewBox="0 0 860 250" role="img" aria-label="メモリ / CPU グラフの画面">
   <rect x="0" y="0" width="860" height="250" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>

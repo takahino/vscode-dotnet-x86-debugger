@@ -66,6 +66,7 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 | [PerfTips](#perftips) | Time of the last step or continue at the line | Automatic |
 | [Section timing, value trend](#section-timing) ★ | Time a section or chart values on every pass, without stopping | Editor right-click |
 | [Memory / CPU graph](#memory--cpu-graph) | Private Bytes, Working Set and CPU over time | Command Palette |
+| [GDI / USER objects, handles, address space](#memory--cpu-graph) ★ | Catch GDI leaks and a full 32-bit address space before the app crashes | Command Palette |
 | [Heap snapshots](#heap-snapshots) | Objects per type on the GC heap, and what grew between two stops | Call Stack right-click |
 | **History and records** | | |
 | [Step history](#step-history) | The locals of every earlier stop | Step History view |
@@ -406,6 +407,17 @@ Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotn
 to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
 in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
 and open *Data table* for the latest samples.
+
+Below them, what Visual Studio does not show:
+
+- **GDI / USER objects** and **handles**. Windows allows a process 10,000 GDI objects and 10,000 USER objects; a WinForms
+  app that never disposes its `Font`, `Brush`, `Pen`, `Bitmap` or `Icon` objects climbs steadily until drawing fails and it
+  crashes. The limit line appears once a count passes half of it.
+- **32-bit address space**: reserved + committed bytes against the limit (2 GB, or 4 GB for a large address aware exe), and
+  the largest free block. An x86 app gets `OutOfMemoryException` when no free block is big enough, with plenty of memory left
+  on the machine.
+
+A warning appears at 80 % of the GDI / USER limit, and when the address space is 85 % full or its largest free block is under 128 MB.
 
 #### Heap snapshots
 

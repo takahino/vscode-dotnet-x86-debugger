@@ -724,6 +724,12 @@ Each pass records the values without stopping and charts them per expression.</p
 <h4>Memory / CPU graph</h4>
 <p>Run <b>.NET x86: Show Memory / CPU Graph</b> to watch Private Bytes, Working Set and CPU usage once per second.
 Stopped periods are shaded. Set <code>dotnetX86.memoryGraph.autoOpen</code> to open it with every session.</p>
+<p>Below them are two things Visual Studio does not chart: <b>GDI / USER objects and handles</b> (a process may hold 10,000 of each
+kind of object; the limit line appears past half of it), and the <b>32-bit address space</b> in use against its 2 GB / 4 GB limit,
+with the largest free block. A warning appears at 80 % of the GDI / USER limit, and when the address space is 85 % full or its
+largest free block is under 128 MB.</p>
+<div class="usecase"><b>Use case:</b> after an hour of use the app draws red crosses and crashes. The GDI line climbs by a few
+objects every time a report is printed: a <code>Font</code> created in the print handler is never disposed.</div>
 <figure class="figure">
 <svg viewBox="0 0 860 250" role="img" aria-label="Memory and CPU graph panel">
   <rect x="0" y="0" width="860" height="250" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>

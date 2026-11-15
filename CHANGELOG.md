@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New: the memory / CPU graph also charts **GDI / USER objects** and **handles** (with the per-process limit once a count passes half of it), and for x86 processes the **32-bit address space** in use against its 2 GB / 4 GB limit with the largest free block. Warnings at 80 % of the GDI / USER limit and when the address space is nearly full. The sampler is now `resources/processSampler.ps1`.
+
 ## 1.0.0
 
 - New: extension **icon**, and a rewritten README (Marketplace page): quick start, highlights, a feature table by category with pictures; the feature descriptions are grouped the same way. Building, tests and releasing moved to CONTRIBUTING.md.
