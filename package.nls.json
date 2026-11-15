@@ -143,15 +143,5 @@
   "config.eventTrace.enabled": "Trace Events (WinForms Controls view) and the Event Trace view: which control's event fired, in what order, without stopping. Off: the command and the view are hidden.",
   "command.captureEvidence": "Capture Evidence",
   "config.evidence.enabled": "Capture Evidence (Command Palette, Call Stack and WinForms Controls views): pictures of the open forms, the control values, the variables, the call stack and the SQL since the previous capture, saved as Markdown and PNG files.",
-  "config.evidence.folder": "Folder where Capture Evidence saves (a new sub folder per capture). A relative path is taken from the workspace folder.",
-  "view.liveWatch": "Live Watch (.NET x86)",
-  "command.addLiveWatch": "Add Live Watch Expression...",
-  "command.editLiveWatch": "Edit Expression",
-  "command.removeLiveWatch": "Remove Expression",
-  "command.clearLiveWatch": "Remove All Live Watch Expressions",
-  "command.startLiveWatch": "Start Live Watch",
-  "command.stopLiveWatch": "Stop Live Watch",
-  "config.liveWatch.enabled": "The Live Watch view: expressions read again and again while the program runs (static fields and properties and what is reached from them). Off: the view is hidden and the program is never paused for it. Its ▶ / ⏸ button turns sampling on and off.",
-  "config.liveWatch.intervalMs": "How often Live Watch reads the values, in milliseconds (at least 250). Each read pauses the UI thread for a moment (about 20 ms per expression).",
-  "config.liveWatch.hookMethods": "Methods the UI thread runs often, as `Namespace.Type.Method`: Live Watch reads the values at the next call of one of them, where the program can evaluate. The default suits WinForms; add e.g. a method of your own main loop for other programs."
+  "config.evidence.folder": "Folder where Capture Evidence saves (a new sub folder per capture). A relative path is taken from the workspace folder."
 }

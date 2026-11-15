@@ -59,7 +59,6 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | **値を見る** | | |
 | [インライン値・DebuggerDisplay・自動変数](#インライン値表示) | コードの横やコンパクトなビューで値を確認 | エディター／自動変数ビュー |
 | [値のピン止め](#値のピン止め) | 式の値を行末に表示し続ける | エディターの右クリック |
-| [Live Watch](#live-watch) ★ | static フィールド・プロパティを、プログラムの実行中に繰り返し読み取って表示 | Live Watch ビュー |
 | [オブジェクト ID](#オブジェクト-id) | オブジェクトに名前（$1）を付けてどこからでも参照 | 変数／ウォッチの右クリック |
 | [ダンプ・表・画像・C# 初期化子・文字列ビューアー・スナップショット](#変数ビューの右クリックメニューにあるその他のコマンド) | 複雑な値を読む・比べる | 変数ビューの右クリック |
 | **時間・メモリ・パフォーマンス** | | |
@@ -197,8 +196,6 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `dotnetX86.exceptionLog.captureLocals` | 記録した例外ごとに、コールスタックとローカル変数も記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.enabled` | スローされたすべての例外を、止まらずに例外ログ ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.sqlLog.methods` | SQL ログがコマンドを読み取るプロバイダーのメソッド（`名前空間.型.メソッド`、既定値は ODP.NET・SqlClient・OleDb・Odbc）。 |
-| `dotnetX86.liveWatch.intervalMs` | Live Watch が式を読み取る間隔（ミリ秒、既定値 `1000`、250 以上）。 |
-| `dotnetX86.liveWatch.hookMethods` | UI スレッドが頻繁に実行し、Live Watch が値を読み取るメソッド（既定値は WinForms の `NativeWindow.Callback`）。 |
 | `dotnetX86.evidence.folder` | エビデンスの保存先。ワークスペース フォルダーからの相対パス（既定値 `evidence`）。 |
 | `dotnetX86.uiFreeze.enabled` | UI が応答しなくなったらプログラムを一時停止します（既定値 `true`）。 |
 | `dotnetX86.uiFreeze.thresholdMs` | UI スレッドが応答しない状態がこの時間続いたら一時停止します（既定値 `2000` ミリ秒）。 |
@@ -225,7 +222,6 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `dotnetX86.parallelStacks.enabled` | 並列スタック、スレッドの凍結・解除 |
 | `dotnetX86.valueTrend.enabled` | 値の推移と区間の計測 |
 | `dotnetX86.pinnedValues.enabled` | ピン留めした値（オンに戻すと再表示） |
-| `dotnetX86.liveWatch.enabled` | Live Watch ビュー（オフの間はプログラムを止めない） |
 | `dotnetX86.breakpointCommands.enabled` | エディターの右クリックのブレークポイント コマンド（`#once` / `#after` / `#changed` / `#caller` の条件は使えます） |
 | `dotnetX86.variableTools.enabled` | 変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像、C# としてコピー、文字列、スナップショット、オブジェクト ID） |
 | `dotnetX86.generateTest.enabled` | ここから単体テストを生成 |
@@ -371,20 +367,6 @@ VS Code の設定 `debug.inlineValues` で無効にできます。
 行を右クリックして **値を行にピン止め...** を選ぶと、式の値がその行の末尾に表示されます。プログラムが停止するたびに、
 選択中のスタック フレームで評価し直します。ピン止めはワークスペースに保存されます。
 **行のピン止めを解除** / **すべてのピン止めを解除** で外せます。
-
-#### Live Watch
-
-**Live Watch (.NET x86)** ビューは、プログラムの**実行中**に式の値を表示し続けます。対象は static フィールド・プロパティと、そこからたどれるもの
-（`MyApp.Program.Counter`、`System.Windows.Forms.Application.OpenForms[0].Text`、`Session.Current.User.Name` など）です。
-**+** で追加し、行のボタンで編集・削除します。変化した直後の値には ● が付き、数値は値の推移ビューにもグラフ化されます（位置は *Live Watch*）。
-ビューのタイトルの **▶ / ⏸** ボタンでオン / オフでき（ワークスペースに保存）、オフの間は Live Watch のためにプログラムを止めることはありません。
-
-実行中のプログラムは式を評価できません（UI スレッドがネイティブ コードで待機しているため）。そこで、UI スレッドが常に実行するメソッド
-（WinForms では `System.Windows.Forms.NativeWindow.Callback`）が次に呼ばれた瞬間に、その時だけ置くブレークポイントで値を読み取り、すぐに続行します。
-マネージ コードの安全な位置なので、プロパティの getter も評価できます。ローカル変数は監視できません（読み取るフレームが定まらないため）。
-読み取りのたびに、式 1 つあたり約 20 ミリ秒 UI スレッドが止まります（`dotnetX86.liveWatch.intervalMs`、既定値 1000）。UI スレッドがウィンドウ メッセージを
-処理していない間は値も変わらないので、ビューに待機中と表示します。停止中・ステップ実行中は読み取りません。WinForms 以外のプログラムでは、
-メイン ループが頻繁に実行するメソッドを `dotnetX86.liveWatch.hookMethods` に追加してください。Visual Studio にはない機能です。
 
 #### オブジェクト ID
 

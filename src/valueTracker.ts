@@ -136,11 +136,10 @@ export class ValueTracker implements vscode.Disposable {
         this.panel?.dispose();
     }
 
-    private record(body: { source?: { path?: string }; line?: number; location?: string; time?: number; values?: TrackedValue[] }): void {
+    private record(body: { source?: { path?: string }; line?: number; time?: number; values?: TrackedValue[] }): void {
         const file = body.source?.path ? path.basename(body.source.path) : '?';
         const n = (this.hits[this.hits.length - 1]?.n ?? 0) + 1;
-        // Samples that do not come from a line (Live Watch) name their own location.
-        this.hits.push({ n, time: body.time ?? Date.now(), location: body.location ?? `${file}:${body.line ?? '?'}`, values: body.values ?? [] });
+        this.hits.push({ n, time: body.time ?? Date.now(), location: `${file}:${body.line ?? '?'}`, values: body.values ?? [] });
         if (this.hits.length > MAX_HITS) {
             this.hits.shift();
         }

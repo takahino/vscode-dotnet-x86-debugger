@@ -48,14 +48,6 @@ export const SQL_EVENT = 'dotnetX86.sqlExecuted';
 export const EVENT_TRACE_REQUEST = 'dotnetX86.setEventTrace';
 /** Custom DAP event for every firing of a traced event handler. */
 export const EVENT_TRACE_EVENT = 'dotnetX86.controlEvent';
-/** Custom DAP request: watch these expressions while the program runs (arguments: expressions, intervalMs, hookMethods; no expressions: off). */
-export const LIVE_WATCH_REQUEST = 'dotnetX86.setLiveWatch';
-/** Custom DAP event with the values of a Live Watch sample ({ time, values }), or { time, idle: true } when none could be taken. */
-export const LIVE_WATCH_EVENT = 'dotnetX86.liveWatchValues';
-/** Location the Live Watch samples are recorded under in the value trend. */
-export const LIVE_WATCH_LOCATION = 'Live Watch';
-/** A Live Watch hook not reached for this long is taken off again: the UI thread is idle (and its values do not change). */
-const LIVE_WATCH_IDLE_MS = 2000;
 /** Frames of the call stack read with each logged statement (the provider's own frame is the first). */
 const SQL_STACK_DEPTH = 12;
 /** Custom DAP request: pause because this UI thread stopped answering for `ms` (arguments: threadId, ms). */
@@ -244,17 +236,6 @@ export class DapProxy {
     private readonly pendingFunctionBreakpoints = new Map<number, number>();
     /** Event handlers whose firing is traced, by function breakpoint name. Their breakpoints are the proxy's too. */
     private readonly eventTraces = new Map<string, { breakpointName: string; labels: Set<string>; events: Set<string>; controls: Set<string> }>();
-    /**
-     * Live Watch: the expressions, how often, and the methods the UI thread runs often (a "hook"). A program stopped by
-     * "pause" cannot evaluate (its threads wait in native code), so a sample is taken at the next call of a hook method,
-     * through a temporary function breakpoint there: managed code at a safe point, where property getters run too.
-     */
-    private liveWatch: { expressions: string[]; intervalMs: number; hookMethods: string[] } | undefined;
-    private liveWatchTimer: ReturnType<typeof setInterval> | undefined;
-    /** When the hook breakpoint was set; undefined while it is not. */
-    private liveWatchArmedAt: number | undefined;
-    /** The program runs because VS Code continued it (not stepping, not stopped): the only time Live Watch samples. */
-    private clientRunning = false;
     /** Ids of the SQL log's and the event trace's breakpoints: their responses and events are not passed on. */
     private readonly hiddenBreakpointIds = new Set<number>();
 
@@ -281,7 +262,6 @@ export class DapProxy {
         this.child.on('error', (e) => this.fail(`Failed to start netcoredbg: ${e.message}`));
         this.child.on('exit', (code) => {
             this.exited = true;
-            this.stopLiveWatchTimer();
             this.log(`[netcoredbg] exited with code ${code}`);
             // Make sure the session ends even if netcoredbg died without sending "terminated".
             this.emitEvent('terminated');
@@ -337,18 +317,6 @@ export class DapProxy {
             void this.setEventTrace(message);
             return;
         }
-        if (message.type === 'request' && message.command === LIVE_WATCH_REQUEST) {
-            this.setLiveWatch(message);
-            return;
-        }
-        if (message.type === 'request' && (message.command === 'continue' || message.command === 'configurationDone')) {
-            this.clientRunning = true;
-        }
-        if (message.type === 'request' && ['next', 'stepIn', 'stepOut', 'stepBack', 'reverseContinue', 'goto', 'pause', 'restartFrame'].includes(message.command ?? '')) {
-            // A step must end where the user expects: no sample (and no hook) until the program runs freely again.
-            this.clientRunning = false;
-            void this.disarmLiveWatch();
-        }
         if (message.type === 'request' && message.command === 'configurationDone' && this.sqlMethods.length && !this.functionBreakpointsSent) {
             // VS Code sent no function breakpoints (it has none): the SQL log's still have to be set before the program runs.
             void this.setSqlBreakpointsThen(message);
@@ -383,16 +351,8 @@ export class DapProxy {
     }
 
     dispose(): void {
-        this.stopLiveWatchTimer();
         if (!this.exited) {
             this.child.kill();
-        }
-    }
-
-    private stopLiveWatchTimer(): void {
-        if (this.liveWatchTimer) {
-            clearInterval(this.liveWatchTimer);
-            this.liveWatchTimer = undefined;
         }
     }
 
@@ -486,7 +446,7 @@ export class DapProxy {
             this.hiddenContinuedCount--;
             return;
         }
-        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && (this.sqlMethods.length || this.eventTraces.size || this.liveWatch)) {
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'breakpoint' && (this.sqlMethods.length || this.eventTraces.size)) {
             if (await this.handleHookStop(message.body.threadId)) {
                 return;
             }
@@ -1040,73 +1000,7 @@ export class DapProxy {
         const userNames = new Set(this.userFunctionBreakpoints.map((b) => String(b.name)));
         // Handlers are code with symbols, so they need no "anyCode"; one the user also has a breakpoint on is that one.
         const traced = [...this.eventTraces.keys()].filter((name) => !userNames.has(name)).map((name) => ({ name }));
-        const liveHooks = this.liveWatchArmedAt !== undefined && this.liveWatch ? this.liveWatch.hookMethods.map((name) => ({ name, anyCode: true })) : [];
-        return [...this.userFunctionBreakpoints, ...extra, ...this.sqlMethods.map((name) => ({ name, anyCode: true })), ...traced, ...liveHooks];
-    }
-
-    /** Live Watch on (expressions to watch) or off (none); takes effect at once, also while the program runs. */
-    private setLiveWatch(message: DapMessage): void {
-        const args = message.arguments ?? {};
-        const expressions = (Array.isArray(args.expressions) ? args.expressions : []).filter((e: unknown): e is string => typeof e === 'string' && e.trim() !== '').map((e: string) => e.trim());
-        const hookMethods = (Array.isArray(args.hookMethods) ? args.hookMethods : []).filter((m: unknown): m is string => typeof m === 'string' && /^[\w.]+\.\w+\.\w+$/.test(m));
-        if (this.liveWatchTimer) {
-            clearInterval(this.liveWatchTimer);
-            this.liveWatchTimer = undefined;
-        }
-        if (expressions.length === 0 || hookMethods.length === 0) {
-            this.liveWatch = undefined;
-            void this.disarmLiveWatch();
-        } else {
-            const intervalMs = Math.max(250, Number(args.intervalMs) || 1000);
-            this.liveWatch = { expressions, intervalMs, hookMethods };
-            this.liveWatchTimer = setInterval(() => this.liveWatchTick(), intervalMs);
-        }
-        this.respond(message, { watching: this.liveWatch !== undefined });
-    }
-
-    /** Time for a sample: sets the hook breakpoint (taken off again at the hit, or when the UI thread stayed idle). */
-    private liveWatchTick(): void {
-        if (!this.liveWatch || !this.clientRunning || this.exited) {
-            return;
-        }
-        if (this.liveWatchArmedAt === undefined) {
-            void this.armLiveWatch();
-        } else if (Date.now() - this.liveWatchArmedAt > Math.max(LIVE_WATCH_IDLE_MS, this.liveWatch.intervalMs * 2)) {
-            void this.disarmLiveWatch();
-            this.emitEvent(LIVE_WATCH_EVENT, { time: Date.now(), idle: true });
-        }
-    }
-
-    private async armLiveWatch(): Promise<void> {
-        this.liveWatchArmedAt = Date.now();
-        const r = await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger() });
-        this.recordHiddenBreakpoints(r, this.userFunctionBreakpoints.length);
-    }
-
-    private async disarmLiveWatch(): Promise<void> {
-        if (this.liveWatchArmedAt === undefined) {
-            return;
-        }
-        this.liveWatchArmedAt = undefined;
-        await this.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpointsForDebugger() });
-    }
-
-    /** At a hook: evaluates the watched expressions in its frame and reports them (and to the value trend). */
-    private async sampleLiveWatch(frame: any): Promise<void> {
-        // Off first: an evaluation may itself run the hook method (a property getter sending a window message).
-        await this.disarmLiveWatch();
-        const watch = this.liveWatch;
-        if (!watch) {
-            return;
-        }
-        const values: { expression: string; value: string; type?: string; error?: string }[] = [];
-        for (const expression of watch.expressions) {
-            const r = await this.request('evaluate', { expression, frameId: frame.id, context: 'watch' });
-            values.push(r.success ? { expression, value: String(r.body?.result ?? ''), type: r.body?.type } : { expression, value: '', error: r.message ?? 'evaluation failed' });
-        }
-        const time = Date.now();
-        this.emitEvent(LIVE_WATCH_EVENT, { time, values });
-        this.emitEvent(TRACK_EVENT, { time, location: LIVE_WATCH_LOCATION, values: values.filter((v) => !v.error) });
+        return [...this.userFunctionBreakpoints, ...extra, ...this.sqlMethods.map((name) => ({ name, anyCode: true })), ...traced];
     }
 
     /** "Trace Events": records the handlers to trace (or forgets them all) and sets their breakpoints. */
@@ -1160,10 +1054,7 @@ export class DapProxy {
             const nameOf = (frame: any) => String(frame?.name ?? '');
             const isHook = (frame: any) => this.sqlMethods.find((m) => frameIsMethod(nameOf(frame), m));
             const method = isHook(frames[0]);
-            const liveHook = this.liveWatch?.hookMethods.some((m) => frameIsMethod(nameOf(frames[0]), m));
-            if (liveHook && !method) {
-                await this.sampleLiveWatch(frames[0]);
-            } else if (method) {
+            if (method) {
                 // ExecuteReader() often calls ExecuteReader(behavior): the inner call is the same statement.
                 if (!isHook(frames[1])) {
                     await this.reportSql(method, threadId, frames);
@@ -1380,15 +1271,6 @@ export class DapProxy {
 
     /** Every message to VS Code goes through here: PDB paths become local ones and re-sent breakpoints keep their ids. */
     private toClient(message: DapMessage): void {
-        if (message.type === 'event' && message.event === 'stopped') {
-            // A stop the user sees: their own evaluations must not run into the Live Watch hook.
-            this.clientRunning = false;
-            void this.disarmLiveWatch();
-        }
-        if (message.type === 'event' && (message.event === 'terminated' || message.event === 'exited')) {
-            this.clientRunning = false;
-            this.stopLiveWatchTimer();
-        }
         let out = responseWithClientObjectIds(message);
         if (out.type === 'response' && out.command === MAKE_OBJECT_ID_REQUEST && out.success) {
             // Values shown so far do not carry the "{$N}" mark yet: have VS Code read them again.

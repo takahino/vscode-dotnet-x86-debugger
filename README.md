@@ -60,7 +60,6 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 | **Looking at values** | | |
 | [Inline values, DebuggerDisplay, Autos](#inline-values) | Values next to the code and in compact views | Editor / Autos view |
 | [Pinned values](#pinned-values) | Keep an expression at the end of a line | Editor right-click |
-| [Live Watch](#live-watch) ★ | Static fields and properties read again and again while the program runs | Live Watch view |
 | [Object IDs](#object-ids) | Name an object ($1) and reach it from anywhere | Variables / Watch right-click |
 | [Dump, table, image, C# initializer, string viewer, snapshots](#more-commands-in-the-variables-view-context-menu) | Read and compare complex values | Variables right-click |
 | **Time, memory and performance** | | |
@@ -198,8 +197,6 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
 | `dotnetX86.sqlLog.methods` | Provider methods the SQL log reads commands at, as `Namespace.Type.Method` (default: ODP.NET, SqlClient, OleDb, Odbc). |
-| `dotnetX86.liveWatch.intervalMs` | How often Live Watch reads its expressions, in ms (default `1000`, at least `250`). |
-| `dotnetX86.liveWatch.hookMethods` | Methods the UI thread runs often, where Live Watch reads the values (default: WinForms' `NativeWindow.Callback`). |
 | `dotnetX86.evidence.folder` | Where Capture Evidence saves, relative to the workspace folder (default `evidence`). |
 | `dotnetX86.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
 | `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
@@ -227,7 +224,6 @@ the exception settings, the exception log, the SQL log and UI freeze detection c
 | `dotnetX86.parallelStacks.enabled` | Parallel Stacks, Freeze / Thaw Thread |
 | `dotnetX86.valueTrend.enabled` | Value trend and section timing |
 | `dotnetX86.pinnedValues.enabled` | Pinned values (kept, shown again when turned back on) |
-| `dotnetX86.liveWatch.enabled` | Live Watch view (never pauses the program when off) |
 | `dotnetX86.breakpointCommands.enabled` | The breakpoint commands of the editor context menu (the `#once` / `#after` / `#changed` / `#caller` conditions keep working) |
 | `dotnetX86.variableTools.enabled` | Variables / Watch context menu commands (Dump, View as Table / Image, Copy as C#, View String, snapshots, Object ID) |
 | `dotnetX86.generateTest.enabled` | Generate Unit Test from Here |
@@ -383,22 +379,6 @@ object, so complex expressions (operators, casts) fall back to the default `{Typ
 Right-click a line and choose **Pin Value to Line...** to show an expression at the end of that line. It is evaluated
 again in the selected stack frame every time the program stops, and the pins are kept with the workspace.
 Use **Unpin Value from Line** or **Clear All Pinned Values** to remove them.
-
-#### Live Watch
-
-The **Live Watch (.NET x86)** view shows expressions while the program **runs**: static fields and properties and what is
-reached from them (`MyApp.Program.Counter`, `System.Windows.Forms.Application.OpenForms[0].Text`, `Session.Current.User.Name`).
-Add them with **+**; edit or remove them inline. A value that just changed is marked ●, and numbers are also charted in the
-Value Trend view (location *Live Watch*). The **▶ / ⏸** button in the view title turns it on and off (kept with the workspace);
-while it is off the program is never paused for it.
-
-A running program cannot evaluate: its UI thread waits in native code. So each sample is taken at the next call of a method the
-UI thread runs all the time (`System.Windows.Forms.NativeWindow.Callback` for WinForms), through a breakpoint that is set for that
-moment only — managed code at a safe point, where property getters run too — and the program goes on at once. Local variables
-cannot be watched (there is no frame to read them in). Each sample pauses the UI thread for about 20 ms per expression
-(`dotnetX86.liveWatch.intervalMs`, default 1000). While the UI thread handles no window message the values cannot change, and the
-view says it is waiting. Nothing is sampled while the program is stopped or stepping. For a program that is not WinForms, add a
-method its main loop runs often to `dotnetX86.liveWatch.hookMethods`. Visual Studio has no such view.
 
 #### Object IDs
 

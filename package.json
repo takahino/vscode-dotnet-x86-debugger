@@ -74,10 +74,7 @@
     "onCommand:dotnetX86.traceControlEvents",
     "onCommand:dotnetX86.clearEventTrace",
     "onCommand:dotnetX86.exportEventTrace",
-    "onCommand:dotnetX86.captureEvidence",
-    "onCommand:dotnetX86.addLiveWatch",
-    "onCommand:dotnetX86.startLiveWatch",
-    "onCommand:dotnetX86.stopLiveWatch"
+    "onCommand:dotnetX86.captureEvidence"
   ],
   "contributes": {
     "walkthroughs": [
@@ -456,42 +453,6 @@
         "title": "%command.captureEvidence%",
         "category": ".NET x86",
         "icon": "$(device-camera)"
-      },
-      {
-        "command": "dotnetX86.addLiveWatch",
-        "title": "%command.addLiveWatch%",
-        "category": ".NET x86",
-        "icon": "$(add)"
-      },
-      {
-        "command": "dotnetX86.editLiveWatch",
-        "title": "%command.editLiveWatch%",
-        "category": ".NET x86",
-        "icon": "$(edit)"
-      },
-      {
-        "command": "dotnetX86.removeLiveWatch",
-        "title": "%command.removeLiveWatch%",
-        "category": ".NET x86",
-        "icon": "$(close)"
-      },
-      {
-        "command": "dotnetX86.clearLiveWatch",
-        "title": "%command.clearLiveWatch%",
-        "category": ".NET x86",
-        "icon": "$(clear-all)"
-      },
-      {
-        "command": "dotnetX86.startLiveWatch",
-        "title": "%command.startLiveWatch%",
-        "category": ".NET x86",
-        "icon": "$(debug-start)"
-      },
-      {
-        "command": "dotnetX86.stopLiveWatch",
-        "title": "%command.stopLiveWatch%",
-        "category": ".NET x86",
-        "icon": "$(debug-pause)"
       }
     ],
     "menus": {
@@ -797,30 +758,6 @@
         {
           "command": "dotnetX86.captureEvidence",
           "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.evidence.enabled"
-        },
-        {
-          "command": "dotnetX86.addLiveWatch",
-          "when": "config.dotnetX86.liveWatch.enabled"
-        },
-        {
-          "command": "dotnetX86.clearLiveWatch",
-          "when": "config.dotnetX86.liveWatch.enabled"
-        },
-        {
-          "command": "dotnetX86.startLiveWatch",
-          "when": "config.dotnetX86.liveWatch.enabled && !dotnetX86.liveWatch.running"
-        },
-        {
-          "command": "dotnetX86.stopLiveWatch",
-          "when": "config.dotnetX86.liveWatch.enabled && dotnetX86.liveWatch.running"
-        },
-        {
-          "command": "dotnetX86.editLiveWatch",
-          "when": "false"
-        },
-        {
-          "command": "dotnetX86.removeLiveWatch",
-          "when": "false"
         }
       ],
       "editor/context": [
@@ -930,26 +867,6 @@
           "command": "dotnetX86.captureEvidence",
           "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled && config.dotnetX86.evidence.enabled",
           "group": "navigation@2"
-        },
-        {
-          "command": "dotnetX86.startLiveWatch",
-          "when": "view == dotnetX86.liveWatch && config.dotnetX86.liveWatch.enabled && !dotnetX86.liveWatch.running",
-          "group": "navigation@0"
-        },
-        {
-          "command": "dotnetX86.stopLiveWatch",
-          "when": "view == dotnetX86.liveWatch && config.dotnetX86.liveWatch.enabled && dotnetX86.liveWatch.running",
-          "group": "navigation@0"
-        },
-        {
-          "command": "dotnetX86.addLiveWatch",
-          "when": "view == dotnetX86.liveWatch && config.dotnetX86.liveWatch.enabled",
-          "group": "navigation@1"
-        },
-        {
-          "command": "dotnetX86.clearLiveWatch",
-          "when": "view == dotnetX86.liveWatch && config.dotnetX86.liveWatch.enabled",
-          "group": "navigation@2"
         }
       ],
       "view/item/context": [
@@ -1037,16 +954,6 @@
           "command": "dotnetX86.traceControlEvents",
           "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled && config.dotnetX86.eventTrace.enabled",
           "group": "z_dotnetX86@0"
-        },
-        {
-          "command": "dotnetX86.editLiveWatch",
-          "when": "view == dotnetX86.liveWatch && config.dotnetX86.liveWatch.enabled && viewItem == dotnetX86.liveWatchItem",
-          "group": "inline@0"
-        },
-        {
-          "command": "dotnetX86.removeLiveWatch",
-          "when": "view == dotnetX86.liveWatch && config.dotnetX86.liveWatch.enabled && viewItem == dotnetX86.liveWatchItem",
-          "group": "inline@1"
         }
       ]
     },
@@ -1268,27 +1175,6 @@
           "default": "evidence",
           "scope": "resource",
           "description": "%config.evidence.folder%"
-        },
-        "dotnetX86.liveWatch.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "%config.liveWatch.enabled%"
-        },
-        "dotnetX86.liveWatch.intervalMs": {
-          "type": "number",
-          "default": 1000,
-          "minimum": 250,
-          "description": "%config.liveWatch.intervalMs%"
-        },
-        "dotnetX86.liveWatch.hookMethods": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [
-            "System.Windows.Forms.NativeWindow.Callback"
-          ],
-          "markdownDescription": "%config.liveWatch.hookMethods%"
         }
       }
     },
@@ -1477,11 +1363,6 @@
           "id": "dotnetX86.autos",
           "name": "%view.autos%",
           "when": "debugType == 'dotnet-x86' && config.dotnetX86.autos.enabled"
-        },
-        {
-          "id": "dotnetX86.liveWatch",
-          "name": "%view.liveWatch%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.liveWatch.enabled"
         },
         {
           "id": "dotnetX86.exceptions",

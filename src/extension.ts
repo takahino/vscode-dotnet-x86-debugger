@@ -24,7 +24,6 @@ import { makeObjectIdCommand } from './objectIdCommand';
 import { SessionReport } from './sessionReport';
 import { EventTrace } from './eventTrace';
 import { EvidenceCapture } from './evidence';
-import { LiveWatch, LiveWatchItem } from './liveWatch';
 import { SqlLog } from './sqlLog';
 import { StepHistory } from './stepHistory';
 import { SymbolServer } from './symbolServer';
@@ -65,9 +64,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionLog = new ExceptionLog();
     const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
-    const liveWatch = new LiveWatch(context.workspaceState);
-    const liveWatchView = vscode.window.createTreeView('dotnetX86.liveWatch', { treeDataProvider: liveWatch });
-    liveWatch.attach(liveWatchView);
     const eventTrace = new EventTrace();
     const eventTraceView = vscode.window.createTreeView('dotnetX86.eventTrace', { treeDataProvider: eventTrace });
     eventTrace.attach(eventTraceView);
@@ -165,14 +161,6 @@ export function activate(context: vscode.ExtensionContext): void {
         exceptionLog,
         exceptionView,
         vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),
-        liveWatch,
-        liveWatchView,
-        vscode.commands.registerCommand('dotnetX86.addLiveWatch', () => liveWatch.add()),
-        vscode.commands.registerCommand('dotnetX86.editLiveWatch', (item?: LiveWatchItem) => liveWatch.edit(item)),
-        vscode.commands.registerCommand('dotnetX86.removeLiveWatch', (item?: LiveWatchItem) => liveWatch.remove(item)),
-        vscode.commands.registerCommand('dotnetX86.clearLiveWatch', () => liveWatch.clear()),
-        vscode.commands.registerCommand('dotnetX86.startLiveWatch', () => liveWatch.setRunning(true)),
-        vscode.commands.registerCommand('dotnetX86.stopLiveWatch', () => liveWatch.setRunning(false)),
         evidence,
         vscode.commands.registerCommand('dotnetX86.captureEvidence', () => evidence.capture()),
         eventTrace,
