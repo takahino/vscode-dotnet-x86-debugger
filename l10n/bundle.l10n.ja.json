@@ -183,5 +183,19 @@
   "Could not read {0} as an image: {1}": "{0} を画像として読み取れませんでした: {1}",
   "Image: {0}": "画像: {0}",
   "Fit": "全体を表示",
-  "Actual size": "実寸"
+  "Actual size": "実寸",
+  "Other property...": "ほかのプロパティ...",
+  "any property, with a C# expression as the value": "任意のプロパティ（値は C# の式）",
+  "Property of {0} to change": "変更する {0} のプロパティ",
+  "Property name (e.g. Font, MaximumSize)": "プロパティ名（例: Font、MaximumSize）",
+  "Enter a property name.": "プロパティ名を入力してください。",
+  "{0}.{1} was not changed: the setter threw {2}.": "{0}.{1} は変更されませんでした（setter が {2} をスローしました）。",
+  "{0}.{1} was changed. It shows on screen when the program continues.": "{0}.{1} を変更しました。プログラムを続行すると画面に反映されます。",
+  "Enum properties (Dock, Anchor, ...) cannot be changed with this debugger.": "列挙型のプロパティ（Dock、Anchor など）は、このデバッガーでは変更できません。",
+  "{0}.{1} was not changed: {2}": "{0}.{1} は変更されませんでした: {2}",
+  "{0} (now {1})": "{0}（現在 {1}）",
+  "New text": "新しいテキスト",
+  "A whole number": "整数",
+  "A color name (Red), #RRGGBB, #AARRGGBB or R,G,B": "色の名前（Red）、#RRGGBB、#AARRGGBB、または R,G,B",
+  "A C# expression, e.g. System.Drawing.SystemFonts.CaptionFont": "C# の式（例: System.Drawing.SystemFonts.CaptionFont）"
 }

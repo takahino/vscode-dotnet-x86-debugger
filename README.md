@@ -215,6 +215,10 @@ Right-click it to **Dump Control** or **Copy Expression** (e.g. `System.Windows.
 which you can paste into the Watch view). Every value is read by evaluating an expression, so children are read only when
 you expand a node.
 
+Right-click a control and choose **Change Property...** to change its `Text`, `Visible`, `Enabled`, colors, position or
+size (or any property, with a C# expression as the value) in the stopped program; it shows on screen when the program
+continues. Enum properties such as `Dock` cannot be changed: netcoredbg cannot pass enum values.
+
 Click the eye icon (**Highlight on Screen**) to see where a control is: the form is shown in front, as it was when the
 program stopped, with a red frame and the control's name and size around it for a few seconds. Visual Studio cannot do
 this for WinForms. (The stopped program cannot repaint or come to the front itself; the image comes from the desktop compositor.)

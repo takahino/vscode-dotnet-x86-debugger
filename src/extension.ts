@@ -115,6 +115,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.refreshControlTree', () => controlTree.refresh()),
         vscode.commands.registerCommand('dotnetX86.dumpControl', (node: ControlNode) => dumpExpressionCommand(node?.expression)),
         highlighter,
+        vscode.commands.registerCommand('dotnetX86.editControlProperty', (node?: ControlNode) => controlTree.editProperty(node ?? controlView.selection[0])),
         vscode.commands.registerCommand('dotnetX86.highlightControl', (node?: ControlNode) => controlTree.highlight(node ?? controlView.selection[0], highlighter)),
         vscode.commands.registerCommand('dotnetX86.copyControlExpression', (node: ControlNode) => node && vscode.env.clipboard.writeText(node.expression)),
         exceptionLog,

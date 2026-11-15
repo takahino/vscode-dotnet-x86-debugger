@@ -226,6 +226,12 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "dotnetX86.editControlProperty",
+        "title": "%command.editControlProperty%",
+        "category": ".NET x86",
+        "icon": "$(edit)"
+      },
+      {
         "command": "dotnetX86.highlightControl",
         "title": "%command.highlightControl%",
         "category": ".NET x86",
@@ -420,6 +426,10 @@
           "when": "false"
         },
         {
+          "command": "dotnetX86.editControlProperty",
+          "when": "false"
+        },
+        {
           "command": "dotnetX86.dumpControl",
           "when": "false"
         },
@@ -540,6 +550,11 @@
         },
         {
           "command": "dotnetX86.highlightControl",
+          "when": "view == dotnetX86.controls",
+          "group": "z_dotnetX86@0"
+        },
+        {
+          "command": "dotnetX86.editControlProperty",
           "when": "view == dotnetX86.controls",
           "group": "z_dotnetX86@0"
         },

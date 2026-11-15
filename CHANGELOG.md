@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: **Change Property...** in the WinForms Controls view — change a control's text, visibility, colors, position or size (or any property with a C# expression) in the stopped program. Enum properties cannot be changed (netcoredbg cannot pass enum values).
 - New: **View as Image** (Variables / Watch context menu) — shows a System.Drawing Image / Bitmap / Icon as a picture with zoom, size and pixel format.
 - New: **Exception Settings** view — check the exception types to stop on when thrown, grouped by namespace as in Visual Studio; add your own, or from an Exception Log entry. Applies at once, also while running.
 - Tests: unit tests (`npm test`) and end-to-end tests against the real netcoredbg (`npm run test:e2e`), run by a new CI workflow on every push; the release workflow runs the unit tests before packaging.

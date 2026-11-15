@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
+import { EDITABLE_PROPERTIES, PropertyKind, failedResult, setterExpression, valueExpression } from './controlPropertyCore';
 import { WindowHighlighter } from './windowHighlight';
 
 export interface ControlNode {
@@ -112,6 +113,87 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
             this.setMessage(node ? undefined : vscode.l10n.t('Could not read Application.OpenForms ({0}). Is this a WinForms program?', errorMessage(e)));
             return [];
         }
+    }
+
+    /**
+     * "Change Property...": calls the property's setter in the stopped program. The form cannot repaint while stopped,
+     * so the change shows on screen when the program continues.
+     */
+    async editProperty(node: ControlNode | undefined): Promise<void> {
+        const evaluate = this.evaluator();
+        if (!node || !evaluate) {
+            void vscode.window.showInformationMessage(vscode.l10n.t('Stop the program to see its WinForms controls.'));
+            return;
+        }
+        const label = node.name || shortType(node.typeName);
+        const other = vscode.l10n.t('Other property...');
+        const items = await Promise.all(EDITABLE_PROPERTIES.map(async (p) => ({
+            label: p.name,
+            description: await evaluate(`${node.expression}.${p.name}`).catch(() => '?'),
+            property: p,
+        })));
+        const picked = await vscode.window.showQuickPick<vscode.QuickPickItem & { property?: { name: string; kind: PropertyKind } }>(
+            [...items, { label: other, description: vscode.l10n.t('any property, with a C# expression as the value') }],
+            { placeHolder: vscode.l10n.t('Property of {0} to change', label) },
+        );
+        if (!picked) {
+            return;
+        }
+        let property = picked.property;
+        if (!property) {
+            const name = await vscode.window.showInputBox({
+                prompt: vscode.l10n.t('Property name (e.g. Font, MaximumSize)'),
+                validateInput: (v) => (/^[A-Za-z_]\w*$/.test(v.trim()) ? undefined : vscode.l10n.t('Enter a property name.')),
+            });
+            if (!name) {
+                return;
+            }
+            property = { name: name.trim(), kind: 'expression' };
+        }
+        const input = await this.askValue(property, picked.description ?? '');
+        if (input === undefined) {
+            return;
+        }
+        const value = valueExpression(property.kind, input);
+        if ('error' in value) {
+            return; // the input box already refused it
+        }
+        const session = (vscode.debug.activeStackItem as vscode.DebugStackFrame).session;
+        const frameId = (vscode.debug.activeStackItem as vscode.DebugStackFrame).frameId;
+        try {
+            const r = await session.customRequest('evaluate', { expression: setterExpression(node.expression, property.name, value.expression), frameId, context: 'repl' });
+            const thrown = failedResult(r ?? {});
+            if (thrown) {
+                void vscode.window.showErrorMessage(vscode.l10n.t('{0}.{1} was not changed: the setter threw {2}.', label, property.name, thrown));
+                return;
+            }
+            this.refresh();
+            void vscode.window.showInformationMessage(vscode.l10n.t('{0}.{1} was changed. It shows on screen when the program continues.', label, property.name));
+        } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            // netcoredbg's evaluator cannot pass enum values (E_INVALIDARG): say so instead of the bare error code.
+            const hint = /0x80070057/.test(message) ? vscode.l10n.t('Enum properties (Dock, Anchor, ...) cannot be changed with this debugger.') : message;
+            void vscode.window.showErrorMessage(vscode.l10n.t('{0}.{1} was not changed: {2}', label, property.name, hint));
+        }
+    }
+
+    private async askValue(property: { name: string; kind: PropertyKind }, current: string): Promise<string | undefined> {
+        if (property.kind === 'bool') {
+            return vscode.window.showQuickPick(['true', 'false'], { placeHolder: vscode.l10n.t('{0} (now {1})', property.name, current) });
+        }
+        const hints: Record<PropertyKind, string> = {
+            string: vscode.l10n.t('New text'),
+            bool: '',
+            int: vscode.l10n.t('A whole number'),
+            color: vscode.l10n.t('A color name (Red), #RRGGBB, #AARRGGBB or R,G,B'),
+            expression: vscode.l10n.t('A C# expression, e.g. System.Drawing.SystemFonts.CaptionFont'),
+        };
+        return vscode.window.showInputBox({
+            prompt: `${property.name}: ${hints[property.kind]}`,
+            // Current text without its quotes, current numbers as they are; colors are typed anew.
+            value: property.kind === 'string' ? current.replace(/^"|"$/g, '') : property.kind === 'int' ? current : '',
+            validateInput: (v) => ('error' in valueExpression(property.kind, v) ? hints[property.kind] : undefined),
+        });
     }
 
     /**
