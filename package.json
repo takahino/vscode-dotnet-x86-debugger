@@ -2,7 +2,7 @@
   "name": "dotnet-x86-debugger",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "publisher": "takahino",
   "icon": "media/icon.png",
   "galleryBanner": {

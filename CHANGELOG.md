@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 - New: extension **icon**, and a rewritten README (Marketplace page): quick start, highlights, a feature table by category with pictures; the feature descriptions are grouped the same way. Building, tests and releasing moved to CONTRIBUTING.md.
 - New: **Getting Started** walkthrough (Welcome page / **.NET x86: Getting Started**) — check the environment, make the project x86, create launch.json, start debugging.
