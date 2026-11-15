@@ -215,6 +215,11 @@ Right-click it to **Dump Control** or **Copy Expression** (e.g. `System.Windows.
 which you can paste into the Watch view). Every value is read by evaluating an expression, so children are read only when
 you expand a node.
 
+Right-click a control and choose **Break on Event...** to see the handlers attached to its events (e.g. *Click →
+`MainForm.OnSaveClick`*, lambdas too) and stop in the ones you pick the next time the event fires — without knowing
+where they are in the code. They are added as function breakpoints in the Breakpoints view. Visual Studio has no such
+command.
+
 Right-click a control and choose **Change Property...** to change its `Text`, `Visible`, `Enabled`, colors, position or
 size (or any property, with a C# expression as the value) in the stopped program; it shows on screen when the program
 continues. Enum properties such as `Dock` cannot be changed: netcoredbg cannot pass enum values.

@@ -72,6 +72,7 @@
   "command.refreshControlTree": "最新の情報に更新",
   "command.highlightControl": "画面上で強調表示",
   "command.editControlProperty": "プロパティを変更...",
+  "command.breakOnControlEvent": "イベントで停止...",
   "command.dumpControl": "コントロールをダンプ",
   "command.copyControlExpression": "式をコピー",
   "command.exportSessionReport": "デバッグ セッションの報告書を出力",

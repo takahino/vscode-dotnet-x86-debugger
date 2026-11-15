@@ -197,5 +197,12 @@
   "New text": "新しいテキスト",
   "A whole number": "整数",
   "A color name (Red), #RRGGBB, #AARRGGBB or R,G,B": "色の名前（Red）、#RRGGBB、#AARRGGBB、または R,G,B",
-  "A C# expression, e.g. System.Drawing.SystemFonts.CaptionFont": "C# の式（例: System.Drawing.SystemFonts.CaptionFont）"
+  "A C# expression, e.g. System.Drawing.SystemFonts.CaptionFont": "C# の式（例: System.Drawing.SystemFonts.CaptionFont）",
+  "Reading the event handlers of {0}…": "{0} のイベント ハンドラーを読み取っています…",
+  "{0} has no event handlers attached.": "{0} にはイベント ハンドラーが登録されていません。",
+  "(event not identified)": "（イベントを特定できません）",
+  "A breakpoint is already set here.": "ここには既にブレークポイントがあります。",
+  "Event handlers of {0}: pick the ones to stop in": "{0} のイベント ハンドラー: 停止するものを選んでください",
+  "Breakpoints were added on {0}. The program stops there the next time the event fires (continue, then use the form).": "{0} にブレークポイントを追加しました。次にイベントが発生したときに停止します（続行してフォームを操作してください）。",
+  "Could not read the event handlers of {0}: {1}": "{0} のイベント ハンドラーを読み取れませんでした: {1}"
 }

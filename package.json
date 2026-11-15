@@ -226,6 +226,11 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "dotnetX86.breakOnControlEvent",
+        "title": "%command.breakOnControlEvent%",
+        "category": ".NET x86"
+      },
+      {
         "command": "dotnetX86.editControlProperty",
         "title": "%command.editControlProperty%",
         "category": ".NET x86",
@@ -430,6 +435,10 @@
           "when": "false"
         },
         {
+          "command": "dotnetX86.breakOnControlEvent",
+          "when": "false"
+        },
+        {
           "command": "dotnetX86.dumpControl",
           "when": "false"
         },
@@ -555,6 +564,11 @@
         },
         {
           "command": "dotnetX86.editControlProperty",
+          "when": "view == dotnetX86.controls",
+          "group": "z_dotnetX86@0"
+        },
+        {
+          "command": "dotnetX86.breakOnControlEvent",
           "when": "view == dotnetX86.controls",
           "group": "z_dotnetX86@0"
         },

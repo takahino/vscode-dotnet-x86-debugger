@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
 import { EDITABLE_PROPERTIES, PropertyKind, failedResult, setterExpression, valueExpression } from './controlPropertyCore';
+import { handlerLabel, readEventHandlers, readEventKeys } from './eventHandlersCore';
 import { WindowHighlighter } from './windowHighlight';
 
 export interface ControlNode {
@@ -174,6 +175,53 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
             // netcoredbg's evaluator cannot pass enum values (E_INVALIDARG): say so instead of the bare error code.
             const hint = /0x80070057/.test(message) ? vscode.l10n.t('Enum properties (Dock, Anchor, ...) cannot be changed with this debugger.') : message;
             void vscode.window.showErrorMessage(vscode.l10n.t('{0}.{1} was not changed: {2}', label, property.name, hint));
+        }
+    }
+
+    /**
+     * "Break on Event...": lists the handlers attached to the control's events and adds function breakpoints on the
+     * picked ones, so the program stops the next time the event fires - without knowing where the handler is.
+     */
+    async breakOnEvent(node: ControlNode | undefined): Promise<void> {
+        const frame = vscode.debug.activeStackItem;
+        const evaluate = this.evaluator();
+        if (!node || !evaluate || !(frame instanceof vscode.DebugStackFrame)) {
+            void vscode.window.showInformationMessage(vscode.l10n.t('Stop the program to see its WinForms controls.'));
+            return;
+        }
+        const label = node.name || shortType(node.typeName);
+        try {
+            const handlers = await vscode.window.withProgress(
+                { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Reading the event handlers of {0}…', label) },
+                async () => {
+                    const keys = await readEventKeys(node.expression, frame.frameId, (command, args) => frame.session.customRequest(command, args));
+                    return readEventHandlers(node.expression, keys, evaluate);
+                },
+            );
+            if (handlers.length === 0) {
+                void vscode.window.showInformationMessage(vscode.l10n.t('{0} has no event handlers attached.', label));
+                return;
+            }
+            const existing = new Set(vscode.debug.breakpoints.filter((b): b is vscode.FunctionBreakpoint => b instanceof vscode.FunctionBreakpoint).map((b) => b.functionName));
+            const picked = await vscode.window.showQuickPick(
+                handlers.map((h) => ({
+                    label: h.event ?? vscode.l10n.t('(event not identified)'),
+                    description: handlerLabel(h.declaringType, h.method),
+                    detail: existing.has(h.breakpointName) ? vscode.l10n.t('A breakpoint is already set here.') : undefined,
+                    handler: h,
+                })),
+                { canPickMany: true, placeHolder: vscode.l10n.t('Event handlers of {0}: pick the ones to stop in', label) },
+            );
+            const added = (picked ?? []).filter((p) => !existing.has(p.handler.breakpointName));
+            if (added.length === 0) {
+                return;
+            }
+            vscode.debug.addBreakpoints(added.map((p) => new vscode.FunctionBreakpoint(p.handler.breakpointName)));
+            void vscode.window.showInformationMessage(
+                vscode.l10n.t('Breakpoints were added on {0}. The program stops there the next time the event fires (continue, then use the form).', added.map((p) => p.description).join(', ')),
+            );
+        } catch (e) {
+            void vscode.window.showErrorMessage(vscode.l10n.t('Could not read the event handlers of {0}: {1}', label, errorMessage(e)));
         }
     }
 

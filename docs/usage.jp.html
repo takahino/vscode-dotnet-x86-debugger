@@ -323,6 +323,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   <tr class="group"><th colspan="3">WinForms</th></tr>
   <tr><td><a href="#f-winforms">WinForms コントロール ビュー</a></td><td>開いているフォームのコントロール ツリー</td><td>WinForms コントロール ビュー</td></tr>
   <tr><td><a href="#f-winforms">画面上で強調表示</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のフォーム上でコントロールを枠で示す</td><td>ビューの目のアイコン</td></tr>
+  <tr><td><a href="#f-winforms">コントロールのイベントで停止</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>イベントのハンドラーが、コードのどこにあっても止まる</td><td>WinForms コントロールの右クリック</td></tr>
   <tr><td><a href="#f-winforms">コントロールのプロパティ変更</a></td><td>停止中にテキスト・表示・色・位置・サイズを変える</td><td>WinForms コントロールの右クリック</td></tr>
   <tr class="group"><th colspan="3">セッションを始める</th></tr>
   <tr><td><a href="#f-attach">アタッチ（名前指定も）</a></td><td>実行中の x86 アプリにアタッチ、起動を待ってアタッチ</td><td>launch.json</td></tr>
@@ -919,6 +920,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 <figcaption>子はノードを展開したときに読み込むので、大きなフォームでもすぐに開けます。</figcaption>
 </figure>
 <div class="usecase"><b>ユースケース:</b> ボタンが「表示されない」。ツリーを見れば、存在するか、どのパネルに入っているか、非表示なのか親の範囲外に置かれているのかが分かります。</div>
+<p>コントロールを右クリックして <b>イベントで停止...</b> を選ぶと、そのイベントに登録されたハンドラー（ラムダも含む）の一覧から、次にイベントが発生したときに止まる場所を選べます。どのメソッドがボタンを処理しているか誰も知らない古いコードで役立ちます。</p>
 <p>コントロールを右クリックして <b>プロパティを変更...</b> を選ぶと、停止中のプログラムでテキスト・表示/非表示・色・位置・サイズを変えられます。リビルドせずに修正案を試せます。画面には続行すると反映されます。列挙型のプロパティ（<code>Dock</code>、<code>Anchor</code>）は変更できません。</p>
 <p>目のアイコン（<b>画面上で強調表示</b>）をクリックすると、コントロールを画面上で枠で示します。停止した時点のフォームが手前に表示され、赤い枠と名前・サイズが数秒間表示されます。</p>
 

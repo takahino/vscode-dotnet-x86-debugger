@@ -72,6 +72,7 @@
   "command.refreshControlTree": "Refresh",
   "command.highlightControl": "Highlight on Screen",
   "command.editControlProperty": "Change Property...",
+  "command.breakOnControlEvent": "Break on Event...",
   "command.dumpControl": "Dump Control",
   "command.copyControlExpression": "Copy Expression",
   "command.exportSessionReport": "Export Debug Session Report",
