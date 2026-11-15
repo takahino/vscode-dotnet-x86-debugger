@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New: every feature can be turned off (all on by default) with `dotnetX86.<feature>.enabled`: memoryGraph, inlineValues, autos, modules, exceptionSettings, winforms, heapSnapshot, parallelStacks, valueTrend, pinnedValues, breakpointCommands, variableTools, generateTest, sessionReport. Off removes the views, menu entries and commands, and stops the background work. `stepHistory.enabled` and `exceptionLog.enabled` now hide their views too.
+
 ## 1.1.0
 
 - New: **GDI leak candidates** in the Heap Snapshots panel — objects holding native resources (GDI+ fonts, brushes, pens, images, graphics, regions, paths; icons, cursors, windows) per type, how many are not disposed, and the change between two snapshots; growing ones are marked as leak candidates. .NET and .NET Framework (netcoredbg patch 0012, `dotnetX86.handleStats`).

@@ -200,6 +200,33 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `dotnetX86.dump.maxDepth` | *Dump Variable* で展開する入れ子の深さ（既定値 `3`）。 |
 | `dotnetX86.dump.maxNodes` | この数の値を集めた時点で、それ以上の展開をやめます（既定値 `2000`）。 |
 
+#### 機能のオン / オフ
+
+すべての機能は既定でオンです。次の設定を `false` にすると、その機能のビュー・メニュー・コマンドが消え、裏で行う処理（計測や、停止のたびの評価）も止まります。
+変更はすぐに反映されます。ただし、メモリ グラフ・例外設定・例外ログ・UI フリーズの検知は、次のデバッグ セッションから反映されます。
+
+| 設定 | 機能 |
+|---|---|
+| `dotnetX86.memoryGraph.enabled` | メモリ / CPU / GDI グラフ（計測もしない） |
+| `dotnetX86.inlineValues.enabled` | インライン値 |
+| `dotnetX86.autos.enabled` | 自動変数ビュー |
+| `dotnetX86.modules.enabled` | モジュール ビュー、シンボルのダウンロード、デバッグ用に逆コンパイル |
+| `dotnetX86.exceptionSettings.enabled` | 例外設定ビュー（そこでチェックした型での停止も） |
+| `dotnetX86.winforms.enabled` | WinForms コントロール ビューとそのコマンド、データ バインディングを表示 |
+| `dotnetX86.heapSnapshot.enabled` | ヒープ スナップショットと GDI リーク候補 |
+| `dotnetX86.parallelStacks.enabled` | 並列スタック、スレッドの凍結・解除 |
+| `dotnetX86.valueTrend.enabled` | 値の推移と区間の計測 |
+| `dotnetX86.pinnedValues.enabled` | ピン留めした値（オンに戻すと再表示） |
+| `dotnetX86.breakpointCommands.enabled` | エディターの右クリックのブレークポイント コマンド（`#once` / `#after` / `#changed` / `#caller` の条件は使えます） |
+| `dotnetX86.variableTools.enabled` | 変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像、C# としてコピー、文字列、スナップショット、オブジェクト ID） |
+| `dotnetX86.generateTest.enabled` | ここから単体テストを生成 |
+| `dotnetX86.sessionReport.enabled` | デバッグ セッション レポートの出力 |
+| `dotnetX86.stepHistory.enabled` | ステップ履歴ビューと記録 |
+| `dotnetX86.exceptionLog.enabled` | 例外ログ ビューと記録 |
+| `dotnetX86.perfTips.enabled` | PerfTips |
+| `dotnetX86.uiFreeze.enabled` | UI フリーズの検知 |
+| `dotnetX86.sourceLink.enabled` | Source Link でのダウンロード |
+
 ### .NET Framework 4.x
 
 `.NET Framework` のアプリ（`net48`・`net472` など）も同じようにデバッグできます。`program` に x86 の `.exe`

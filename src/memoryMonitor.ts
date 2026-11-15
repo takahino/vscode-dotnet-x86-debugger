@@ -2,6 +2,7 @@ import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { isEnabled } from './features';
 
 interface Sample {
     /** ms since the session started */
@@ -57,7 +58,11 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
 
     constructor(private readonly extensionPath: string, private readonly output: vscode.OutputChannel) {}
 
-    createDebugAdapterTracker(session: vscode.DebugSession): vscode.DebugAdapterTracker {
+    createDebugAdapterTracker(session: vscode.DebugSession): vscode.DebugAdapterTracker | undefined {
+        // Turned off: no sampler process for this session.
+        if (!isEnabled('memoryGraph', session.workspaceFolder?.uri)) {
+            return undefined;
+        }
         return {
             onDidSendMessage: (m: { type?: string; event?: string; body?: { systemProcessId?: number } }) => {
                 if (m.type !== 'event') {

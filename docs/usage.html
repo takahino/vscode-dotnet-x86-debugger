@@ -1176,6 +1176,30 @@ Debugging waits until the process appears:</p>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>Troubleshooting log of the debugger communication.</td></tr>
   <tr><td><code>dotnetX86.debuggerPath</code></td><td>(empty)</td><td>Use another x86 netcoredbg instead of the bundled one.</td></tr>
 </table>
+<h3 id="settings-features">Turning features off</h3>
+<p>Every feature is on by default (<code>true</code>). <code>false</code> removes its views, menu entries and commands, and stops the work it does in the background.</p>
+<table>
+  <tr><th>Setting</th><th>Feature</th></tr>
+  <tr><td><code>dotnetX86.memoryGraph.enabled</code></td><td>Memory / CPU / GDI graph (no sampling at all)</td></tr>
+  <tr><td><code>dotnetX86.inlineValues.enabled</code></td><td>Inline values</td></tr>
+  <tr><td><code>dotnetX86.autos.enabled</code></td><td>Autos view</td></tr>
+  <tr><td><code>dotnetX86.modules.enabled</code></td><td>Modules view, Download Symbols, Decompile for Debugging</td></tr>
+  <tr><td><code>dotnetX86.exceptionSettings.enabled</code></td><td>Exception Settings view (and stopping on the types checked in it)</td></tr>
+  <tr><td><code>dotnetX86.winforms.enabled</code></td><td>WinForms Controls view and its commands, Show Data Bindings</td></tr>
+  <tr><td><code>dotnetX86.heapSnapshot.enabled</code></td><td>Heap Snapshots and GDI leak candidates</td></tr>
+  <tr><td><code>dotnetX86.parallelStacks.enabled</code></td><td>Parallel Stacks, Freeze / Thaw Thread</td></tr>
+  <tr><td><code>dotnetX86.valueTrend.enabled</code></td><td>Value trend and section timing</td></tr>
+  <tr><td><code>dotnetX86.pinnedValues.enabled</code></td><td>Pinned values (kept, shown again when turned back on)</td></tr>
+  <tr><td><code>dotnetX86.breakpointCommands.enabled</code></td><td>The breakpoint commands of the editor context menu (the <code>#once</code> / <code>#after</code> / <code>#changed</code> / <code>#caller</code> conditions keep working)</td></tr>
+  <tr><td><code>dotnetX86.variableTools.enabled</code></td><td>Variables / Watch context menu commands (Dump, View as Table / Image, Copy as C#, View String, snapshots, Object ID)</td></tr>
+  <tr><td><code>dotnetX86.generateTest.enabled</code></td><td>Generate Unit Test from Here</td></tr>
+  <tr><td><code>dotnetX86.sessionReport.enabled</code></td><td>Export Debug Session Report</td></tr>
+  <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>Step History view and recording</td></tr>
+  <tr><td><code>dotnetX86.exceptionLog.enabled</code></td><td>Exception Log view and recording</td></tr>
+  <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>PerfTips</td></tr>
+  <tr><td><code>dotnetX86.uiFreeze.enabled</code></td><td>UI freeze detection</td></tr>
+  <tr><td><code>dotnetX86.sourceLink.enabled</code></td><td>Source Link downloads</td></tr>
+</table>
 <p style="color:var(--muted);font-size:13px;margin-top:40px">.NET x86 Debugger · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>
 </main>
 </div>

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
+import { isEnabled, onDidChangeFeature } from './features';
 
 interface Pin {
     uri: string;
@@ -45,6 +46,10 @@ export class PinnedValues implements vscode.Disposable {
                 }
             }),
             vscode.workspace.onDidChangeTextDocument((e) => this.followEdits(e)),
+            onDidChangeFeature('pinnedValues', () => {
+                this.render();
+                void this.evaluate(vscode.debug.activeStackItem);
+            }),
         );
         this.render();
     }
@@ -108,7 +113,7 @@ export class PinnedValues implements vscode.Disposable {
     }
 
     private async evaluate(item: vscode.DebugThread | vscode.DebugStackFrame | undefined): Promise<void> {
-        if (!(item instanceof vscode.DebugStackFrame) || item.session.type !== DEBUG_TYPE || this.pins.length === 0) {
+        if (!(item instanceof vscode.DebugStackFrame) || item.session.type !== DEBUG_TYPE || this.pins.length === 0 || !isEnabled('pinnedValues')) {
             return;
         }
         const generation = ++this.generation;
@@ -152,10 +157,12 @@ export class PinnedValues implements vscode.Disposable {
     }
 
     private render(): void {
+        // Turned off: the pins are kept (they come back when it is turned on again) but not shown.
+        const pins = isEnabled('pinnedValues') ? this.pins : [];
         for (const editor of vscode.window.visibleTextEditors) {
             const uri = editor.document.uri.toString();
             const byLine = new Map<number, Pin[]>();
-            for (const pin of this.pins.filter((p) => p.uri === uri && p.line < editor.document.lineCount)) {
+            for (const pin of pins.filter((p) => p.uri === uri && p.line < editor.document.lineCount)) {
                 byLine.set(pin.line, [...(byLine.get(pin.line) ?? []), pin]);
             }
             const options: vscode.DecorationOptions[] = [...byLine].map(([line, pins]) => {

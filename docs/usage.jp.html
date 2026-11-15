@@ -1076,6 +1076,30 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
   <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>同梱版の代わりに別の x86 版 netcoredbg を使います。</td></tr>
 </table>
+<h3 id="settings-features">機能のオン / オフ</h3>
+<p>すべての機能は既定でオン（<code>true</code>）です。<code>false</code> にすると、その機能のビュー・メニュー・コマンドが消え、裏で行う処理も止まります。</p>
+<table>
+  <tr><th>設定</th><th>機能</th></tr>
+  <tr><td><code>dotnetX86.memoryGraph.enabled</code></td><td>メモリ / CPU / GDI グラフ（計測もしない）</td></tr>
+  <tr><td><code>dotnetX86.inlineValues.enabled</code></td><td>インライン値</td></tr>
+  <tr><td><code>dotnetX86.autos.enabled</code></td><td>自動変数ビュー</td></tr>
+  <tr><td><code>dotnetX86.modules.enabled</code></td><td>モジュール ビュー、シンボルのダウンロード、デバッグ用に逆コンパイル</td></tr>
+  <tr><td><code>dotnetX86.exceptionSettings.enabled</code></td><td>例外設定ビュー（そこでチェックした型での停止も）</td></tr>
+  <tr><td><code>dotnetX86.winforms.enabled</code></td><td>WinForms コントロール ビューとそのコマンド、データ バインディングを表示</td></tr>
+  <tr><td><code>dotnetX86.heapSnapshot.enabled</code></td><td>ヒープ スナップショットと GDI リーク候補</td></tr>
+  <tr><td><code>dotnetX86.parallelStacks.enabled</code></td><td>並列スタック、スレッドの凍結・解除</td></tr>
+  <tr><td><code>dotnetX86.valueTrend.enabled</code></td><td>値の推移と区間の計測</td></tr>
+  <tr><td><code>dotnetX86.pinnedValues.enabled</code></td><td>ピン留めした値（オンに戻すと再表示）</td></tr>
+  <tr><td><code>dotnetX86.breakpointCommands.enabled</code></td><td>エディターの右クリックのブレークポイント コマンド（<code>#once</code> / <code>#after</code> / <code>#changed</code> / <code>#caller</code> の条件は使えます）</td></tr>
+  <tr><td><code>dotnetX86.variableTools.enabled</code></td><td>変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像、C# としてコピー、文字列、スナップショット、オブジェクト ID）</td></tr>
+  <tr><td><code>dotnetX86.generateTest.enabled</code></td><td>ここから単体テストを生成</td></tr>
+  <tr><td><code>dotnetX86.sessionReport.enabled</code></td><td>デバッグ セッション レポートの出力</td></tr>
+  <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>ステップ履歴ビューと記録</td></tr>
+  <tr><td><code>dotnetX86.exceptionLog.enabled</code></td><td>例外ログ ビューと記録</td></tr>
+  <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>PerfTips</td></tr>
+  <tr><td><code>dotnetX86.uiFreeze.enabled</code></td><td>UI フリーズの検知</td></tr>
+  <tr><td><code>dotnetX86.sourceLink.enabled</code></td><td>Source Link でのダウンロード</td></tr>
+</table>
 <p style="color:var(--muted);font-size:13px;margin-top:40px">.NET x86 Debugger · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>
 </main>
 </div>

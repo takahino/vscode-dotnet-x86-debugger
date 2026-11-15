@@ -6,6 +6,7 @@ import { BreakpointCommands } from './breakpointCommands';
 import { DEBUG_TYPE, X86ConfigurationProvider } from './configProvider';
 import { ControlNode, ControlTree } from './controlTree';
 import { DataBindingsPanel } from './dataBindings';
+import { isEnabled } from './features';
 import { DapTraceFactory } from './dapTrace';
 import { Decompiler } from './decompiler';
 import { ExceptionLog } from './exceptionLog';
@@ -73,7 +74,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         output,
         vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new X86ConfigurationProvider()),
-        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, { decompiled: decompiler.cacheRoot, symbols: symbolServer.symbolCache, sources: symbolServer.sourceCache }, () => exceptionSettings.checkedTypes())),
+        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, { decompiled: decompiler.cacheRoot, symbols: symbolServer.symbolCache, sources: symbolServer.sourceCache }, () => (isEnabled('exceptionSettings') ? exceptionSettings.checkedTypes() : []))),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new DapTraceFactory(output)),
         vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),

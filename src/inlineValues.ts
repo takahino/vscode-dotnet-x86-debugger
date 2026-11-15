@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
+import { isEnabled } from './features';
 import { findInlineTargets } from './inlineValuesCore';
 
 /**
@@ -13,7 +14,7 @@ export class CSharpInlineValuesProvider implements vscode.InlineValuesProvider {
         context: vscode.InlineValueContext,
     ): vscode.InlineValue[] | undefined {
         // Leave other debuggers' sessions (e.g. the C# extension) alone.
-        if (vscode.debug.activeDebugSession?.type !== DEBUG_TYPE) {
+        if (vscode.debug.activeDebugSession?.type !== DEBUG_TYPE || !isEnabled('inlineValues', document.uri)) {
             return undefined;
         }
         const stoppedLine = context.stoppedLocation.end.line;

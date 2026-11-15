@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
+import { isEnabled } from './features';
 import { findInlineTargets } from './inlineValuesCore';
 
 interface AutoItem {
@@ -65,7 +66,8 @@ export class AutosView implements vscode.TreeDataProvider<AutoItem>, vscode.Disp
                 this.changeEmitter.fire();
             }
         };
-        if (!(item instanceof vscode.DebugStackFrame) || item.session.type !== DEBUG_TYPE) {
+        // Turned off: the view is hidden, and no stack trace or evaluation is spent on it at each stop.
+        if (!(item instanceof vscode.DebugStackFrame) || item.session.type !== DEBUG_TYPE || !isEnabled('autos')) {
             update([]);
             return;
         }

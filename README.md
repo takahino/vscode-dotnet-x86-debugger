@@ -201,6 +201,34 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
 | `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
 
+#### Turning features off
+
+Every feature is on by default. Set one of these to `false` to remove its views, menu entries and commands, and to stop
+the work it does in the background (sampling, evaluating at each stop). The change applies at once; the memory graph,
+the exception settings, the exception log and UI freeze detection change with the next debug session.
+
+| Setting | Feature |
+|---|---|
+| `dotnetX86.memoryGraph.enabled` | Memory / CPU / GDI graph (no sampling at all) |
+| `dotnetX86.inlineValues.enabled` | Inline values |
+| `dotnetX86.autos.enabled` | Autos view |
+| `dotnetX86.modules.enabled` | Modules view, Download Symbols, Decompile for Debugging |
+| `dotnetX86.exceptionSettings.enabled` | Exception Settings view (and stopping on the types checked in it) |
+| `dotnetX86.winforms.enabled` | WinForms Controls view and its commands, Show Data Bindings |
+| `dotnetX86.heapSnapshot.enabled` | Heap Snapshots and GDI leak candidates |
+| `dotnetX86.parallelStacks.enabled` | Parallel Stacks, Freeze / Thaw Thread |
+| `dotnetX86.valueTrend.enabled` | Value trend and section timing |
+| `dotnetX86.pinnedValues.enabled` | Pinned values (kept, shown again when turned back on) |
+| `dotnetX86.breakpointCommands.enabled` | The breakpoint commands of the editor context menu (the `#once` / `#after` / `#changed` / `#caller` conditions keep working) |
+| `dotnetX86.variableTools.enabled` | Variables / Watch context menu commands (Dump, View as Table / Image, Copy as C#, View String, snapshots, Object ID) |
+| `dotnetX86.generateTest.enabled` | Generate Unit Test from Here |
+| `dotnetX86.sessionReport.enabled` | Export Debug Session Report |
+| `dotnetX86.stepHistory.enabled` | Step History view and recording |
+| `dotnetX86.exceptionLog.enabled` | Exception Log view and recording |
+| `dotnetX86.perfTips.enabled` | PerfTips |
+| `dotnetX86.uiFreeze.enabled` | UI freeze detection |
+| `dotnetX86.sourceLink.enabled` | Source Link downloads |
+
 ### .NET Framework 4.x
 
 `.NET Framework` apps (`net48`, `net472`, ...) are debugged the same way: point `program` at the x86 `.exe`
