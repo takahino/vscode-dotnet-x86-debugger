@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New: **Parallel Stacks** — all threads' call stacks merged into boxes, as in Visual Studio (Call Stack context menu / Command Palette).
+- New: **Freeze / Thaw Thread** — a frozen thread stays suspended when the program continues, also across expression evaluation; shown as `[frozen]` (netcoredbg patch 0010).
 - New: **Source Link** — when the program stops in a file that is not on this machine, it is downloaded through the PDB's Source Link map and opened (`dotnetX86.sourceLink.enabled`).
 - New: **Download Symbols** (Modules view) — fetches the PDB of an assembly without symbols from the NuGet / Microsoft symbol servers (`dotnetX86.symbolServers`).
 - Fix: symbols from **Decompile for Debugging** were not found by the debugger in a real session (the cache folder was given to netcoredbg after it had started).

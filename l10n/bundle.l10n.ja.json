@@ -213,5 +213,16 @@
   "The symbols of {0} were downloaded. Restart debugging to step into it (symbols are read when the module loads).": "{0} のシンボルをダウンロードしました。ステップ インするにはデバッグを再起動してください（シンボルはモジュールの読み込み時に読まれます）。",
   "The symbols of {0} were downloaded. The next debug session can step into it.": "{0} のシンボルをダウンロードしました。次のデバッグ セッションからステップ インできます。",
   "Delete all downloaded symbols and Source Link sources? They are downloaded again when needed.": "ダウンロードしたシンボルと Source Link のソースをすべて削除しますか？ 必要になれば再びダウンロードされます。",
-  "Downloaded symbols and sources were deleted.": "ダウンロードしたシンボルとソースを削除しました。"
+  "Downloaded symbols and sources were deleted.": "ダウンロードしたシンボルとソースを削除しました。",
+  "Parallel Stacks (.NET x86)": "並列スタック (.NET x86)",
+  "Stop the program and select a thread in the Call Stack view.": "プログラムを停止し、コールスタック ビューでスレッドを選んでください。",
+  "Could not change thread {0}: {1}": "スレッド {0} を変更できませんでした: {1}",
+  "Stop the program to see the stacks of its threads.": "スレッドのスタックを見るには、プログラムを停止してください。",
+  "{0} threads": "{0} スレッド",
+  "1 thread": "1 スレッド",
+  "Freeze": "凍結",
+  "Thaw": "凍結を解除",
+  "Threads": "スレッド",
+  "Refresh": "更新",
+  "Callers are at the bottom; a box splits where the threads go different ways. Click a frame to open it. A frozen thread stays suspended when the program continues.": "呼び出し元が下です。スレッドの経路が分かれるところで箱が分かれます。フレームをクリックすると開きます。凍結したスレッドは、続行しても止まったままです。"
 }

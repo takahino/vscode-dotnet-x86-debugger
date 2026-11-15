@@ -334,6 +334,16 @@ While stopped, right-click a line of the method that is executing and choose **J
 to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
 or moving into / out of a catch / finally block, are refused.
 
+### Parallel Stacks and freezing threads
+
+Right-click in the Call Stack view and choose **Show Parallel Stacks** (or run it from the Command Palette): the call stacks of
+all threads are merged into boxes, as in Visual Studio — callers at the bottom, a box per path the threads share, with the
+number of threads. Click a frame to open it; the panel follows every stop.
+
+Right-click a thread in the Call Stack view and choose **Freeze Thread** (or use the buttons in the panel): a frozen thread
+stays suspended when the program continues, also across expression evaluation, until **Thaw Thread**. Its name shows
+`[frozen]`. Use it to let one thread run alone, or to hold one back to provoke a race. Needs netcoredbg patch 0010.
+
 ### Step Into Specific
 
 On a line with several calls, such as `Outer(Inner1(), Inner2())`, right-click and choose **Step Into Target** (or run it

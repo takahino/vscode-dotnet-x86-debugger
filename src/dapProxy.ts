@@ -45,6 +45,8 @@ export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
 export const FREEZE_PAUSE_REQUEST = 'dotnetX86.pauseForFreeze';
 /** Custom DAP request: the exception types checked in the Exception Settings view changed (arguments: types). */
 export const EXCEPTION_TYPES_REQUEST = 'dotnetX86.setExceptionTypes';
+/** Custom DAP request (netcoredbg patch 0010): freeze / thaw a thread (arguments: threadId, frozen). */
+export const FREEZE_THREAD_REQUEST = 'dotnetX86.freezeThread';
 
 export interface ExceptionFilterText {
     label: string;
@@ -187,6 +189,9 @@ export class DapProxy {
     private sourceLinks: SourceLinkEntry[] = [];
     /** Source Link downloads by URL (each file is downloaded once; a failed URL is not tried again). */
     private readonly downloads = new Map<string, Promise<string | undefined>>();
+    /** Threads frozen with FREEZE_THREAD_REQUEST, and such requests waiting for their response. */
+    private readonly frozenThreads = new Set<number>();
+    private readonly pendingFreezeRequests = new Map<number, { threadId: number; frozen: boolean }>();
     private readonly mapper: SourcePathMapper;
     /** Assemblies whose PDB documents were already given to the mapper (pathKey). */
     private readonly scannedModules = new Set<string>();
@@ -253,6 +258,9 @@ export class DapProxy {
                 filterOptions: Array.isArray(args.filterOptions) ? args.filterOptions : [],
             };
             message = { ...message, arguments: this.exceptionArgsForDebugger() };
+        }
+        if (message.type === 'request' && message.command === FREEZE_THREAD_REQUEST && message.seq !== undefined) {
+            this.pendingFreezeRequests.set(message.seq, { threadId: Number(message.arguments?.threadId), frozen: message.arguments?.frozen !== false });
         }
         if (message.type === 'request' && message.command === EXCEPTION_TYPES_REQUEST) {
             void this.setCheckedExceptionTypes(message);
@@ -343,6 +351,22 @@ export class DapProxy {
             if (special && typeof bp.line === 'number') {
                 special.line = bp.line;
             }
+        }
+        if (message.type === 'response' && message.command === FREEZE_THREAD_REQUEST && message.request_seq !== undefined) {
+            const pending = this.pendingFreezeRequests.get(message.request_seq);
+            this.pendingFreezeRequests.delete(message.request_seq);
+            if (pending && message.success) {
+                if (pending.frozen) {
+                    this.frozenThreads.add(pending.threadId);
+                } else {
+                    this.frozenThreads.delete(pending.threadId);
+                }
+            }
+        }
+        if (message.type === 'response' && message.command === 'threads' && message.success && this.frozenThreads.size) {
+            // Frozen threads stay suspended when the program continues: say so in the Call Stack view.
+            const threads = (message.body?.threads ?? []).map((t: any) => (this.frozenThreads.has(t.id) ? { ...t, name: `${t.name} [frozen]` } : t));
+            message = { ...message, body: { ...message.body, threads } };
         }
         if (message.type === 'response' && message.command === 'stackTrace' && message.success) {
             await this.fetchSourceLinkFiles(message);
