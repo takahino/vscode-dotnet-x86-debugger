@@ -57,10 +57,10 @@ public static class Program
         var nested = Outer(Inner1(1), Inner2(2)); // @nested
 
         // Object IDs and test generation.
-        var orders = new Orders();
+        var orders = new Orders(); // @orders
         var lines = new List<Line> { new Line { Sku = "A-1", Quantity = 2, Price = 150m }, new Line { Sku = "B-2", Quantity = 1, Price = 99.5m } };
         Console.WriteLine(orders.Total(lines, 0.1m));
-        Console.WriteLine(Orders.Label("A-1", 3));
+        Console.WriteLine(Orders.Label("A-1", 3)); // @call-label
         Console.WriteLine(await orders.CountAsync(new[] { 1, 2, 3 }));
 
         // Source mapping (MappedLib's PDB records C:\fake\src\MappedLib) and decompiling (NoPdbLib has no PDB).
