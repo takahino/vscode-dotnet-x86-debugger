@@ -53,7 +53,7 @@ DAP を返すエンジンの代役 `fakeDebugger.ts` に対してテストし、
 
 ## リリース手順
 
-1. `package.json` の `version` と `CHANGELOG.md` を更新してコミットします。
+1. `package.json` の `version` と `CHANGELOG.md` を更新し、`npm run docs:api` を実行して（エンジンの API の文書に版が出ます）、コミットします。
 2. version と一致するタグを push します。
 
    ```powershell

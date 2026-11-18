@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": ".NET x86 Debugger - debug engine API",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "launch": {
     "description": "Arguments of `launch` as the engine receives them. The extension resolves launch.json first: a `.dll` program becomes `program: <dotnet.exe of the chosen bitness>, args: [<dll>, ...]`, and a .NET Framework exe gets `__dotnetFramework`. launch.json properties that only the extension reads (`architecture`, `sourceFileMap`, `sourceSearchPaths`, `processName`, `waitTimeout`) are not listed here.",
     "type": "object",

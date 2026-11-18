@@ -54,7 +54,7 @@ was sent (`sentToDebugger()`). What depends on the engine's own behavior (bindin
 
 ## Releasing
 
-1. Update `version` in `package.json` and `CHANGELOG.md`, and commit.
+1. Update `version` in `package.json` and `CHANGELOG.md`, run `npm run docs:api` (the engine API document shows the version), and commit.
 2. Push a tag that matches the version:
 
    ```powershell
