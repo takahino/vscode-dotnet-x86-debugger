@@ -5,7 +5,9 @@
     those paths to a local HTTP server the E2E tests start (port 43117).
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- net48 too: the E2E tests also run against .NET Framework apps (DOTNETX86_E2E_FRAMEWORK=net48). -->
+    <TargetFrameworks>net10.0;net48</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <DebugType>portable</DebugType>
     <PathMap>$(MSBuildProjectDirectory)=C:\fake\linked</PathMap>
     <!-- The SDK would put a Source Link map of this repository on GitHub instead (.NET 8+ does that by default). -->

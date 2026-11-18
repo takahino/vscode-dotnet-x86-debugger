@@ -4,7 +4,10 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { HANDLE_STATS_REQUEST, ResourceType, handleStatsArguments } from '../../resourceLeakCore';
-import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, FRAMEWORK, appSource, buildApp, e2eSkip, lineOf } from './harness';
+
+/** The handle fields are named without the underscore on .NET Framework (nativeFont, nativeImage). */
+const NATIVE = FRAMEWORK === 'net48' ? 'native' : '_native';
 
 describe('GDI leak candidates', { skip: e2eSkip }, () => {
     let s: DapSession;
@@ -31,13 +34,13 @@ describe('GDI leak candidates', { skip: e2eSkip }, () => {
     it('counts the fonts that were not disposed apart from the disposed ones', async () => {
         const find = await stats();
         // 5 kept, 3 disposed and dropped (still on the heap: no GC yet), 1 disposed and kept.
-        assert.deepEqual(find('System.Drawing.Font'), { name: 'System.Drawing.Font', count: 9, live: 5, field: 'System.Drawing.Font._nativeFont' });
+        assert.deepEqual(find('System.Drawing.Font'), { name: 'System.Drawing.Font', count: 9, live: 5, field: `System.Drawing.Font.${NATIVE}Font` });
     });
 
     it('finds the handle of a derived type in its base type', async () => {
         const find = await stats();
         assert.equal(find('System.Drawing.SolidBrush')?.live, 2);
-        assert.equal(find('System.Drawing.Bitmap')?.field, 'System.Drawing.Image._nativeImage');
+        assert.equal(find('System.Drawing.Bitmap')?.field, `System.Drawing.Image.${NATIVE}Image`);
         assert.equal(find('System.Drawing.Bitmap')?.live, 1);
     });
 

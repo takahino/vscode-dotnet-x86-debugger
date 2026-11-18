@@ -4,7 +4,7 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { readEventHandlers, readEventKeys } from '../../eventHandlersCore';
-import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, FRAMEWORK, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const BUTTON = 'System.Windows.Forms.Application.OpenForms[0].Controls[0].Controls[0]';
 
@@ -29,7 +29,8 @@ describe('breaking on control events', { skip: e2eSkip || (process.env.DOTNETX86
     it('lists the handlers of each event, lambdas included, and stops in the picked one', { timeout: 120_000 }, async () => {
         const request = async (command: string, args: Record<string, unknown>) => (await s.request(command, args)).body;
         const keys = await readEventKeys(BUTTON, frameId, request);
-        assert.ok(keys.some((k) => k.field === 's_clickEvent'), `${keys.length} keys`);
+        // The key of Click: Control.s_clickEvent on .NET, Control.EventClick on .NET Framework.
+        assert.ok(keys.some((k) => k.field === (FRAMEWORK === 'net48' ? 'EventClick' : 's_clickEvent')), `${keys.length} keys`);
         const evaluate = async (expression: string) => {
             const r = await s.evaluate(expression, frameId);
             if (!r.success) {

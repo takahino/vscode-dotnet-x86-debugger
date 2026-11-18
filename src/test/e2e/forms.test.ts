@@ -4,7 +4,9 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { failedResult, setterExpression, valueExpression } from '../../controlPropertyCore';
-import { DapSession, IS_NETCOREDBG, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, FRAMEWORK, IS_NETCOREDBG, appSource, buildApp, e2eSkip, lineOf } from './harness';
+
+const colorDisplay = (name: string, argb: string) => (FRAMEWORK === 'net48' ? `\"{Name=${name}, ARGB=(${argb})}\"` : `\"{Name = ${name}, ARGB = (${argb})}\"`);
 
 const BUTTON = 'System.Windows.Forms.Application.OpenForms[0].Controls[0].Controls[0]';
 
@@ -34,8 +36,9 @@ describe('changing control properties', { skip: e2eSkip || (process.env.DOTNETX8
         ['Text', 'string', 'Changed "here"', '"Changed \\"here\\""'],
         ['Visible', 'bool', 'false', 'false'],
         ['Width', 'int', '150', '150'],
-        ['BackColor', 'color', '#ff0080', '"{Name = ffff0080, ARGB = (255, 255, 0, 128)}"'],
-        ['ForeColor', 'color', 'Red', '"{Name = Red, ARGB = (255, 255, 0, 0)}"'],
+        // Color's DebuggerDisplay: "{Name = Red, ...}" on .NET, "{Name=Red, ...}" on .NET Framework.
+        ['BackColor', 'color', '#ff0080', colorDisplay('ffff0080', '255, 255, 0, 128')],
+        ['ForeColor', 'color', 'Red', colorDisplay('Red', '255, 255, 0, 0')],
     ] as const) {
         it(`sets ${property} through its setter`, { timeout: 60_000 }, async () => {
             const r = await set(property, kind, input);

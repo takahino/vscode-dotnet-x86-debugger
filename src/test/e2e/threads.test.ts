@@ -4,7 +4,7 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { buildStackGraph } from '../../parallelStacksCore';
-import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, FRAMEWORK, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 describe('threads', { skip: e2eSkip }, () => {
     let s: DapSession;
@@ -41,10 +41,11 @@ describe('threads', { skip: e2eSkip }, () => {
         const stacks = await Promise.all(threads.map(async (t) => ({ ...t, frames: (await s.request('stackTrace', { threadId: t.id, levels: 50 })).body.stackFrames ?? [] })));
         const graph = buildStackGraph(stacks);
         const { a, b } = await workers();
-        // Both workers start in Thread.StartCallback (one box for the two), then run different lambdas into Work.
+        // Both workers start in the runtime's thread entry (one box for the two), then run different lambdas into Work.
+        // (Thread.StartCallback on .NET, ThreadHelper.ThreadStart on .NET Framework.)
         const shared = graph.find((n) => n.threadIds.includes(a.id) && n.threadIds.includes(b.id));
         assert.ok(shared, JSON.stringify(graph.map((n) => n.frames.map((f) => f.name))));
-        assert.match(shared.frames[0].name, /StartCallback/);
+        assert.match(shared.frames[0].name, FRAMEWORK === 'net48' ? /ThreadHelper\.ThreadStart/ : /StartCallback/);
         type Node = ReturnType<typeof buildStackGraph>[number];
         const reachesWork = (n: Node, thread: number): boolean =>
             n.threadIds.includes(thread) && (n.frames.some((f) => /Program\.Work\(/.test(f.name)) || n.children.some((c) => reachesWork(c, thread)));

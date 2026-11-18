@@ -12,11 +12,13 @@ import { DapProxy, ProxyOptions } from '../../dapProxy';
 export const REPO = path.resolve(__dirname, '..', '..', '..');
 /** DOTNETX86_E2E_ARCH=x64 runs the tests with the x64 engine against the apps built for x64 (default x86). */
 export const ARCH: 'x86' | 'x64' = process.env.DOTNETX86_E2E_ARCH === 'x64' ? 'x64' : 'x86';
+/** DOTNETX86_E2E_FRAMEWORK=net48 builds the apps for .NET Framework 4.8 (default: as their projects say, .NET 10). */
+export const FRAMEWORK: 'net48' | undefined = process.env.DOTNETX86_E2E_FRAMEWORK === 'net48' ? 'net48' : undefined;
 // DOTNETX86_E2E_DEBUGGER points the same tests at another debug engine (for example netcoredbg, to compare).
 export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', `dotnet-x86dbg-${ARCH}`, 'dotnet-x86dbg.exe');
 export const DECOMPILER = path.join(REPO, 'debugger', 'decompiler', 'DotnetX86.Decompiler.dll');
 const APPS = path.join(REPO, 'test', 'apps');
-const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e', ARCH);
+const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e', FRAMEWORK ? `-${FRAMEWORK}` : ARCH);
 
 /** Whether the engine under test is netcoredbg (some of its limitations are tested as they are). */
 export const IS_NETCOREDBG = /netcoredbg\.exe$/i.test(NETCOREDBG);
@@ -35,7 +37,15 @@ export function buildApp(name: string): string {
     const outDir = path.join(OUT, name);
     // The apps say x86 (PlatformTarget, RuntimeIdentifier) in their projects; for x64 both are overridden for the whole build.
     const platform = ARCH === 'x64' ? ['-p:PlatformTarget=x64', '-p:RuntimeIdentifier=win-x64'] : [];
-    const result = cp.spawnSync('dotnet', ['build', path.join(APPS, name), '-c', 'Debug', '-o', outDir, '-nologo', '-v', 'q', ...platform], { encoding: 'utf8' });
+    // .NET Framework: the apps' own TargetFramework is overridden (the libraries target net48 too and follow), with the intermediate
+    // files apart from those of the .NET build, and the C# version the apps are written in.
+    const framework = FRAMEWORK ? [`-p:TargetFramework=${FRAMEWORK}`, '-p:LangVersion=latest', '-p:UseArtifactsOutput=true', `-p:ArtifactsPath=${path.join(OUT, 'artifacts')}`] : [];
+    // The restore inside `dotnet build` does not see the TargetFramework override: restore first, on its own.
+    const restored = FRAMEWORK ? cp.spawnSync('dotnet', ['restore', path.join(APPS, name), '-nologo', '-v', 'q', ...platform, ...framework], { encoding: 'utf8' }) : undefined;
+    if (restored && restored.status !== 0) {
+        throw new Error(`dotnet restore ${name} failed:\n${restored.stdout}\n${restored.stderr}`);
+    }
+    const result = cp.spawnSync('dotnet', ['build', path.join(APPS, name), '-c', 'Debug', '-o', outDir, '-nologo', '-v', 'q', ...(FRAMEWORK ? ['--no-restore'] : []), ...platform, ...framework], { encoding: 'utf8' });
     if (result.status !== 0) {
         throw new Error(`dotnet build ${name} failed:\n${result.stdout}\n${result.stderr}`);
     }
