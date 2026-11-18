@@ -13,6 +13,9 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      # 同梱するデバッグエンジン (dotnet-x86dbg) の版。CI と同じものにする
+      ENGINE_REF: main
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +24,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      # netcoredbg の ManagedPart のビルドに使う
+      # 逆コンパイル ヘルパーのビルドに使う
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
@@ -36,19 +39,23 @@ jobs:
             throw "タグ $tag と package.json の version ($version) が一致しません。package.json を更新してからタグを付け直してください。"
           }
 
-      # netcoredbg のビルドは時間がかかるため、ビルドスクリプトとパッチが変わらない限りキャッシュを使う
-      - name: Restore netcoredbg (x86) cache
-        id: netcoredbg-cache
-        uses: actions/cache@v4
+      # デバッグエンジン dotnet-x86dbg (Rust) を取得してビルドし、debugger/dotnet-x86dbg-x86 と -x64 に置く。
+      # ENGINE_REF でエンジンの版を固定する (エンジンを新しくするときは、ここを書き換えて E2E を通す)。
+      - uses: actions/checkout@v4
         with:
-          path: debugger/netcoredbg-x86
-          key: netcoredbg-x86-${{ runner.os }}-${{ hashFiles('scripts/build-netcoredbg.ps1', 'patches/netcoredbg/**') }}
+          repository: ${{ github.repository_owner }}/dotnet-x86dbg
+          ref: ${{ env.ENGINE_REF }}
+          path: engine
 
-      - name: Build netcoredbg (x86)
-        if: steps.netcoredbg-cache.outputs.cache-hit != 'true'
+      - name: Install the Rust targets
         shell: pwsh
-        # dotnet/runtime のソースは MAX_PATH を超えやすいので短い作業パスを使う
-        run: ./scripts/build-netcoredbg.ps1 -WorkDir C:\ncdbg
+        run: |
+          rustup target add i686-pc-windows-msvc x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { throw "Rust のターゲットを追加できません (exit code $LASTEXITCODE)。" }
+
+      - name: Build the debug engine (x86 / x64)
+        shell: pwsh
+        run: ./scripts/build-engine.ps1 -EngineRepo engine
 
       # 壊れた VSIX を公開しないよう、パッケージ前に単体テストを通す（E2E は CI ワークフローで実行）
       - name: Unit tests

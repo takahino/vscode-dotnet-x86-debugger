@@ -1,2 +1,0 @@
-# Patches must keep LF line endings so that git apply works on Windows checkouts
-*.patch -text

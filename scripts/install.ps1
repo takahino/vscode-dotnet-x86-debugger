@@ -33,9 +33,9 @@ if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
 
 Push-Location $repoRoot
 try {
-    # VSIX に同梱する x86 版 netcoredbg が未ビルドならビルドする
-    if (-not (Test-Path (Join-Path $repoRoot 'debugger\netcoredbg-x86\netcoredbg.exe'))) {
-        & (Join-Path $PSScriptRoot 'build-netcoredbg.ps1')
+    # VSIX に同梱するデバッグエンジン (x86 / x64) が無ければ、隣の dotnet-x86dbg のリポジトリからビルドして置く
+    if (-not (Test-Path (Join-Path $repoRoot 'debugger\dotnet-x86dbg-x86\dotnet-x86dbg.exe')) -or -not (Test-Path (Join-Path $repoRoot 'debugger\dotnet-x86dbg-x64\dotnet-x86dbg.exe'))) {
+        & (Join-Path $PSScriptRoot 'build-engine.ps1')
     }
     # VSIX に同梱する逆コンパイル ヘルパーが未ビルドならビルドする
     if (-not (Test-Path (Join-Path $repoRoot 'debugger\decompiler\DotnetX86.Decompiler.dll'))) {
