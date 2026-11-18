@@ -45,9 +45,19 @@ describe('changing control properties', { skip: e2eSkip || (process.env.DOTNETX8
         });
     }
 
-    it('cannot pass an enum value (a netcoredbg limitation the command explains)', { timeout: 60_000 }, async () => {
-        const r = await set('Dock', 'expression', 'System.Windows.Forms.DockStyle.Fill');
-        assert.ok(!r.success || failedResult(r.body) !== undefined, JSON.stringify(r.body));
-        assert.equal((await s.evaluate(`${BUTTON}.Dock`, frameId)).body.result, 'None');
-    });
+    // netcoredbg's evaluator cannot pass enum values (the command explains it); the new engine (dotnet-x86dbg) can.
+    if (process.env.DOTNETX86_E2E_DEBUGGER) {
+        it('passes an enum value', { timeout: 60_000 }, async () => {
+            const r = await set('Dock', 'expression', 'System.Windows.Forms.DockStyle.Fill');
+            assert.equal(r.success, true, r.message);
+            assert.equal(failedResult(r.body), undefined);
+            assert.equal((await s.evaluate(`${BUTTON}.Dock`, frameId)).body.result, 'Fill');
+        });
+    } else {
+        it('cannot pass an enum value (a netcoredbg limitation the command explains)', { timeout: 60_000 }, async () => {
+            const r = await set('Dock', 'expression', 'System.Windows.Forms.DockStyle.Fill');
+            assert.ok(!r.success || failedResult(r.body) !== undefined, JSON.stringify(r.body));
+            assert.equal((await s.evaluate(`${BUTTON}.Dock`, frameId)).body.result, 'None');
+        });
+    }
 });
