@@ -18,6 +18,22 @@ describe('valueExpression', () => {
         assert.ok('error' in valueExpression('int', '1.5'));
     });
 
+    it('writes enum members with their type, combining several with |', () => {
+        assert.deepEqual(valueExpression('enum', 'Fill', 'System.Windows.Forms.DockStyle'), { expression: 'System.Windows.Forms.DockStyle.Fill' });
+        assert.deepEqual(valueExpression('enum', 'Top, Left', 'System.Windows.Forms.AnchorStyles'), {
+            expression: 'System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left',
+        });
+        assert.deepEqual(valueExpression('enum', 'Top | Left', 'A'), { expression: 'A.Top | A.Left' });
+        assert.ok('error' in valueExpression('enum', '', 'A'));
+        assert.ok('error' in valueExpression('enum', 'Top,', 'A'));
+        assert.ok('error' in valueExpression('enum', 'Fill()', 'A'));
+    });
+
+    it('lists Dock and Anchor as enum properties', () => {
+        assert.equal(EDITABLE_PROPERTIES.find((p) => p.name === 'Dock')?.enumType, 'System.Windows.Forms.DockStyle');
+        assert.equal(EDITABLE_PROPERTIES.find((p) => p.name === 'Anchor')?.enumType, 'System.Windows.Forms.AnchorStyles');
+    });
+
     it('accepts color names, #RRGGBB, #AARRGGBB and R,G,B', () => {
         assert.deepEqual(valueExpression('color', 'Red'), { expression: 'System.Drawing.Color.Red' });
         assert.deepEqual(valueExpression('color', '#ff0080'), { expression: 'System.Drawing.Color.FromArgb(255, 0, 128)' });

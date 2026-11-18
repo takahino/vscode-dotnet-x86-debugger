@@ -9,7 +9,7 @@ import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
 import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { findWriteLines } from './writeSites';
 
-/** Labels for netcoredbg's exception filters, shown in the Breakpoints view. */
+/** Labels for the debug engine's exception filters, shown in the Breakpoints view. */
 function exceptionFilterTexts(): Record<string, ExceptionFilterText> {
     const conditionDescription = vscode.l10n.t('Exception types to break on, e.g. "System.NullReferenceException, System.InvalidOperationException". Start with "!" to break on every type except these.');
     return {
@@ -186,9 +186,10 @@ class ProxyAdapter implements vscode.DebugAdapter {
 }
 
 /**
- * Environment for netcoredbg's .NET Framework support (patch 0007): NETCOREDBG_DESKTOP_CLR launches the program with
- * the .NET Framework CLR, and NETCOREDBG_HOST_CORECLR is the CoreCLR netcoredbg runs its own managed part on.
- * The host is also given for attach, where netcoredbg falls back to .NET Framework when the process has no CoreCLR.
+ * Environment for netcoredbg's .NET Framework support (patch 0007), used only when dotnetX86.debuggerPath points to a
+ * netcoredbg: NETCOREDBG_DESKTOP_CLR launches the program with the .NET Framework CLR, and NETCOREDBG_HOST_CORECLR is the
+ * CoreCLR netcoredbg runs its own managed part on. The bundled engine (dotnet-x86dbg) needs neither: it reads the
+ * "__dotnetFramework" launch argument and debugs .NET Framework apps without any .NET runtime of its own.
  */
 function debuggerEnvironment(config: vscode.DebugConfiguration): Record<string, string> {
     const framework = config.request === 'launch' && config[DOTNET_FRAMEWORK_KEY] === true;
@@ -204,8 +205,14 @@ function debuggerEnvironment(config: vscode.DebugConfiguration): Record<string, 
     return framework ? { NETCOREDBG_DESKTOP_CLR: '1', NETCOREDBG_HOST_CORECLR: hostCoreClr } : { NETCOREDBG_HOST_CORECLR: hostCoreClr };
 }
 
-/** Folder (relative to the extension root) holding the bundled x86 build of netcoredbg. */
-const BUNDLED_DEBUGGER_DIR = path.join('debugger', 'netcoredbg-x86');
+/** Folder (relative to the extension root) holding the bundled x86 debug engine (dotnet-x86dbg, with dbgshim.dll). */
+const BUNDLED_DEBUGGER_DIR = path.join('debugger', 'dotnet-x86dbg-x86');
+const BUNDLED_DEBUGGER_EXE = 'dotnet-x86dbg.exe';
+
+/** Whether the engine is netcoredbg (an old one set in dotnetX86.debuggerPath), which needs its own environment. */
+function isNetcoredbg(engine: string): boolean {
+    return path.basename(engine).toLowerCase() === 'netcoredbg.exe';
+}
 
 export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     constructor(
@@ -221,18 +228,18 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.DebugAdapterDescriptor {
         const debugger_ = this.locateDebugger();
         this.output.appendLine(`[session] using ${debugger_}`);
-        const env = debuggerEnvironment(session.configuration);
+        const env = isNetcoredbg(debugger_) ? debuggerEnvironment(session.configuration) : {};
         const args = ['--interpreter=vscode'];
-        // With tracing on, netcoredbg also writes its own log (flushed per line, so it survives a hang or crash).
+        // With tracing on, the engine also writes its own log (flushed per line, so it survives a hang or crash).
         if (vscode.workspace.getConfiguration('dotnetX86').get<boolean>('trace')) {
             fs.mkdirSync(this.logDir, { recursive: true });
-            const logFile = path.join(this.logDir, `netcoredbg-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+            const logFile = path.join(this.logDir, `${path.basename(debugger_, '.exe')}-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
             args.push(`--log=${logFile}`);
-            this.output.appendLine(`[trace] netcoredbg log: ${logFile}`);
+            this.output.appendLine(`[trace] engine log: ${logFile}`);
         }
         const sourceMap = sourceMapSetup(session, this.output);
-        // Decompiled and downloaded symbols: netcoredbg (patch 0009) loads them from these folders by MVID. The variable
-        // must be set before netcoredbg starts (in the ProxyAdapter constructor).
+        // Decompiled and downloaded symbols: the engine loads them from these folders by MVID (netcoredbg: patch 0009).
+        // The variable must be set before the engine starts (in the ProxyAdapter constructor).
         const symbolDirs = [this.caches.decompiled, this.caches.symbols].filter((dir) => hasEntries(dir));
         if (symbolDirs.length) {
             env[SYMBOL_DIRS_ENV] = symbolDirs.join(path.delimiter);
@@ -246,7 +253,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const sourceLink = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri).get<boolean>('sourceLink.enabled', true)
             ? { cacheRoot: this.caches.sources }
             : undefined;
-        // netcoredbg runs behind a DAP relay that adds logpoints (see DapProxy).
+        // The engine runs behind a DAP relay that adds logpoints (see DapProxy).
         const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap, this.checkedExceptionTypes(), { symbolDirs, sourceLink });
         if (sourceMap.mapper.enabled) {
             // Generated files under obj\ are never on another machine's disk and are not worth reporting.
@@ -264,15 +271,15 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         if (configured) {
             if (!fs.existsSync(configured)) {
                 throw new Error(
-                    vscode.l10n.t("netcoredbg in the dotnetX86.debuggerPath setting was not found: {0}. Fix the path, or clear it to use the bundled one.", configured),
+                    vscode.l10n.t("The debug engine in the dotnetX86.debuggerPath setting was not found: {0}. Fix the path, or clear it to use the bundled one.", configured),
                 );
             }
             return configured;
         }
-        const bundled = path.join(this.extensionPath, BUNDLED_DEBUGGER_DIR, 'netcoredbg.exe');
+        const bundled = path.join(this.extensionPath, BUNDLED_DEBUGGER_DIR, BUNDLED_DEBUGGER_EXE);
         if (!fs.existsSync(bundled)) {
             throw new Error(
-                vscode.l10n.t("The bundled netcoredbg (x86) was not found: {0}. Build it with scripts\\build-netcoredbg.ps1 and rebuild the VSIX, or set dotnetX86.debuggerPath.", bundled),
+                vscode.l10n.t("The bundled debug engine (dotnet-x86dbg, x86) was not found: {0}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX, or set dotnetX86.debuggerPath.", bundled),
             );
         }
         return bundled;

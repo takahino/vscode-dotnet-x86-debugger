@@ -4,7 +4,7 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { failedResult, setterExpression, valueExpression } from '../../controlPropertyCore';
-import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, IS_NETCOREDBG, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const BUTTON = 'System.Windows.Forms.Application.OpenForms[0].Controls[0].Controls[0]';
 
@@ -46,7 +46,7 @@ describe('changing control properties', { skip: e2eSkip || (process.env.DOTNETX8
     }
 
     // netcoredbg's evaluator cannot pass enum values (the command explains it); the new engine (dotnet-x86dbg) can.
-    if (process.env.DOTNETX86_E2E_DEBUGGER) {
+    if (!IS_NETCOREDBG) {
         it('passes an enum value', { timeout: 60_000 }, async () => {
             const r = await set('Dock', 'expression', 'System.Windows.Forms.DockStyle.Fill');
             assert.equal(r.success, true, r.message);

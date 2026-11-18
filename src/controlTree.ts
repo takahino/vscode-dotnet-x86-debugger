@@ -134,7 +134,7 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
             description: await evaluate(`${node.expression}.${p.name}`).catch(() => '?'),
             property: p,
         })));
-        const picked = await vscode.window.showQuickPick<vscode.QuickPickItem & { property?: { name: string; kind: PropertyKind } }>(
+        const picked = await vscode.window.showQuickPick<vscode.QuickPickItem & { property?: { name: string; kind: PropertyKind; enumType?: string } }>(
             [...items, { label: other, description: vscode.l10n.t('any property, with a C# expression as the value') }],
             { placeHolder: vscode.l10n.t('Property of {0} to change', label) },
         );
@@ -156,7 +156,7 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
         if (input === undefined) {
             return;
         }
-        const value = valueExpression(property.kind, input);
+        const value = valueExpression(property.kind, input, property.enumType);
         if ('error' in value) {
             return; // the input box already refused it
         }
@@ -173,9 +173,7 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
             void vscode.window.showInformationMessage(vscode.l10n.t('{0}.{1} was changed. It shows on screen when the program continues.', label, property.name));
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e);
-            // netcoredbg's evaluator cannot pass enum values (E_INVALIDARG): say so instead of the bare error code.
-            const hint = /0x80070057/.test(message) ? vscode.l10n.t('Enum properties (Dock, Anchor, ...) cannot be changed with this debugger.') : message;
-            void vscode.window.showErrorMessage(vscode.l10n.t('{0}.{1} was not changed: {2}', label, property.name, hint));
+            void vscode.window.showErrorMessage(vscode.l10n.t('{0}.{1} was not changed: {2}', label, property.name, message));
         }
     }
 
@@ -263,7 +261,7 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
         }
     }
 
-    private async askValue(property: { name: string; kind: PropertyKind }, current: string): Promise<string | undefined> {
+    private async askValue(property: { name: string; kind: PropertyKind; enumType?: string }, current: string): Promise<string | undefined> {
         if (property.kind === 'bool') {
             return vscode.window.showQuickPick(['true', 'false'], { placeHolder: vscode.l10n.t('{0} (now {1})', property.name, current) });
         }
@@ -272,13 +270,14 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
             bool: '',
             int: vscode.l10n.t('A whole number'),
             color: vscode.l10n.t('A color name (Red), #RRGGBB, #AARRGGBB or R,G,B'),
+            enum: vscode.l10n.t('A member name (Fill), or names joined with commas (Top, Left)'),
             expression: vscode.l10n.t('A C# expression, e.g. System.Drawing.SystemFonts.CaptionFont'),
         };
         return vscode.window.showInputBox({
             prompt: `${property.name}: ${hints[property.kind]}`,
             // Current text without its quotes, current numbers as they are; colors are typed anew.
-            value: property.kind === 'string' ? current.replace(/^"|"$/g, '') : property.kind === 'int' ? current : '',
-            validateInput: (v) => ('error' in valueExpression(property.kind, v) ? hints[property.kind] : undefined),
+            value: property.kind === 'string' ? current.replace(/^"|"$/g, '') : property.kind === 'int' || property.kind === 'enum' ? current : '',
+            validateInput: (v) => ('error' in valueExpression(property.kind, v, property.enumType) ? hints[property.kind] : undefined),
         });
     }
 

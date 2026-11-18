@@ -1,5 +1,5 @@
-// E2E harness: drives the real netcoredbg through DapProxy, like VS Code does, against the apps in test/apps.
-// Needs the bundled netcoredbg (scripts/build-netcoredbg.ps1), the .NET SDK and the x86 .NET runtime.
+// E2E harness: drives the real debug engine through DapProxy, like VS Code does, against the apps in test/apps.
+// Needs the bundled engine (scripts/build-engine.ps1), the .NET SDK and the x86 .NET runtime.
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -10,14 +10,17 @@ import { DapProxy, ProxyOptions } from '../../dapProxy';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const REPO = path.resolve(__dirname, '..', '..', '..');
-// DOTNETX86_E2E_DEBUGGER points the same tests at another debug engine (a drop-in replacement under development).
-export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', 'netcoredbg-x86', 'netcoredbg.exe');
+// DOTNETX86_E2E_DEBUGGER points the same tests at another debug engine (for example netcoredbg, to compare).
+export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', 'dotnet-x86dbg-x86', 'dotnet-x86dbg.exe');
 export const DECOMPILER = path.join(REPO, 'debugger', 'decompiler', 'DotnetX86.Decompiler.dll');
 const APPS = path.join(REPO, 'test', 'apps');
 const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e');
 
 /** Why the E2E tests cannot run here, or false when they can. */
-export const e2eSkip: string | false = fs.existsSync(NETCOREDBG) ? false : `the debugger is missing (${NETCOREDBG}): run scripts/build-netcoredbg.ps1, or fix DOTNETX86_E2E_DEBUGGER`;
+/** Whether the engine under test is netcoredbg (some of its limitations are tested as they are). */
+export const IS_NETCOREDBG = /netcoredbg\.exe$/i.test(NETCOREDBG);
+
+export const e2eSkip: string | false = fs.existsSync(NETCOREDBG) ? false : `the debugger is missing (${NETCOREDBG}): run scripts/build-engine.ps1, or fix DOTNETX86_E2E_DEBUGGER`;
 
 const built = new Map<string, string>();
 

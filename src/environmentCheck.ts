@@ -76,24 +76,22 @@ export class EnvironmentCheck implements vscode.Disposable {
             items.push({ level: 'error', title: t('Windows is required'), detail: t('x86 .NET programs can only be debugged on Windows.') });
             return items;
         }
-        const debuggerExe = path.join(this.extensionPath, 'debugger', 'netcoredbg-x86', 'netcoredbg.exe');
+        const debuggerExe = path.join(this.extensionPath, 'debugger', 'dotnet-x86dbg-x86', 'dotnet-x86dbg.exe');
         items.push(fs.existsSync(debuggerExe)
-            ? { level: 'ok', title: t('Bundled debugger (netcoredbg x86)'), detail: debuggerExe }
+            ? { level: 'ok', title: t('Bundled debugger (dotnet-x86dbg x86)'), detail: debuggerExe }
             : { level: 'error', title: t('The bundled debugger is missing'), detail: t('{0} was not found. Reinstall the extension.', debuggerExe) });
 
         const runtimes = findX86Runtimes(x86DotnetRoots());
         const download = { label: t('Download page'), action: { type: 'url' as const, url: DOWNLOAD_URL } };
+        // The debugger itself needs no .NET runtime: the x86 runtime is only for running .NET 5+ apps as x86.
         if (!runtimes.netCore.length) {
             items.push({
-                level: 'error', title: t('x86 .NET Runtime not found'),
-                detail: t('The debugger runs on the x86 .NET runtime (8 or later), also for .NET Framework apps. Install the .NET Desktop Runtime for x86 (it includes the .NET Runtime), or set DOTNET_ROOT(x86).'),
+                level: 'warning', title: t('x86 .NET Runtime not found'),
+                detail: t('.NET 5 or later apps need it to run as x86 (self-contained apps and .NET Framework apps do not). Install the .NET Desktop Runtime for x86 (it includes the .NET Runtime), or set DOTNET_ROOT(x86).'),
                 fixes: [download],
             });
         } else {
-            const newest = Number(runtimes.netCore[0].split('.')[0]);
-            items.push(newest >= 8
-                ? { level: 'ok', title: t('x86 .NET Runtime {0}', runtimes.netCore.join(', ')), detail: runtimes.root }
-                : { level: 'error', title: t('x86 .NET Runtime {0} is too old', runtimes.netCore[0]), detail: t('The debugger needs the x86 .NET runtime 8 or later.'), fixes: [download] });
+            items.push({ level: 'ok', title: t('x86 .NET Runtime {0}', runtimes.netCore.join(', ')), detail: runtimes.root });
             items.push(runtimes.windowsDesktop.length
                 ? { level: 'ok', title: t('x86 .NET Desktop Runtime {0}', runtimes.windowsDesktop.join(', ')), detail: t('For WinForms / WPF apps on .NET 5 or later.') }
                 : { level: 'warning', title: t('x86 .NET Desktop Runtime not found'), detail: t('WinForms / WPF apps on .NET 5 or later need it to run as x86. Console apps and .NET Framework apps do not.'), fixes: [download] });

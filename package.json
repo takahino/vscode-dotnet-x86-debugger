@@ -1247,6 +1247,17 @@
                 "default": true,
                 "description": "%debugger.launch.enableStepFiltering%"
               },
+              "expressionEvaluationOptions": {
+                "type": "object",
+                "description": "%debugger.expressionEvaluationOptions%",
+                "properties": {
+                  "allowImplicitFuncEval": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%debugger.expressionEvaluationOptions.allowImplicitFuncEval%"
+                  }
+                }
+              },
               "sourceFileMap": {
                 "type": "object",
                 "additionalProperties": {
@@ -1289,6 +1300,17 @@
                 "type": "boolean",
                 "default": true,
                 "description": "%debugger.attach.enableStepFiltering%"
+              },
+              "expressionEvaluationOptions": {
+                "type": "object",
+                "description": "%debugger.expressionEvaluationOptions%",
+                "properties": {
+                  "allowImplicitFuncEval": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%debugger.expressionEvaluationOptions.allowImplicitFuncEval%"
+                  }
+                }
               },
               "sourceFileMap": {
                 "type": "object",

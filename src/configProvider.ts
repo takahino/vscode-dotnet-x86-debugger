@@ -88,9 +88,8 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
 
     const { bitness, managed } = inspectPe(program);
     // .NET 5+ produces a native apphost exe; a managed exe means .NET Framework, debugged through its own CLR
-    // (the adapter factory tells netcoredbg so). netcoredbg still needs the x86 .NET runtime for itself: check it now.
+    // (the launch argument tells the engine so). The bundled engine needs no .NET runtime for that.
     if (managed) {
-        findX86CoreClr();
         config[DOTNET_FRAMEWORK_KEY] = true;
         warnIfWindowsPdb(program);
     }
@@ -178,8 +177,8 @@ export function x86DotnetRoots(): string[] {
 }
 
 /**
- * coreclr.dll of the newest installed x86 .NET runtime. netcoredbg runs its managed part (PDB reading, expression
- * parsing) on it when the debuggee is a .NET Framework app, which has no CoreCLR of its own.
+ * coreclr.dll of the newest installed x86 .NET runtime. Only netcoredbg (set in dotnetX86.debuggerPath) needs it: it runs
+ * its managed part (PDB reading, expression parsing) on it when the debuggee is a .NET Framework app.
  */
 export function findX86CoreClr(): string {
     for (const root of x86DotnetRoots()) {

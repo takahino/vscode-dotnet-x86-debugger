@@ -1,10 +1,10 @@
-// Changing a WinForms control's property while stopped. netcoredbg refuses to assign through an indexer result
-// (Controls[0].Text = ...), but calls the property setter (set_Text) fine; enum arguments fail in its evaluator, so
-// enum properties cannot be changed. Kept free of the vscode module.
+// Changing a WinForms control's property while stopped, by calling the property setter (set_Text). The setter call works with
+// every debug engine (netcoredbg refused to assign through an indexer result, Controls[0].Text = ...). Enum values (Dock,
+// Anchor) are passed as C# enum member expressions. Kept free of the vscode module.
 
-export type PropertyKind = 'string' | 'bool' | 'int' | 'color' | 'expression';
+export type PropertyKind = 'string' | 'bool' | 'int' | 'color' | 'enum' | 'expression';
 
-export const EDITABLE_PROPERTIES: { name: string; kind: PropertyKind }[] = [
+export const EDITABLE_PROPERTIES: { name: string; kind: PropertyKind; enumType?: string }[] = [
     { name: 'Text', kind: 'string' },
     { name: 'Visible', kind: 'bool' },
     { name: 'Enabled', kind: 'bool' },
@@ -15,10 +15,12 @@ export const EDITABLE_PROPERTIES: { name: string; kind: PropertyKind }[] = [
     { name: 'Width', kind: 'int' },
     { name: 'Height', kind: 'int' },
     { name: 'TabIndex', kind: 'int' },
+    { name: 'Dock', kind: 'enum', enumType: 'System.Windows.Forms.DockStyle' },
+    { name: 'Anchor', kind: 'enum', enumType: 'System.Windows.Forms.AnchorStyles' },
 ];
 
 /** The C# expression for what the user typed, or why it is not a valid value of that kind. */
-export function valueExpression(kind: PropertyKind, input: string): { expression: string } | { error: string } {
+export function valueExpression(kind: PropertyKind, input: string, enumType?: string): { expression: string } | { error: string } {
     const text = input.trim();
     switch (kind) {
         case 'string':
@@ -29,9 +31,20 @@ export function valueExpression(kind: PropertyKind, input: string): { expression
             return /^-?\d+$/.test(text) ? { expression: text } : { error: 'a whole number' };
         case 'color':
             return colorExpression(text);
+        case 'enum':
+            return enumExpression(text, enumType ?? '');
         case 'expression':
             return text ? { expression: text } : { error: 'a C# expression' };
     }
+}
+
+/** "Fill" -> DockStyle.Fill; "Top, Left" (or "Top | Left") -> the members combined with | (flags such as AnchorStyles). */
+function enumExpression(text: string, enumType: string): { expression: string } | { error: string } {
+    const names = text.split(/[,|]/).map((n) => n.trim());
+    if (!enumType || names.length === 0 || names.some((n) => !/^[A-Za-z_]\w*$/.test(n))) {
+        return { error: 'a member name such as Fill, or names joined with commas such as Top, Left' };
+    }
+    return { expression: names.map((n) => `${enumType}.${n}`).join(' | ') };
 }
 
 function colorExpression(text: string): { expression: string } | { error: string } {
