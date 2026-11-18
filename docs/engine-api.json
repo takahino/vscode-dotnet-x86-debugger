@@ -1,0 +1,998 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": ".NET x86 Debugger - debug engine API",
+  "version": "1.2.1",
+  "launch": {
+    "description": "Arguments of `launch` as the engine receives them. The extension resolves launch.json first: a `.dll` program becomes `program: <dotnet.exe of the chosen bitness>, args: [<dll>, ...]`, and a .NET Framework exe gets `__dotnetFramework`. launch.json properties that only the extension reads (`architecture`, `sourceFileMap`, `sourceSearchPaths`, `processName`, `waitTimeout`) are not listed here.",
+    "type": "object",
+    "properties": {
+      "program": {
+        "type": "string",
+        "description": "Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe)."
+      },
+      "args": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Command-line arguments."
+      },
+      "cwd": {
+        "type": "string",
+        "description": "Working directory of the program."
+      },
+      "env": {
+        "type": "object",
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": "Environment variables added for the program. `null` removes a variable."
+      },
+      "stopAtEntry": {
+        "type": "boolean",
+        "description": "Stop at the first line of the user's `Main` (also for `async Main`)."
+      },
+      "justMyCode": {
+        "type": "boolean",
+        "description": "Only modules with symbols, without `DebuggerNonUserCode` / `DebuggerHidden` / `DebuggerStepThrough`, are user code (default true)."
+      },
+      "enableStepFiltering": {
+        "type": "boolean",
+        "description": "Step over property accessors and operators when stepping in (default true)."
+      },
+      "expressionEvaluationOptions": {
+        "$ref": "#/definitions/ExpressionEvaluationOptions",
+        "description": "Options for evaluating expressions."
+      },
+      "__dotnetFramework": {
+        "type": "boolean",
+        "description": "Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed)."
+      }
+    },
+    "required": [
+      "program"
+    ]
+  },
+  "attach": {
+    "description": "Arguments of `attach`. The process must have its runtime (coreclr.dll or clr.dll) loaded and be of the engine's bitness.",
+    "type": "object",
+    "properties": {
+      "processId": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "description": "Process id. A string is accepted too (`${command:pickProcess}` returns one)."
+      },
+      "justMyCode": {
+        "type": "boolean",
+        "description": "As in launch."
+      },
+      "enableStepFiltering": {
+        "type": "boolean",
+        "description": "As in launch."
+      },
+      "expressionEvaluationOptions": {
+        "$ref": "#/definitions/ExpressionEvaluationOptions",
+        "description": "As in launch."
+      }
+    },
+    "required": [
+      "processId"
+    ]
+  },
+  "messages": [
+    {
+      "name": "dotnetX86.freezeThread",
+      "kind": "request",
+      "side": "engine",
+      "description": "Freezes or thaws a thread: a frozen thread stays suspended across `continue`, steps and evaluations until thawed.",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "number",
+            "description": "The thread (`threads`' id, the OS thread id)."
+          },
+          "frozen": {
+            "type": "boolean",
+            "description": "true freezes (default), false thaws."
+          }
+        },
+        "required": [
+          "threadId"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.handleStats",
+      "kind": "request",
+      "side": "engine",
+      "description": "For the types that hold a native handle in a field, counts the objects and those whose handle is not 0 (not disposed). The field may be declared by a base type (`Bitmap` holds `Image._nativeImage`).",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "field"
+              ]
+            },
+            "description": "The fields to look at, by declaring type (`Namespace.Name`) and field name."
+          }
+        },
+        "required": [
+          "fields"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "number"
+                },
+                "live": {
+                  "type": "number"
+                },
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "count",
+                "live",
+                "field"
+              ]
+            },
+            "description": "By type name; types without one of the fields are left out."
+          }
+        },
+        "required": [
+          "types"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.heapStats",
+      "kind": "request",
+      "side": "engine",
+      "description": "Counts the objects on the GC heap by type, while the program is stopped. Fails while a GC is in progress.",
+      "arguments": {
+        "type": "object",
+        "properties": {}
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/HeapTypeStatistics"
+            },
+            "description": "Largest total size first. Free space between objects is counted under the name `?`."
+          }
+        },
+        "required": [
+          "types"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.makeObjectId",
+      "kind": "request",
+      "side": "engine",
+      "description": "Gives the object a value refers to an id (`$1`) that stays valid while the program runs (a weak GC handle: it does not keep the object alive, and reads `null` once the object is collected). In expressions the extension writes `$1` as `__DOTNETX86_OBJID_1`; values of objects with an id end with ` {$1}`.",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "variablesReference": {
+            "type": "number",
+            "description": "A variable's `variablesReference` (from `variables`, `evaluate` or `scopes`)."
+          }
+        },
+        "required": [
+          "variablesReference"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "The new id (1, 2, ...); the same object asked twice keeps its first id."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.pauseForFreeze",
+      "kind": "request",
+      "side": "proxy",
+      "description": "Pauses the program because this UI thread stopped answering for `ms`; the stop is reported on that thread with the description \"UI not responding for N s\".",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "number"
+          },
+          "ms": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "threadId",
+          "ms"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.setEventTrace",
+      "kind": "request",
+      "side": "proxy",
+      "description": "Traces the firing of event handlers without stopping (function breakpoints the relay continues from).",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "handlers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "breakpointName": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "event": {
+                  "type": "string"
+                },
+                "control": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "breakpointName",
+                "label"
+              ]
+            },
+            "description": "The handlers to trace (added to those already traced)."
+          },
+          "clear": {
+            "type": "boolean",
+            "description": "Stop tracing every handler."
+          }
+        }
+      }
+    },
+    {
+      "name": "dotnetX86.setExceptionTypes",
+      "kind": "request",
+      "side": "proxy",
+      "description": "The exception types checked in the Exception Settings view changed: the relay stops on these when they are thrown.",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Full type names (`System.InvalidOperationException`)."
+          }
+        },
+        "required": [
+          "types"
+        ]
+      }
+    },
+    {
+      "name": "output",
+      "kind": "event",
+      "side": "engine",
+      "description": "Standard DAP `output`. Categories: `stdout` / `stderr` (the program's output, decoded as UTF-8 while it is valid, else in the console code page), `console` (Debug.WriteLine and the engine's notes), `important` (an evaluation that had to run the other threads to finish).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "stdout",
+              "stderr",
+              "console",
+              "important"
+            ]
+          },
+          "output": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "output"
+        ]
+      }
+    },
+    {
+      "name": "process",
+      "kind": "event",
+      "side": "engine",
+      "description": "Sent once the program is started or attached to (after the `configurationDone` response). The extension starts the memory graph and the UI freeze watch with `systemProcessId`.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The program's path (launch) or the process's exe (attach)."
+          },
+          "systemProcessId": {
+            "type": "number"
+          },
+          "isLocalProcess": {
+            "const": true
+          },
+          "startMethod": {
+            "type": "string",
+            "enum": [
+              "launch",
+              "attach"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "systemProcessId",
+          "isLocalProcess",
+          "startMethod"
+        ]
+      }
+    },
+    {
+      "name": "stopped",
+      "kind": "event",
+      "side": "engine",
+      "description": "Standard DAP `stopped`. The engine sends `breakpoint` (also function breakpoints), `step`, `exception`, `pause` (also `Debugger.Break()`) and `entry`; the relay sends `goto`, `data breakpoint` (Break on Value Change) and `step`.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "breakpoint",
+              "step",
+              "exception",
+              "pause",
+              "entry",
+              "goto",
+              "data breakpoint"
+            ]
+          },
+          "threadId": {
+            "type": "number"
+          },
+          "allThreadsStopped": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "hitBreakpointIds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "reason",
+          "threadId"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.controlEvent",
+      "kind": "event",
+      "side": "proxy",
+      "description": "A traced event handler ran (event trace).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number"
+          },
+          "threadId": {
+            "type": "number"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "controls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sender": {
+            "type": "string"
+          },
+          "handler": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "line": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "time",
+          "threadId",
+          "events",
+          "labels",
+          "controls",
+          "handler"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.exceptionThrown",
+      "kind": "event",
+      "side": "proxy",
+      "description": "An exception was thrown (exception log): sent for every throw while the log is on, whether the program stops or not.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number"
+          },
+          "typeName": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "breakMode": {
+            "type": "string",
+            "description": "`always` (thrown), `unhandled`, `userUnhandled`."
+          },
+          "stopped": {
+            "type": "boolean",
+            "description": "Whether the program stopped for it."
+          },
+          "functionName": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "line": {
+            "type": "number"
+          },
+          "snapshot": {
+            "description": "Call stack and local variables at the throw (when exceptionLog.captureLocals is on)."
+          }
+        },
+        "required": [
+          "time",
+          "typeName",
+          "message",
+          "breakMode",
+          "stopped"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.removeBreakpoint",
+      "kind": "event",
+      "side": "proxy",
+      "description": "A temporary (`#once`) breakpoint was hit: the extension removes it from VS Code's list.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "line": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "source",
+          "line"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.sqlExecuted",
+      "kind": "event",
+      "side": "proxy",
+      "description": "A statement read from a database command (SQL log), with its parameters and the frames that ran it.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number"
+          },
+          "threadId": {
+            "type": "number"
+          },
+          "method": {
+            "type": "string",
+            "description": "The provider method that ran it (`System.Data.SqlClient.SqlCommand.ExecuteReader`)."
+          },
+          "typeName": {
+            "type": "string",
+            "description": "The command's type."
+          },
+          "commandText": {
+            "type": "string"
+          },
+          "commandType": {
+            "type": "string",
+            "description": "`Text`, `StoredProcedure`, `TableDirect`."
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "null",
+                    "string",
+                    "number",
+                    "datetime",
+                    "binary",
+                    "other"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                },
+                "direction": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "kind",
+                "value",
+                "direction"
+              ]
+            }
+          },
+          "bindByName": {
+            "type": "boolean",
+            "description": "ODP.NET: parameters bound by name."
+          },
+          "dataSource": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Not every parameter was read."
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "line": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "time",
+          "threadId",
+          "method",
+          "typeName",
+          "commandText",
+          "commandType",
+          "parameters",
+          "frames"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.trackedValues",
+      "kind": "event",
+      "side": "proxy",
+      "description": "Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "line": {
+            "type": "number"
+          },
+          "time": {
+            "type": "number",
+            "description": "Milliseconds since the epoch."
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression",
+                "value"
+              ]
+            }
+          }
+        },
+        "required": [
+          "source",
+          "line",
+          "time",
+          "values"
+        ]
+      }
+    }
+  ],
+  "definitions": {
+    "ExpressionEvaluationOptions": {
+      "description": "The same option as the C# extension's debugger (vsdbg).",
+      "type": "object",
+      "properties": {
+        "allowImplicitFuncEval": {
+          "type": "boolean",
+          "description": "Run property getters and `ToString()` / `DebuggerDisplay` to show values (default true). When false, properties come with `presentationHint.lazy` and run only when expanded; explicit evaluations (watch, hover, console) still run code."
+        }
+      }
+    },
+    "HeapTypeStatistics": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Type name as the Variables view shows it (`System.Collections.Generic.List<int>`)."
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of objects."
+        },
+        "size": {
+          "type": "number",
+          "description": "Total size in bytes."
+        }
+      },
+      "required": [
+        "name",
+        "count",
+        "size"
+      ]
+    }
+  },
+  "standardRequests": [
+    {
+      "command": "initialize",
+      "handledBy": "engine",
+      "notes": "Answers with the capabilities below, then sends `initialized`. Reads `supportsInvalidatedEvent`."
+    },
+    {
+      "command": "launch",
+      "handledBy": "engine",
+      "notes": "Checks the program (exists, bitness of the engine, .NET Framework 4.x) and remembers it; starts it at `configurationDone`."
+    },
+    {
+      "command": "attach",
+      "handledBy": "engine",
+      "notes": "Checks the process (runtime loaded, bitness of the engine); attaches at `configurationDone`."
+    },
+    {
+      "command": "configurationDone",
+      "handledBy": "both",
+      "notes": "Starts or attaches, then sends `process`. The relay first sets the SQL log's function breakpoints."
+    },
+    {
+      "command": "setBreakpoints",
+      "handledBy": "both",
+      "notes": "`condition` is a C# expression evaluated in the stopped program. The relay keeps `hitCondition`, `logMessage` and the `#once` / `#after` / `#changed` / `#caller` conditions to itself."
+    },
+    {
+      "command": "setFunctionBreakpoints",
+      "handledBy": "both",
+      "notes": "`Type.Method`, `Method`, `Namespace.Type.Method` (all overloads). `anyCode: true` binds outside user code too (SQL log, event trace). The relay adds its own breakpoints and cuts the response back to VS Code's."
+    },
+    {
+      "command": "setExceptionBreakpoints",
+      "handledBy": "both",
+      "notes": "Filters `all` and `user-unhandled`; `filterOptions[].condition` is `A, B` or `!A, B` (type names)."
+    },
+    {
+      "command": "exceptionInfo",
+      "handledBy": "engine",
+      "notes": "`exceptionId` is `CLR/<type>`, `breakMode` `always` / `unhandled` / `userUnhandled`, `details` with `message`, `stackTrace`, `innerException`."
+    },
+    {
+      "command": "threads",
+      "handledBy": "engine",
+      "notes": "The OS thread id is the DAP thread id. Names are `Thread.Name`; else the process's first thread is `Main Thread` (listed first) and the others `<No name>`."
+    },
+    {
+      "command": "stackTrace",
+      "handledBy": "engine",
+      "notes": "Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them."
+    },
+    {
+      "command": "scopes",
+      "handledBy": "engine",
+      "notes": "One scope, `Locals`. A step over a call puts `<Type.Method> returned` first."
+    },
+    {
+      "command": "variables",
+      "handledBy": "engine",
+      "notes": "See the value conventions. Children carry `evaluateName`. `Static members` and `Raw View` are nodes of their own."
+    },
+    {
+      "command": "evaluate",
+      "handledBy": "both",
+      "notes": "C# expressions with the compiler's values and types (lambdas, LINQ, `await` waited synchronously, pointers). The relay rewrites `$N` object ids."
+    },
+    {
+      "command": "setVariable",
+      "handledBy": "engine",
+      "notes": "The value is a C# expression."
+    },
+    {
+      "command": "setExpression",
+      "handledBy": "engine",
+      "notes": "Assigns to any assignable expression."
+    },
+    {
+      "command": "continue",
+      "handledBy": "engine",
+      "notes": "Frozen threads stay suspended."
+    },
+    {
+      "command": "next",
+      "handledBy": "engine",
+      "notes": "Steps over `await` to the same method's continuation."
+    },
+    {
+      "command": "stepIn",
+      "handledBy": "both",
+      "notes": "With `targetId`, the relay steps into the chosen call (Step Into Specific)."
+    },
+    {
+      "command": "stepOut",
+      "handledBy": "engine",
+      "notes": "From an async method, returns to the awaiting caller."
+    },
+    {
+      "command": "stepInTargets",
+      "handledBy": "proxy",
+      "notes": "The calls on the line, in the order they run."
+    },
+    {
+      "command": "pause",
+      "handledBy": "engine",
+      "notes": "Stops every thread (reason `pause`)."
+    },
+    {
+      "command": "gotoTargets",
+      "handledBy": "engine",
+      "notes": "The lines of the same method that can be the next statement."
+    },
+    {
+      "command": "goto",
+      "handledBy": "both",
+      "notes": "The engine moves the instruction pointer; the relay sends the `stopped` (reason `goto`)."
+    },
+    {
+      "command": "dataBreakpointInfo",
+      "handledBy": "proxy",
+      "notes": "Break on Value Change, emulated with breakpoints on the lines that write the variable."
+    },
+    {
+      "command": "cancel",
+      "handledBy": "engine",
+      "notes": "Cancels a running evaluation."
+    },
+    {
+      "command": "terminate",
+      "handledBy": "engine",
+      "notes": "Ends the program; `exited` and `terminated` follow."
+    },
+    {
+      "command": "disconnect",
+      "handledBy": "engine",
+      "notes": "Ends a launched program, detaches from an attached one (`terminateDebuggee` overrides)."
+    }
+  ],
+  "capabilities": {
+    "supportsConfigurationDoneRequest": true,
+    "supportsFunctionBreakpoints": true,
+    "supportsConditionalBreakpoints": true,
+    "supportsEvaluateForHovers": true,
+    "supportsSetVariable": true,
+    "supportsSetExpression": true,
+    "supportsExceptionInfoRequest": true,
+    "supportsExceptionFilterOptions": true,
+    "supportsGotoTargetsRequest": true,
+    "supportTerminateDebuggee": true,
+    "supportsTerminateRequest": true,
+    "supportsCancelRequest": true,
+    "exceptionBreakpointFilters": [
+      {
+        "filter": "all",
+        "label": "all"
+      },
+      {
+        "filter": "user-unhandled",
+        "label": "user-unhandled"
+      }
+    ]
+  },
+  "startup": [
+    {
+      "name": "--interpreter=vscode",
+      "notes": "DAP over stdin / stdout (the default; accepted for netcoredbg compatibility)."
+    },
+    {
+      "name": "--log=<file>",
+      "notes": "Writes the DAP traffic and the engine's own log, flushed per line (setting `dotnetX86.trace`)."
+    },
+    {
+      "name": "NETCOREDBG_SYMBOL_DIRS",
+      "notes": "Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (decompiled and downloaded symbols)."
+    }
+  ],
+  "valueConventions": [
+    {
+      "what": "Objects",
+      "rule": "`{Namespace.Type}`, or the `DebuggerDisplay` text; `DateTime`, `TimeSpan`, `Guid` and the like as `{ToString()}`."
+    },
+    {
+      "what": "Strings and chars",
+      "rule": "Strings as C# literals (`\"a\\\"b\"`); chars as the code and the literal (`120 'x'`)."
+    },
+    {
+      "what": "null",
+      "rule": "`null`."
+    },
+    {
+      "what": "Arrays and collections",
+      "rule": "`{int[3]}`; collections with a DebuggerDisplay show it (`Count = 3`)."
+    },
+    {
+      "what": "Object ids",
+      "rule": "A value with an id ends with ` {$N}`; in expressions `$N` is sent as `__DOTNETX86_OBJID_N`."
+    },
+    {
+      "what": "Enums",
+      "rule": "Member names (`Read, Write` for flags); unnamed values as the number in the underlying type (`-6`)."
+    },
+    {
+      "what": "Pointers",
+      "rule": "The pointed value, with the pointer type in `type` (`int*`); `null` for 0."
+    },
+    {
+      "what": "Exceptions from evaluations",
+      "rule": "The result is the exception object (`{System.InvalidOperationException}`); errors fail the request with a message saying what to do."
+    },
+    {
+      "what": "Void calls",
+      "rule": "`Expression has been evaluated and has no value` with type `void`."
+    }
+  ]
+}

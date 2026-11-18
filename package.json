@@ -1439,6 +1439,7 @@
   },
   "scripts": {
     "compile": "tsc -p ./",
+    "docs:api": "tsc -p ./ && node scripts/gen-engine-api.js",
     "watch": "tsc -watch -p ./",
     "test": "tsc -p ./ && node --test \"out/test/unit/**/*.test.js\"",
     "test:e2e": "tsc -p ./ && node --test --test-concurrency=1 \"out/test/e2e/**/*.test.js\"",

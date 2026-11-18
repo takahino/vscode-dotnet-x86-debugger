@@ -12,6 +12,7 @@ tools/**
 .github/**
 docs/**
 out/test/**
+out/tools/**
 test/**
 media/readme/**
 media/icon.svg
