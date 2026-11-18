@@ -10,8 +10,10 @@ export interface PeInfo {
 }
 
 const IMAGE_FILE_MACHINE_I386 = 0x014c;
+const IMAGE_FILE_MACHINE_AMD64 = 0x8664;
 const IMAGE_FILE_DLL = 0x2000;
 const PE32_MAGIC = 0x10b;
+const PE32PLUS_MAGIC = 0x20b;
 const CLR_DIRECTORY_INDEX = 14;
 const COMIMAGE_FLAGS_32BITREQUIRED = 0x2;
 const COMIMAGE_FLAGS_32BITPREFERRED = 0x20000;
@@ -39,14 +41,18 @@ export function inspectPe(filePath: string): PeInfo {
 
     const coff = peOffset + 4;
     const machine = buf.readUInt16LE(coff);
-    if (machine !== IMAGE_FILE_MACHINE_I386) {
-        return { bitness: 'x64', managed: false };
-    }
     const numberOfSections = buf.readUInt16LE(coff + 2);
     const sizeOfOptionalHeader = buf.readUInt16LE(coff + 16);
     const isDll = (buf.readUInt16LE(coff + 18) & IMAGE_FILE_DLL) !== 0;
-
     const opt = coff + 20;
+    if (machine !== IMAGE_FILE_MACHINE_I386) {
+        // An x64 image (a .NET apphost, or a .NET Framework exe built for x64: it has a CLR header). Other machines
+        // (ARM64) are not debuggable here; they are reported as x64 so that the engine refuses them with its reason.
+        const managed = machine === IMAGE_FILE_MACHINE_AMD64 && opt + 2 <= buf.length && buf.readUInt16LE(opt) === PE32PLUS_MAGIC
+            && hasClrHeader(buf, opt + 112, opt + sizeOfOptionalHeader);
+        return { bitness: 'x64', managed };
+    }
+
     // PE32+ with an i386 machine type does not exist in practice; treat it as unknown.
     if (buf.readUInt16LE(opt) !== PE32_MAGIC) {
         return unknown;
@@ -69,6 +75,20 @@ export function inspectPe(filePath: string): PeInfo {
     const flags = buf.readUInt32LE(clrOffset + 16);
     const is32Bit = (flags & COMIMAGE_FLAGS_32BITREQUIRED) !== 0 || (!isDll && (flags & COMIMAGE_FLAGS_32BITPREFERRED) !== 0);
     return { bitness: is32Bit ? 'x86' : 'anycpu', managed: true };
+}
+
+/** Whether the data directories at dataDirectories (ending at end) have a CLR header. */
+function hasClrHeader(buf: Buffer, dataDirectories: number, end: number): boolean {
+    const clrDir = dataDirectories + CLR_DIRECTORY_INDEX * 8;
+    return clrDir + 8 <= end && clrDir + 8 <= buf.length && buf.readUInt32LE(clrDir) !== 0;
+}
+
+/**
+ * The debug engine for an image: ICorDebug needs a debugger of the same bitness as the process. AnyCPU exes run as
+ * 64-bit on 64-bit Windows; an unknown image gets the x86 engine (the main one), which checks it again and explains.
+ */
+export function engineArchitecture(bitness: Bitness): 'x86' | 'x64' {
+    return bitness === 'x64' || bitness === 'anycpu' ? 'x64' : 'x86';
 }
 
 /** File offset of an RVA, from the section table at `sectionTable` (`count` entries); undefined outside every section. */

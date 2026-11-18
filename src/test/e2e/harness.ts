@@ -1,5 +1,5 @@
 // E2E harness: drives the real debug engine through DapProxy, like VS Code does, against the apps in test/apps.
-// Needs the bundled engine (scripts/build-engine.ps1), the .NET SDK and the x86 .NET runtime.
+// Needs the bundled engine (scripts/build-engine.ps1), the .NET SDK and the .NET runtime of the bitness under test.
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -10,16 +10,18 @@ import { DapProxy, ProxyOptions } from '../../dapProxy';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const REPO = path.resolve(__dirname, '..', '..', '..');
+/** DOTNETX86_E2E_ARCH=x64 runs the tests with the x64 engine against the apps built for x64 (default x86). */
+export const ARCH: 'x86' | 'x64' = process.env.DOTNETX86_E2E_ARCH === 'x64' ? 'x64' : 'x86';
 // DOTNETX86_E2E_DEBUGGER points the same tests at another debug engine (for example netcoredbg, to compare).
-export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', 'dotnet-x86dbg-x86', 'dotnet-x86dbg.exe');
+export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', `dotnet-x86dbg-${ARCH}`, 'dotnet-x86dbg.exe');
 export const DECOMPILER = path.join(REPO, 'debugger', 'decompiler', 'DotnetX86.Decompiler.dll');
 const APPS = path.join(REPO, 'test', 'apps');
-const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e');
+const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e', ARCH);
 
-/** Why the E2E tests cannot run here, or false when they can. */
 /** Whether the engine under test is netcoredbg (some of its limitations are tested as they are). */
 export const IS_NETCOREDBG = /netcoredbg\.exe$/i.test(NETCOREDBG);
 
+/** Why the E2E tests cannot run here, or false when they can. */
 export const e2eSkip: string | false = fs.existsSync(NETCOREDBG) ? false : `the debugger is missing (${NETCOREDBG}): run scripts/build-engine.ps1, or fix DOTNETX86_E2E_DEBUGGER`;
 
 const built = new Map<string, string>();
@@ -31,7 +33,9 @@ export function buildApp(name: string): string {
         return cached;
     }
     const outDir = path.join(OUT, name);
-    const result = cp.spawnSync('dotnet', ['build', path.join(APPS, name), '-c', 'Debug', '-o', outDir, '-nologo', '-v', 'q'], { encoding: 'utf8' });
+    // The apps say x86 (PlatformTarget, RuntimeIdentifier) in their projects; for x64 both are overridden for the whole build.
+    const platform = ARCH === 'x64' ? ['-p:PlatformTarget=x64', '-p:RuntimeIdentifier=win-x64'] : [];
+    const result = cp.spawnSync('dotnet', ['build', path.join(APPS, name), '-c', 'Debug', '-o', outDir, '-nologo', '-v', 'q', ...platform], { encoding: 'utf8' });
     if (result.status !== 0) {
         throw new Error(`dotnet build ${name} failed:\n${result.stdout}\n${result.stderr}`);
     }

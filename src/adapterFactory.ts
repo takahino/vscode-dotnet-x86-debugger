@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { DOTNET_FRAMEWORK_KEY, findX86CoreClr } from './configProvider';
+import { DOTNET_FRAMEWORK_KEY, ENGINE_ARCHITECTURE_KEY, findX86CoreClr } from './configProvider';
 import { isEnabled } from './features';
 import { DapProxy, ExceptionFilterText, ProxyOptions } from './dapProxy';
 import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
@@ -205,8 +205,13 @@ function debuggerEnvironment(config: vscode.DebugConfiguration): Record<string, 
     return framework ? { NETCOREDBG_DESKTOP_CLR: '1', NETCOREDBG_HOST_CORECLR: hostCoreClr } : { NETCOREDBG_HOST_CORECLR: hostCoreClr };
 }
 
-/** Folder (relative to the extension root) holding the bundled x86 debug engine (dotnet-x86dbg, with dbgshim.dll). */
-const BUNDLED_DEBUGGER_DIR = path.join('debugger', 'dotnet-x86dbg-x86');
+/**
+ * Folder (relative to the extension root) holding the bundled debug engine of a bitness (dotnet-x86dbg, with dbgshim.dll).
+ * ICorDebug needs a debugger of the same bitness as the program, so there is one engine for x86 and one for x64.
+ */
+function bundledDebuggerDir(architecture: 'x86' | 'x64'): string {
+    return path.join('debugger', `dotnet-x86dbg-${architecture}`);
+}
 const BUNDLED_DEBUGGER_EXE = 'dotnet-x86dbg.exe';
 
 /** Whether the engine is netcoredbg (an old one set in dotnetX86.debuggerPath), which needs its own environment. */
@@ -226,7 +231,8 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     ) {}
 
     createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.DebugAdapterDescriptor {
-        const debugger_ = this.locateDebugger();
+        const architecture = session.configuration[ENGINE_ARCHITECTURE_KEY] === 'x64' ? 'x64' : 'x86';
+        const debugger_ = this.locateDebugger(architecture);
         this.output.appendLine(`[session] using ${debugger_}`);
         const env = isNetcoredbg(debugger_) ? debuggerEnvironment(session.configuration) : {};
         const args = ['--interpreter=vscode'];
@@ -266,8 +272,9 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         return new vscode.DebugAdapterInlineImplementation(adapter);
     }
 
-    private locateDebugger(): string {
-        const configured = vscode.workspace.getConfiguration('dotnetX86').get<string>('debuggerPath');
+    private locateDebugger(architecture: 'x86' | 'x64'): string {
+        // dotnetX86.debuggerPath is an x86 engine: x64 programs always use the bundled x64 engine.
+        const configured = architecture === 'x86' ? vscode.workspace.getConfiguration('dotnetX86').get<string>('debuggerPath') : undefined;
         if (configured) {
             if (!fs.existsSync(configured)) {
                 throw new Error(
@@ -276,10 +283,10 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             }
             return configured;
         }
-        const bundled = path.join(this.extensionPath, BUNDLED_DEBUGGER_DIR, BUNDLED_DEBUGGER_EXE);
+        const bundled = path.join(this.extensionPath, bundledDebuggerDir(architecture), BUNDLED_DEBUGGER_EXE);
         if (!fs.existsSync(bundled)) {
             throw new Error(
-                vscode.l10n.t("The bundled debug engine (dotnet-x86dbg, x86) was not found: {0}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX, or set dotnetX86.debuggerPath.", bundled),
+                vscode.l10n.t("The bundled debug engine (dotnet-x86dbg, {0}) was not found: {1}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX.", architecture, bundled),
             );
         }
         return bundled;

@@ -1,14 +1,16 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { inspectPe } from './peInfo';
-import { listX86DotnetProcesses } from './processPicker';
+import { engineArchitecture, inspectPe } from './peInfo';
+import { listDotnetProcesses, processArchitecture } from './processPicker';
 import { configurationsForFolder } from './launchSetup';
 import { compareVersions } from './projectSetupCore';
 
 export const DEBUG_TYPE = 'dotnet-x86';
 /** Set on a launch configuration whose program is a .NET Framework exe (not written by users). */
 export const DOTNET_FRAMEWORK_KEY = '__dotnetFramework';
+/** Set on every configuration: the bitness of the debug engine to start ('x86' or 'x64'), that of the program. */
+export const ENGINE_ARCHITECTURE_KEY = '__engineArchitecture';
 
 /** launch.json content when no executable project is found: the usual layout of a WinForms project. */
 const TEMPLATE_CONFIGURATION: vscode.DebugConfiguration = {
@@ -72,7 +74,7 @@ export class X86ConfigurationProvider implements vscode.DebugConfigurationProvid
 function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfiguration {
     const program: unknown = config.program;
     if (typeof program !== 'string' || !program) {
-        throw new Error(vscode.l10n.t("Set \"program\" (the path to the x86 .exe) in launch.json."));
+        throw new Error(vscode.l10n.t("Set \"program\" (the path to the .exe) in launch.json."));
     }
     if (!fs.existsSync(program)) {
         throw new Error(vscode.l10n.t("program not found: {0}. Check that the project is built and the output path (bin/x86/...) is correct.", program));
@@ -80,9 +82,14 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
 
     const isDll = path.extname(program).toLowerCase() === '.dll';
     if (isDll) {
-        // A framework-dependent .dll must be hosted by the x86 dotnet.exe to run as 32-bit.
+        // A framework-dependent .dll runs in the dotnet.exe of the chosen bitness (x86 unless "architecture" says x64).
+        const architecture = config.architecture ?? 'x86';
+        if (architecture !== 'x86' && architecture !== 'x64') {
+            throw new Error(vscode.l10n.t("Invalid architecture: {0}. Specify \"x86\" or \"x64\".", String(architecture)));
+        }
         config.args = [program, ...(Array.isArray(config.args) ? config.args : [])];
-        config.program = findX86DotnetHost();
+        config.program = findDotnetHost(architecture);
+        config[ENGINE_ARCHITECTURE_KEY] = architecture;
         return config;
     }
 
@@ -93,16 +100,13 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
         config[DOTNET_FRAMEWORK_KEY] = true;
         warnIfWindowsPdb(program);
     }
-    if (bitness === 'x64' || bitness === 'anycpu') {
-        void vscode.window.showWarningMessage(
-            vscode.l10n.t("{0} will run as a 64-bit process ({1}). To debug it as x86, set <PlatformTarget>x86</PlatformTarget> in the project.", path.basename(program), bitness),
-        );
-    }
+    // The program runs as it was built (x86, x64, or AnyCPU as 64-bit): the engine of that bitness debugs it.
+    config[ENGINE_ARCHITECTURE_KEY] = engineArchitecture(bitness);
     return config;
 }
 
 /**
- * netcoredbg reads Portable PDBs only. Old-style .NET Framework projects write Windows PDBs ("full" / "pdbonly"),
+ * The debugger reads Portable PDBs only. Old-style .NET Framework projects write Windows PDBs ("full" / "pdbonly"),
  * with which breakpoints are never hit, so say how to switch.
  */
 function warnIfWindowsPdb(program: string): void {
@@ -137,11 +141,12 @@ async function resolveAttach(config: vscode.DebugConfiguration): Promise<vscode.
         throw new Error(vscode.l10n.t("Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".", String(config.processId)));
     }
     config.processId = pid;
+    config[ENGINE_ARCHITECTURE_KEY] = await processArchitecture(pid);
     return config;
 }
 
 /**
- * Waits until an x86 .NET process with this name (with or without ".exe") is running with its runtime loaded,
+ * Waits until a .NET process with this name (with or without ".exe") is running with its runtime loaded,
  * then returns its PID. Returns undefined when the user cancels; throws on timeout.
  */
 async function waitForProcess(processName: string, timeoutSeconds: number): Promise<number | undefined> {
@@ -149,13 +154,13 @@ async function waitForProcess(processName: string, timeoutSeconds: number): Prom
     return vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
-            title: vscode.l10n.t('Waiting for {0} to start (x86 .NET)…', processName),
+            title: vscode.l10n.t('Waiting for {0} to start (.NET)…', processName),
             cancellable: true,
         },
         async (_progress, token) => {
             const deadline = Date.now() + Math.max(1, timeoutSeconds) * 1000;
             while (!token.isCancellationRequested) {
-                const found = (await listX86DotnetProcesses()).find((p) => p.name.toLowerCase() === wanted);
+                const found = (await listDotnetProcesses()).find((p) => p.name.toLowerCase() === wanted);
                 if (found) {
                     return Number(found.pid);
                 }
@@ -201,7 +206,27 @@ export function findX86CoreClr(): string {
     );
 }
 
+/** Where the x64 .NET is installed (only for .dll programs with "architecture": "x64"). */
+export function x64DotnetRoots(): string[] {
+    return [
+        process.env['DOTNET_ROOT_X64'],
+        process.env['DOTNET_ROOT'],
+        process.env['ProgramW6432'] && path.join(process.env['ProgramW6432'], 'dotnet'),
+    ].filter((p): p is string => !!p);
+}
+
 export function findX86DotnetHost(): string {
+    return findDotnetHost('x86');
+}
+
+export function findDotnetHost(architecture: 'x86' | 'x64'): string {
+    if (architecture === 'x64') {
+        const exe = x64DotnetRoots().map((dir) => path.join(dir, 'dotnet.exe')).find((e) => fs.existsSync(e));
+        if (exe) {
+            return exe;
+        }
+        throw new Error(vscode.l10n.t("The x64 dotnet.exe was not found. Install the x64 .NET runtime or set DOTNET_ROOT."));
+    }
     const candidates = x86DotnetRoots();
     for (const dir of candidates) {
         const exe = path.join(dir, 'dotnet.exe');

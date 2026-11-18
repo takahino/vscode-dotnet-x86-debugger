@@ -76,10 +76,13 @@ export class EnvironmentCheck implements vscode.Disposable {
             items.push({ level: 'error', title: t('Windows is required'), detail: t('x86 .NET programs can only be debugged on Windows.') });
             return items;
         }
-        const debuggerExe = path.join(this.extensionPath, 'debugger', 'dotnet-x86dbg-x86', 'dotnet-x86dbg.exe');
-        items.push(fs.existsSync(debuggerExe)
-            ? { level: 'ok', title: t('Bundled debugger (dotnet-x86dbg x86)'), detail: debuggerExe }
-            : { level: 'error', title: t('The bundled debugger is missing'), detail: t('{0} was not found. Reinstall the extension.', debuggerExe) });
+        // One engine per bitness (the program's bitness picks it).
+        for (const architecture of ['x86', 'x64']) {
+            const debuggerExe = path.join(this.extensionPath, 'debugger', `dotnet-x86dbg-${architecture}`, 'dotnet-x86dbg.exe');
+            items.push(fs.existsSync(debuggerExe)
+                ? { level: 'ok', title: t('Bundled debugger (dotnet-x86dbg {0})', architecture), detail: debuggerExe }
+                : { level: 'error', title: t('The bundled debugger is missing'), detail: t('{0} was not found. Reinstall the extension.', debuggerExe) });
+        }
 
         const runtimes = findX86Runtimes(x86DotnetRoots());
         const download = { label: t('Download page'), action: { type: 'url' as const, url: DOWNLOAD_URL } };
@@ -119,8 +122,8 @@ export class EnvironmentCheck implements vscode.Disposable {
                 const open = { label: t('Open .csproj'), action: { type: 'open' as const, file: p.file } };
                 if (issues.includes('not-x86')) {
                     items.push({
-                        level: 'error', title: t('{0}: not built as x86', rel),
-                        detail: t('Without <PlatformTarget>x86</PlatformTarget> the exe runs as a 64-bit process on 64-bit Windows, which this debugger cannot debug.'),
+                        level: 'warning', title: t('{0}: not built as x86', rel),
+                        detail: t('Without <PlatformTarget>x86</PlatformTarget> the exe runs as a 64-bit process on 64-bit Windows (it is debugged with the x64 engine). To debug it as x86, add the property.'),
                         fixes: [{ label: t('Add <PlatformTarget>x86</PlatformTarget>'), action: { type: 'property', file: p.file, name: 'PlatformTarget', value: 'x86' } }, open],
                     });
                 }

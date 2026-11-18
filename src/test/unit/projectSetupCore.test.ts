@@ -115,7 +115,7 @@ describe('launchConfigurations', () => {
         assert.deepEqual(configs.map((c) => [c.name, c.request, c.program]), [
             ['App (net10.0-windows, x86)', 'launch', '${workspaceFolder}/App/bin/x86/Debug/net10.0-windows/App.exe'],
             ['App (net48, x86)', 'launch', '${workspaceFolder}/App/bin/x86/Debug/net48/App.exe'],
-            ['Attach (x86 .NET process)', 'attach', undefined],
+            ['Attach (.NET process)', 'attach', undefined],
         ]);
         assert.equal(configs[0].cwd, '${workspaceFolder}/App');
         assert.equal(configs[0].preLaunchTask, 'build');

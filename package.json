@@ -1237,6 +1237,15 @@
                 "default": false,
                 "description": "%debugger.launch.stopAtEntry%"
               },
+              "architecture": {
+                "type": "string",
+                "enum": [
+                  "x86",
+                  "x64"
+                ],
+                "default": "x86",
+                "description": "%debugger.launch.architecture%"
+              },
               "justMyCode": {
                 "type": "boolean",
                 "default": true,

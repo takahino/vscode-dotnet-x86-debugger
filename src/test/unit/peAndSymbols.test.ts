@@ -8,7 +8,7 @@ import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { readDecompiledAssemblies } from '../../decompilerCore';
 import { findSourceLinkJson } from '../../pdbDocuments';
-import { inspectPe, rvaToOffset } from '../../peInfo';
+import { engineArchitecture, inspectPe, rvaToOffset } from '../../peInfo';
 
 const PE_OFFSET = 0x80;
 const OPT = PE_OFFSET + 24;
@@ -77,6 +77,20 @@ describe('inspectPe', () => {
     it('sees a native x86 image (the apphost) and a 64-bit image', () => {
         assert.deepEqual(inspectPe(write('apphost.exe', pe({}))), { bitness: 'x86', managed: false });
         assert.deepEqual(inspectPe(write('x64.exe', pe({ machine: 0x8664 }))), { bitness: 'x64', managed: false });
+    });
+
+    it('sees a .NET Framework exe built for x64 (PE32+ with a CLR header) as managed', () => {
+        const image = pe({ machine: 0x8664, magic: 0x20b });
+        image.writeUInt16LE(240, PE_OFFSET + 4 + 16); // PE32+ optional header with 16 data directories
+        image.writeUInt32LE(CLR_HEADER_RVA, OPT + 112 + 14 * 8);
+        assert.deepEqual(inspectPe(write('framework-x64.exe', image)), { bitness: 'x64', managed: true });
+    });
+
+    it('picks the engine of the bitness the program runs as', () => {
+        assert.equal(engineArchitecture('x86'), 'x86');
+        assert.equal(engineArchitecture('x64'), 'x64');
+        assert.equal(engineArchitecture('anycpu'), 'x64');
+        assert.equal(engineArchitecture('unknown'), 'x86');
     });
 
     it('does not guess for what is not a readable PE32 image', () => {

@@ -5,7 +5,7 @@ import * as path from 'path';
 import { before, describe, it } from 'node:test';
 import { readPdbDocuments } from '../../pdbDocuments';
 import { inspectPe } from '../../peInfo';
-import { buildApp, e2eSkip } from './harness';
+import { ARCH, buildApp, e2eSkip } from './harness';
 
 describe('reading PDBs and PE headers', { skip: e2eSkip }, () => {
     let dir = '';
@@ -31,9 +31,13 @@ describe('reading PDBs and PE headers', { skip: e2eSkip }, () => {
         assert.deepEqual(readPdbDocuments(path.join(dir, 'Basic.deps.json')), []);
     });
 
-    it('tells an x86 managed assembly from an AnyCPU one and from the native apphost', () => {
+    it('tells an x86 managed assembly from an AnyCPU one and from the native apphost', { skip: ARCH !== 'x86' && 'the apps are built for x64' }, () => {
         assert.deepEqual(inspectPe(path.join(dir, 'Basic.dll')), { bitness: 'x86', managed: true });
         assert.deepEqual(inspectPe(path.join(dir, 'MappedLib.dll')), { bitness: 'anycpu', managed: true });
         assert.deepEqual(inspectPe(path.join(dir, 'Basic.exe')), { bitness: 'x86', managed: false });
+    });
+
+    it('sees the x64 apphost (the x64 engine debugs it)', { skip: ARCH !== 'x64' && 'the apps are built for x86' }, () => {
+        assert.deepEqual(inspectPe(path.join(dir, 'Basic.exe')), { bitness: 'x64', managed: false });
     });
 });

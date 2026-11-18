@@ -85,7 +85,7 @@ export function projectIssues(project: ProjectInfo): ProjectIssue[] {
     if (project.platformTarget?.toLowerCase() !== 'x86') {
         issues.push('not-x86');
     }
-    // netcoredbg reads Portable PDBs only; old-style projects default to Windows PDBs.
+    // The debugger reads Portable PDBs only; old-style projects default to Windows PDBs.
     const debugType = project.debugType?.toLowerCase() ?? (project.sdkStyle ? 'portable' : 'full');
     if (debugType === 'full' || debugType === 'pdbonly') {
         issues.push('windows-pdb');
@@ -154,7 +154,7 @@ export function launchConfigurations(
             });
         }
     }
-    configs.push({ name: 'Attach (x86 .NET process)', type: 'dotnet-x86', request: 'attach', processId: '${command:pickProcess}' });
+    configs.push({ name: 'Attach (.NET process)', type: 'dotnet-x86', request: 'attach', processId: '${command:pickProcess}' });
     return configs;
 }
 
