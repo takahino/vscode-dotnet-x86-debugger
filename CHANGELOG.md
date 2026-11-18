@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.0
+
+- **New debug engine.** The extension bundles **dotnet-x86dbg** (Rust), a debug engine made for it, instead of netcoredbg. It speaks the
+  same DAP and writes values the same way, so every feature works as before; the differences are listed in the README
+  ("Differences from netcoredbg (1.x)"). `dotnetX86.debuggerPath` can still point at a netcoredbg.exe (x86 programs).
+- New: **x64 and AnyCPU programs.** The engine of the program's bitness is started (an x86 and an x64 engine are bundled): an exe
+  runs as it was built, a framework-dependent `.dll` in the dotnet.exe of `architecture` (`x86` by default, or `x64`), and attach
+  picks the engine from the process. The process picker lists x86 and x64 .NET processes. The "will run as a 64-bit process"
+  warning is gone; the environment check still offers to make a project x86.
+- New: **.NET Framework apps without .NET.** The debugger itself no longer needs the x86 .NET runtime (8 or later).
+- New: **self-contained single-file apps** can be debugged (when the same .NET runtime version is on the machine).
+- New: **expressions with the C# compiler's values and types** — lambdas and LINQ, patterns and `switch` expressions, tuples,
+  pointers, generic type arguments of the current method, `await` (waited synchronously), user-defined operators and conversions.
+- New: **Change Property...** can change enum properties (`Dock`, `Anchor`): type a member name, or names joined with commas.
+- New: `expressionEvaluationOptions.allowImplicitFuncEval` in launch.json (also attach): when false, the Variables view does not run
+  property getters and `ToString()` by itself; they run when expanded.
+- New: the program's non-ASCII output (Japanese, ...) is read in the console code page instead of being garbled; `DateTime`,
+  `TimeSpan`, `Guid` and the like show their `ToString()`; `DebuggerDisplay` also applies to values inside; `DebuggerBrowsable` and
+  `DebuggerTypeProxy` of your own types are honored (the original members under Raw View).
+- New: **engine API document** — [docs/engine-api.html](docs/engine-api.html) and its JSON Schema, generated from `src/engineProtocol.ts`
+  with `npm run docs:api`; a unit test keeps them up to date.
+- Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
+  and from netcoredbg.
+- Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow
+  build the engine (`ENGINE_REF`), and CI runs the E2E tests with both the x86 and the x64 engine (`DOTNETX86_E2E_ARCH=x64`).
 ## 1.2.1
 
 - New: **SQL Log** view — every SQL statement the program runs through an ADO.NET provider (ODP.NET managed / unmanaged, SqlClient, OleDb, Odbc), without stopping: the statement, its parameter values, the caller and the call stack. **Copy SQL with Parameter Values** gives the statement with the values filled in (Oracle `BindByName = false` honored), **Export SQL Log** writes a `.sql` file, and a statement that runs five times or more is flagged (N+1). It hooks the provider, so statements run by a home-made data access component are logged too. `dotnetX86.sqlLog.enabled`, `dotnetX86.sqlLog.methods`.

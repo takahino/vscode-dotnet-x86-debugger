@@ -2,7 +2,7 @@
   "name": "dotnet-x86-debugger",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "publisher": "takahino",
   "icon": "media/icon.png",
   "galleryBanner": {
@@ -31,7 +31,7 @@
     "x86",
     "32-bit",
     "WinForms",
-    "netcoredbg",
+    "x64",
     "C#",
     "csharp",
     "debugger",
