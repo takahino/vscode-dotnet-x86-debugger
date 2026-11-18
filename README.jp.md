@@ -11,8 +11,9 @@
 ![WinForms アプリのデバッグ: ブレークポイント・変数・コールスタック・例外ログ・ステップ履歴](media/readme/debugging.ja.png)
 
 C# 拡張のデバッガー (vsdbg) は x64 / arm64 版しかないため、`<PlatformTarget>x86</PlatformTarget>` でビルドしたアプリは
-VS Code でデバッグできません。この拡張は **[netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）の x86 ビルド**をパッチを当てて同梱し、
-Visual Studio にある機能を中継役で補います。Visual Studio にもない機能もいくつかあります。
+VS Code でデバッグできません。この拡張は、x86 のための自前のデバッグ エンジン **dotnet-x86dbg**（Rust、x86 と x64）を同梱し、
+Visual Studio にある機能を中継役で補います。Visual Studio にもない機能もいくつかあります。デバッガー自身は .NET を使わないので、
+.NET Framework のアプリは .NET を入れていない Windows でもデバッグできます。
 
 ## クイック スタート
 
@@ -30,7 +31,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
   停止状態からの単体テスト生成、止めずに記録する値の推移と区間の時間計測、セッションの報告書。
 - **WinForms のための機能** — 停止中のコントロール ツリー、画面上での強調表示、コントロールのイベントで停止、停止中のプロパティ変更。
 - **自分のコード以外にも入れる** — Source Link、シンボル サーバー、シンボルのないアセンブリを逆コンパイルしてステップ イン。
-- **.NET 5 以降と .NET Framework 4.x**。起動・アタッチ（プロセス名を指定して起動を待つことも）に対応。
+- **.NET 5 以降と .NET Framework 4.x**、x86 と x64（AnyCPU も）、自己完結と単一ファイルの発行。起動・アタッチ（プロセス名を指定して起動を待つことも）に対応。
 
 | | |
 |---|---|
@@ -93,7 +94,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 - アプリに合った **x86 版 .NET ランタイム**（WinForms / WPF なら *.NET Desktop Runtime (x86)*）
   （`C:\Program Files (x86)\dotnet` にインストールされます）
 - プロジェクトをビルドするための .NET SDK
-- **.NET Framework 4.x** のアプリでは、さらに **x86 版 .NET ランタイム（8 以降）**。デバッガー自身の一部がその上で動きます
+- **.NET Framework 4.x** のアプリには、.NET Framework のほかに要るものはありません（デバッガー自身は .NET を使いません）
 
 ## インストール
 
@@ -180,6 +181,8 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `stopAtEntry` | エントリポイントで停止します。 |
 | `justMyCode` | ユーザーコードのみをデバッグします（既定値 `true`）。 |
 | `enableStepFiltering` | プロパティや演算子をステップオーバーします（既定値 `true`）。 |
+| `expressionEvaluationOptions` | `allowImplicitFuncEval: false` にすると、変数ビューでプロパティの getter と `ToString()` を自動では呼ばず、開いたときに呼びます（副作用のある getter への備え）。attach でも使えます。 |
+| `architecture` | `program` がフレームワーク依存の `.dll` のとき、それを動かす `dotnet.exe` のビット数（`x86` 既定 / `x64`）。`.exe` はビルドしたとおりに動き、同じビット数のデバッガーが使われます。 |
 | `sourceFileMap` | PDB に記録されたソースのパスの接頭辞を、ローカルのフォルダに置き換えます（下記参照）。attach でも使えます。 |
 | `sourceSearchPaths` | PDB に記録された場所に無いソースを探すフォルダ（下記参照）。attach でも使えます。 |
 
@@ -187,11 +190,11 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 | 設定 | 説明 |
 |---|---|
-| `dotnetX86.debuggerPath` | 同梱版の代わりに、別の x86 版 `netcoredbg.exe` を使います。 |
+| `dotnetX86.debuggerPath` | x86 のプログラムに、同梱版の代わりに別の x86 のデバッグ エンジン（`dotnet-x86dbg.exe`、または 1.x の `netcoredbg.exe`）を使います。 |
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | 全構成に共通の `sourceFileMap` / `sourceSearchPaths`（`${workspaceFolder}` が使えます）。 |
 | `dotnetX86.sourceLink.enabled` | PDB の Source Link の対応表からソースをダウンロードします（既定値 `true`）。 |
 | `dotnetX86.symbolServers` | **シンボルをダウンロード** が使うシンボル サーバー（既定は NuGet と Microsoft）。 |
-| `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、netcoredbg のログファイルも出力します（パスは同パネルに表示）。 |
+| `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、デバッグ エンジンのログファイルも出力します（パスは同パネルに表示）。 |
 | `dotnetX86.stepHistory.enabled` | 停止のたびにステップ履歴ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.captureLocals` | 記録した例外ごとに、コールスタックとローカル変数も記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.enabled` | スローされたすべての例外を、止まらずに例外ログ ビューへ記録します（既定値 `true`）。 |
@@ -243,7 +246,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 - プロジェクトは **Portable PDB** を出力する必要があります。SDK 形式のプロジェクトは既定で Portable です。古い形式のプロジェクトは既定で
   Windows PDB を出力するので、`<DebugType>portable</DebugType>` を追加してください（Windows PDB を見つけると警告が出ます）。
 - 対応しているのは .NET Framework 4.x だけです（2.0 / 3.5 は非対応）。
-- アプリ自体は使いませんが、x86 版 .NET ランタイム 8 以降のインストールが必要です。
+- .NET（Core）のランタイムは要りません。x64 や AnyCPU（「32 ビットを優先」なし）の exe は、x64 のデバッガーでデバッグします。
 
 ### 表示言語
 
@@ -284,7 +287,7 @@ C# エディターの行を右クリックします。
 #### 値が変わったら停止
 
 変数ビューでフィールド・プロパティ・ローカル変数を右クリックして **値の変更時に中断** を選びます。値が変わった直後に停止し、
-`旧値 → 新値` を表示します。netcoredbg にデータブレークポイントが無いため、エミュレーションで実現しています。
+`旧値 → 新値` を表示します。ハードウェアのデータブレークポイントではなく、エミュレーションで実現しています。
 ワークスペースの C# ファイルからその名前への代入箇所（`x = …`、`x += …`、`x++` など）を探し、各箇所の前後で値を比べて、
 変わったときだけ停止します。`ref` / `out` 経由の書き換え、別オブジェクトのメンバーへの代入（`other.x = …`）、
 ワークスペース外のコードによる書き換えは検出できません。
@@ -317,7 +320,7 @@ UI スレッドがネイティブ コードの中で待っている場合（`Thr
 
 `Outer(Inner1(), Inner2())` のように 1 行に複数の呼び出しがあるとき、右クリックの **Step Into Target**（またはコマンド パレット）で
 入りたい呼び出しを選べます。ほかの呼び出しは止まらずに実行されます。候補は実行される順（引数が先）に並びます。
-netcoredbg にはこの機能が無いため、選んだメソッドに一時的な関数ブレークポイントを置いてその行をステップ オーバーします。
+選んだメソッドに一時的な関数ブレークポイントを置いてその行をステップ オーバーします。
 結局その行で呼ばれなかった場合は、次の行で止まります。コンストラクター（`new T(...)`）は候補に出ません。
 
 #### 次のステートメントの設定
@@ -340,7 +343,7 @@ Visual Studio と同様に、行をもう一度実行したり、行を飛ばし
 
 コールスタック ビューでスレッドを右クリックして **スレッドを凍結** を選ぶと（パネルのボタンからも可）、そのスレッドは続行しても止まったままになります。
 式の評価をはさんでも凍結は解けず、**スレッドの凍結を解除** まで続きます。名前に `[frozen]` が付きます。1 つのスレッドだけを動かしたり、
-1 つを止めて競合状態を再現したりするのに使えます。netcoredbg のパッチ 0010 が必要です（同梱版に含まれます）。
+1 つを止めて競合状態を再現したりするのに使えます。
 
 ### 値を見る
 
@@ -374,7 +377,7 @@ VS Code の設定 `debug.inlineValues` で無効にできます。
 ほかのメソッドや後の停止でも、ウォッチ・デバッグ コンソール・ホバー・ブレークポイントの条件から同じオブジェクトを参照できます（例: `$1.Count`、`order == $2`）。
 変数ビューでは、そのオブジェクトである値に `{$1}` と表示されます。Visual Studio と同じく、オブジェクト ID はオブジェクトを生かし続けません。
 ガベージ コレクションで回収されると `$1` は `null` になります。ID はデバッグ セッションが終わるまで有効です。
-対象はオブジェクトだけです（数値・文字列・構造体・null は不可）。netcoredbg のパッチ 0008 が必要です（同梱版には含まれています）。
+対象はオブジェクトだけです（数値・文字列・構造体・null は不可）。
 
 #### Dump Variable（変数のダンプ）
 
@@ -446,13 +449,12 @@ GDI / USER が上限の 80 % に達したとき、アドレス空間の 85 % が
 型ごとのオブジェクト数とバイト数が大きい順に表示されます（Visual Studio のメモリ使用量に相当）。あとの停止でもう一度取ると、
 型ごとの増減（**Δ 個数**・**Δ サイズ**）がわかります。比べる 2 つは自由に選べ、列で並べ替え、型名で絞り込み、**増えたものだけ** の表示ができます。
 取得の直前にガベージ コレクションを実行し、まだ使われているオブジェクトだけを数えます（`dotnetX86.heapSnapshot.collectGarbage`）。
-netcoredbg のパッチ 0011 が必要です（同梱版に含まれます）。
 
 型の一覧の上には **GDI リーク候補** を表示します。ネイティブ リソースを持つオブジェクト（GDI+ の Font・Brush・Pen・Image・Graphics・
 Region・GraphicsPath、アイコン・カーソル・ウィンドウ）を型ごとに数え、そのうち **未 Dispose**（まだハンドルを持っているもの）の数と、
 比較対象のスナップショットからの増減を並べます。スナップショットを取り、同じ操作（フォームの開閉、帳票の印刷など）を何度か繰り返してから
 もう一度取ると、*未 Dispose* が増え続けている型に *⚠ リーク候補* が付きます。Visual Studio では、Dispose 済みかどうかは区別できません。
-.NET と .NET Framework の両方に対応しています。netcoredbg のパッチ 0012 が必要です（同梱版に含まれます）。
+.NET と .NET Framework の両方に対応しています。
 
 ### 履歴と記録
 
@@ -560,7 +562,7 @@ Source Link があればソースも付いてきます。どのサーバーに�
 ステップ イン・ローカル変数の表示・逆コンパイルしたファイルへのブレークポイントが使えます。Just My Code が有効なままでも動作します。
 結果はアセンブリのビルドごとに拡張機能の保存領域に置かれ、アセンブリのフォルダには何も書き込みません。
 **逆コンパイルしたシンボルを削除** で消せます。逆コンパイラーの実行に .NET 8 以降のランタイムが必要です。
-netcoredbg のパッチ 0009 が必要です（同梱版には含まれています）。ローカル変数名は元の名前ではなく、逆コンパイラーが付けたものです。
+ローカル変数名は元の名前ではなく、逆コンパイラーが付けたものです。
 
 ### WinForms
 
@@ -577,7 +579,7 @@ netcoredbg のパッチ 0009 が必要です（同梱版には含まれていま
 
 コントロールを右クリックして **プロパティを変更...** を選ぶと、停止中のプログラムで `Text`・`Visible`・`Enabled`・色・位置・サイズ
 （または任意のプロパティを C# の式で）を変更できます。画面にはプログラムを続行すると反映されます。
-`Dock` などの列挙型のプロパティは、netcoredbg が列挙値を渡せないため変更できません。
+`Dock`・`Anchor` は `Fill` や `Top, Left` のようにメンバーの名前で指定します。
 
 目のアイコン（**画面上で強調表示**）をクリックすると、コントロールの場所が分かります。停止した時点のフォームが手前に表示され、
 コントロールの周りに赤い枠と名前・サイズが数秒間表示されます。Visual Studio には WinForms 向けのこの機能はありません
@@ -597,9 +599,68 @@ netcoredbg のパッチ 0009 が必要です（同梱版には含まれていま
 
 ## 制限事項
 
-- **.NET Framework**: 4.x のみ、Portable PDB が必要です（上記参照）。
+- **.NET Framework**: 4.x のみ、Portable PDB（埋め込みも可）が必要です（上記参照）。
 - デバッグ対象の出力は常にデバッグコンソールに表示されます（`console: integratedTerminal` は使えません）。
-- Windows 専用です。
+- Windows 専用です。対象のプロセスは x86 と x64 です（ARM64 は未確認）。
+
+## Visual Studio との違い
+
+この拡張は Visual Studio のデバッガーの主な機能を VS Code で使えるようにしますが、同じではありません。
+
+**Visual Studio にあって、この拡張に無いもの**
+
+| 機能 | この拡張では |
+|---|---|
+| エディット コンティニュ / ホット リロード | ありません。直したらビルドし直して起動します。 |
+| ネイティブ コードとの混在モード デバッグ | マネージド コードだけです。ネイティブのフレームはコール スタックに出ません。 |
+| ハードウェアのデータ ブレークポイント | [値が変わったら停止](#値が変わったら停止) は、代入している行で比べる模倣です（`ref` 経由などは検出できません）。 |
+| Windows PDB（full / pdbonly） | 読めません。Portable PDB か埋め込み PDB が必要です。 |
+| .NET Framework 2.0〜3.5 | 対象外です（起動時に理由つきで断ります）。 |
+| ダンプ ファイルのデバッグ、リモート デバッグ | ありません。同じ Windows で動いているプロセスだけです。 |
+| CPU プロファイラー、メモリの割り当ての追跡 | ありません。[メモリ / CPU グラフ](#メモリ--cpu-グラフ) と [ヒープ スナップショット](#ヒープ-スナップショット)（型ごとの数と大きさ）だけです。 |
+| タスク ウィンドウ、async のコール スタックの連結 | ありません。[並列スタック](#並列スタックとスレッドの凍結) はスレッドだけです。 |
+| `List<T>` などの「結果ビュー」 | 変数ビューでは中のフィールド（`_items`、`_size`）を開きます。[変数をダンプ](#dump-variable変数のダンプ) は要素だけを表示します。 |
+| 自作のデバッガー ビジュアライザー（`DebuggerVisualizer`） | 使えません。画像・表・文字列のビューアーが付いています。 |
+| WPF / XAML のツール（ライブ ビジュアル ツリーなど） | ありません。WinForms 向けのツールがあります。 |
+
+**同じように動くもの**: 条件・ヒットカウント・ログポイント、例外設定（スロー時 / ユーザー未処理）、Just My Code、ステップ フィルター、
+Step Into Specific、次のステートメントの設定、戻り値、オブジェクト ID、`DebuggerDisplay` / `DebuggerBrowsable` / `DebuggerTypeProxy`（自分のコードの型）、
+式の評価（C# のコンパイラと同じ値と型。ラムダ、LINQ、パターン、`switch` 式、ポインターも）、暗黙の関数評価のオン / オフ（`expressionEvaluationOptions.allowImplicitFuncEval`）。
+
+**Visual Studio に無いもの** は、[機能一覧](#機能一覧) の ★ です。
+
+## netcoredbg（1.x）との違い
+
+1.x はデバッグ エンジンに [netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）の x86 ビルドにパッチを 13 枚当てて同梱していました。
+2.0 からは、この拡張のために作った **dotnet-x86dbg**（Rust）を同梱します。DAP のやり取りと値の書き方は netcoredbg と同じにしてあり、
+拡張の機能はそのまま使えます。`dotnetX86.debuggerPath` に netcoredbg.exe を指定すれば、前のエンジンでも動きます（x86 のプログラムだけ）。
+
+| | netcoredbg（1.x） | dotnet-x86dbg（2.0） |
+|---|---|---|
+| デバッガー自身が使う .NET | x86 の .NET 8 以降が必要（.NET Framework のアプリでも） | 不要。.NET Framework のアプリは .NET を入れていない Windows でもデバッグできます |
+| x64 / AnyCPU のアプリ | デバッグできない（警告だけ） | x64 のエンジンでデバッグします（エンジンはプログラムのビット数で選ばれます） |
+| 単一ファイルで発行した自己完結のアプリ | 落ちる | デバッグできます（同じ版の .NET ランタイムが機械にあるとき） |
+| 式の評価 | 名前・呼び出し・演算子など約 50 種類の命令。ラムダ、LINQ、パターンは不可 | C# のコンパイラと同じ値と型（ラムダ、LINQ、パターン、`switch` 式、タプル、ポインター、`await` は同期で待つ、ジェネリックの型引数） |
+| WinForms の列挙型のプロパティ（`Dock`、`Anchor`） | 変更できない | 変更できます |
+| 対象の出力の日本語 | 化ける | コンソールのコード ページで読みます |
+| `DateTime`・`TimeSpan`・`Guid` の値 | `{System.DateTime}` | `ToString()` の結果 |
+| ボックス化した数（`object o = 5`） | `{int}`（開くと `m_value`） | `5` |
+| インデクサー（引数を取るプロパティ） | 例外の値として並ぶ | 出しません |
+| `DebuggerDisplay` | 最上位の変数だけ | 開いた中の値にも効きます |
+| `DebuggerBrowsable(Never)` / `RootHidden`、`DebuggerTypeProxy` | プロパティの `Never` だけ | フィールドにも効き、`RootHidden` と自分のコードの型の `DebuggerTypeProxy`（元のメンバーは Raw View）も効きます |
+| 名前の無い負の列挙値 | `18446744073709551610` | `-6` |
+| ランタイムの中で投げられた例外の場所 | `<unknown module>` | 実際のモジュール名 |
+| プロパティを自動で評価しない設定 | なし | `expressionEvaluationOptions.allowImplicitFuncEval: false` |
+| 同梱物 | 約 8.4 MB（netcoredbg、ManagedPart、Roslyn、dbgshim） | x86 と x64 の exe と dbgshim.dll |
+
+同じもの: ブレークポイントで止まる行、ステップ（async の `await` をまたぐ `next`、async メソッドからの `stepOut`、async `Main` の `stopAtEntry`）、
+フレームとスレッドの名前、例外の情報（`exceptionInfo`）、変数の `evaluateName`、静的メンバーの節（基底の型の分も）。
+
+## デバッグ エンジンの API
+
+拡張とデバッグ エンジンの間の取り決め（DAP の要求・応答・イベント、独自の要求、launch / attach の引数、値の書き方）は、
+[docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)（JSON Schema は [engine-api.json](docs/engine-api.json)）にあります。
+`src/engineProtocol.ts` の型から `npm run docs:api` で生成しています。
 
 ## 開発に参加する
 

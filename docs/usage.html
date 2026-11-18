@@ -144,12 +144,12 @@ debugging tools you know from Visual Studio, and a few it doesn't have.</p>
 
 <h2 id="what">What it is</h2>
 <p>The C# extension for VS Code ships its debugger only for 64-bit and ARM64, so a process built with
-<code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> cannot be debugged with it. This extension bundles a 32-bit build of
-the open-source debugger <a href="https://github.com/Samsung/netcoredbg">netcoredbg</a> and adds the debug type
-<code>dotnet-x86</code>.</p>
+<code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> cannot be debugged with it. This extension bundles its own debug engine,
+<b>dotnet-x86dbg</b> (x86 and x64; the one of the program's bitness is used), and adds the debug type <code>dotnet-x86</code>.
+The debugger itself uses no .NET. The differences from Visual Studio and from netcoredbg (the engine of 1.x) are listed in the README.</p>
 <div class="cards">
   <div class="card"><h4>You need</h4>Windows (64-bit), VS Code, a .NET SDK, and the <b>x86</b> .NET runtime your app uses — for WinForms / WPF that is the <i>.NET Desktop Runtime (x86)</i>.</div>
-  <div class="card"><h4>Supported</h4>.NET (Core), .NET 5 or later and .NET Framework 4.x, 32-bit processes: launch and attach. For .NET Framework the x86 .NET runtime (8 or later) is also needed, and the project must write Portable PDBs.</div>
+  <div class="card"><h4>Supported</h4>.NET (Core), .NET 5 or later and .NET Framework 4.x, 32-bit and 64-bit processes (self-contained and single-file too): launch and attach. .NET Framework apps need no other .NET; the project must write Portable (or embedded) PDBs.</div>
   <div class="card"><h4>Not supported</h4>.NET Framework 2.0 / 3.5, and Windows PDBs. The debuggee's output goes to the Debug Console (no integrated terminal).</div>
 </div>
 
@@ -201,8 +201,8 @@ pressing <kbd>F5</kbd> without a launch.json does the same. The steps below are 
 <h3>3. Set a breakpoint and press F5</h3>
 <p>Click left of a line number to set a breakpoint (a red dot), then press <kbd>F5</kbd>. When the app reaches the line, it stops and
 VS Code shows the values. Use <kbd>F10</kbd> (step over), <kbd>F11</kbd> (step into), <kbd>Shift</kbd>+<kbd>F11</kbd> (step out) and <kbd>F5</kbd> (continue).</p>
-<div class="note">If the extension warns that the program <i>will run as a 64-bit process</i>, the project is not built for x86 yet — check
-<code>PlatformTarget</code> and the path in <code>program</code> (<code>bin/x86/...</code>).</div>
+<div class="note">A program built without <code>PlatformTarget</code> (AnyCPU) runs as a 64-bit process and is debugged with the x64 engine.
+To debug it as x86, set <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> and point <code>program</code> at <code>bin/x86/...</code>.</div>
 
 <h2 id="tour">A tour of the screen</h2>
 <p>While stopped, the <b>Run and Debug</b> side bar (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd>) and the editor look like this.</p>
@@ -590,7 +590,7 @@ after the value changes and the reason shows the old and new value.</p>
 </svg>
 <figcaption>Stopped on the line after the write, showing old → new.</figcaption>
 </figure>
-<div class="note"><b>How it works and its limits.</b> netcoredbg has no hardware data breakpoints, so the extension finds the lines of your
+<div class="note"><b>How it works and its limits.</b> It is not a hardware data breakpoint: the extension finds the lines of your
 workspace's C# files that assign the name (<code>x = …</code>, <code>x += …</code>, <code>x++</code>), checks the value before and
 after each of them, and stops only if it changed. Writes through <code>ref</code> / <code>out</code>, from another object
 (<code>other.x = …</code>) or from code outside the workspace are not detected; the same name is watched for every instance.</div>
@@ -768,7 +768,7 @@ if it never comes down, look for event handlers that are not removed.</div>
 the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
 Take another snapshot at a later stop to see the change of each type (<b>Δ Count</b>, <b>Δ Size</b>); pick any two snapshots to compare,
 sort by a column, filter by name or show <b>Increases only</b>. A garbage collection runs right before each snapshot so that only
-objects still in use are counted (<code>dotnetX86.heapSnapshot.collectGarbage</code>, or the checkbox in the panel). Needs netcoredbg patch 0011.</p>
+objects still in use are counted (<code>dotnetX86.heapSnapshot.collectGarbage</code>, or the checkbox in the panel).</p>
 <figure class="figure">
 <svg viewBox="0 0 860 200" role="img" aria-label="Heap Snapshots">
   <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -790,7 +790,7 @@ objects still in use are counted (<code>dotnetX86.heapSnapshot.collectGarbage</c
 <p>Above the types, <b>GDI leak candidates</b> lists the objects that hold a native resource (GDI+ fonts, brushes, pens, images,
 graphics, regions, paths; icons, cursors, windows), how many are <b>not disposed</b> — they still hold their handle — and the
 change since the snapshot compared with. A type whose <i>Not disposed</i> keeps growing is marked <i>⚠ leak candidate</i>.
-Visual Studio cannot tell a disposed object from one that was not. Needs netcoredbg patch 0012.</p>
+Visual Studio cannot tell a disposed object from one that was not.</p>
 <div class="usecase"><b>Use case:</b> the GDI graph climbs while reports are printed. Take a snapshot, print three reports, take
 another: <code>System.Drawing.Font</code> shows <i>Δ Not disposed +3</i>. The print handler creates a font per page and never
 disposes it; a <code>using</code> fixes it.</div>
@@ -1003,7 +1003,7 @@ logged too, with your method as the caller.</p>
 <p>Each statement pauses the program for a moment while it is read (about a few hundred milliseconds), so leave it off
 (<code>dotnetX86.sqlLog.enabled</code>) when timing. To log another provider, add its command type to <code>dotnetX86.sqlLog.methods</code>,
 e.g. <code>Npgsql.NpgsqlCommand.ExecuteReader</code>. The time a statement took is not recorded; <code>...Async</code> methods are logged only
-where the provider calls its synchronous method. Needs netcoredbg patch 0013 (included).</p>
+where the provider calls its synchronous method.</p>
 <div class="usecase"><b>Use case:</b> a screen shows the wrong orders. Open the SQL Log, copy the statement with its values and run it in
 SQL Developer: the <code>:since</code> date is a day off, and the caller shows which method built it.</div>
 
@@ -1116,7 +1116,7 @@ whether it is hidden or placed outside its parent's bounds.</div>
 <p>Right-click a control and choose <b>Break on Event...</b> to list the handlers attached to its events, lambdas included, and stop
 in the ones you pick the next time the event fires — useful in old code where nobody knows which method handles the button.</p>
 <p>Right-click a control and choose <b>Change Property...</b> to change its text, visibility, colors, position or size in the stopped
-program — try a fix without rebuilding. It shows on screen when the program continues. Enum properties (<code>Dock</code>, <code>Anchor</code>) cannot be changed.</p>
+program — try a fix without rebuilding. It shows on screen when the program continues. <code>Dock</code> and <code>Anchor</code> take member names (<code>Fill</code>, <code>Top, Left</code>).</p>
 <p>Click the eye icon (<b>Highlight on Screen</b>) to frame a control on the screen: the form is shown in front, as it was when the
 program stopped, with a red frame, the control's name and its size for a few seconds.</p>
 
@@ -1231,7 +1231,7 @@ Debugging waits until the process appears:</p>
   <tr><th>Symptom</th><th>What to do</th></tr>
   <tr><td>“… is a Windows PDB, which this debugger cannot read”</td><td>Add <code>&lt;DebugType&gt;portable&lt;/DebugType&gt;</code> to the .NET Framework project and rebuild.</td></tr>
   <tr><td>“Debugging a .NET Framework app needs the x86 .NET runtime”</td><td>Install the .NET Runtime (x86) 8 or later; the debugger itself uses it.</td></tr>
-  <tr><td>“… will run as a 64-bit process”</td><td>Set <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> and point <code>program</code> at <code>bin/x86/...</code>.</td></tr>
+  <tr><td>The program runs as 64-bit, but should be x86</td><td>Set <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> and point <code>program</code> at <code>bin/x86/...</code>.</td></tr>
   <tr><td>“The x86 dotnet.exe was not found”</td><td>Install the x86 .NET runtime (for WinForms: .NET Desktop Runtime x86).</td></tr>
   <tr><td>Breakpoint stays hollow</td><td>Check the Modules view: your assembly needs <i>symbols loaded</i> (Debug build, PDB next to the DLL).</td></tr>
   <tr><td>Can’t step into your own library / “Source not found: …” in the Debug Console</td><td>Its PDB records a path that is not on this machine: add a parent folder of the source to <code>sourceSearchPaths</code>, or map the path prefix with <code>sourceFileMap</code> (and set <code>justMyCode</code> to false for a Release build).</td></tr>
@@ -1251,7 +1251,7 @@ Debugging waits until the process appears:</p>
   <tr><td><code>dotnetX86.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>Limits of Dump Variable and related commands.</td></tr>
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>(empty)</td><td>Where the source of referenced assemblies is, for every configuration (merged with launch.json).</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>Troubleshooting log of the debugger communication.</td></tr>
-  <tr><td><code>dotnetX86.debuggerPath</code></td><td>(empty)</td><td>Use another x86 netcoredbg instead of the bundled one.</td></tr>
+  <tr><td><code>dotnetX86.debuggerPath</code></td><td>(empty)</td><td>For x86 programs, use another x86 debug engine (dotnet-x86dbg.exe, or the netcoredbg.exe of 1.x) instead of the bundled one.</td></tr>
   <tr><td><code>dotnetX86.sqlLog.methods</code></td><td>ODP.NET, SqlClient, OleDb, Odbc</td><td>Provider methods the SQL log reads commands at (<code>Namespace.Type.Method</code>).</td></tr>
   <tr><td><code>dotnetX86.evidence.folder</code></td><td>evidence</td><td>Where Capture Evidence saves (relative to the workspace folder).</td></tr>
 </table>

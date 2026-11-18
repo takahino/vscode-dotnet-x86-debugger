@@ -11,8 +11,9 @@
 ![Debugging a WinForms app: breakpoints, variables, call stack, exception log, step history](media/readme/debugging.png)
 
 The C# extension's debugger (vsdbg) ships only for x64 and arm64, so an app built with `<PlatformTarget>x86</PlatformTarget>`
-cannot be debugged in VS Code. This extension bundles an **x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg)** (MIT),
-extended with patches, behind a relay that adds the Visual Studio features you miss — and a few Visual Studio does not have.
+cannot be debugged in VS Code. This extension bundles its own debug engine for x86, **dotnet-x86dbg** (Rust, x86 and x64),
+behind a relay that adds the Visual Studio features you miss — and a few Visual Studio does not have. The debugger itself
+uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET installed.
 
 ## Quick start
 
@@ -31,7 +32,7 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 - **Made for WinForms** — the control tree of the stopped program, highlight a control on screen, stop in a control's event
   handlers, change its properties while stopped.
 - **Into code that is not yours** — Source Link, symbol servers, and decompiling assemblies without symbols to step into them.
-- **.NET 5+ and .NET Framework 4.x**, launch or attach (also by process name, waiting for it to start).
+- **.NET 5+ and .NET Framework 4.x**, x86 and x64 (AnyCPU too), self-contained and single-file publishing; launch or attach (also by process name, waiting for it to start).
 
 | | |
 |---|---|
@@ -94,7 +95,7 @@ extended with patches, behind a relay that adds the Visual Studio features you m
 - The **x86 .NET runtime** for your app, e.g. *.NET Desktop Runtime (x86)* for WinForms / WPF
   (installed under `C:\Program Files (x86)\dotnet`)
 - A .NET SDK to build your project
-- For **.NET Framework 4.x** apps, additionally the **x86 .NET runtime (8 or later)**: the debugger runs part of itself on it
+- **.NET Framework 4.x** apps need nothing else (the debugger itself uses no .NET)
 
 ## Installation
 
@@ -181,6 +182,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `stopAtEntry` | Break at the entry point. |
 | `justMyCode` | Only debug user code (default `true`). |
 | `enableStepFiltering` | Step over properties and operators (default `true`). |
+| `expressionEvaluationOptions` | With `allowImplicitFuncEval: false`, the Variables view does not run property getters and `ToString()` by itself; they run when expanded (a guard against getters with side effects). Also for attach. |
+| `architecture` | When `program` is a framework-dependent `.dll`: the bitness of the `dotnet.exe` that runs it (`x86` by default, or `x64`). An `.exe` runs as it was built, and the debugger of that bitness is used. |
 | `sourceFileMap` | Replace source path prefixes recorded in PDBs with local folders (see below). Attach too. |
 | `sourceSearchPaths` | Folders searched for source files the PDB records elsewhere (see below). Attach too. |
 
@@ -188,11 +191,11 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 
 | Setting | Description |
 |---|---|
-| `dotnetX86.debuggerPath` | Use another x86 `netcoredbg.exe` instead of the bundled one. |
+| `dotnetX86.debuggerPath` | For x86 programs, use another x86 debug engine (`dotnet-x86dbg.exe`, or the `netcoredbg.exe` of 1.x) instead of the bundled one. |
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
 | `dotnetX86.sourceLink.enabled` | Download sources through the PDB's Source Link map (default `true`). |
 | `dotnetX86.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
-| `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a netcoredbg log (its path is shown there). |
+| `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a log of the debug engine (its path is shown there). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
@@ -246,7 +249,7 @@ the exception settings, the exception log, the SQL log and UI freeze detection c
 - The project must produce **Portable PDBs**. SDK-style projects do; old-style projects write Windows PDBs by default —
   add `<DebugType>portable</DebugType>` (the extension warns when it finds a Windows PDB).
 - Only .NET Framework 4.x is supported (not 2.0 / 3.5).
-- The x86 .NET runtime 8 or later must be installed, even though the app does not use it.
+- No .NET (Core) runtime is needed. x64 and AnyCPU exes (without *Prefer 32-bit*) are debugged with the x64 debugger.
 
 ### Display language
 
@@ -289,7 +292,7 @@ You can also type these markers as the condition of any breakpoint. They can be 
 #### Break on Value Change
 
 Right-click a field, property or local variable in the Variables view and choose **Break on Value Change**.
-Execution stops right after the value changes, showing `old → new`. netcoredbg has no data breakpoints, so this is
+Execution stops right after the value changes, showing `old → new`. It is not a hardware data breakpoint but
 emulated: the extension finds the lines of the workspace's C# files that assign that name (`x = …`, `x += …`, `x++`, …),
 checks the value before and after each of them, and stops only when it changed. Writes through `ref` / `out`,
 from other objects (`other.x = …`) or from code outside the workspace are not detected.
@@ -324,7 +327,7 @@ look a few frames down for your code. Expressions cannot be evaluated in such a 
 
 On a line with several calls, such as `Outer(Inner1(), Inner2())`, right-click and choose **Step Into Target** (or run it
 from the Command Palette) and pick the call to step into; the others run without stopping. The calls are listed in the
-order they run (arguments first). netcoredbg has no step-in targets, so the step goes over the line with a temporary
+order they run (arguments first). The step goes over the line with a temporary
 function breakpoint on the picked method: if the line does not call it after all, the step ends on the next line.
 Constructors (`new T(...)`) are not listed.
 
@@ -351,7 +354,7 @@ number of threads. Click a frame to open it; the panel follows every stop.
 
 Right-click a thread in the Call Stack view and choose **Freeze Thread** (or use the buttons in the panel): a frozen thread
 stays suspended when the program continues, also across expression evaluation, until **Thaw Thread**. Its name shows
-`[frozen]`. Use it to let one thread run alone, or to hold one back to provoke a race. Needs netcoredbg patch 0010.
+`[frozen]`. Use it to let one thread run alone, or to hold one back to provoke a race.
 
 ### Looking at values
 
@@ -386,7 +389,7 @@ Right-click an object in the Variables or Watch view and choose **Make Object ID
 reaches that very object from any method and any later stop — in Watch, the Debug Console, hovers and breakpoint conditions
 (e.g. `$1.Count`, `order == $2`). Values that are that object show `{$1}` in the Variables view. As in Visual Studio, an object ID
 does not keep its object alive: once it is garbage collected, `$1` is `null`. IDs last until the debug session ends.
-Objects only (not numbers, strings, structs or null). Needs netcoredbg patch 0008, included in the bundled build.
+Objects only (not numbers, strings, structs or null).
 
 #### Dump Variable
 
@@ -463,13 +466,13 @@ While stopped, right-click in the Call Stack view and choose **Take Heap Snapsho
 the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
 Take another one at a later stop to see what changed per type (**Δ Count**, **Δ Size**); pick any two snapshots to compare,
 sort by a column, filter by name, or show **Increases only**. A garbage collection runs right before each snapshot so that
-only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`). Needs netcoredbg patch 0011.
+only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`).
 
 Above the types, **GDI leak candidates** lists the objects that hold a native resource — GDI+ fonts, brushes, pens, images,
 graphics, regions and paths; icons, cursors and windows — with how many are **not disposed** (they still hold their handle)
 and how that changed since the snapshot compared with. Take a snapshot, repeat an action a few times (open and close a
 form, print a report), take another: a type whose *Not disposed* keeps growing is marked *⚠ leak candidate*. Visual Studio
-cannot tell a disposed object from one that was not. Works for .NET and .NET Framework; needs netcoredbg patch 0012.
+cannot tell a disposed object from one that was not. Works for .NET and .NET Framework.
 
 ### History and records
 
@@ -581,8 +584,8 @@ For an assembly without symbols (e.g. a NuGet package, or a DLL whose source you
 bundled ILSpy engine decompiles it into C# with matching symbols; from the next debug session (a button restarts the
 current one) you can step into it, see its locals and set breakpoints in the decompiled files, with Just My Code on.
 The result is kept in the extension's storage, keyed by the exact build of the assembly, and the assembly's own folder
-is not touched. **Delete Decompiled Symbols** removes them. Needs a .NET 8 or later runtime to run the decompiler, and
-netcoredbg patch 0009 (included in the bundled build). Names of locals are the decompiler's, not the original ones.
+is not touched. **Delete Decompiled Symbols** removes them. Needs a .NET 8 or later runtime to run the decompiler.
+Names of locals are the decompiler's, not the original ones.
 
 ### WinForms
 
@@ -601,7 +604,7 @@ command.
 
 Right-click a control and choose **Change Property...** to change its `Text`, `Visible`, `Enabled`, colors, position or
 size (or any property, with a C# expression as the value) in the stopped program; it shows on screen when the program
-continues. Enum properties such as `Dock` cannot be changed: netcoredbg cannot pass enum values.
+continues. `Dock` and `Anchor` take member names, such as `Fill` or `Top, Left`.
 
 Click the eye icon (**Highlight on Screen**) to see where a control is: the form is shown in front, as it was when the
 program stopped, with a red frame and the control's name and size around it for a few seconds. Visual Studio cannot do
@@ -622,10 +625,71 @@ the screen. A form with many controls takes a few seconds (about 5 evaluations p
 
 ## Limitations
 
-- **.NET Framework**: 4.x only, with Portable PDBs (see above).
+- **.NET Framework**: 4.x only, with Portable PDBs (embedded ones too; see above).
 - The debuggee always runs with its output in the Debug Console (`console: integratedTerminal` is not available).
-- Windows only.
+- Windows only. The debugged process is x86 or x64 (ARM64 is untested).
 
+## Differences from Visual Studio
+
+The extension brings the main features of the Visual Studio debugger to VS Code, but it is not the same debugger.
+
+**In Visual Studio, not here**
+
+| Feature | Here |
+|---|---|
+| Edit and Continue / Hot Reload | Not available: rebuild and start again. |
+| Mixed-mode (native and managed) debugging | Managed code only; native frames do not appear in the call stack. |
+| Hardware data breakpoints | [Break on Value Change](#break-on-value-change) is emulated on the lines that assign the variable (changes through `ref` and the like are missed). |
+| Windows PDBs (full / pdbonly) | Not readable: use Portable or embedded PDBs. |
+| .NET Framework 2.0–3.5 | Not supported (refused at launch with the reason). |
+| Dump files, remote debugging | Not available: processes on the same Windows only. |
+| CPU profiler, allocation tracking | Not available: the [memory / CPU graph](#memory--cpu-graph) and [heap snapshots](#heap-snapshots) (count and size per type) only. |
+| Tasks window, async call stacks stitched together | Not available: [Parallel Stacks](#parallel-stacks-and-freezing-threads) shows threads. |
+| "Results View" of `List<T>` and the like | The Variables view expands the inner fields (`_items`, `_size`); [Dump Variable](#dump-variable) shows the elements only. |
+| Custom debugger visualizers (`DebuggerVisualizer`) | Not supported; image, table and string viewers are built in. |
+| WPF / XAML tools (Live Visual Tree, ...) | Not available; there are tools for WinForms. |
+
+**Works the same**: conditions, hit counts and logpoints; Exception Settings (thrown / user-unhandled); Just My Code and step
+filtering; Step Into Specific; Set Next Statement; return values; Object IDs; `DebuggerDisplay` / `DebuggerBrowsable` /
+`DebuggerTypeProxy` (types of your code); expressions with the C# compiler's values and types (lambdas, LINQ, patterns,
+`switch` expressions, pointers too); turning implicit function evaluation off (`expressionEvaluationOptions.allowImplicitFuncEval`).
+
+**Not in Visual Studio**: the ★ entries of the [feature table](#features).
+
+## Differences from netcoredbg (1.x)
+
+Up to 1.x the extension bundled an x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg) (MIT) with 13 patches.
+From 2.0 it bundles **dotnet-x86dbg** (Rust), a debug engine made for this extension. Its DAP messages and the way it writes
+values are kept the same as netcoredbg's, so every feature of the extension works as before. Setting `dotnetX86.debuggerPath`
+to a netcoredbg.exe still uses the old engine (for x86 programs).
+
+| | netcoredbg (1.x) | dotnet-x86dbg (2.0) |
+|---|---|---|
+| .NET used by the debugger itself | x86 .NET 8 or later required (also for .NET Framework apps) | None: .NET Framework apps can be debugged on a Windows without .NET |
+| x64 / AnyCPU apps | Not debuggable (a warning only) | Debugged with the x64 engine (the engine is picked by the program's bitness) |
+| Self-contained single-file apps | Crashes | Debuggable (when the same .NET runtime version is on the machine) |
+| Expressions | About 50 instructions (names, calls, operators); no lambdas, LINQ or patterns | The C# compiler's values and types (lambdas, LINQ, patterns, `switch` expressions, tuples, pointers, `await` waited synchronously, generic type arguments) |
+| WinForms enum properties (`Dock`, `Anchor`) | Cannot be changed | Can be changed |
+| Non-ASCII program output (Japanese, ...) | Garbled | Read in the console code page |
+| `DateTime`, `TimeSpan`, `Guid` values | `{System.DateTime}` | The `ToString()` result |
+| Boxed numbers (`object o = 5`) | `{int}` (expand for `m_value`) | `5` |
+| Indexers (properties with parameters) | Listed with an exception as the value | Left out |
+| `DebuggerDisplay` | Top-level variables only | Also on the values inside |
+| `DebuggerBrowsable(Never)` / `RootHidden`, `DebuggerTypeProxy` | `Never` on properties only | `Never` on fields too, `RootHidden`, and `DebuggerTypeProxy` of your own types (the original members under Raw View) |
+| Unnamed negative enum values | `18446744073709551610` | `-6` |
+| Where an exception thrown inside the runtime was thrown | `<unknown module>` | The real module name |
+| Not running property getters automatically | Not available | `expressionEvaluationOptions.allowImplicitFuncEval: false` |
+| Bundled files | About 8.4 MB (netcoredbg, ManagedPart, Roslyn, dbgshim) | The x86 and x64 exes and dbgshim.dll |
+
+The same: the lines breakpoints stop at, stepping (`next` over `await`, `stepOut` from an async method, `stopAtEntry` with an
+async `Main`), frame and thread names, exception information (`exceptionInfo`), `evaluateName` of variables, the Static members
+node (with the base types' members).
+
+## Debug engine API
+
+The contract between the extension and its debug engine (DAP requests, responses and events, custom requests, launch / attach
+arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)
+(JSON Schema: [engine-api.json](docs/engine-api.json)). It is generated from the types in `src/engineProtocol.ts` with `npm run docs:api`.
 ## Contributing
 
 Building from source, the tests and the release steps are described in [CONTRIBUTING.md](CONTRIBUTING.md). Issues and pull requests are welcome.

@@ -144,11 +144,12 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h2 id="what">この拡張機能について</h2>
 <p>VS Code の C# 拡張に含まれるデバッガは 64bit と ARM64 向けしか配布されていないため、
-<code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> でビルドしたプロセスはデバッグできません。この拡張機能は、オープンソースのデバッガ
-<a href="https://github.com/Samsung/netcoredbg">netcoredbg</a> の 32bit 版を同梱し、デバッグの種類 <code>dotnet-x86</code> を追加します。</p>
+<code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> でビルドしたプロセスはデバッグできません。この拡張機能は、自前のデバッグ エンジン
+<b>dotnet-x86dbg</b>（x86 と x64。プログラムのビット数に合う方を使います）を同梱し、デバッグの種類 <code>dotnet-x86</code> を追加します。
+デバッガー自身は .NET を使いません。Visual Studio との違いと、netcoredbg（1.x のエンジン）との違いは README にまとめています。</p>
 <div class="cards">
   <div class="card"><h4>必要なもの</h4>Windows（64bit）、VS Code、.NET SDK、そしてアプリが使う <b>x86 版</b>の .NET ランタイム（WinForms / WPF なら <i>.NET Desktop Runtime (x86)</i>）。</div>
-  <div class="card"><h4>対応</h4>.NET（Core）、.NET 5 以降、.NET Framework 4.x の 32bit プロセス。起動してのデバッグと、実行中のプロセスへのアタッチ。.NET Framework では x86 版 .NET ランタイム（8 以降）も必要で、プロジェクトは Portable PDB を出力する必要があります。</div>
+  <div class="card"><h4>対応</h4>.NET（Core）、.NET 5 以降、.NET Framework 4.x の 32bit と 64bit のプロセス（自己完結、単一ファイルも）。起動してのデバッグと、実行中のプロセスへのアタッチ。.NET Framework のアプリにはほかの .NET は要りません。プロジェクトは Portable PDB（埋め込みも可）を出力する必要があります。</div>
   <div class="card"><h4>非対応</h4>.NET Framework 2.0 / 3.5、Windows PDB。デバッグ対象の出力はデバッグコンソールに表示されます（統合ターミナルは使えません）。</div>
 </div>
 
@@ -199,8 +200,8 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 <h3>3. ブレークポイントを置いて F5 を押す</h3>
 <p>行番号の左をクリックするとブレークポイント（赤い丸）が置けます。<kbd>F5</kbd> を押してアプリがその行に来ると止まり、VS Code に値が表示されます。
 <kbd>F10</kbd>（ステップオーバー）、<kbd>F11</kbd>（ステップイン）、<kbd>Shift</kbd>+<kbd>F11</kbd>（ステップアウト）、<kbd>F5</kbd>（続行）で進めます。</p>
-<div class="note">「64bit プロセスとして起動します」という警告が出たら、プロジェクトがまだ x86 でビルドされていません。
-<code>PlatformTarget</code> と、<code>program</code> のパス（<code>bin/x86/...</code>）を確認してください。</div>
+<div class="note"><code>PlatformTarget</code> の無い（AnyCPU の）プログラムは 64bit のプロセスとして動き、x64 のエンジンでデバッグします。
+x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> を設定し、<code>program</code> を <code>bin/x86/...</code> に向けます。</div>
 
 <h2 id="tour">画面の見取り図</h2>
 <p>停止中の <b>実行とデバッグ</b> サイドバー（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd>）とエディタは、次のようになります。</p>
@@ -569,7 +570,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>書き込みの次の行で停止し、「変化前 → 変化後」を表示します。</figcaption>
 </figure>
-<div class="note"><b>仕組みと制限。</b> netcoredbg にはハードウェアのデータブレークポイントが無いため、この拡張機能はワークスペースの C# ファイルからその名前への代入箇所（<code>x = …</code>、<code>x += …</code>、<code>x++</code>）を探し、各箇所の前後で値を比べて、変わったときだけ停止します。
+<div class="note"><b>仕組みと制限。</b> ハードウェアのデータブレークポイントではなく、この拡張機能はワークスペースの C# ファイルからその名前への代入箇所（<code>x = …</code>、<code>x += …</code>、<code>x++</code>）を探し、各箇所の前後で値を比べて、変わったときだけ停止します。
 <code>ref</code> / <code>out</code> 経由の書き換え、別オブジェクトのメンバーへの代入（<code>other.x = …</code>）、ワークスペース外のコードによる書き換えは検出できません。また、同じ名前のメンバーはインスタンスを区別せずに監視します。</div>
 <div class="usecase"><b>ユースケース:</b> 状態を表すフィールドが「いつの間にか」<code>Cancelled</code> になっているが、どこで設定されているのか分からない。値が変わったら停止を使えば、その行で直接止まります。</div>
 
@@ -712,7 +713,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </figure>
 <div class="usecase"><b>ユースケース:</b> フォームを開いて閉じるたびにメモリが増える。操作を繰り返しながら Private Bytes を見て、下がらないなら解除し忘れたイベントハンドラを疑います。</div>
 <h4 id="f-heap">ヒープ スナップショット</h4>
-<p>停止中に <b>コールスタック</b> ビューで右クリックして <b>ヒープ スナップショットを取得</b> を選ぶと（コマンド パレットの <b>.NET x86: ヒープ スナップショットを取得</b> も可）、GC ヒープ上の型ごとのオブジェクト数とバイト数が大きい順に表示されます（Visual Studio のメモリ使用量に相当）。あとの停止でもう一度取ると、型ごとの増減（<b>Δ 個数</b>・<b>Δ サイズ</b>）がわかります。比べる 2 つのスナップショットは自由に選べ、列で並べ替え、型名で絞り込み、<b>増えたものだけ</b> の表示ができます。取得の直前にガベージ コレクションを実行し、まだ使われているオブジェクトだけを数えます（<code>dotnetX86.heapSnapshot.collectGarbage</code>、またはパネルのチェックボックス）。netcoredbg のパッチ 0011 が必要です（同梱版に含まれます）。</p>
+<p>停止中に <b>コールスタック</b> ビューで右クリックして <b>ヒープ スナップショットを取得</b> を選ぶと（コマンド パレットの <b>.NET x86: ヒープ スナップショットを取得</b> も可）、GC ヒープ上の型ごとのオブジェクト数とバイト数が大きい順に表示されます（Visual Studio のメモリ使用量に相当）。あとの停止でもう一度取ると、型ごとの増減（<b>Δ 個数</b>・<b>Δ サイズ</b>）がわかります。比べる 2 つのスナップショットは自由に選べ、列で並べ替え、型名で絞り込み、<b>増えたものだけ</b> の表示ができます。取得の直前にガベージ コレクションを実行し、まだ使われているオブジェクトだけを数えます（<code>dotnetX86.heapSnapshot.collectGarbage</code>、またはパネルのチェックボックス）。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 200" role="img" aria-label="ヒープ スナップショット">
   <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -731,7 +732,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </svg>
 <figcaption>フォームを 5 回開いて閉じたあとも、OrderForm が 5 個増えたまま残っています。解放されていません。</figcaption>
 </figure>
-<p>型の一覧の上には <b>GDI リーク候補</b> を表示します。ネイティブ リソースを持つオブジェクト（GDI+ の Font・Brush・Pen・Image・Graphics・Region・GraphicsPath、アイコン・カーソル・ウィンドウ）を型ごとに数え、<b>未 Dispose</b>（まだハンドルを持っているもの）の数と、比較対象からの増減を並べます。<i>未 Dispose</i> が増え続けている型には <i>⚠ リーク候補</i> が付きます。Visual Studio では、Dispose 済みかどうかは区別できません。netcoredbg のパッチ 0012 が必要です（同梱版に含まれます）。</p>
+<p>型の一覧の上には <b>GDI リーク候補</b> を表示します。ネイティブ リソースを持つオブジェクト（GDI+ の Font・Brush・Pen・Image・Graphics・Region・GraphicsPath、アイコン・カーソル・ウィンドウ）を型ごとに数え、<b>未 Dispose</b>（まだハンドルを持っているもの）の数と、比較対象からの増減を並べます。<i>未 Dispose</i> が増え続けている型には <i>⚠ リーク候補</i> が付きます。Visual Studio では、Dispose 済みかどうかは区別できません。</p>
 <div class="usecase"><b>ユースケース:</b> 帳票を印刷するたびに GDI のグラフが上がる。スナップショットを取り、3 回印刷してからもう一度取ると、<code>System.Drawing.Font</code> が <i>Δ 未 Dispose +3</i>。印刷処理でページごとに作った Font を Dispose していませんでした。<code>using</code> で直ります。</div>
 <div class="usecase"><b>ユースケース:</b> メモリ グラフが下がらない。停止してスナップショットを取り、フォームを何度か開いて閉じてから、もう一度停止して取ります。<b>増えたものだけ</b> にすると、閉じたはずのフォームの型が開いた回数分残っている。長生きするオブジェクトのイベント ハンドラなどが、まだ参照を握っています。</div>
 
@@ -922,7 +923,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 </ul>
 <p>SQL を読み取る間、実行ごとにプログラムが一瞬（数百ミリ秒ほど）止まるため、時間を計測するときはオフにしてください（<code>dotnetX86.sqlLog.enabled</code>）。
 他のプロバイダーを記録するには、その Command 型を <code>dotnetX86.sqlLog.methods</code> に追加します（例: <code>Npgsql.NpgsqlCommand.ExecuteReader</code>）。
-SQL の実行時間は記録しません。<code>...Async</code> メソッドは、プロバイダーが同期メソッドを呼ぶ場合に限って記録されます。netcoredbg のパッチ 0013 が必要です（同梱版に含まれます）。</p>
+SQL の実行時間は記録しません。<code>...Async</code> メソッドは、プロバイダーが同期メソッドを呼ぶ場合に限って記録されます。</p>
 <div class="usecase"><b>活用例:</b> 画面に違う受注が表示される。SQL ログから値を埋めた SQL をコピーして SQL Developer で実行すると、
 <code>:since</code> の日付が 1 日ずれていることが分かり、呼び出し元からそれを組み立てたメソッドも分かります。</div>
 
@@ -1023,7 +1024,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 </figure>
 <div class="usecase"><b>ユースケース:</b> ボタンが「表示されない」。ツリーを見れば、存在するか、どのパネルに入っているか、非表示なのか親の範囲外に置かれているのかが分かります。</div>
 <p>コントロールを右クリックして <b>イベントで停止...</b> を選ぶと、そのイベントに登録されたハンドラー（ラムダも含む）の一覧から、次にイベントが発生したときに止まる場所を選べます。どのメソッドがボタンを処理しているか誰も知らない古いコードで役立ちます。</p>
-<p>コントロールを右クリックして <b>プロパティを変更...</b> を選ぶと、停止中のプログラムでテキスト・表示/非表示・色・位置・サイズを変えられます。リビルドせずに修正案を試せます。画面には続行すると反映されます。列挙型のプロパティ（<code>Dock</code>、<code>Anchor</code>）は変更できません。</p>
+<p>コントロールを右クリックして <b>プロパティを変更...</b> を選ぶと、停止中のプログラムでテキスト・表示/非表示・色・位置・サイズを変えられます。リビルドせずに修正案を試せます。画面には続行すると反映されます。<code>Dock</code>・<code>Anchor</code> は、メンバーの名前（<code>Fill</code>、<code>Top, Left</code>）で指定します。</p>
 <p>目のアイコン（<b>画面上で強調表示</b>）をクリックすると、コントロールを画面上で枠で示します。停止した時点のフォームが手前に表示され、赤い枠と名前・サイズが数秒間表示されます。</p>
 
 <figure class="figure">
@@ -1126,7 +1127,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><th>症状</th><th>対処</th></tr>
   <tr><td>「… は Windows PDB で、このデバッガーでは読み取れません」</td><td>.NET Framework のプロジェクトに <code>&lt;DebugType&gt;portable&lt;/DebugType&gt;</code> を追加して再ビルドします。</td></tr>
   <tr><td>「.NET Framework アプリのデバッグには … x86 の .NET ランタイム … が必要」</td><td>.NET Runtime (x86) 8 以降をインストールします。デバッガー自身が使います。</td></tr>
-  <tr><td>「64bit プロセスとして起動します」</td><td><code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> を設定し、<code>program</code> を <code>bin/x86/...</code> に向けます。</td></tr>
+  <tr><td>64bit で動いてしまう（x86 にしたい）</td><td><code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> を設定し、<code>program</code> を <code>bin/x86/...</code> に向けます。</td></tr>
   <tr><td>「x86 版 dotnet.exe が見つかりません」</td><td>x86 版の .NET ランタイム（WinForms なら .NET Desktop Runtime x86）をインストールします。</td></tr>
   <tr><td>ブレークポイントが白抜きのまま</td><td>モジュール ビューで、自分のアセンブリが「シンボル読み込み済み」か確認します（Debug ビルドで、DLL の隣に PDB があること）。</td></tr>
   <tr><td>自作ライブラリにステップインできない／デバッグ コンソールに「ソースが見つかりません: …」</td><td>PDB にこのマシンに無いパスが記録されています。ソースの親フォルダを <code>sourceSearchPaths</code> に追加するか、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（Release ビルドなら <code>justMyCode</code> も false に）。</td></tr>
@@ -1146,7 +1147,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>変数をダンプなどのコマンドの上限。</td></tr>
   <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
   <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
-  <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>同梱版の代わりに別の x86 版 netcoredbg を使います。</td></tr>
+  <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>x86 のプログラムに、同梱版の代わりに別の x86 のデバッグ エンジン（dotnet-x86dbg.exe、または 1.x の netcoredbg.exe）を使います。</td></tr>
   <tr><td><code>dotnetX86.sqlLog.methods</code></td><td>ODP.NET・SqlClient・OleDb・Odbc</td><td>SQL ログがコマンドを読み取るプロバイダーのメソッド（<code>名前空間.型.メソッド</code>）。</td></tr>
   <tr><td><code>dotnetX86.evidence.folder</code></td><td>evidence</td><td>エビデンスの保存先（ワークスペース フォルダーからの相対パス）。</td></tr>
 </table>
