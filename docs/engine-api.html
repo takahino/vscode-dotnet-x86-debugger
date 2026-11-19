@@ -45,6 +45,7 @@ main a { color: var(--engine); }
 <a href="#arguments-attach">attach</a>
 <a href="#standard">Standard requests</a>
 <a href="#capabilities">Capabilities</a>
+<a class="sub engine" href="#request-dotnetX86-applyChanges">req dotnetX86.applyChanges</a>
 <a class="sub engine" href="#request-dotnetX86-freezeThread">req dotnetX86.freezeThread</a>
 <a class="sub engine" href="#request-dotnetX86-handleStats">req dotnetX86.handleStats</a>
 <a class="sub engine" href="#request-dotnetX86-heapStats">req dotnetX86.heapStats</a>
@@ -52,6 +53,7 @@ main a { color: var(--engine); }
 <a class="sub proxy" href="#request-dotnetX86-pauseForFreeze">req dotnetX86.pauseForFreeze</a>
 <a class="sub proxy" href="#request-dotnetX86-setEventTrace">req dotnetX86.setEventTrace</a>
 <a class="sub proxy" href="#request-dotnetX86-setExceptionTypes">req dotnetX86.setExceptionTypes</a>
+<a class="sub engine" href="#event-dotnetX86-changesApplied">evt dotnetX86.changesApplied</a>
 <a class="sub engine" href="#event-dotnetX86-mcpEndpoint">evt dotnetX86.mcpEndpoint</a>
 <a class="sub engine" href="#event-output">evt output</a>
 <a class="sub engine" href="#event-process">evt process</a>
@@ -91,6 +93,7 @@ main a { color: var(--engine); }
 <tr><td><code>justMyCode</code><span class="opt">optional</span></td><td>boolean</td><td>Only modules with symbols, without <code>DebuggerNonUserCode</code> / <code>DebuggerHidden</code> / <code>DebuggerStepThrough</code>, are user code (default true).</td></tr>
 <tr><td><code>enableStepFiltering</code><span class="opt">optional</span></td><td>boolean</td><td>Step over property accessors and operators when stepping in (default true).</td></tr>
 <tr><td><code>expressionEvaluationOptions</code><span class="opt">optional</span></td><td><a href="#def-ExpressionEvaluationOptions">ExpressionEvaluationOptions</a></td><td>Options for evaluating expressions.</td></tr>
+<tr><td><code>editAndContinue</code><span class="opt">optional</span></td><td>boolean</td><td>Edit and Continue (default true): modules of a Debug build with symbols are loaded so that <code>dotnetX86.applyChanges</code> can update them. The extension sets it from <code>dotnetX86.editAndContinue.enabled</code> unless launch.json does.</td></tr>
 <tr><td><code>__dotnetFramework</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the extension when <code>program</code> is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed).</td></tr>
 </table>
 <details><summary>Example</summary><pre>{
@@ -110,6 +113,7 @@ main a { color: var(--engine); }
     &quot;expressionEvaluationOptions&quot;: {
       &quot;allowImplicitFuncEval&quot;: false
     },
+    &quot;editAndContinue&quot;: false,
     &quot;__dotnetFramework&quot;: false
   }
 }</pre></details>
@@ -170,6 +174,7 @@ main a { color: var(--engine); }
   &quot;supportTerminateDebuggee&quot;: true,
   &quot;supportsTerminateRequest&quot;: true,
   &quot;supportsCancelRequest&quot;: true,
+  &quot;dotnetX86SupportsApplyChanges&quot;: true,
   &quot;exceptionBreakpointFilters&quot;: [
     {
       &quot;filter&quot;: &quot;all&quot;,
@@ -183,6 +188,64 @@ main a { color: var(--engine); }
 }</pre>
 
 <h2 id="messages">Custom requests and events</h2>
+<section class="op" id="request-dotnetX86-applyChanges"><h3><span class="verb request">request</span> <code>dotnetX86.applyChanges</code> <span class="badge engine">engine</span></h3>
+<p>Edit and Continue: applies the saved edits of the program's C# sources to the program, without restarting (launched, not attached; a Debug build). The engine has its helper (<code>encdelta</code>, run with the Roslyn of the installed .NET SDK 9+) build the change against the sources as they were when debugging started, applies it with <code>ApplyChanges</code>, and moves breakpoints to the new code. Changed methods run the new code from their next call; a method that is running moves to the new code at its next statement unless that statement's line was changed. A running program is paused for the moment it takes. Also sends <code>dotnetX86.changesApplied</code>, <code>output</code> and, when applied, <code>invalidated</code>.</p>
+<h4>arguments</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>files</code><span class="opt">optional</span></td><td>string[]</td><td>The saved files (paths as the PDB has them; the relay maps them through <code>sourceFileMap</code>). Omitted: every source of the program.</td></tr>
+</table>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;dotnetX86.applyChanges&quot;,
+  &quot;arguments&quot;: {
+    &quot;files&quot;: [
+      &quot;&quot;
+    ]
+  }
+}</pre></details>
+<h4>response body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>status</code></td><td><code>"applied"</code> | <code>"noChanges"</code> | <code>"rude"</code> | <code>"errors"</code> | <code>"failed"</code></td><td><code>applied</code>, <code>noChanges</code>, <code>rude</code> (an edit that needs a restart), <code>errors</code> (compile errors) or <code>failed</code>.</td></tr>
+<tr><td><code>message</code></td><td>string</td><td>One-line summary for the user.</td></tr>
+<tr><td><code>applied</code></td><td>object[]</td><td>The modules changed and how many methods each.</td></tr>
+<tr><td><code>applied[].module</code></td><td>string</td><td></td></tr>
+<tr><td><code>applied[].methods</code></td><td>number</td><td></td></tr>
+<tr><td><code>problems</code></td><td>object[]</td><td>Where an edit cannot be applied, or a compile error (line and column from 1).</td></tr>
+<tr><td><code>problems[].file</code></td><td>string</td><td></td></tr>
+<tr><td><code>problems[].line</code></td><td>number</td><td></td></tr>
+<tr><td><code>problems[].column</code></td><td>number</td><td></td></tr>
+<tr><td><code>problems[].message</code></td><td>string</td><td></td></tr>
+<tr><td><code>details</code></td><td>string[]</td><td>Further reasons, one per line (the helper could not start, the source changed before debugging, ...).</td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;dotnetX86.applyChanges&quot;,
+  &quot;body&quot;: {
+    &quot;status&quot;: &quot;applied&quot;,
+    &quot;message&quot;: &quot;&quot;,
+    &quot;applied&quot;: [
+      {
+        &quot;module&quot;: &quot;&quot;,
+        &quot;methods&quot;: 0
+      }
+    ],
+    &quot;problems&quot;: [
+      {
+        &quot;file&quot;: &quot;&quot;,
+        &quot;line&quot;: 0,
+        &quot;column&quot;: 0,
+        &quot;message&quot;: &quot;&quot;
+      }
+    ],
+    &quot;details&quot;: [
+      &quot;&quot;
+    ]
+  }
+}</pre></details>
+</section>
 <section class="op" id="request-dotnetX86-freezeThread"><h3><span class="verb request">request</span> <code>dotnetX86.freezeThread</code> <span class="badge engine">engine</span></h3>
 <p>Freezes or thaws a thread: a frozen thread stays suspended across <code>continue</code>, steps and evaluations until thawed.</p>
 <h4>arguments</h4>
@@ -373,6 +436,49 @@ main a { color: var(--engine); }
 }</pre></details>
 <h4>response body</h4>
 <p class="none">None (an empty body; <code>success</code> tells the result).</p>
+</section>
+<section class="op" id="event-dotnetX86-changesApplied"><h3><span class="verb event">event</span> <code>dotnetX86.changesApplied</code> <span class="badge engine">engine</span></h3>
+<p>The result of applying code changes (Edit and Continue), whether VS Code asked (<code>dotnetX86.applyChanges</code>) or an AI client did through MCP (<code>debug_apply_changes</code>). The body is the response of <code>dotnetX86.applyChanges</code>.</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>status</code></td><td><code>"applied"</code> | <code>"noChanges"</code> | <code>"rude"</code> | <code>"errors"</code> | <code>"failed"</code></td><td>As in the response of <code>dotnetX86.applyChanges</code>.</td></tr>
+<tr><td><code>message</code></td><td>string</td><td>One-line summary.</td></tr>
+<tr><td><code>applied</code></td><td>object[]</td><td>The modules changed.</td></tr>
+<tr><td><code>applied[].module</code></td><td>string</td><td></td></tr>
+<tr><td><code>applied[].methods</code></td><td>number</td><td></td></tr>
+<tr><td><code>problems</code></td><td>object[]</td><td>Problems with their place.</td></tr>
+<tr><td><code>problems[].file</code></td><td>string</td><td></td></tr>
+<tr><td><code>problems[].line</code></td><td>number</td><td></td></tr>
+<tr><td><code>problems[].column</code></td><td>number</td><td></td></tr>
+<tr><td><code>problems[].message</code></td><td>string</td><td></td></tr>
+<tr><td><code>details</code></td><td>string[]</td><td>Further reasons.</td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;dotnetX86.changesApplied&quot;,
+  &quot;body&quot;: {
+    &quot;status&quot;: &quot;applied&quot;,
+    &quot;message&quot;: &quot;&quot;,
+    &quot;applied&quot;: [
+      {
+        &quot;module&quot;: &quot;&quot;,
+        &quot;methods&quot;: 0
+      }
+    ],
+    &quot;problems&quot;: [
+      {
+        &quot;file&quot;: &quot;&quot;,
+        &quot;line&quot;: 0,
+        &quot;column&quot;: 0,
+        &quot;message&quot;: &quot;&quot;
+      }
+    ],
+    &quot;details&quot;: [
+      &quot;&quot;
+    ]
+  }
+}</pre></details>
 </section>
 <section class="op" id="event-dotnetX86-mcpEndpoint"><h3><span class="verb event">event</span> <code>dotnetX86.mcpEndpoint</code> <span class="badge engine">engine</span></h3>
 <p>Sent once after <code>initialize</code> when the engine was started with <code>--mcp-listen</code> (setting <code>dotnetX86.mcp.enabled</code>): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to <code>%LOCALAPPDATA%\dotnet-x86dbg\mcp\&lt;enginePid&gt;.json</code> (removed on exit), where <code>dotnet-x86dbg --mcp-connect</code> finds it for AI clients outside VS Code.</p>

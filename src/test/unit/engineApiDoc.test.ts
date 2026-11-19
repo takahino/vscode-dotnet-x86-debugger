@@ -6,6 +6,7 @@ import * as path from 'path';
 import { describe, it } from 'node:test';
 import { buildEngineApi, renderHtml, renderJson } from '../../tools/engineApiDoc';
 import * as proxy from '../../dapProxy';
+import { APPLY_CHANGES_REQUEST } from '../../editAndContinueCore';
 import { HEAP_STATS_REQUEST } from '../../heapSnapshotCore';
 import { MAKE_OBJECT_ID_REQUEST } from '../../objectIds';
 import { HANDLE_STATS_REQUEST } from '../../resourceLeakCore';
@@ -23,13 +24,13 @@ describe('engine API document', () => {
 
     it('lists every custom request the extension sends, with the side that handles it', () => {
         const requests = new Map(api.messages.filter((m) => m.kind === 'request').map((m) => [m.name, m.side]));
-        for (const name of [HEAP_STATS_REQUEST, HANDLE_STATS_REQUEST, MAKE_OBJECT_ID_REQUEST, proxy.FREEZE_THREAD_REQUEST]) {
+        for (const name of [HEAP_STATS_REQUEST, HANDLE_STATS_REQUEST, MAKE_OBJECT_ID_REQUEST, proxy.FREEZE_THREAD_REQUEST, APPLY_CHANGES_REQUEST]) {
             assert.equal(requests.get(name), 'engine', name);
         }
         for (const name of [proxy.EXCEPTION_TYPES_REQUEST, proxy.FREEZE_PAUSE_REQUEST, proxy.EVENT_TRACE_REQUEST]) {
             assert.equal(requests.get(name), 'proxy', name);
         }
-        assert.equal(requests.size, 7, [...requests.keys()].join(', '));
+        assert.equal(requests.size, 8, [...requests.keys()].join(', '));
     });
 
     it('lists every custom event the relay sends', () => {

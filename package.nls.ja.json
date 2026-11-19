@@ -39,6 +39,7 @@
   "debugger.launch.architecture": "フレームワーク依存の .dll を program にしたとき、それを動かす dotnet.exe のビット数 (既定は x86)。.exe はビルドしたとおり (x86、x64、AnyCPU は 64bit) に動き、同じビット数のデバッガーを使います。",
   "debugger.launch.justMyCode": "ユーザーコードのみをデバッグします。",
   "debugger.launch.enableStepFiltering": "プロパティや演算子をステップオーバーします。",
+  "debugger.launch.editAndContinue": "エディット コンティニュ: デバッグ中に、プログラムの C# のソースの変更を、再起動せずに当てます（デバッガーから起動した Debug ビルド。.NET SDK 9 以降が要ります）。既定は設定 dotnetX86.editAndContinue.enabled の値です。",
   "debugger.attach.processId": "アタッチするプロセス ID。${command:pickProcess} を指定すると一覧から選べます。",
   "debugger.attach.justMyCode": "ユーザーコードのみをデバッグします。",
   "debugger.attach.enableStepFiltering": "プロパティや演算子をステップオーバーします。",
@@ -148,6 +149,9 @@
   "command.captureEvidence": "エビデンスを取得",
   "command.copyMcpConnectionSettings": "AI クライアント用の MCP の接続設定をコピー",
   "command.registerMcpServer": "MCP サーバーを AI クライアントに登録",
+  "command.applyCodeChanges": "コードの変更を適用",
+  "config.editAndContinue.enabled": "エディット コンティニュ: デバッガーから起動した Debug ビルドのデバッグ中に、C# のソースの変更を再起動せずに当てます（**.NET x86: コードの変更を適用**、または保存したとき）。変えたメソッドは次に呼ばれたときから新しいコードで動き、止まっているメソッドは次の文から新しいコードに乗り換わります。.NET SDK 9 以降が要ります（そのコンパイラーで変更を作ります）。次のデバッグのセッションから効きます。",
+  "config.editAndContinue.applyOnSave": "デバッグ中のプログラムの C# のソースを保存したときに、その変更を当てます。",
   "config.evidence.enabled": "エビデンスの取得（コマンド パレット・コール スタック・WinForms コントロール ビュー）: 開いているフォームの画像、コントロールの値、変数、コール スタック、前回の取得以降の SQL を、Markdown と PNG で保存します。",
   "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。"
 }

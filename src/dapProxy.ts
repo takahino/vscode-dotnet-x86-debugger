@@ -13,6 +13,7 @@ import { SourceLinkEntry, parseSourceLink, resolveSourceLink, sourceCachePath } 
 import { ExpressionReader, captureSqlCommand } from './sqlLogCore';
 import { findCallTargets } from './stepTargets';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
+import { APPLY_CHANGES_REQUEST } from './editAndContinueCore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type DapMessage = {
@@ -272,6 +273,10 @@ export class DapProxy {
     fromClient(message: DapMessage): void {
         if (message.type === 'request' && this.mapper.enabled && message.arguments) {
             message = { ...message, arguments: mapSourcePaths(message.arguments, (p) => this.mapper.toDebugger(p)) };
+            // The files of dotnetX86.applyChanges are plain paths (not DAP sources): the engine knows the PDB's paths.
+            if (message.command === APPLY_CHANGES_REQUEST && Array.isArray(message.arguments.files)) {
+                message = { ...message, arguments: { ...message.arguments, files: message.arguments.files.map((f: unknown) => (typeof f === 'string' ? this.mapper.toDebugger(f) : f)) } };
+            }
         }
         if (message.type === 'request' && message.command === 'stackTrace' && message.seq !== undefined && !message.arguments?.startFrame) {
             this.pendingStackTraces.add(message.seq);

@@ -5,6 +5,7 @@ import { engineArchitecture, inspectPe } from './peInfo';
 import { listDotnetProcesses, processArchitecture } from './processPicker';
 import { configurationsForFolder } from './launchSetup';
 import { compareVersions } from './projectSetupCore';
+import { isEnabled } from './features';
 
 export const DEBUG_TYPE = 'dotnet-x86';
 /** Set on a launch configuration whose program is a .NET Framework exe (not written by users). */
@@ -78,6 +79,12 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
     }
     if (!fs.existsSync(program)) {
         throw new Error(vscode.l10n.t("program not found: {0}. Check that the project is built and the output path (bin/x86/...) is correct.", program));
+    }
+
+    // Edit and Continue (setting dotnetX86.editAndContinue.enabled) unless launch.json says otherwise. The engine prepares
+    // the modules for it as they load, so it is decided at launch.
+    if (typeof config.editAndContinue !== 'boolean') {
+        config.editAndContinue = isEnabled('editAndContinue');
     }
 
     const isDll = path.extname(program).toLowerCase() === '.dll';

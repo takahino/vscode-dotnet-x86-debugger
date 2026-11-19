@@ -38,6 +38,8 @@ export interface LaunchArguments {
     enableStepFiltering?: boolean;
     /** Options for evaluating expressions. */
     expressionEvaluationOptions?: ExpressionEvaluationOptions;
+    /** Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `dotnetX86.applyChanges` can update them. The extension sets it from `dotnetX86.editAndContinue.enabled` unless launch.json does. */
+    editAndContinue?: boolean;
     /** Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed). */
     __dotnetFramework?: boolean;
 }
@@ -139,6 +141,35 @@ export interface HandleStatsResponse {
     types: { name: string; count: number; live: number; field: string }[];
 }
 
+/**
+ * Edit and Continue: applies the saved edits of the program's C# sources to the program, without restarting (launched,
+ * not attached; a Debug build). The engine has its helper (`encdelta`, run with the Roslyn of the installed .NET SDK 9+)
+ * build the change against the sources as they were when debugging started, applies it with `ApplyChanges`, and moves
+ * breakpoints to the new code. Changed methods run the new code from their next call; a method that is running moves
+ * to the new code at its next statement unless that statement's line was changed. A running program is paused for the
+ * moment it takes. Also sends `dotnetX86.changesApplied`, `output` and, when applied, `invalidated`.
+ * @request dotnetX86.applyChanges
+ * @handledBy engine
+ */
+export interface ApplyChangesArguments {
+    /** The saved files (paths as the PDB has them; the relay maps them through `sourceFileMap`). Omitted: every source of the program. */
+    files?: string[];
+}
+
+/** @response dotnetX86.applyChanges */
+export interface ApplyChangesResponse {
+    /** `applied`, `noChanges`, `rude` (an edit that needs a restart), `errors` (compile errors) or `failed`. */
+    status: 'applied' | 'noChanges' | 'rude' | 'errors' | 'failed';
+    /** One-line summary for the user. */
+    message: string;
+    /** The modules changed and how many methods each. */
+    applied: { module: string; methods: number }[];
+    /** Where an edit cannot be applied, or a compile error (line and column from 1). */
+    problems: { file: string; line: number; column: number; message: string }[];
+    /** Further reasons, one per line (the helper could not start, the source changed before debugging, ...). */
+    details: string[];
+}
+
 /* ----------------------------------------------------------------------------------------------------------------
  * Custom requests the relay handles (never sent to the engine)
  * ---------------------------------------------------------------------------------------------------------------- */
@@ -236,6 +267,25 @@ export interface McpEndpointEventBody {
     token: string;
     /** Process id of the engine. */
     enginePid: number;
+}
+
+/**
+ * The result of applying code changes (Edit and Continue), whether VS Code asked (`dotnetX86.applyChanges`) or an AI
+ * client did through MCP (`debug_apply_changes`). The body is the response of `dotnetX86.applyChanges`.
+ * @event dotnetX86.changesApplied
+ * @sentBy engine
+ */
+export interface ChangesAppliedEventBody {
+    /** As in the response of `dotnetX86.applyChanges`. */
+    status: 'applied' | 'noChanges' | 'rude' | 'errors' | 'failed';
+    /** One-line summary. */
+    message: string;
+    /** The modules changed. */
+    applied: { module: string; methods: number }[];
+    /** Problems with their place. */
+    problems: { file: string; line: number; column: number; message: string }[];
+    /** Further reasons. */
+    details: string[];
 }
 
 /**
@@ -378,6 +428,8 @@ export const ENGINE_CAPABILITIES = {
     supportTerminateDebuggee: true,
     supportsTerminateRequest: true,
     supportsCancelRequest: true,
+    /** Custom: `dotnetX86.applyChanges` (Edit and Continue). */
+    dotnetX86SupportsApplyChanges: true,
     exceptionBreakpointFilters: [{ filter: 'all', label: 'all' }, { filter: 'user-unhandled', label: 'user-unhandled' }],
 } as const;
 

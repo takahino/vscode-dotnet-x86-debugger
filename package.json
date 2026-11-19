@@ -76,7 +76,8 @@
     "onCommand:dotnetX86.exportEventTrace",
     "onCommand:dotnetX86.captureEvidence",
     "onCommand:dotnetX86.copyMcpConnectionSettings",
-    "onCommand:dotnetX86.registerMcpServer"
+    "onCommand:dotnetX86.registerMcpServer",
+    "onCommand:dotnetX86.applyCodeChanges"
   ],
   "contributes": {
     "mcpServerDefinitionProviders": [
@@ -471,9 +472,22 @@
         "command": "dotnetX86.registerMcpServer",
         "title": "%command.registerMcpServer%",
         "category": ".NET x86"
+      },
+      {
+        "command": "dotnetX86.applyCodeChanges",
+        "title": "%command.applyCodeChanges%",
+        "category": ".NET x86",
+        "icon": "$(flame)"
       }
     ],
     "menus": {
+      "debug/toolbar": [
+        {
+          "command": "dotnetX86.applyCodeChanges",
+          "when": "debugType == 'dotnet-x86' && config.dotnetX86.editAndContinue.enabled",
+          "group": "navigation@100"
+        }
+      ],
       "debug/watch/context": [
         {
           "command": "dotnetX86.viewAsImage",
@@ -776,6 +790,10 @@
         {
           "command": "dotnetX86.captureEvidence",
           "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.evidence.enabled"
+        },
+        {
+          "command": "dotnetX86.applyCodeChanges",
+          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.editAndContinue.enabled"
         }
       ],
       "editor/context": [
@@ -1193,6 +1211,17 @@
           "default": true,
           "description": "%config.evidence.enabled%"
         },
+        "dotnetX86.editAndContinue.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%config.editAndContinue.enabled%"
+        },
+        "dotnetX86.editAndContinue.applyOnSave": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%config.editAndContinue.applyOnSave%"
+        },
         "dotnetX86.evidence.folder": {
           "type": "string",
           "default": "evidence",
@@ -1278,6 +1307,11 @@
                 "type": "boolean",
                 "default": true,
                 "description": "%debugger.launch.enableStepFiltering%"
+              },
+              "editAndContinue": {
+                "type": "boolean",
+                "default": true,
+                "description": "%debugger.launch.editAndContinue%"
               },
               "expressionEvaluationOptions": {
                 "type": "object",

@@ -395,5 +395,8 @@
   "Could not register the MCP server with {0}: {1}": "MCP サーバーを {0} に登録できませんでした: {1}",
   "Registered {0} with {1}. Restart the client or start a new session there to see the tools.": "{0} を {1} に登録しました。ツールを使うには、クライアントを起動し直すか、新しいセッションを始めてください。",
   "{0} was not found on PATH.": "{0} が PATH に見つかりません。",
-  "{0} was left as it was: it could not be read ({1}).": "{0} は読めなかったので、変えていません（{1}）。"
+  "{0} was left as it was: it could not be read ({1}).": "{0} は読めなかったので、変えていません（{1}）。",
+  "Start debugging a .NET x86 program to apply code changes.": "コードの変更を適用するには、.NET x86 のプログラムのデバッグを始めてください。",
+  "Could not apply the code changes: {0}": "コードの変更を適用できませんでした: {0}",
+  "Show Details": "詳細を表示"
 }

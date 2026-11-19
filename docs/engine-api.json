@@ -51,6 +51,10 @@
         "$ref": "#/definitions/ExpressionEvaluationOptions",
         "description": "Options for evaluating expressions."
       },
+      "editAndContinue": {
+        "type": "boolean",
+        "description": "Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `dotnetX86.applyChanges` can update them. The extension sets it from `dotnetX86.editAndContinue.enabled` unless launch.json does."
+      },
       "__dotnetFramework": {
         "type": "boolean",
         "description": "Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed)."
@@ -93,6 +97,104 @@
     ]
   },
   "messages": [
+    {
+      "name": "dotnetX86.applyChanges",
+      "kind": "request",
+      "side": "engine",
+      "description": "Edit and Continue: applies the saved edits of the program's C# sources to the program, without restarting (launched, not attached; a Debug build). The engine has its helper (`encdelta`, run with the Roslyn of the installed .NET SDK 9+) build the change against the sources as they were when debugging started, applies it with `ApplyChanges`, and moves breakpoints to the new code. Changed methods run the new code from their next call; a method that is running moves to the new code at its next statement unless that statement's line was changed. A running program is paused for the moment it takes. Also sends `dotnetX86.changesApplied`, `output` and, when applied, `invalidated`.",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The saved files (paths as the PDB has them; the relay maps them through `sourceFileMap`). Omitted: every source of the program."
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "noChanges",
+              "rude",
+              "errors",
+              "failed"
+            ],
+            "description": "`applied`, `noChanges`, `rude` (an edit that needs a restart), `errors` (compile errors) or `failed`."
+          },
+          "message": {
+            "type": "string",
+            "description": "One-line summary for the user."
+          },
+          "applied": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "module": {
+                  "type": "string"
+                },
+                "methods": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "module",
+                "methods"
+              ]
+            },
+            "description": "The modules changed and how many methods each."
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "number"
+                },
+                "column": {
+                  "type": "number"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "file",
+                "line",
+                "column",
+                "message"
+              ]
+            },
+            "description": "Where an edit cannot be applied, or a compile error (line and column from 1)."
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Further reasons, one per line (the helper could not start, the source changed before debugging, ...)."
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "applied",
+          "problems",
+          "details"
+        ]
+      }
+    },
     {
       "name": "dotnetX86.freezeThread",
       "kind": "request",
@@ -317,6 +419,92 @@
         },
         "required": [
           "types"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.changesApplied",
+      "kind": "event",
+      "side": "engine",
+      "description": "The result of applying code changes (Edit and Continue), whether VS Code asked (`dotnetX86.applyChanges`) or an AI client did through MCP (`debug_apply_changes`). The body is the response of `dotnetX86.applyChanges`.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "noChanges",
+              "rude",
+              "errors",
+              "failed"
+            ],
+            "description": "As in the response of `dotnetX86.applyChanges`."
+          },
+          "message": {
+            "type": "string",
+            "description": "One-line summary."
+          },
+          "applied": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "module": {
+                  "type": "string"
+                },
+                "methods": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "module",
+                "methods"
+              ]
+            },
+            "description": "The modules changed."
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "number"
+                },
+                "column": {
+                  "type": "number"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "file",
+                "line",
+                "column",
+                "message"
+              ]
+            },
+            "description": "Problems with their place."
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Further reasons."
+          }
+        },
+        "required": [
+          "status",
+          "message",
+          "applied",
+          "problems",
+          "details"
         ]
       }
     },
@@ -960,6 +1148,7 @@
     "supportTerminateDebuggee": true,
     "supportsTerminateRequest": true,
     "supportsCancelRequest": true,
+    "dotnetX86SupportsApplyChanges": true,
     "exceptionBreakpointFilters": [
       {
         "filter": "all",

@@ -24,7 +24,8 @@ export type Feature =
     | 'exceptionLog'
     | 'sqlLog'
     | 'eventTrace'
-    | 'evidence';
+    | 'evidence'
+    | 'editAndContinue';
 
 export function isEnabled(feature: Feature, scope?: vscode.Uri): boolean {
     return vscode.workspace.getConfiguration(`dotnetX86.${feature}`, scope).get<boolean>('enabled', true);

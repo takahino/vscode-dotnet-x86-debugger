@@ -39,6 +39,7 @@
   "debugger.expressionEvaluationOptions": "Options for evaluating expressions in the Variables, Watch and Debug Console views.",
   "debugger.expressionEvaluationOptions.allowImplicitFuncEval": "Call property getters and ToString() to show values (when false, properties are shown unevaluated and can be expanded to evaluate them).",
   "debugger.launch.enableStepFiltering": "Step over properties and operators.",
+  "debugger.launch.editAndContinue": "Edit and Continue: apply the edits of the program's C# sources while debugging, without restarting (a Debug build started by the debugger; needs the .NET SDK 9 or later). Defaults to the setting dotnetX86.editAndContinue.enabled.",
   "debugger.attach.processId": "Process ID to attach to. Use ${command:pickProcess} to pick from a list.",
   "debugger.attach.justMyCode": "Only debug user code.",
   "debugger.attach.enableStepFiltering": "Step over properties and operators.",
@@ -148,6 +149,9 @@
   "command.captureEvidence": "Capture Evidence",
   "command.copyMcpConnectionSettings": "Copy MCP Connection Settings for AI Clients",
   "command.registerMcpServer": "Register the MCP Server with AI Clients",
+  "command.applyCodeChanges": "Apply Code Changes",
+  "config.editAndContinue.enabled": "Edit and Continue: while debugging a Debug build started by the debugger, apply the edits of its C# sources without restarting (**.NET x86: Apply Code Changes**, or on save). Changed methods run the new code from their next call, and a method that is stopped moves to the new code at its next statement. Needs the .NET SDK 9 or later (its compiler builds the change). Takes effect from the next debug session.",
+  "config.editAndContinue.applyOnSave": "Apply the edit when a C# source of the program being debugged is saved.",
   "config.evidence.enabled": "Capture Evidence (Command Palette, Call Stack and WinForms Controls views): pictures of the open forms, the control values, the variables, the call stack and the SQL since the previous capture, saved as Markdown and PNG files.",
   "config.evidence.folder": "Folder where Capture Evidence saves (a new sub folder per capture). A relative path is taken from the workspace folder."
 }

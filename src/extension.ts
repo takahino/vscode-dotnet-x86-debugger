@@ -9,6 +9,7 @@ import { DataBindingsPanel } from './dataBindings';
 import { isEnabled } from './features';
 import { DapTraceFactory } from './dapTrace';
 import { Decompiler } from './decompiler';
+import { EditAndContinue } from './editAndContinue';
 import { ExceptionLog } from './exceptionLog';
 import { ExceptionSettings } from './exceptionSettings';
 import { CSharpInlineValuesProvider } from './inlineValues';
@@ -82,6 +83,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const environmentCheck = new EnvironmentCheck(context.extensionPath);
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
     const mcp = new McpIntegration(context.extensionPath, output);
+    const editAndContinue = new EditAndContinue(output);
 
     context.subscriptions.push(
         output,
@@ -189,6 +191,8 @@ export function activate(context: vscode.ExtensionContext): void {
         mcp,
         vscode.commands.registerCommand('dotnetX86.copyMcpConnectionSettings', () => mcp.copyConnectionSettings()),
         vscode.commands.registerCommand('dotnetX86.registerMcpServer', () => mcp.registerWithClients()),
+        editAndContinue,
+        vscode.commands.registerCommand('dotnetX86.applyCodeChanges', () => editAndContinue.applyCommand()),
     );
 }
 
