@@ -625,13 +625,13 @@ Source Link があればソースも付いてきます。どのサーバーに�
 | `breakpoint_set` / `_remove` / `_list` / `_clear`、`trace_log` | 行やメソッドへの条件つきのブレークポイント、トレースポイント（止めずにログ） |
 | `debug_continue`、`debug_step`、`debug_pause`、`debug_terminate` | 実行とステップ |
 | `threads`、`stack_trace`、`variables`、`evaluate`、`set_variable`、`exception_info`、`source_context`、`modules`、`debug_output` | 止まったプログラムを読む |
-| `ui_tree`、`ui_find` | プログラムの窓とコントロール: 種類、名前（`Control.Name`）、文字、状態、画面と窓の中の座標 |
+| `ui_tree`、`ui_find` | プログラムの窓とコントロール（WinForms、WPF）: 種類、名前（`Control.Name`、`x:Name`）、文字、状態、画面と窓の中の座標 |
 | `ui_screenshot` | 窓、コントロール、プログラムのすべての窓、画面全体の PNG。止まっている間も撮れ、コントロールに番号の印も付けられます |
 | `ui_invoke`、`ui_set_text`、`ui_select`、`ui_toggle` | ボタンを押す、文字を入れる、項目を選ぶ、チェックする（マウスを動かさずに） |
 | `ui_keys`、`ui_mouse`、`ui_window`、`ui_wait_for` | 座標での実際のキーとマウスの入力、窓を前に出す・動かす・閉じる、コントロールを待つ |
 
-操作でイベント ハンドラーのブレークポイントに当たると、止まった場所を返します。コントロールを 1 つずつ読めるのは WinForms です。
-ほかの UI フレームワークでは、窓・座標・画像の単位で使えます。エンジンは 127.0.0.1 だけで待ち、セッションごとのトークン
+操作でイベント ハンドラーのブレークポイントに当たると、止まった場所を返します。コントロールを 1 つずつ読めるのは WinForms と WPF です
+（名前は `Control.Name` / `x:Name`）。ほかの UI フレームワークでは、窓・座標・画像の単位で使えます。エンジンは 127.0.0.1 だけで待ち、セッションごとのトークン
 （プロファイルの `%LOCALAPPDATA%` に置きます）が要り、Web ページからの要求は断ります。
 
 ## 制限事項

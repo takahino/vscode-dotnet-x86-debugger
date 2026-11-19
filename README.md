@@ -653,13 +653,13 @@ operate windows in your program.
 | `breakpoint_set` / `_remove` / `_list` / `_clear`, `trace_log` | Breakpoints on lines or methods, with conditions; tracepoints (log without stopping) |
 | `debug_continue`, `debug_step`, `debug_pause`, `debug_terminate` | Run and step |
 | `threads`, `stack_trace`, `variables`, `evaluate`, `set_variable`, `exception_info`, `source_context`, `modules`, `debug_output` | Read the stopped program |
-| `ui_tree`, `ui_find` | The program's windows and controls: kind, name (`Control.Name`), text, state, screen and window coordinates |
+| `ui_tree`, `ui_find` | The program's windows and controls (WinForms, WPF): kind, name (`Control.Name`, `x:Name`), text, state, screen and window coordinates |
 | `ui_screenshot` | A PNG of a window, a control, every window of the program or the screen — also while stopped, optionally with numbered marks on the controls |
 | `ui_invoke`, `ui_set_text`, `ui_select`, `ui_toggle` | Press a button, type into a box, pick an item, check a box — without moving the mouse |
 | `ui_keys`, `ui_mouse`, `ui_window`, `ui_wait_for` | Real keyboard and mouse input at coordinates; bring forward, move or close a window; wait for a control |
 
-An action that hits a breakpoint in an event handler returns where it stopped. Controls are read one by one for WinForms;
-for other UI frameworks the tools work on windows, coordinates and screenshots. The engine listens on 127.0.0.1 only, with
+An action that hits a breakpoint in an event handler returns where it stopped. Controls are read one by one for WinForms
+and WPF (names are `Control.Name` / `x:Name`); for other UI frameworks the tools work on windows, coordinates and screenshots. The engine listens on 127.0.0.1 only, with
 a token made for each session (kept in your profile's `%LOCALAPPDATA%`), and refuses requests from web pages.
 
 ## Limitations
