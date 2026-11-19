@@ -89,7 +89,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | [Change control properties](#winforms-controls-view) | Change text, visibility, colors, position or size while stopped | WinForms Controls right-click |
 | [Data bindings](#winforms-controls-view) ★ | Every binding of a form with the value on each side; unconnected bindings and unsaved edits flagged | WinForms Controls view |
 | **AI** | | |
-| [AI clients (MCP)](#ai-clients-mcp) ★ | Let Copilot, Cursor, Claude Code and other AI assistants debug the session and operate the program's windows | Setting / Command Palette |
+| [AI clients (MCP)](#ai-clients-mcp) ★ | Let Copilot, Cursor, Claude Code, Codex and other AI assistants debug the session and operate the program's windows | Setting / Command Palette |
 
 ## Requirements
 
@@ -638,15 +638,25 @@ operate windows in your program.
   *.NET x86 Debugger*. Enable its tools in the chat's tool picker.
 - **Cursor's AI**: in Cursor, while the setting is on, the server *dotnet-x86* is registered for you (Cursor's MCP
   extension API). Enable it in Cursor's MCP settings if Cursor asks.
-- **Claude Code** (the terminal and the Claude Code extension): run **.NET x86: Register the MCP Server with Claude Code**
-  once. It runs `claude mcp add --scope user dotnet-x86 -- "<path>" --mcp-connect` for you; if `claude` is not on the
-  PATH, the command is copied for you to run in a terminal. Claude Code sessions started afterwards see the tools.
-- **GitHub Copilot CLI and other AI clients**: run **.NET x86: Copy MCP Connection Settings for AI Clients**,
-  pick the client and use what was copied:
-  - Claude Code: the same `claude mcp add` command, to run yourself.
-  - GitHub Copilot CLI: run `copilot mcp add dotnet-x86 -- "<path>" --mcp-connect` in a terminal (or add the same command
-    to `~/.copilot/mcp-config.json` as a `"type": "local"` server).
-  - Others (Claude Desktop, Cursor's `mcp.json`, ...): an `mcpServers` JSON for the client's settings.
+- **Other AI clients**: run **.NET x86: Register the MCP Server with AI Clients** once and pick the clients (the ones
+  found on this PC come first). Clients started afterwards (or their new sessions) see the server *dotnet-x86*.
+
+  | Client | How it is registered |
+  |---|---|
+  | Claude Code (the terminal and the Claude Code extension) | `claude mcp add --scope user dotnet-x86 -- "<path>" --mcp-connect` |
+  | GitHub Copilot CLI | `copilot mcp add dotnet-x86 -- "<path>" --mcp-connect` |
+  | Codex (the CLI, the IDE extension and the ChatGPT app) | `[mcp_servers.dotnet-x86]` in `~/.codex/config.toml` |
+  | Gemini CLI | `mcpServers` in `~/.gemini/settings.json` |
+  | Claude Desktop | `mcpServers` in `claude_desktop_config.json` (the Microsoft Store app's own copy when installed from there) |
+  | Cursor (when you debug in VS Code) | `mcpServers` in `~/.cursor/mcp.json` |
+  | Windsurf | `mcpServers` in `~/.codeium/windsurf/mcp_config.json` |
+  | LM Studio | `mcpServers` in `~/.lmstudio/mcp.json` |
+  | opencode | `mcp` in `~/.config/opencode/opencode.json` |
+
+  A settings file keeps everything else; the file before the change is saved beside it as `<file>.dotnet-x86.bak`. A file
+  with comments is left alone (the command says so and offers to copy the settings). For a client not in the list, or to
+  register by hand, run **.NET x86: Copy MCP Connection Settings for AI Clients**: it copies the command or the settings
+  for the client you pick, or an `mcpServers` JSON, which most clients read.
 
   `<path>` is a copy of the debug engine in `%LOCALAPPDATA%\dotnet-x86dbg\bin` that the extension keeps up to date, so you
   register it once. It connects to the latest debug session started in VS Code or Cursor (with the setting on); while there is none,

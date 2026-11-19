@@ -24,7 +24,7 @@
   "config.title": ".NET x86 Debugger",
   "config.debuggerPath": "x86 のプログラムに使う、ほかの x86 のデバッグエンジン (dotnet-x86dbg.exe、または netcoredbg.exe) のフルパス。空の場合は同梱のものを使います。64bit のプログラムには、常に同梱の x64 版を使います。",
   "config.trace": "トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、デバッグエンジンのログファイルも出力します（パスは同パネルに表示）。",
-  "config.mcp.enabled": "AI クライアントから MCP（Model Context Protocol）でデバッグできるようにします。デバッグのセッションごとに、127.0.0.1 でセッションごとのトークン付きで待ち受けます。VS Code の AI には MCP サーバー「.NET x86 Debugger」、Cursor の AI には「dotnet-x86」として見えます。Claude Code からは **.NET x86: MCP サーバーを Claude Code に登録**、GitHub Copilot CLI などからは **.NET x86: AI クライアント用の MCP の接続設定をコピー** を実行してください。ツールは式を評価し、プログラムの画面を操作するので、使うときだけオンにしてください。",
+  "config.mcp.enabled": "AI クライアントから MCP（Model Context Protocol）でデバッグできるようにします。デバッグのセッションごとに、127.0.0.1 でセッションごとのトークン付きで待ち受けます。VS Code の AI には MCP サーバー「.NET x86 Debugger」、Cursor の AI には「dotnet-x86」として見えます。Claude Code、GitHub Copilot CLI、Codex、Claude Desktop などからは **.NET x86: MCP サーバーを AI クライアントに登録** を実行してください。ツールは式を評価し、プログラムの画面を操作するので、使うときだけオンにしてください。",
   "config.memoryGraph.autoOpen": "dotnet-x86 のデバッグ開始時にメモリ / CPU グラフを自動で開きます。",
   "config.dump.maxDepth": "「変数をダンプ」「式をダンプ」で展開する入れ子の最大の深さ。",
   "config.dump.maxNodes": "「変数をダンプ」「式をダンプ」は、この数の値を集めた時点でそれ以上の展開をやめます。Form のような大きなオブジェクトは 1 階層に数百のメンバーがあります。",
@@ -147,7 +147,7 @@
   "config.eventTrace.enabled": "イベントのトレース（WinForms コントロール ビュー）とイベント トレース ビュー: どのコントロールのどのイベントがどの順で発火したかを、止まらずに記録します。オフにするとコマンドとビューを隠します。",
   "command.captureEvidence": "エビデンスを取得",
   "command.copyMcpConnectionSettings": "AI クライアント用の MCP の接続設定をコピー",
-  "command.registerMcpWithClaudeCode": "MCP サーバーを Claude Code に登録",
+  "command.registerMcpServer": "MCP サーバーを AI クライアントに登録",
   "config.evidence.enabled": "エビデンスの取得（コマンド パレット・コール スタック・WinForms コントロール ビュー）: 開いているフォームの画像、コントロールの値、変数、コール スタック、前回の取得以降の SQL を、Markdown と PNG で保存します。",
   "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。"
 }

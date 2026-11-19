@@ -1,9 +1,10 @@
 import { exec, execFile } from 'child_process';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
-import { CursorServerConfig, MCP_CLIENTS, MCP_ENDPOINT_EVENT, MCP_SERVER_NAME, McpClient, McpEndpoint, claudeCodeRegistration, connectionSettings, cursorServer, parseEndpoint } from './mcpCore';
+import { AI_CLIENTS, AiClient, ClientFolders, CursorServerConfig, MCP_ENDPOINT_EVENT, MCP_SERVER_NAME, McpEndpoint, Registration, cursorServer, genericSettings, parseEndpoint } from './mcpCore';
 
 /** Id of the contributed MCP server definition provider (package.json `mcpServerDefinitionProviders`). */
 const PROVIDER_ID = 'dotnetX86.mcp';
@@ -29,8 +30,8 @@ function cursorMcpApi(): CursorMcpApi | undefined {
  * MCP for AI clients, a thin layer over the engine:
  * - VS Code's AI: the endpoint of the latest debug session is offered as an HTTP MCP server (VS Code 1.101 and later).
  * - Cursor's AI: while the setting is on, the engine's stdio bridge (`--mcp-connect`) is registered through Cursor's API.
- * - Claude Code: a command registers the bridge with the `claude` CLI.
- * - Other AI clients (GitHub Copilot CLI, any `mcpServers` JSON): a command copies the settings that start the bridge.
+ * - Other AI clients (Claude Code, GitHub Copilot CLI, Codex, Claude Desktop, ...): a command registers the bridge with
+ *   the clients picked (their own command, or their settings file); another copies the settings to register by hand.
  * The bridge is a copy of the engine at a fixed path, so registrations survive extension updates (the extension's own
  * folder changes with every version).
  */
@@ -125,58 +126,86 @@ export class McpIntegration implements vscode.Disposable {
         return [new vscode.McpHttpServerDefinition('.NET x86 Debugger', vscode.Uri.parse(latest.url), { Authorization: `Bearer ${latest.token}` }, String(latest.enginePid))];
     }
 
+    /** AI clients offered by the commands. In Cursor, Cursor itself is left out: the API registration covers it. */
+    private clients(): readonly AiClient[] {
+        return AI_CLIENTS.filter((client) => !(this.cursor && client.id === 'cursor'));
+    }
+
     /** Command: copies the connection settings for the chosen AI client. */
     async copyConnectionSettings(): Promise<void> {
-        const labels: Record<McpClient, { label: string; detail: string }> = {
-            claudeCode: { label: 'Claude Code', detail: vscode.l10n.t('A command to run in a terminal') },
-            copilotCli: { label: 'GitHub Copilot CLI', detail: vscode.l10n.t('A command to run in a terminal') },
-            json: { label: vscode.l10n.t('Other (mcpServers JSON)'), detail: vscode.l10n.t('For Cursor, Claude Desktop and other clients configured with an mcpServers JSON') },
-        };
-        const picked = await vscode.window.showQuickPick(
-            MCP_CLIENTS.map((client) => ({ ...labels[client], client })),
-            { placeHolder: vscode.l10n.t('Which AI client will debug through MCP?') },
-        );
-        if (!picked) {
-            return;
-        }
         const bridge = this.updateBridge();
         if (!bridge) {
             return;
         }
-        await vscode.env.clipboard.writeText(connectionSettings(picked.client, bridge));
+        const folders = clientFolders();
+        const items = this.clients().map((client) => {
+            const registration = client.registration(bridge, folders);
+            const detail = registration.kind === 'cli' ? vscode.l10n.t('A command to run in a terminal') : vscode.l10n.t('Add to {0}', registration.file);
+            return { label: client.label, detail, settings: client.settings(bridge) };
+        });
+        items.push({ label: vscode.l10n.t('Other (mcpServers JSON)'), detail: vscode.l10n.t('For other clients configured with an mcpServers JSON'), settings: genericSettings(bridge) });
+        const picked = await vscode.window.showQuickPick(items, { placeHolder: vscode.l10n.t('Which AI client will debug through MCP?') });
+        if (!picked) {
+            return;
+        }
+        await vscode.env.clipboard.writeText(picked.settings);
         await reportWithSetting(vscode.l10n.t('Copied the settings for {0}. The AI client can use a debug session started in VS Code.', picked.label));
     }
 
     /**
-     * Command: registers the bridge with Claude Code (user scope) by running the `claude` CLI. Without the CLI on PATH,
-     * the command line is copied instead.
+     * Command: registers the bridge with the AI clients picked, with each client's own command or by adding the entry
+     * to its settings file. Nothing is registered without being picked: these are other programs' settings.
      */
-    async registerWithClaudeCode(): Promise<void> {
+    async registerWithClients(): Promise<void> {
         const bridge = this.updateBridge();
         if (!bridge) {
             return;
         }
-        const commands = claudeCodeRegistration(bridge);
-        if (!(await onPath('claude'))) {
-            await vscode.env.clipboard.writeText(commands.add);
-            vscode.window.showWarningMessage(vscode.l10n.t('The Claude Code CLI (claude) was not found on PATH. The command that registers the server was copied: run it in a terminal where claude works.'));
+        const folders = clientFolders();
+        const candidates = await Promise.all(
+            this.clients().map(async (client) => {
+                const registration = client.registration(bridge, folders);
+                return { client, registration, found: await isInstalled(registration) };
+            }),
+        );
+        candidates.sort((a, b) => Number(b.found) - Number(a.found)); // the stable sort keeps the list's order otherwise
+        const picked = await vscode.window.showQuickPick(
+            candidates.map((candidate) => ({
+                label: candidate.client.label,
+                description: candidate.found ? vscode.l10n.t('found') : vscode.l10n.t('not found'),
+                detail: candidate.registration.kind === 'cli' ? candidate.registration.add : candidate.registration.file,
+                candidate,
+            })),
+            { canPickMany: true, placeHolder: vscode.l10n.t('Register the MCP server with which AI clients?') },
+        );
+        if (!picked || picked.length === 0) {
             return;
         }
-        const failure = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Registering the MCP server with Claude Code...') },
+        const results = await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Registering the MCP server...') },
             async () => {
-                await run(commands.remove); // fails when there is no earlier registration
-                const added = await run(commands.add);
-                return added.ok ? undefined : added.output;
+                const done: { label: string; failure?: string; settings: string }[] = [];
+                for (const { candidate } of picked) {
+                    done.push({ label: candidate.client.label, failure: await register(candidate.registration), settings: candidate.client.settings(bridge) });
+                }
+                return done;
             },
         );
-        if (failure !== undefined) {
-            this.output.appendLine(`[mcp] ${commands.add}\n${failure}`);
-            vscode.window.showErrorMessage(vscode.l10n.t('Could not register the MCP server with Claude Code: {0}', failure.trim()));
-            return;
+        const registered = results.filter((r) => r.failure === undefined).map((r) => r.label);
+        for (const result of results) {
+            this.output.appendLine(`[mcp] ${result.label}: ${result.failure ?? 'registered'}`);
         }
-        this.output.appendLine(`[mcp] registered with Claude Code: ${commands.add}`);
-        await reportWithSetting(vscode.l10n.t('Registered {0} with Claude Code for all projects. Claude Code sessions started from now on can use a debug session started in VS Code.', MCP_SERVER_NAME));
+        for (const failed of results.filter((r) => r.failure !== undefined)) {
+            const copy = vscode.l10n.t('Copy the Settings');
+            void vscode.window.showErrorMessage(vscode.l10n.t('Could not register the MCP server with {0}: {1}', failed.label, failed.failure ?? ''), copy).then((answer) => {
+                if (answer === copy) {
+                    void vscode.env.clipboard.writeText(failed.settings);
+                }
+            });
+        }
+        if (registered.length > 0) {
+            await reportWithSetting(vscode.l10n.t('Registered {0} with {1}. Restart the client or start a new session there to see the tools.', MCP_SERVER_NAME, registered.join(', ')));
+        }
     }
 
     /**
@@ -230,6 +259,66 @@ async function reportWithSetting(message: string): Promise<void> {
     }
 }
 
+/**
+ * The folders the clients' settings are in. Claude Desktop installed from the Microsoft Store reads its own copy of
+ * `%APPDATA%\Claude` (in its package's LocalCache), so a change to `%APPDATA%\Claude` would not reach it.
+ */
+function clientFolders(): ClientFolders {
+    const home = process.env.USERPROFILE ?? os.homedir();
+    const appData = process.env.APPDATA ?? path.join(home, 'AppData', 'Roaming');
+    const localAppData = process.env.LOCALAPPDATA ?? path.join(home, 'AppData', 'Local');
+    let claudeDesktop = path.join(appData, 'Claude');
+    try {
+        const packages = path.join(localAppData, 'Packages');
+        const storeApp = fs.readdirSync(packages).find((name) => /^Claude_[a-z0-9]+$/i.test(name));
+        const storeCopy = storeApp && path.join(packages, storeApp, 'LocalCache', 'Roaming', 'Claude');
+        if (storeCopy && fs.existsSync(storeCopy)) {
+            claudeDesktop = storeCopy;
+        }
+    } catch {
+        // no Packages folder: not the Store app
+    }
+    return { home, claudeDesktop };
+}
+
+/** Whether a client looks installed: its command is on PATH, or its settings folder exists. */
+async function isInstalled(registration: Registration): Promise<boolean> {
+    return registration.kind === 'cli' ? onPath(registration.program) : fs.existsSync(path.dirname(registration.file));
+}
+
+/** Registers the bridge; the reason when it could not. */
+async function register(registration: Registration): Promise<string | undefined> {
+    if (registration.kind === 'cli') {
+        if (!(await onPath(registration.program))) {
+            return vscode.l10n.t('{0} was not found on PATH.', registration.program);
+        }
+        await run(registration.remove); // fails when there is no earlier registration
+        const added = await run(registration.add);
+        return added.ok ? undefined : added.output.trim();
+    }
+    const file = registration.file;
+    try {
+        const text = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : undefined;
+        let updated: string;
+        try {
+            updated = registration.update(text);
+        } catch (e) {
+            return vscode.l10n.t('{0} was left as it was: it could not be read ({1}).', file, (e as Error).message);
+        }
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        if (text !== undefined) {
+            fs.writeFileSync(`${file}.dotnet-x86.bak`, text, 'utf8'); // the settings before this change, to undo it by hand
+        }
+        // Written beside and renamed over: the client never reads a half-written file.
+        const temporary = `${file}.dotnet-x86.tmp`;
+        fs.writeFileSync(temporary, updated, 'utf8');
+        fs.renameSync(temporary, file);
+        return undefined;
+    } catch (e) {
+        return (e as Error).message;
+    }
+}
+
 /** Whether a command is found on PATH (`where.exe`; the CLI may be an .exe or an npm .cmd shim). */
 function onPath(command: string): Promise<boolean> {
     return new Promise((resolve) => execFile('where.exe', [command], { windowsHide: true }, (error) => resolve(!error)));
@@ -237,7 +326,7 @@ function onPath(command: string): Promise<boolean> {
 
 /**
  * Runs a command line through the shell (an npm-installed `claude` is a .cmd shim, which needs one). The lines are built
- * by `claudeCodeRegistration`: fixed words and the quoted bridge path.
+ * from `AI_CLIENTS`: fixed words and the quoted bridge path.
  */
 function run(commandLine: string): Promise<{ ok: boolean; output: string }> {
     return new Promise((resolve) =>

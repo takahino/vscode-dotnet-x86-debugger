@@ -88,7 +88,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | [コントロールのプロパティ変更](#winforms-コントロール-ビュー) | 停止中にテキスト・表示・色・位置・サイズを変える | WinForms コントロールの右クリック |
 | [データ バインディング](#winforms-コントロール-ビュー) ★ | フォームのバインディングを両側の値つきで一覧。つながっていないものや書き戻していない編集を表示 | WinForms コントロール ビュー |
 | **AI** | | |
-| [AI から使う（MCP）](#ai-から使うmcp) ★ | Copilot、Cursor、Claude Code などの AI が、セッションをデバッグし、プログラムの画面を操作する | 設定／コマンド パレット |
+| [AI から使う（MCP）](#ai-から使うmcp) ★ | Copilot、Cursor、Claude Code、Codex などの AI が、セッションをデバッグし、プログラムの画面を操作する | 設定／コマンド パレット |
 
 ## 必要なもの
 
@@ -611,15 +611,26 @@ Source Link があればソースも付いてきます。どのサーバーに�
   *.NET x86 Debugger* として見えます。チャットのツールの選択で、そのツールを有効にしてください。
 - **Cursor の AI**: Cursor の中では、設定がオンの間、MCP サーバー *dotnet-x86* が自動で登録されます（Cursor の MCP の
   拡張 API）。Cursor が尋ねたら、Cursor の MCP の設定で有効にしてください。
-- **Claude Code**（ターミナルと Claude Code の拡張）: **.NET x86: MCP サーバーを Claude Code に登録** を一度実行します。
-  `claude mcp add --scope user dotnet-x86 -- "<パス>" --mcp-connect` を代わりに実行します。`claude` が PATH に無ければ、
-  コマンドをコピーするので、ターミナルで実行してください。そのあとに始めた Claude Code のセッションから使えます。
-- **GitHub Copilot CLI などの AI クライアント**: **.NET x86: AI クライアント用の MCP の接続設定をコピー** を実行し、
-  クライアントを選んで、コピーされたものを使います。
-  - Claude Code: 同じ `claude mcp add` のコマンド（自分で実行する場合）。
-  - GitHub Copilot CLI: ターミナルで `copilot mcp add dotnet-x86 -- "<パス>" --mcp-connect` を実行します
-    （または、同じコマンドを `~/.copilot/mcp-config.json` に `"type": "local"` のサーバーとして書きます）。
-  - その他（Claude Desktop、Cursor の `mcp.json` など）: クライアントの設定に書く `mcpServers` の JSON。
+- **ほかの AI クライアント**: **.NET x86: MCP サーバーを AI クライアントに登録** を一度実行し、クライアントを選びます
+  （この PC で見つかったものが先に並びます）。そのあとに起動した（または新しく始めた）セッションから、MCP サーバー
+  *dotnet-x86* が見えます。
+
+  | クライアント | 登録のしかた |
+  |---|---|
+  | Claude Code（ターミナルと Claude Code の拡張） | `claude mcp add --scope user dotnet-x86 -- "<パス>" --mcp-connect` |
+  | GitHub Copilot CLI | `copilot mcp add dotnet-x86 -- "<パス>" --mcp-connect` |
+  | Codex（CLI、IDE の拡張、ChatGPT のアプリ） | `~/.codex/config.toml` の `[mcp_servers.dotnet-x86]` |
+  | Gemini CLI | `~/.gemini/settings.json` の `mcpServers` |
+  | Claude Desktop | `claude_desktop_config.json` の `mcpServers`（Microsoft Store から入れたものは、そのアプリ用の写し） |
+  | Cursor（VS Code でデバッグするとき） | `~/.cursor/mcp.json` の `mcpServers` |
+  | Windsurf | `~/.codeium/windsurf/mcp_config.json` の `mcpServers` |
+  | LM Studio | `~/.lmstudio/mcp.json` の `mcpServers` |
+  | opencode | `~/.config/opencode/opencode.json` の `mcp` |
+
+  設定ファイルは、ほかの中身をそのまま残します。変える前のファイルは、隣に `<ファイル>.dotnet-x86.bak` として残します。
+  コメントのあるファイルは変えません（そう知らせ、設定のコピーを勧めます）。一覧に無いクライアントや、手で登録したいときは、
+  **.NET x86: AI クライアント用の MCP の接続設定をコピー** を実行します。選んだクライアント用のコマンドか設定、または
+  多くのクライアントが読む `mcpServers` の JSON をコピーします。
 
   `<パス>` は、拡張が `%LOCALAPPDATA%\dotnet-x86dbg\bin` に置いて最新に保つデバッグ エンジンの写しなので、登録は一度で済みます。
   VS Code か Cursor で（設定をオンにして）始めた最新のデバッグのセッションにつながります。セッションが無い間は、ツールがそう答えます。

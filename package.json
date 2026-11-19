@@ -76,7 +76,7 @@
     "onCommand:dotnetX86.exportEventTrace",
     "onCommand:dotnetX86.captureEvidence",
     "onCommand:dotnetX86.copyMcpConnectionSettings",
-    "onCommand:dotnetX86.registerMcpWithClaudeCode"
+    "onCommand:dotnetX86.registerMcpServer"
   ],
   "contributes": {
     "mcpServerDefinitionProviders": [
@@ -468,8 +468,8 @@
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.registerMcpWithClaudeCode",
-        "title": "%command.registerMcpWithClaudeCode%",
+        "command": "dotnetX86.registerMcpServer",
+        "title": "%command.registerMcpServer%",
         "category": ".NET x86"
       }
     ],

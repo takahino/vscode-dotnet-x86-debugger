@@ -24,8 +24,9 @@
 - New: **AI clients (MCP)** — with `dotnetX86.mcp.enabled` (off by default), AI assistants debug the session through MCP: breakpoints,
   stepping, the stack, variables and expressions, and the program's windows (list, screenshot even while stopped, buttons, text,
   mouse and keys). VS Code's AI sees it as the MCP server *.NET x86 Debugger* (VS Code 1.101 or later) and Cursor's AI as *dotnet-x86*;
-  **Register the MCP Server with Claude Code** registers it with Claude Code; **Copy MCP Connection Settings for AI Clients**
-  gives the settings for GitHub Copilot CLI and other clients.
+  **Register the MCP Server with AI Clients** registers it with Claude Code, GitHub Copilot CLI, Codex, Gemini CLI, Claude
+  Desktop, Cursor, Windsurf, LM Studio and opencode; **Copy MCP Connection Settings for AI Clients** gives the settings for
+  others.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
   and from netcoredbg.
 - Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow

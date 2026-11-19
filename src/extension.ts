@@ -188,7 +188,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.exportSessionReport', () => sessionReport.export()),
         mcp,
         vscode.commands.registerCommand('dotnetX86.copyMcpConnectionSettings', () => mcp.copyConnectionSettings()),
-        vscode.commands.registerCommand('dotnetX86.registerMcpWithClaudeCode', () => mcp.registerWithClaudeCode()),
+        vscode.commands.registerCommand('dotnetX86.registerMcpServer', () => mcp.registerWithClients()),
     );
 }
 
