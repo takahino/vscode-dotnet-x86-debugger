@@ -217,9 +217,10 @@ function order(m: Message): number {
     return (m.kind === 'request' ? 0 : 2) + (m.side === 'engine' ? 0 : 1);
 }
 
-/** The requests dotnet-x86dbg's adapter dispatches (`"command" =>` in src/adapter.rs), to compare with the document. */
+/** The requests dotnet-x86dbg dispatches (`"command" =>` in src/debugger/engine.rs; src/adapter.rs before the engine was split), to compare with the document. */
 export function engineDispatchedRequests(engineRepo: string): string[] {
-    const text = fs.readFileSync(path.join(engineRepo, 'src', 'adapter.rs'), 'utf8');
+    const file = [path.join(engineRepo, 'src', 'debugger', 'engine.rs'), path.join(engineRepo, 'src', 'adapter.rs')].find((f) => fs.existsSync(f)) ?? path.join(engineRepo, 'src', 'debugger', 'engine.rs');
+    const text = fs.readFileSync(file, 'utf8');
     return [...text.matchAll(/^\s*"([A-Za-z][\w.]*)"\s*=>/gm)].map((m) => m[1]).sort();
 }
 

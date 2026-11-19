@@ -1,7 +1,7 @@
 // Writes docs/engine-api.json and docs/engine-api.html from src/engineProtocol.ts (run `npm run compile` first).
 //   node scripts/gen-engine-api.js                 write the files
 //   node scripts/gen-engine-api.js --check         fail when the files are not up to date
-//   node scripts/gen-engine-api.js --engine <dir>  also compare with the requests dotnet-x86dbg dispatches (src/adapter.rs)
+//   node scripts/gen-engine-api.js --engine <dir>  also compare with the requests dotnet-x86dbg dispatches (src/debugger/engine.rs)
 const fs = require('fs');
 const path = require('path');
 const { buildEngineApi, renderJson, renderHtml, engineDispatchedRequests, documentedEngineRequests } = require('../out/tools/engineApiDoc');
