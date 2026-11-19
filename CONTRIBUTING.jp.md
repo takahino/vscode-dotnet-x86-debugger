@@ -18,7 +18,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..
 ```
 
 `scripts\build-engine.ps1` は、エンジンの `build.ps1`（`dbgshim.dll` を版を固定して NuGet から取得します）を呼び、両方のビット数の
-`dotnet-x86dbg.exe` と `dbgshim.dll` を写します。ICorDebug はプログラムと同じビット数のデバッガーでしか動かないため、拡張はセッションごとに
+`dotnet-x86dbg.exe`、`dbgshim.dll`、エディット コンティニュの補助（`encdelta\`。C#。.NET SDK 9 以降でビルドし、デバッグのときは利用者の SDK の Roslyn で動きます）を写します。ICorDebug はプログラムと同じビット数のデバッガーでしか動かないため、拡張はセッションごとに
 x86 か x64 のエンジンを起動します（`configProvider.ts` の `ENGINE_ARCHITECTURE_KEY`）。CI とリリースのワークフローは
 `<owner>/dotnet-x86dbg` を `ENGINE_REF` の版で取得します。エンジンを新しくするときは、`ENGINE_REF` を書き換えて E2E テストを実行します。
 

@@ -27,6 +27,11 @@
   **Register the MCP Server with AI Clients** registers it with Claude Code, GitHub Copilot CLI, Codex, Gemini CLI, Claude
   Desktop, Cursor, Windsurf, LM Studio and opencode; **Copy MCP Connection Settings for AI Clients** gives the settings for
   others.
+- New: **Edit and Continue** — edit a C# source while debugging and save (or **Apply Code Changes** on the debug toolbar): the
+  change is applied without restarting. Changed methods run the new code from their next call, and a stopped method moves to
+  the new code at its next statement; methods, fields, properties and classes can be added (.NET and .NET Framework). Changes
+  that need a restart and compile errors are shown with their place. Debug builds started by the debugger; needs the .NET SDK 9
+  or later. `dotnetX86.editAndContinue.enabled`, `dotnetX86.editAndContinue.applyOnSave`; MCP tool `debug_apply_changes`.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
   and from netcoredbg.
 - Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow

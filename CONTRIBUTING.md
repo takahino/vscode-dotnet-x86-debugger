@@ -18,7 +18,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..
 ```
 
 `scripts\build-engine.ps1` runs the engine's `build.ps1` (which also fetches `dbgshim.dll` from NuGet, version pinned) and copies
-`dotnet-x86dbg.exe` and `dbgshim.dll` of both bitnesses. ICorDebug needs a debugger of the program's bitness, so the extension
+`dotnet-x86dbg.exe`, `dbgshim.dll` and the Edit and Continue helper (`encdelta\`, C#; built with the .NET SDK 9 or later, and run at debug time with the Roslyn of the user's SDK) of both bitnesses. ICorDebug needs a debugger of the program's bitness, so the extension
 starts the x86 or the x64 engine per session (`ENGINE_ARCHITECTURE_KEY` in `configProvider.ts`). CI and the release workflow
 check out `<owner>/dotnet-x86dbg` at `ENGINE_REF`; to move to a newer engine, change `ENGINE_REF` and run the E2E tests.
 

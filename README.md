@@ -57,6 +57,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | [Parallel Stacks, freezing threads](#parallel-stacks-and-freezing-threads) | All threads' stacks merged; keep a thread suspended | Call Stack right-click |
 | [Step Into Target](#step-into-specific) | Step into one chosen call of the line | Editor right-click |
 | [Set next statement](#set-next-statement) | Run a line again or skip lines | Editor right-click |
+| [Edit and Continue](#edit-and-continue) | Change the code while debugging and keep going, without restarting | Save, or the debug toolbar |
 | [Return values](#return-values) | See what the methods you stepped over returned | Variables / Autos |
 | **Looking at values** | | |
 | [Inline values, DebuggerDisplay, Autos](#inline-values) | Values next to the code and in compact views | Editor / Autos view |
@@ -199,6 +200,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a log of the debug engine (its path is shown there). |
 | `dotnetX86.mcp.enabled` | Let AI clients debug through MCP (default `false`; see [AI clients](#ai-clients-mcp)). |
+| `dotnetX86.editAndContinue.enabled` | Edit and Continue (default `true`; see [Edit and Continue](#edit-and-continue)). |
+| `dotnetX86.editAndContinue.applyOnSave` | Apply the edit when a C# source is saved while debugging (default `true`). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
@@ -339,6 +342,25 @@ Constructors (`new T(...)`) are not listed.
 While stopped, right-click a line of the method that is executing and choose **Jump to Cursor** (Set Next Statement)
 to move execution there: run a line again or skip lines, as in Visual Studio. Lines outside the executing method,
 or moving into / out of a catch / finally block, are refused.
+
+#### Edit and Continue
+
+While debugging, edit a C# source of the program and save it: the change is applied to the running program, without
+restarting and without losing its state (the screens you went through, the data loaded). The command **.NET x86: Apply
+Code Changes** (the flame on the debug toolbar) does the same for every source.
+
+- Changed methods run the new code from their next call. A method that is stopped (or running) moves to the new code at
+  its next statement, keeping its local variables; when the line it is on was itself changed, it finishes with the old
+  code and the next call runs the new one (the Debug Console says so).
+- You can change method, constructor and property bodies, and add methods, fields, properties and classes (.NET and .NET
+  Framework). Lines that moved keep their breakpoints and stack lines right.
+- Changes that cannot be applied while running, such as a changed signature, a removed member, a changed field
+  initializer, or a type's base class, are refused with the file and line; restart then (**Restart Debugging** on the
+  message). Compile errors are shown the same way and nothing is applied.
+- It works for a Debug build started by the debugger (not attached), with portable PDBs. The change is built by the
+  compiler of the installed **.NET SDK 9 or later**, from the sources as they were when debugging started.
+- Settings: `dotnetX86.editAndContinue.enabled` (off: modules load as before) and `dotnetX86.editAndContinue.applyOnSave`.
+  AI clients apply their edits with the MCP tool `debug_apply_changes`.
 
 #### Return values
 
@@ -691,7 +713,7 @@ The extension brings the main features of the Visual Studio debugger to VS Code,
 
 | Feature | Here |
 |---|---|
-| Edit and Continue / Hot Reload | Not available: rebuild and start again. |
+| Edit and Continue / Hot Reload | Available for a Debug build started by the debugger; the .NET SDK 9 or later builds the change. Not for attached processes; some edits of `async` methods, iterators and lambdas are refused. |
 | Mixed-mode (native and managed) debugging | Managed code only; native frames do not appear in the call stack. |
 | Hardware data breakpoints | [Break on Value Change](#break-on-value-change) is emulated on the lines that assign the variable (changes through `ref` and the like are missed). |
 | Windows PDBs (full / pdbonly) | Not readable: use Portable or embedded PDBs. |
