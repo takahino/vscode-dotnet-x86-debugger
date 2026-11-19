@@ -89,7 +89,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | [Change control properties](#winforms-controls-view) | Change text, visibility, colors, position or size while stopped | WinForms Controls right-click |
 | [Data bindings](#winforms-controls-view) ★ | Every binding of a form with the value on each side; unconnected bindings and unsaved edits flagged | WinForms Controls view |
 | **AI** | | |
-| [AI clients (MCP)](#ai-clients-mcp) ★ | Let Copilot, Claude Code and other AI assistants debug the session and operate the program's windows | Setting / Command Palette |
+| [AI clients (MCP)](#ai-clients-mcp) ★ | Let Copilot, Cursor, Claude Code and other AI assistants debug the session and operate the program's windows | Setting / Command Palette |
 
 ## Requirements
 
@@ -636,15 +636,20 @@ operate windows in your program.
 
 - **VS Code's AI** (Copilot Chat in agent mode, VS Code 1.101 or later): while debugging, the session is the MCP server
   *.NET x86 Debugger*. Enable its tools in the chat's tool picker.
-- **Claude Code, GitHub Copilot CLI and other AI clients**: run **.NET x86: Copy MCP Connection Settings for AI Clients**,
+- **Cursor's AI**: in Cursor, while the setting is on, the server *dotnet-x86* is registered for you (Cursor's MCP
+  extension API). Enable it in Cursor's MCP settings if Cursor asks.
+- **Claude Code** (the terminal and the Claude Code extension): run **.NET x86: Register the MCP Server with Claude Code**
+  once. It runs `claude mcp add --scope user dotnet-x86 -- "<path>" --mcp-connect` for you; if `claude` is not on the
+  PATH, the command is copied for you to run in a terminal. Claude Code sessions started afterwards see the tools.
+- **GitHub Copilot CLI and other AI clients**: run **.NET x86: Copy MCP Connection Settings for AI Clients**,
   pick the client and use what was copied:
-  - Claude Code: run `claude mcp add --scope user dotnet-x86 -- "<path>" --mcp-connect` in a terminal.
+  - Claude Code: the same `claude mcp add` command, to run yourself.
   - GitHub Copilot CLI: run `copilot mcp add dotnet-x86 -- "<path>" --mcp-connect` in a terminal (or add the same command
     to `~/.copilot/mcp-config.json` as a `"type": "local"` server).
-  - Others (Cursor, Claude Desktop, ...): an `mcpServers` JSON for the client's settings.
+  - Others (Claude Desktop, Cursor's `mcp.json`, ...): an `mcpServers` JSON for the client's settings.
 
   `<path>` is a copy of the debug engine in `%LOCALAPPDATA%\dotnet-x86dbg\bin` that the extension keeps up to date, so you
-  register it once. It connects to the latest debug session started in VS Code (with the setting on); while there is none,
+  register it once. It connects to the latest debug session started in VS Code or Cursor (with the setting on); while there is none,
   its tools say so.
 
 | Tools | What they do |

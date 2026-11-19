@@ -385,5 +385,9 @@
   "Enable MCP": "MCP をオンにする",
   "Copied the settings for {0}. The AI client can use a debug session started in VS Code.": "{0} 用の設定をコピーしました。VS Code で始めたデバッグのセッションを、その AI クライアントから使えます。",
   "MCP is off (dotnetX86.mcp.enabled): turn it on for debug sessions to accept AI clients.": "MCP がオフです（dotnetX86.mcp.enabled）。AI クライアントから使うには、オンにしてください。",
-  "Could not put the MCP bridge at {0}: {1}": "MCP の橋渡し（{0}）を置けませんでした: {1}"
+  "Could not put the MCP bridge at {0}: {1}": "MCP の橋渡し（{0}）を置けませんでした: {1}",
+  "The Claude Code CLI (claude) was not found on PATH. The command that registers the server was copied: run it in a terminal where claude works.": "Claude Code の CLI（claude）が PATH に見つかりません。登録するコマンドをコピーしたので、claude が使えるターミナルで実行してください。",
+  "Registering the MCP server with Claude Code...": "MCP サーバーを Claude Code に登録しています...",
+  "Could not register the MCP server with Claude Code: {0}": "MCP サーバーを Claude Code に登録できませんでした: {0}",
+  "Registered {0} with Claude Code for all projects. Claude Code sessions started from now on can use a debug session started in VS Code.": "{0} を Claude Code に（すべてのプロジェクト用に）登録しました。これから始める Claude Code のセッションから、VS Code で始めたデバッグのセッションを使えます。"
 }

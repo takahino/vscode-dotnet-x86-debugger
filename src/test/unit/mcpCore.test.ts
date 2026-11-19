@@ -2,7 +2,7 @@
 
 import * as assert from 'assert/strict';
 import { describe, it } from 'node:test';
-import { connectionSettings, parseEndpoint } from '../../mcpCore';
+import { claudeCodeRegistration, connectionSettings, cursorServer, parseEndpoint } from '../../mcpCore';
 
 describe('parseEndpoint', () => {
     it('reads the endpoint the engine announces', () => {
@@ -30,5 +30,22 @@ describe('connectionSettings', () => {
 
     it('writes an mcpServers JSON for other clients', () => {
         assert.deepEqual(JSON.parse(connectionSettings('json', engine)), { mcpServers: { 'dotnet-x86': { command: engine, args: ['--mcp-connect'] } } });
+    });
+});
+
+describe('claudeCodeRegistration', () => {
+    const engine = 'C:\\Users\\a b\\AppData\\Local\\dotnet-x86dbg\\bin\\dotnet-x86dbg.exe';
+
+    it('removes the earlier entry of the user scope, then adds the bridge there', () => {
+        assert.deepEqual(claudeCodeRegistration(engine), {
+            remove: 'claude mcp remove --scope user dotnet-x86',
+            add: `claude mcp add --scope user dotnet-x86 -- "${engine}" --mcp-connect`,
+        });
+    });
+});
+
+describe('cursorServer', () => {
+    it('registers the bridge as a stdio server, which needs no token', () => {
+        assert.deepEqual(cursorServer('C:\\x\\dotnet-x86dbg.exe'), { name: 'dotnet-x86', server: { command: 'C:\\x\\dotnet-x86dbg.exe', args: ['--mcp-connect'], env: {} } });
     });
 });

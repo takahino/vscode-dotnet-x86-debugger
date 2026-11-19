@@ -56,3 +56,26 @@ export function connectionSettings(client: McpClient, engine: string): string {
             return JSON.stringify({ mcpServers: { [MCP_SERVER_NAME]: { command: engine, args: ['--mcp-connect'] } } }, null, 2);
     }
 }
+
+/**
+ * Commands that register the bridge with Claude Code for every project (the terminal and the Claude Code extension read
+ * the same user settings). `claude mcp add` refuses a name that is already there, so the old entry is removed first; the
+ * removal fails harmlessly when there is none.
+ */
+export function claudeCodeRegistration(engine: string): { remove: string; add: string } {
+    return { remove: `claude mcp remove --scope user ${MCP_SERVER_NAME}`, add: connectionSettings('claudeCode', engine) };
+}
+
+/** A server for Cursor's extension API (`vscode.cursor.mcp.registerServer`). */
+export interface CursorServerConfig {
+    name: string;
+    server: { command: string; args: string[]; env: Record<string, string> };
+}
+
+/**
+ * The bridge as a stdio server for Cursor. Not the session's HTTP endpoint: Cursor has been reported to drop the headers
+ * (the token) of servers registered this way, and the bridge needs no token and finds the latest session by itself.
+ */
+export function cursorServer(engine: string): CursorServerConfig {
+    return { name: MCP_SERVER_NAME, server: { command: engine, args: ['--mcp-connect'], env: {} } };
+}

@@ -88,7 +88,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | [コントロールのプロパティ変更](#winforms-コントロール-ビュー) | 停止中にテキスト・表示・色・位置・サイズを変える | WinForms コントロールの右クリック |
 | [データ バインディング](#winforms-コントロール-ビュー) ★ | フォームのバインディングを両側の値つきで一覧。つながっていないものや書き戻していない編集を表示 | WinForms コントロール ビュー |
 | **AI** | | |
-| [AI から使う（MCP）](#ai-から使うmcp) ★ | Copilot や Claude Code などの AI が、セッションをデバッグし、プログラムの画面を操作する | 設定／コマンド パレット |
+| [AI から使う（MCP）](#ai-から使うmcp) ★ | Copilot、Cursor、Claude Code などの AI が、セッションをデバッグし、プログラムの画面を操作する | 設定／コマンド パレット |
 
 ## 必要なもの
 
@@ -609,15 +609,20 @@ Source Link があればソースも付いてきます。どのサーバーに�
 
 - **VS Code の AI**（エージェント モードの Copilot Chat。VS Code 1.101 以降）: デバッグ中は、セッションが MCP サーバー
   *.NET x86 Debugger* として見えます。チャットのツールの選択で、そのツールを有効にしてください。
-- **Claude Code、GitHub Copilot CLI などの AI クライアント**: **.NET x86: AI クライアント用の MCP の接続設定をコピー** を実行し、
+- **Cursor の AI**: Cursor の中では、設定がオンの間、MCP サーバー *dotnet-x86* が自動で登録されます（Cursor の MCP の
+  拡張 API）。Cursor が尋ねたら、Cursor の MCP の設定で有効にしてください。
+- **Claude Code**（ターミナルと Claude Code の拡張）: **.NET x86: MCP サーバーを Claude Code に登録** を一度実行します。
+  `claude mcp add --scope user dotnet-x86 -- "<パス>" --mcp-connect` を代わりに実行します。`claude` が PATH に無ければ、
+  コマンドをコピーするので、ターミナルで実行してください。そのあとに始めた Claude Code のセッションから使えます。
+- **GitHub Copilot CLI などの AI クライアント**: **.NET x86: AI クライアント用の MCP の接続設定をコピー** を実行し、
   クライアントを選んで、コピーされたものを使います。
-  - Claude Code: ターミナルで `claude mcp add --scope user dotnet-x86 -- "<パス>" --mcp-connect` を実行します。
+  - Claude Code: 同じ `claude mcp add` のコマンド（自分で実行する場合）。
   - GitHub Copilot CLI: ターミナルで `copilot mcp add dotnet-x86 -- "<パス>" --mcp-connect` を実行します
     （または、同じコマンドを `~/.copilot/mcp-config.json` に `"type": "local"` のサーバーとして書きます）。
-  - その他（Cursor、Claude Desktop など）: クライアントの設定に書く `mcpServers` の JSON。
+  - その他（Claude Desktop、Cursor の `mcp.json` など）: クライアントの設定に書く `mcpServers` の JSON。
 
   `<パス>` は、拡張が `%LOCALAPPDATA%\dotnet-x86dbg\bin` に置いて最新に保つデバッグ エンジンの写しなので、登録は一度で済みます。
-  VS Code で（設定をオンにして）始めた最新のデバッグのセッションにつながります。セッションが無い間は、ツールがそう答えます。
+  VS Code か Cursor で（設定をオンにして）始めた最新のデバッグのセッションにつながります。セッションが無い間は、ツールがそう答えます。
 
 | ツール | 内容 |
 |---|---|
