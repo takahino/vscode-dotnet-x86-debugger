@@ -52,6 +52,7 @@ main a { color: var(--engine); }
 <a class="sub proxy" href="#request-dotnetX86-pauseForFreeze">req dotnetX86.pauseForFreeze</a>
 <a class="sub proxy" href="#request-dotnetX86-setEventTrace">req dotnetX86.setEventTrace</a>
 <a class="sub proxy" href="#request-dotnetX86-setExceptionTypes">req dotnetX86.setExceptionTypes</a>
+<a class="sub engine" href="#event-dotnetX86-mcpEndpoint">evt dotnetX86.mcpEndpoint</a>
 <a class="sub engine" href="#event-output">evt output</a>
 <a class="sub engine" href="#event-process">evt process</a>
 <a class="sub engine" href="#event-stopped">evt stopped</a>
@@ -74,6 +75,8 @@ main a { color: var(--engine); }
 <table><thead><tr><th>Argument / variable</th><th>Meaning</th></tr></thead>
 <tr><td><code>--interpreter=vscode</code></td><td>DAP over stdin / stdout (the default; accepted for netcoredbg compatibility).</td></tr>
 <tr><td><code>--log=&lt;file&gt;</code></td><td>Writes the DAP traffic and the engine's own log, flushed per line (setting <code>dotnetX86.trace</code>).</td></tr>
+<tr><td><code>--mcp-listen</code></td><td>Also accepts MCP on 127.0.0.1 with a token, and sends <code>dotnetX86.mcpEndpoint</code> (setting <code>dotnetX86.mcp.enabled</code>). The tools drive this session; VS Code follows through the usual DAP events.</td></tr>
+<tr><td><code>--mcp-connect[=&lt;enginePid&gt;]</code></td><td>Not used by the extension: run by AI clients outside VS Code, a stdio MCP server that relays to the latest engine started with <code>--mcp-listen</code> (or the given one).</td></tr>
 <tr><td><code>NETCOREDBG_SYMBOL_DIRS</code></td><td>Environment variable: folders (separated by <code>;</code>) searched first for PDBs, by module MVID (decompiled and downloaded symbols).</td></tr>
 </table>
 
@@ -370,6 +373,25 @@ main a { color: var(--engine); }
 }</pre></details>
 <h4>response body</h4>
 <p class="none">None (an empty body; <code>success</code> tells the result).</p>
+</section>
+<section class="op" id="event-dotnetX86-mcpEndpoint"><h3><span class="verb event">event</span> <code>dotnetX86.mcpEndpoint</code> <span class="badge engine">engine</span></h3>
+<p>Sent once after <code>initialize</code> when the engine was started with <code>--mcp-listen</code> (setting <code>dotnetX86.mcp.enabled</code>): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to <code>%LOCALAPPDATA%\dotnet-x86dbg\mcp\&lt;enginePid&gt;.json</code> (removed on exit), where <code>dotnet-x86dbg --mcp-connect</code> finds it for AI clients outside VS Code.</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>url</code></td><td>string</td><td><code>http://127.0.0.1:&lt;port&gt;/mcp</code>. Requests from a web page (an <code>Origin</code> other than localhost or VS Code) are refused.</td></tr>
+<tr><td><code>token</code></td><td>string</td><td>Required as <code>Authorization: Bearer &lt;token&gt;</code>; made anew for every engine.</td></tr>
+<tr><td><code>enginePid</code></td><td>number</td><td>Process id of the engine.</td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;dotnetX86.mcpEndpoint&quot;,
+  &quot;body&quot;: {
+    &quot;url&quot;: &quot;&quot;,
+    &quot;token&quot;: &quot;&quot;,
+    &quot;enginePid&quot;: 0
+  }
+}</pre></details>
 </section>
 <section class="op" id="event-output"><h3><span class="verb event">event</span> <code>output</code> <span class="badge engine">engine</span></h3>
 <p>Standard DAP <code>output</code>. Categories: <code>stdout</code> / <code>stderr</code> (the program's output, decoded as UTF-8 while it is valid, else in the console code page), <code>console</code> (Debug.WriteLine and the engine's notes), <code>important</code> (an evaluation that had to run the other threads to finish).</p>

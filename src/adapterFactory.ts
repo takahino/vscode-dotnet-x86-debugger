@@ -7,6 +7,7 @@ import { isEnabled } from './features';
 import { DapProxy, ExceptionFilterText, ProxyOptions } from './dapProxy';
 import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
 import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
+import { isMcpEnabled } from './mcp';
 import { findWriteLines } from './writeSites';
 
 /** Labels for the debug engine's exception filters, shown in the Breakpoints view. */
@@ -236,6 +237,10 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         this.output.appendLine(`[session] using ${debugger_}`);
         const env = isNetcoredbg(debugger_) ? debuggerEnvironment(session.configuration) : {};
         const args = ['--interpreter=vscode'];
+        // MCP: the engine also listens on 127.0.0.1 (with a token) for AI clients and announces where (see McpIntegration).
+        if (isMcpEnabled() && !isNetcoredbg(debugger_)) {
+            args.push('--mcp-listen');
+        }
         // With tracing on, the engine also writes its own log (flushed per line, so it survives a hang or crash).
         if (vscode.workspace.getConfiguration('dotnetX86').get<boolean>('trace')) {
             fs.mkdirSync(this.logDir, { recursive: true });

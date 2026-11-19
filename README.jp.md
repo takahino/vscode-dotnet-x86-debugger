@@ -87,6 +87,8 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | [コントロールのイベントで停止](#winforms-コントロール-ビュー) ★ | イベントのハンドラーが、コードのどこにあっても停止 | WinForms コントロールの右クリック |
 | [コントロールのプロパティ変更](#winforms-コントロール-ビュー) | 停止中にテキスト・表示・色・位置・サイズを変える | WinForms コントロールの右クリック |
 | [データ バインディング](#winforms-コントロール-ビュー) ★ | フォームのバインディングを両側の値つきで一覧。つながっていないものや書き戻していない編集を表示 | WinForms コントロール ビュー |
+| **AI** | | |
+| [AI から使う（MCP）](#ai-から使うmcp) ★ | Copilot や Claude Code などの AI が、セッションをデバッグし、プログラムの画面を操作する | 設定／コマンド パレット |
 
 ## 必要なもの
 
@@ -195,6 +197,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `dotnetX86.sourceLink.enabled` | PDB の Source Link の対応表からソースをダウンロードします（既定値 `true`）。 |
 | `dotnetX86.symbolServers` | **シンボルをダウンロード** が使うシンボル サーバー（既定は NuGet と Microsoft）。 |
 | `dotnetX86.trace` | トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、デバッグ エンジンのログファイルも出力します（パスは同パネルに表示）。 |
+| `dotnetX86.mcp.enabled` | AI クライアントから MCP でデバッグできるようにします（既定値 `false`。[AI から使う](#ai-から使うmcp) を参照）。 |
 | `dotnetX86.stepHistory.enabled` | 停止のたびにステップ履歴ビューへ記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.captureLocals` | 記録した例外ごとに、コールスタックとローカル変数も記録します（既定値 `true`）。 |
 | `dotnetX86.exceptionLog.enabled` | スローされたすべての例外を、止まらずに例外ログ ビューへ記録します（既定値 `true`）。 |
@@ -596,6 +599,40 @@ Source Link があればソースも付いてきます。どのサーバーに�
 
 値は停止した時点のものです。次に停止したら **更新** を押してください。各行のボタンで、そのコントロールを画面上で強調表示できます。
 コントロールの多いフォームは数秒かかります（コントロール 1 個あたり約 5 回の式の評価）。進捗の通知からキャンセルできます。
+
+### AI から使う（MCP）
+
+`dotnetX86.mcp.enabled` をオンにすると、VS Code で始めたデバッグを、AI が MCP（Model Context Protocol）で操作できます。
+ブレークポイントを置く、続行・ステップする、コール スタック・変数・式を読む、に加えて、プログラムの画面を操作して不具合を再現し、
+止まった場所を調べられます。実行とデバッグのビューも AI の操作についてきます。利用者と AI のブレークポイントは互いに消しません。
+ツールはプログラムの中で式を評価し、画面を操作するので、既定はオフです。
+
+- **VS Code の AI**（エージェント モードの Copilot Chat。VS Code 1.101 以降）: デバッグ中は、セッションが MCP サーバー
+  *.NET x86 Debugger* として見えます。チャットのツールの選択で、そのツールを有効にしてください。
+- **Claude Code、GitHub Copilot CLI などの AI クライアント**: **.NET x86: AI クライアント用の MCP の接続設定をコピー** を実行し、
+  クライアントを選んで、コピーされたものを使います。
+  - Claude Code: ターミナルで `claude mcp add --scope user dotnet-x86 -- "<パス>" --mcp-connect` を実行します。
+  - GitHub Copilot CLI: ターミナルで `copilot mcp add dotnet-x86 -- "<パス>" --mcp-connect` を実行します
+    （または、同じコマンドを `~/.copilot/mcp-config.json` に `"type": "local"` のサーバーとして書きます）。
+  - その他（Cursor、Claude Desktop など）: クライアントの設定に書く `mcpServers` の JSON。
+
+  `<パス>` は、拡張が `%LOCALAPPDATA%\dotnet-x86dbg\bin` に置いて最新に保つデバッグ エンジンの写しなので、登録は一度で済みます。
+  VS Code で（設定をオンにして）始めた最新のデバッグのセッションにつながります。セッションが無い間は、ツールがそう答えます。
+
+| ツール | 内容 |
+|---|---|
+| `debug_status`、`debug_wait_for_stop`、`debug_stop_context` | 止まった場所と理由、周りのソースとローカル変数 |
+| `breakpoint_set` / `_remove` / `_list` / `_clear`、`trace_log` | 行やメソッドへの条件つきのブレークポイント、トレースポイント（止めずにログ） |
+| `debug_continue`、`debug_step`、`debug_pause`、`debug_terminate` | 実行とステップ |
+| `threads`、`stack_trace`、`variables`、`evaluate`、`set_variable`、`exception_info`、`source_context`、`modules`、`debug_output` | 止まったプログラムを読む |
+| `ui_tree`、`ui_find` | プログラムの窓とコントロール: 種類、名前（`Control.Name`）、文字、状態、画面と窓の中の座標 |
+| `ui_screenshot` | 窓、コントロール、プログラムのすべての窓、画面全体の PNG。止まっている間も撮れ、コントロールに番号の印も付けられます |
+| `ui_invoke`、`ui_set_text`、`ui_select`、`ui_toggle` | ボタンを押す、文字を入れる、項目を選ぶ、チェックする（マウスを動かさずに） |
+| `ui_keys`、`ui_mouse`、`ui_window`、`ui_wait_for` | 座標での実際のキーとマウスの入力、窓を前に出す・動かす・閉じる、コントロールを待つ |
+
+操作でイベント ハンドラーのブレークポイントに当たると、止まった場所を返します。コントロールを 1 つずつ読めるのは WinForms です。
+ほかの UI フレームワークでは、窓・座標・画像の単位で使えます。エンジンは 127.0.0.1 だけで待ち、セッションごとのトークン
+（プロファイルの `%LOCALAPPDATA%` に置きます）が要り、Web ページからの要求は断ります。
 
 ## 制限事項
 

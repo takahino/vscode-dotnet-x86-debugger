@@ -74,8 +74,9 @@ export class DapSession {
     private readonly waiters: { match: (m: Message) => boolean; resolve: (m: Message) => void }[] = [];
     private seq = 1;
 
-    constructor(options: ProxyOptions = {}) {
-        this.proxy = new DapProxy(NETCOREDBG, ['--interpreter=vscode'], path.dirname(NETCOREDBG), (m) => this.receive(m as Message), () => undefined, options);
+    /** `engineArgs` are added to the engine's command line (as the extension adds `--mcp-listen`). */
+    constructor(options: ProxyOptions = {}, engineArgs: string[] = []) {
+        this.proxy = new DapProxy(NETCOREDBG, ['--interpreter=vscode', ...engineArgs], path.dirname(NETCOREDBG), (m) => this.receive(m as Message), () => undefined, options);
     }
 
     /** Sends a request; resolves with the whole response (check `success`). */

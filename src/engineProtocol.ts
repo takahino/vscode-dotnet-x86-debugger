@@ -222,6 +222,23 @@ export interface OutputEventBody {
 }
 
 /**
+ * Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `dotnetX86.mcp.enabled`): where
+ * AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS
+ * Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\dotnet-x86dbg\mcp\<enginePid>.json`
+ * (removed on exit), where `dotnet-x86dbg --mcp-connect` finds it for AI clients outside VS Code.
+ * @event dotnetX86.mcpEndpoint
+ * @sentBy engine
+ */
+export interface McpEndpointEventBody {
+    /** `http://127.0.0.1:<port>/mcp`. Requests from a web page (an `Origin` other than localhost or VS Code) are refused. */
+    url: string;
+    /** Required as `Authorization: Bearer <token>`; made anew for every engine. */
+    token: string;
+    /** Process id of the engine. */
+    enginePid: number;
+}
+
+/**
  * Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.
  * @event dotnetX86.trackedValues
  * @sentBy proxy
@@ -368,6 +385,8 @@ export const ENGINE_CAPABILITIES = {
 export const ENGINE_STARTUP: readonly { name: string; notes: string }[] = [
     { name: '--interpreter=vscode', notes: 'DAP over stdin / stdout (the default; accepted for netcoredbg compatibility).' },
     { name: '--log=<file>', notes: 'Writes the DAP traffic and the engine\'s own log, flushed per line (setting `dotnetX86.trace`).' },
+    { name: '--mcp-listen', notes: 'Also accepts MCP on 127.0.0.1 with a token, and sends `dotnetX86.mcpEndpoint` (setting `dotnetX86.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events.' },
+    { name: '--mcp-connect[=<enginePid>]', notes: 'Not used by the extension: run by AI clients outside VS Code, a stdio MCP server that relays to the latest engine started with `--mcp-listen` (or the given one).' },
     { name: 'NETCOREDBG_SYMBOL_DIRS', notes: 'Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (decompiled and downloaded symbols).' },
 ];
 

@@ -88,6 +88,8 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | [Break on a control event](#winforms-controls-view) ★ | Stop in the handlers of a control's event, wherever they are | WinForms Controls right-click |
 | [Change control properties](#winforms-controls-view) | Change text, visibility, colors, position or size while stopped | WinForms Controls right-click |
 | [Data bindings](#winforms-controls-view) ★ | Every binding of a form with the value on each side; unconnected bindings and unsaved edits flagged | WinForms Controls view |
+| **AI** | | |
+| [AI clients (MCP)](#ai-clients-mcp) ★ | Let Copilot, Claude Code and other AI assistants debug the session and operate the program's windows | Setting / Command Palette |
 
 ## Requirements
 
@@ -196,6 +198,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.sourceLink.enabled` | Download sources through the PDB's Source Link map (default `true`). |
 | `dotnetX86.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
 | `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a log of the debug engine (its path is shown there). |
+| `dotnetX86.mcp.enabled` | Let AI clients debug through MCP (default `false`; see [AI clients](#ai-clients-mcp)). |
 | `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
 | `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
 | `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
@@ -622,6 +625,42 @@ ones inside it) to list its **data bindings** in a table, which Visual Studio ca
 
 The values are those of the stop: press **Refresh** after the next one. Each row has a button that highlights its control on
 the screen. A form with many controls takes a few seconds (about 5 evaluations per control); the progress can be cancelled.
+
+### AI clients (MCP)
+
+Turn on `dotnetX86.mcp.enabled` and AI assistants can debug the program you started in VS Code through MCP (Model Context
+Protocol): set breakpoints, continue and step, read the call stack, variables and expressions — and operate the program's
+windows to reproduce a problem, then look at where it stopped. The Run and Debug views follow what the AI does, and your
+breakpoints and the AI's do not remove each other. The setting is off by default: the tools evaluate expressions and
+operate windows in your program.
+
+- **VS Code's AI** (Copilot Chat in agent mode, VS Code 1.101 or later): while debugging, the session is the MCP server
+  *.NET x86 Debugger*. Enable its tools in the chat's tool picker.
+- **Claude Code, GitHub Copilot CLI and other AI clients**: run **.NET x86: Copy MCP Connection Settings for AI Clients**,
+  pick the client and use what was copied:
+  - Claude Code: run `claude mcp add --scope user dotnet-x86 -- "<path>" --mcp-connect` in a terminal.
+  - GitHub Copilot CLI: run `copilot mcp add dotnet-x86 -- "<path>" --mcp-connect` in a terminal (or add the same command
+    to `~/.copilot/mcp-config.json` as a `"type": "local"` server).
+  - Others (Cursor, Claude Desktop, ...): an `mcpServers` JSON for the client's settings.
+
+  `<path>` is a copy of the debug engine in `%LOCALAPPDATA%\dotnet-x86dbg\bin` that the extension keeps up to date, so you
+  register it once. It connects to the latest debug session started in VS Code (with the setting on); while there is none,
+  its tools say so.
+
+| Tools | What they do |
+|---|---|
+| `debug_status`, `debug_wait_for_stop`, `debug_stop_context` | Where the program stopped and why, with the source around it and the locals |
+| `breakpoint_set` / `_remove` / `_list` / `_clear`, `trace_log` | Breakpoints on lines or methods, with conditions; tracepoints (log without stopping) |
+| `debug_continue`, `debug_step`, `debug_pause`, `debug_terminate` | Run and step |
+| `threads`, `stack_trace`, `variables`, `evaluate`, `set_variable`, `exception_info`, `source_context`, `modules`, `debug_output` | Read the stopped program |
+| `ui_tree`, `ui_find` | The program's windows and controls: kind, name (`Control.Name`), text, state, screen and window coordinates |
+| `ui_screenshot` | A PNG of a window, a control, every window of the program or the screen — also while stopped, optionally with numbered marks on the controls |
+| `ui_invoke`, `ui_set_text`, `ui_select`, `ui_toggle` | Press a button, type into a box, pick an item, check a box — without moving the mouse |
+| `ui_keys`, `ui_mouse`, `ui_window`, `ui_wait_for` | Real keyboard and mouse input at coordinates; bring forward, move or close a window; wait for a control |
+
+An action that hits a breakpoint in an event handler returns where it stopped. Controls are read one by one for WinForms;
+for other UI frameworks the tools work on windows, coordinates and screenshots. The engine listens on 127.0.0.1 only, with
+a token made for each session (kept in your profile's `%LOCALAPPDATA%`), and refuses requests from web pages.
 
 ## Limitations
 

@@ -21,6 +21,10 @@
   `DebuggerTypeProxy` of your own types are honored (the original members under Raw View).
 - New: **engine API document** — [docs/engine-api.html](docs/engine-api.html) and its JSON Schema, generated from `src/engineProtocol.ts`
   with `npm run docs:api`; a unit test keeps them up to date.
+- New: **AI clients (MCP)** — with `dotnetX86.mcp.enabled` (off by default), AI assistants debug the session through MCP: breakpoints,
+  stepping, the stack, variables and expressions, and the program's windows (list, screenshot even while stopped, buttons, text,
+  mouse and keys). VS Code's AI sees it as the MCP server *.NET x86 Debugger* (VS Code 1.101 or later); **Copy MCP Connection Settings for
+  AI Clients** gives the settings for Claude Code, GitHub Copilot CLI and other clients.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
   and from netcoredbg.
 - Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow

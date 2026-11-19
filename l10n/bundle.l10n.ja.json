@@ -377,5 +377,13 @@
   "Call stack": "コール スタック",
   "SQL since the previous capture": "前回の取得以降の SQL",
   "Invalid architecture: {0}. Specify \"x86\" or \"x64\".": "architecture の値が正しくありません: {0}。\"x86\" か \"x64\" を指定してください。",
-  "The x64 dotnet.exe was not found. Install the x64 .NET runtime or set DOTNET_ROOT.": "x64 版 dotnet.exe が見つかりません。x64 の .NET ランタイムをインストールするか、DOTNET_ROOT を設定してください。"
+  "The x64 dotnet.exe was not found. Install the x64 .NET runtime or set DOTNET_ROOT.": "x64 版 dotnet.exe が見つかりません。x64 の .NET ランタイムをインストールするか、DOTNET_ROOT を設定してください。",
+  "A command to run in a terminal": "ターミナルで実行するコマンド",
+  "Other (mcpServers JSON)": "その他（mcpServers の JSON）",
+  "For Cursor, Claude Desktop and other clients configured with an mcpServers JSON": "Cursor、Claude Desktop など、mcpServers の JSON で設定するクライアント用",
+  "Which AI client will debug through MCP?": "MCP でデバッグする AI クライアントを選んでください",
+  "Enable MCP": "MCP をオンにする",
+  "Copied the settings for {0}. The AI client can use a debug session started in VS Code.": "{0} 用の設定をコピーしました。VS Code で始めたデバッグのセッションを、その AI クライアントから使えます。",
+  "MCP is off (dotnetX86.mcp.enabled): turn it on for debug sessions to accept AI clients.": "MCP がオフです（dotnetX86.mcp.enabled）。AI クライアントから使うには、オンにしてください。",
+  "Could not put the MCP bridge at {0}: {1}": "MCP の橋渡し（{0}）を置けませんでした: {1}"
 }

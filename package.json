@@ -74,9 +74,16 @@
     "onCommand:dotnetX86.traceControlEvents",
     "onCommand:dotnetX86.clearEventTrace",
     "onCommand:dotnetX86.exportEventTrace",
-    "onCommand:dotnetX86.captureEvidence"
+    "onCommand:dotnetX86.captureEvidence",
+    "onCommand:dotnetX86.copyMcpConnectionSettings"
   ],
   "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "dotnetX86.mcp",
+        "label": ".NET x86 Debugger"
+      }
+    ],
     "walkthroughs": [
       {
         "id": "dotnetX86.gettingStarted",
@@ -453,6 +460,11 @@
         "title": "%command.captureEvidence%",
         "category": ".NET x86",
         "icon": "$(device-camera)"
+      },
+      {
+        "command": "dotnetX86.copyMcpConnectionSettings",
+        "title": "%command.copyMcpConnectionSettings%",
+        "category": ".NET x86"
       }
     ],
     "menus": {
@@ -969,6 +981,11 @@
           "type": "boolean",
           "default": false,
           "description": "%config.trace%"
+        },
+        "dotnetX86.mcp.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "%config.mcp.enabled%"
         },
         "dotnetX86.sourceLink.enabled": {
           "type": "boolean",

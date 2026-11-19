@@ -20,6 +20,7 @@ import { generateLaunchJsonCommand } from './launchSetup';
 import { PerfTips } from './perfTips';
 import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
+import { McpIntegration } from './mcp';
 import { makeObjectIdCommand } from './objectIdCommand';
 import { SessionReport } from './sessionReport';
 import { EventTrace } from './eventTrace';
@@ -80,6 +81,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const heapSnapshots = new HeapSnapshots();
     const environmentCheck = new EnvironmentCheck(context.extensionPath);
     const sessionReport = new SessionReport(stepHistory, exceptionLog, moduleList, valueTracker);
+    const mcp = new McpIntegration(context.extensionPath, output);
 
     context.subscriptions.push(
         output,
@@ -184,6 +186,8 @@ export function activate(context: vscode.ExtensionContext): void {
         sessionReport,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, sessionReport),
         vscode.commands.registerCommand('dotnetX86.exportSessionReport', () => sessionReport.export()),
+        mcp,
+        vscode.commands.registerCommand('dotnetX86.copyMcpConnectionSettings', () => mcp.copyConnectionSettings()),
     );
 }
 
