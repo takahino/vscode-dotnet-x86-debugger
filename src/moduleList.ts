@@ -49,12 +49,13 @@ export class ModuleList implements vscode.TreeDataProvider<ModuleInfo>, vscode.D
 
     getTreeItem(m: ModuleInfo): vscode.TreeItem {
         const item = new vscode.TreeItem(m.name);
-        const loaded = m.symbolStatus === 'Symbols loaded.';
-        item.description = loaded ? vscode.l10n.t('symbols loaded') : vscode.l10n.t('no symbols');
+        const loaded = hasSymbols(m);
+        // The engine decompiles assemblies without symbols when they are needed, and then says so.
+        item.description = m.symbolStatus === DECOMPILED ? vscode.l10n.t('decompiled') : loaded ? vscode.l10n.t('symbols loaded') : vscode.l10n.t('no symbols');
         item.tooltip = `${m.path ?? ''}\n${m.symbolStatus ?? ''}`;
         // Icon shape and the description text both say whether symbols are loaded, not color alone.
         item.iconPath = new vscode.ThemeIcon(loaded ? 'symbol-namespace' : 'library');
-        // Modules without symbols can be decompiled.
+        // Symbols can be downloaded for modules without them.
         item.contextValue = loaded ? 'dotnetX86.module' : 'dotnetX86.module.noSymbols';
         item.resourceUri = m.path ? vscode.Uri.file(m.path) : undefined;
         return item;
@@ -63,8 +64,8 @@ export class ModuleList implements vscode.TreeDataProvider<ModuleInfo>, vscode.D
     /** Assemblies with symbols (usually your own code) first, then by load order. */
     getChildren(): ModuleInfo[] {
         return [...this.modules.values()].sort((a, b) => {
-            const sa = a.symbolStatus === 'Symbols loaded.' ? 0 : 1;
-            const sb = b.symbolStatus === 'Symbols loaded.' ? 0 : 1;
+            const sa = hasSymbols(a) ? 0 : 1;
+            const sb = hasSymbols(b) ? 0 : 1;
             return sa - sb || a.order - b.order;
         });
     }
@@ -85,4 +86,12 @@ export async function revealModule(m?: ModuleInfo): Promise<void> {
     if (m?.path) {
         await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(path.normalize(m.path)));
     }
+}
+
+/** The engine's `symbolStatus` for an assembly it decompiled (the symbols are made from the decompiled C#). */
+export const DECOMPILED = 'Symbols decompiled.';
+
+/** Whether the module has symbols: its own PDB, downloaded ones, or the engine's decompiled ones. */
+export function hasSymbols(m: { symbolStatus?: string }): boolean {
+    return m.symbolStatus === 'Symbols loaded.' || m.symbolStatus === DECOMPILED;
 }

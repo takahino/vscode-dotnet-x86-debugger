@@ -215,7 +215,7 @@
       "name": "dotnetX86.decompile",
       "kind": "request",
       "side": "engine",
-      "description": "Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file, or this request. The C# files are written to `%LOCALAPPDATA%\\dotnet-x86dbg\\decompiled\\<MVID>-v<version>` and the symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in `NETCOREDBG_SYMBOL_DIRS` (**Decompile for Debugging**) take precedence. Methods it cannot turn into C# are shown as IL. Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.",
+      "description": "Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file, or this request. The C# files are written to `%LOCALAPPDATA%\\dotnet-x86dbg\\decompiled\\<MVID>-v<version>` and the symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in `NETCOREDBG_SYMBOL_DIRS` (downloaded ones) take precedence. Methods it cannot turn into C# are shown as IL. Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.",
       "arguments": {
         "type": "object",
         "properties": {
@@ -1306,7 +1306,7 @@
     },
     {
       "name": "NETCOREDBG_SYMBOL_DIRS",
-      "notes": "Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (decompiled and downloaded symbols)."
+      "notes": "Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (downloaded symbols)."
     }
   ],
   "valueConventions": [

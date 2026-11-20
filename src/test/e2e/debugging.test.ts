@@ -2,16 +2,14 @@
 
 import * as assert from 'assert/strict';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { FREEZE_PAUSE_REQUEST } from '../../dapProxy';
-import { decompileAssembly, readDecompiledAssemblies, SYMBOL_DIRS_ENV } from '../../decompilerCore';
 import { MAKE_OBJECT_ID_REQUEST } from '../../objectIds';
 import { SourcePathMapper } from '../../sourceMapCore';
 import { captureValues, findMethodSignature, generateTest, parseFrameName } from '../../testGenCore';
 import { UiFreezeWatch } from '../../uiFreezeWatch';
-import { DECOMPILER, DapSession, IS_NETCOREDBG, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, IS_NETCOREDBG, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 120_000;
 const PROGRAM_CS = appSource('Basic', 'Program.cs');
@@ -172,37 +170,6 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
         assert.match(frame.name, /NoPdbLib\.Pricing\.WithTax\(/);
         assert.match(frame.source.path, /\\dotnet-x86dbg\\decompiled\\.*\\Pricing\.cs$/i);
         assert.ok(fs.readFileSync(frame.source.path, 'utf8').split(/\r?\n/)[frame.line - 1].trim().length > 0, 'the frame\'s line has code');
-    });
-
-    it('steps into a decompiled assembly', { timeout: TIMEOUT, skip: fs.existsSync(DECOMPILER) ? false : 'the decompiler helper is not built' }, async () => {
-        const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-decompiled-'));
-        // The temp folder may be given in its short 8.3 form (C:\Users\RUNNER~1\...) while paths come back long.
-        const realPath = (p: string) => fs.realpathSync.native(p).toLowerCase();
-        let s: DapSession | undefined;
-        try {
-            await decompileAssembly('dotnet', DECOMPILER, path.join(path.dirname(program), 'NoPdbLib.dll'), cache);
-            const mapper = new SourcePathMapper();
-            mapper.addFilePairs(readDecompiledAssemblies(cache).flatMap((a) => a.documents.map((d) => ({ pdbPath: d.name, local: d.file }))));
-            s = session({ sourceMapper: mapper, env: { [SYMBOL_DIRS_ENV]: cache } });
-            const first = s.nextStop();
-            await s.launch(program, { [PROGRAM_CS]: [{ line: line('call-nopdb') }] });
-            const stop = await first;
-            const stepped = s.nextStop();
-            await s.request('stepIn', { threadId: stop.body.threadId });
-            const arrived = await stepped;
-            const frame = await s.topFrame(arrived.body.threadId);
-            assert.match(frame.name, /NoPdbLib\.Pricing\.WithTax\(/);
-            assert.ok(realPath(frame.source.path).startsWith(realPath(cache)), frame.source.path);
-        } finally {
-            // netcoredbg holds the generated PDB until it exits, also when an assertion failed above.
-            await s?.close();
-            // Windows may hold a just-closed file for a moment: retry, and never fail the test over a temporary folder.
-            try {
-                fs.rmSync(cache, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
-            } catch (e) {
-                console.warn(`could not delete ${cache}: ${e instanceof Error ? e.message : String(e)}`);
-            }
-        }
     });
 });
 

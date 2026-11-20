@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
 import { ExceptionLog } from './exceptionLog';
-import { ModuleList } from './moduleList';
+import { ModuleList, hasSymbols } from './moduleList';
 import { ReportSession, buildReport } from './sessionReportCore';
 import { StepHistory } from './stepHistory';
 import { ValueTracker } from './valueTracker';
@@ -63,7 +63,7 @@ export class SessionReport implements vscode.DebugAdapterTrackerFactory, vscode.
                 })),
                 exceptions: this.exceptionLog.getEntries().map((e) => ({ ...e, sourcePath: e.source?.path })),
                 tracked: [...this.valueTracker.getHits()],
-                modules: this.moduleList.getChildren().map((m) => ({ name: m.name, path: m.path, symbolsLoaded: m.symbolStatus === 'Symbols loaded.' })),
+                modules: this.moduleList.getChildren().map((m) => ({ name: m.name, path: m.path, symbolsLoaded: hasSymbols(m) })),
                 createdAt: Date.now(),
             },
             (message, ...args) => vscode.l10n.t(message, ...args),

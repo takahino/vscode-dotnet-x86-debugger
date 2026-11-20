@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { X86AdapterFactory } from './adapterFactory';
@@ -8,7 +9,6 @@ import { ControlNode, ControlTree } from './controlTree';
 import { DataBindingsPanel } from './dataBindings';
 import { isEnabled } from './features';
 import { DapTraceFactory } from './dapTrace';
-import { Decompiler } from './decompiler';
 import { EditAndContinue } from './editAndContinue';
 import { ExceptionLog } from './exceptionLog';
 import { ExceptionSettings } from './exceptionSettings';
@@ -76,7 +76,8 @@ export function activate(context: vscode.ExtensionContext): void {
     const exceptionSettings = new ExceptionSettings(context.workspaceState);
     const exceptionSettingsView = vscode.window.createTreeView('dotnetX86.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
     exceptionSettings.attach(exceptionSettingsView);
-    const decompiler = new Decompiler(context.extensionPath, path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
+    // The ILSpy helper (Decompile for Debugging, 1.x) left its symbols here; the engine now decompiles by itself.
+    removeOldDecompiledCache(path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
     const symbolServer = new SymbolServer(path.join(context.globalStorageUri.fsPath, 'symbols'), path.join(context.globalStorageUri.fsPath, 'sources'), output);
     const parallelStacks = new ParallelStacks();
     const heapSnapshots = new HeapSnapshots();
@@ -88,7 +89,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         output,
         vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new X86ConfigurationProvider()),
-        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, { decompiled: decompiler.cacheRoot, symbols: symbolServer.symbolCache, sources: symbolServer.sourceCache }, () => (isEnabled('exceptionSettings') ? exceptionSettings.checkedTypes() : []))),
+        vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, { symbols: symbolServer.symbolCache, sources: symbolServer.sourceCache }, () => (isEnabled('exceptionSettings') ? exceptionSettings.checkedTypes() : []))),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new DapTraceFactory(output)),
         vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
         vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
@@ -96,8 +97,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.copyAsCSharp', copyAsCSharpCommand),
         vscode.commands.registerCommand('dotnetX86.makeObjectId', makeObjectIdCommand),
         vscode.commands.registerCommand('dotnetX86.generateTest', generateTestCommand),
-        vscode.commands.registerCommand('dotnetX86.decompileModule', (module?: { name?: string; path?: string }) => decompiler.decompile(module)),
-        vscode.commands.registerCommand('dotnetX86.clearDecompiled', () => decompiler.clearCache()),
+
         parallelStacks,
         vscode.commands.registerCommand('dotnetX86.showParallelStacks', () => parallelStacks.show()),
         vscode.commands.registerCommand('dotnetX86.freezeThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, true)),
@@ -197,3 +197,19 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {}
+
+/**
+ * Deletes the symbols and sources the removed ILSpy helper wrote (`<globalStorage>/decompiled`). They would no longer be
+ * loaded, and the engine decompiles assemblies without symbols itself.
+ */
+function removeOldDecompiledCache(folder: string, output: vscode.OutputChannel): void {
+    if (!fs.existsSync(folder)) {
+        return;
+    }
+    try {
+        fs.rmSync(folder, { recursive: true, force: true });
+        output.appendLine(`[decompiler] removed the symbols of the former Decompile for Debugging: ${folder}`);
+    } catch (e) {
+        output.appendLine(`[decompiler] could not remove ${folder}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+}

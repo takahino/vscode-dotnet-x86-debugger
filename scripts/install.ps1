@@ -37,10 +37,7 @@ try {
     if (-not (Test-Path (Join-Path $repoRoot 'debugger\dotnet-x86dbg-x86\dotnet-x86dbg.exe')) -or -not (Test-Path (Join-Path $repoRoot 'debugger\dotnet-x86dbg-x64\dotnet-x86dbg.exe'))) {
         & (Join-Path $PSScriptRoot 'build-engine.ps1')
     }
-    # VSIX に同梱する逆コンパイル ヘルパーが未ビルドならビルドする
-    if (-not (Test-Path (Join-Path $repoRoot 'debugger\decompiler\DotnetX86.Decompiler.dll'))) {
-        & (Join-Path $PSScriptRoot 'build-decompiler.ps1')
-    }
+
     if (-not (Test-Path (Join-Path $repoRoot 'node_modules'))) {
         Invoke-Step '依存関係のインストール (npm ci)' { npm.cmd ci --no-fund --no-audit }
     }

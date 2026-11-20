@@ -87,7 +87,7 @@ describe('SourcePathMapper with sourceSearchPaths', () => {
 });
 
 describe('SourcePathMapper with exact file pairs', () => {
-    it('maps relative PDB document names (decompiled assemblies) both ways', () => {
+    it('maps relative PDB document names both ways', () => {
         const mapper = new SourcePathMapper();
         assert.equal(mapper.enabled, false);
         mapper.addFilePairs([{ pdbPath: 'Lib\\Type.cs', local: 'C:\\cache\\guid\\src\\Lib\\Type.cs' }]);

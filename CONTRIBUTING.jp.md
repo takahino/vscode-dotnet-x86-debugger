@@ -2,7 +2,7 @@
 
 ## ソースからのビルド
 
-前提: Node.js、Git、.NET SDK（テスト アプリと逆コンパイル ヘルパー用）、デバッグ エンジン用に Rust（`rustup`。ターゲット
+前提: Node.js、Git、.NET SDK（テスト アプリ用）、デバッグ エンジン用に Rust（`rustup`。ターゲット
 `i686-pc-windows-msvc` と `x86_64-pc-windows-msvc`）と MSVC のリンカー（Visual Studio Build Tools の「C++ によるデスクトップ開発」）。
 デバッグ エンジン **dotnet-x86dbg** は別のリポジトリです。このリポジトリの隣（`..\dotnet-x86dbg`）に clone してください。
 
@@ -39,7 +39,7 @@ npm run test:e2e  # E2E テスト: 本物のエンジンで test\apps のアプ�
 $env:DOTNETX86_E2E_ARCH = 'x64'; npm run test:e2e   # 同じものを x64 のエンジンと、x64 でビルドしたアプリで
 ```
 
-E2E テストには、エンジン（`scripts\build-engine.ps1`）、逆コンパイル ヘルパー（`scripts\build-decompiler.ps1`）、.NET SDK、
+E2E テストには、エンジン（`scripts\build-engine.ps1`）、.NET SDK、
 試すビット数の .NET（Desktop）ランタイムが必要です。停止する行はテスト アプリの `// @名前` マーカーで探します。
 デスクトップの無い環境では `DOTNETX86_SKIP_UI_TESTS=1` で WinForms のテストを飛ばせます。`DOTNETX86_E2E_DEBUGGER` で、
 別のエンジン（見比べるための netcoredbg など）に対して実行できます。[CI ワークフロー](.github/workflows/ci.yml) が push のたびに、

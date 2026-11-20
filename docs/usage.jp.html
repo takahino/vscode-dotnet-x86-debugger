@@ -335,7 +335,7 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
   <tr><td><a href="#f-modules">モジュール ビュー</a></td><td>読み込まれたアセンブリとシンボルの有無</td><td>モジュール ビュー</td></tr>
   <tr><td><a href="#f-sourcemap">ソースが別の場所にある場合</a></td><td>PDB のパスに無いソースを見つける</td><td>launch.json／設定</td></tr>
   <tr><td><a href="#f-sourcelink">Source Link とシンボル サーバー</a></td><td>NuGet パッケージのソースと PDB をダウンロード</td><td>自動／モジュール ビューの右クリック</td></tr>
-  <tr><td><a href="#f-decompile">逆コンパイルしたソースでのデバッグ</a></td><td>シンボルの無い DLL に C# でステップ イン</td><td>モジュール ビューの右クリック</td></tr>
+  <tr><td><a href="#f-decompile">逆コンパイルしたソースでのデバッグ</a></td><td>シンボルの無い exe や DLL に C# でステップ イン</td><td>自動</td></tr>
   <tr class="group"><th colspan="3">WinForms</th></tr>
   <tr><td><a href="#f-winforms">WinForms コントロール ビュー</a></td><td>開いているフォームのコントロール ツリー</td><td>WinForms コントロール ビュー</td></tr>
   <tr><td><a href="#f-winforms">画面上で強調表示</a> <span class="badge" title="Visual Studio に無い機能">★</span></td><td>停止中のフォーム上でコントロールを枠で示す</td><td>ビューの目のアイコン</td></tr>
@@ -740,62 +740,16 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
 <p><b>ステップ履歴</b> ビューには、停止のたびのローカル変数が新しい順に残ります。同じメソッド内の直前の停止から変わった値には「変化」「新規」と表示されます。項目をクリックするとその位置を開きます。履歴を見返すための機能で、実行を巻き戻すわけではありません。</p>
 
 <h3 id="f-sourcelink">Source Link とシンボル サーバー</h3>
-<p>このマシンに無いファイルで停止し、PDB に <b>Source Link</b> の対応表がある場合（GitHub からビルドされた NuGet パッケージの多くが該当）、そのファイルをダウンロードして開きます。パッケージの本物のソースでステップ実行できます。シンボルの無い DLL は、<b>モジュール</b> ビューで右クリックして <b>シンボルをダウンロード</b> を選ぶと、NuGet / Microsoft のシンボル サーバーから PDB を取得します（次のセッションから有効）。どのサーバーにも無い場合は <a href="#f-decompile">逆コンパイル</a> します。</p>
+<p>このマシンに無いファイルで停止し、PDB に <b>Source Link</b> の対応表がある場合（GitHub からビルドされた NuGet パッケージの多くが該当）、そのファイルをダウンロードして開きます。パッケージの本物のソースでステップ実行できます。シンボルの無い DLL は、<b>モジュール</b> ビューで右クリックして <b>シンボルをダウンロード</b> を選ぶと、NuGet / Microsoft のシンボル サーバーから PDB を取得します（次のセッションから有効）。どのサーバーにも無い場合は、デバッガーが <a href="#f-decompile">逆コンパイル</a> します。</p>
 <div class="usecase"><b>ユースケース:</b> よく使う JSON ライブラリが奥深くで例外を投げる。シンボルをダウンロードして再起動すれば、パッケージがビルドされたまさにそのコミットの GitHub 上のコードにステップ インできます。</div>
 
 <h3 id="f-decompile">逆コンパイルしたソースでのデバッグ</h3>
-<p>シンボルの無い DLL を <b>モジュール</b> ビューで右クリックし、<b>逆コンパイルしてデバッグ可能にする...</b> を選びます。次のデバッグ セッションから（ボタンで今のセッションを再起動できます）、逆コンパイルした C# へのステップ インやブレークポイントが使えます。DLL のフォルダには何も書き込みません。<b>逆コンパイルしたシンボルを削除</b> で生成物をすべて消せます。</p>
-
-<figure class="figure">
-<svg viewBox="0 0 860 230" role="img" aria-label="シンボルの無いモジュールを逆コンパイルし、逆コンパイルした C# でデバッグする">
-  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
-  <!-- 1: Modules view -->
-  <rect x="12" y="12" width="250" height="206" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
-  <text x="24" y="32" font-size="11" font-weight="700" fill="var(--ui-text)">▾ MODULES (.NET X86)</text>
-  <g font-size="11.5">
-    <text x="30" y="54" fill="var(--ui-text)">◈ OrderApp.dll <tspan fill="var(--ui-muted)">シンボル読み込み済み</tspan></text>
-    <rect x="20" y="62" width="234" height="18" fill="var(--ui-sel)"/>
-    <text x="30" y="75" fill="var(--ui-text)">▤ Pricing.Engine.dll <tspan fill="var(--ui-muted)">シンボルなし</tspan></text>
-  </g>
-  <rect x="44" y="88" width="210" height="62" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
-  <rect x="48" y="94" width="202" height="20" fill="var(--ui-sel)"/>
-  <g font-size="11.5" fill="var(--ui-text)"><text x="56" y="108">逆コンパイルしてデバッグ可能に...</text><text x="56" y="134" fill="var(--ui-muted)">パスをコピー</text></g>
-  <!-- 2: what is generated -->
-  <path d="M268 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M302 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
-  <rect x="318" y="58" width="200" height="114" rx="6" fill="var(--accent-soft)" stroke="var(--ui-accent)"/>
-  <text x="330" y="80" font-size="12" font-weight="700" fill="var(--ui-text)">ILSpy エンジン（同梱）</text>
-  <g font-size="11" class="mono" fill="var(--ui-text)"><text x="330" y="102">symbols.pdb</text><text x="330" y="120">src\Pricing\TaxRule.cs …</text></g>
-  <text x="330" y="144" font-size="10.5" fill="var(--ui-muted)">拡張機能の保存領域に、</text>
-  <text x="330" y="160" font-size="10.5" fill="var(--ui-muted)">アセンブリのビルドごとに保存</text>
-  <path d="M524 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M558 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
-  <!-- 3: debugging in the decompiled file -->
-  <rect x="574" y="12" width="274" height="206" rx="4" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
-  <rect x="574" y="12" width="274" height="22" rx="4" fill="var(--ui-bar)"/>
-  <text x="584" y="27" font-size="11.5" fill="var(--ui-text)">TaxRule.cs <tspan fill="var(--ui-muted)">(逆コンパイル)</tspan></text>
-  <g font-size="11" class="mono">
-    <text x="590" y="56" fill="var(--ui-kw)">public decimal <tspan fill="var(--ui-text)">Apply(decimal num)</tspan></text>
-    <text x="590" y="74" fill="var(--ui-text)">{</text>
-    <rect x="578" y="82" width="266" height="16" fill="var(--ui-current)"/>
-    <circle cx="583" cy="90" r="4" fill="var(--ui-bp)"/>
-    <text x="600" y="94" fill="var(--ui-text)">decimal num2 = num * _rate;</text>
-    <text x="600" y="112" fill="var(--ui-kw)">if <tspan fill="var(--ui-text)">(num2 &lt; 0m)</tspan></text>
-    <text x="616" y="130" fill="var(--ui-kw)">throw new <tspan fill="var(--ui-text)">…</tspan></text>
-    <text x="600" y="148" fill="var(--ui-kw)">return <tspan fill="var(--ui-text)">num + num2;</tspan></text>
-    <text x="590" y="166" fill="var(--ui-text)">}</text>
-  </g>
-  <text x="588" y="204" font-size="11" fill="var(--ui-hint)" font-style="italic">num = 100   _rate = 0.1</text>
-  <use href="#c1" x="236" y="94" width="20" height="20"/>
-  <use href="#c2" x="494" y="62" width="20" height="20"/>
-  <use href="#c3" x="822" y="82" width="20" height="20"/>
-</svg>
-<figcaption>DLL のフォルダには何も書き込みません。</figcaption>
-<ol class="callouts">
-  <li>モジュール ビューで、シンボルの無いモジュールを右クリックします。</li>
-  <li>対応するシンボル付きの C# に逆コンパイルされます（数秒）。案内に従ってデバッグを再起動します。</li>
-  <li>自分のコードと同じように、ステップ イン・ブレークポイント・ローカル変数の確認ができます。</li>
-</ol>
-</figure>
-<div class="usecase"><b>ユースケース:</b> 他社製の NuGet パッケージが奥深くから <code>ArgumentException</code> を投げるが、メッセージからはどの値が悪いのか分からない。パッケージを逆コンパイルして再起動し、<code>throw</code> の行で止めれば、ローカル変数で値が分かります。</div>
+<p>PDB なしで配られた exe や、ソースが手元に無いプログラムの DLL は、そこで止まったときやステップ インしたときに、デバッガーが自分で C# に
+逆コンパイルします。コール スタックが逆コンパイルしたファイルを指し、同じセッションのままブレークポイント・ステップ・ローカル変数が使えます。
+.NET ランタイムは要りません。C# に戻せないメソッドは IL で表示します。プログラムに PDB があるときは、シンボルの無い DLL は自分のコードに
+なりません。ステップ インするには <code>"justMyCode": false</code> にしてください。<code>"decompile": "off"</code> で行いません。</p>
+<div class="usecase"><b>ユースケース:</b> 他社のライブラリが奥のほうで <code>ArgumentException</code> を投げるのに、どの値がいけないのかがメッセージに
+ありません。Just My Code を切って呼び出しにステップ インし、<code>throw</code> の行で止めれば、ローカル変数で値が分かります。</div>
 
 <h3 id="f-objectid">オブジェクト ID</h3>
 <p><b>変数</b> ビューか <b>ウォッチ</b> ビューでオブジェクトを右クリックし、<b>オブジェクト ID を作成</b> を選びます。オブジェクトに <code>$1</code> という名前が付き、ほかのメソッドや後の停止でも、ウォッチ・デバッグ コンソール・ブレークポイントの条件から参照できます（<code>$1.Count</code>、<code>order == $2</code>）。そのオブジェクトである値には <code>{$1}</code> と表示されます。Visual Studio と同じく、ID はオブジェクトを生かし続けません。</p>
@@ -1115,7 +1069,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <div class="card"><h4>見たい呼び出しへ直行</h4>Step Into Target で、行の中の 1 つの呼び出しにだけ入ります。</div>
   <div class="card"><h4>1 つのオブジェクトを追う</h4>オブジェクト ID を作り、<code>$1</code> をどこでもウォッチや条件に使います。</div>
   <div class="card"><h4>停止状態をテストに</h4>ここから単体テストを生成で、今の値でメソッドを呼ぶテストを書き出します。</div>
-  <div class="card"><h4>ソースの無いライブラリ</h4>モジュール ビューから逆コンパイルし、C# でステップ実行します。</div>
+  <div class="card"><h4>ソースの無いライブラリ</h4>ステップ インすると、デバッガーが C# に逆コンパイルします。</div>
   <div class="card"><h4>別のマシンでビルドしたライブラリ</h4><code>sourceSearchPaths</code> に手元のクローンを指定します。</div>
   <div class="card"><h4>どの SQL がどの値で流れた?</h4>SQL ログに、自作のデータ アクセス層経由も含めてすべての SQL がパラメーターつきで並びます。値を埋めてコピーできます。</div>
   <div class="card"><h4>テスト報告のエビデンス</h4>エビデンス取得で、フォームの画像・入力値・SQL が 1 つの Markdown に保存されます。</div>
@@ -1158,7 +1112,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>dotnetX86.memoryGraph.enabled</code></td><td>メモリ / CPU / GDI グラフ（計測もしない）</td></tr>
   <tr><td><code>dotnetX86.inlineValues.enabled</code></td><td>インライン値</td></tr>
   <tr><td><code>dotnetX86.autos.enabled</code></td><td>自動変数ビュー</td></tr>
-  <tr><td><code>dotnetX86.modules.enabled</code></td><td>モジュール ビュー、シンボルのダウンロード、デバッグ用に逆コンパイル</td></tr>
+  <tr><td><code>dotnetX86.modules.enabled</code></td><td>モジュール ビュー、シンボルのダウンロード</td></tr>
   <tr><td><code>dotnetX86.exceptionSettings.enabled</code></td><td>例外設定ビュー（そこでチェックした型での停止も）</td></tr>
   <tr><td><code>dotnetX86.winforms.enabled</code></td><td>WinForms コントロール ビューとそのコマンド、データ バインディングを表示</td></tr>
   <tr><td><code>dotnetX86.heapSnapshot.enabled</code></td><td>ヒープ スナップショットと GDI リーク候補</td></tr>

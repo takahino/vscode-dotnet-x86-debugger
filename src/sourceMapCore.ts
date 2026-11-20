@@ -90,8 +90,8 @@ export class SourcePathMapper {
     private hasFilePairs = false;
 
     /**
-     * Exact PDB document -> local file pairs known in advance (decompiled assemblies: their PDB names documents
-     * relatively, "Namespace\Type.cs", and the extracted files live in the decompiler's cache).
+     * Exact PDB document -> local file pairs known in advance (Source Link downloads, and PDBs that name their documents
+     * relatively, "Namespace\Type.cs").
      */
     addFilePairs(pairs: { pdbPath: string; local: string }[]): void {
         for (const { pdbPath, local } of pairs) {

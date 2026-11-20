@@ -7,7 +7,7 @@ import * as http from 'http';
 import * as os from 'os';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
-import { SYMBOL_DIRS_ENV } from '../../decompilerCore';
+import { SYMBOL_DIRS_ENV } from '../../symbolDirs';
 import { readAssemblyIdentity } from '../../pdbDocuments';
 import { sourceCachePath, symbolServerUrl } from '../../sourceLinkCore';
 import { downloadSymbols } from '../../symbolDownload';

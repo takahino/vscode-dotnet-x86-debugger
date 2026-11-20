@@ -11,5 +11,5 @@ obj/
 # env
 .env
 
-# bundled debug engine and decompiler helper (put in place by scripts/build-engine.ps1 / build-decompiler.ps1)
+# bundled debug engine (put in place by scripts/build-engine.ps1)
 debugger/

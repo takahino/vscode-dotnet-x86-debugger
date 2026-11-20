@@ -1,4 +1,4 @@
-// PE headers, decompiled-symbol manifests and the Source Link map in a PDB, from bytes and files made here
+// PE headers and the Source Link map in a PDB, from bytes and files made here
 // (no build, no debugger).
 
 import * as assert from 'assert/strict';
@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
-import { readDecompiledAssemblies } from '../../decompilerCore';
 import { findSourceLinkJson } from '../../pdbDocuments';
 import { engineArchitecture, inspectPe, rvaToOffset } from '../../peInfo';
 
@@ -115,35 +114,6 @@ describe('rvaToOffset', () => {
     });
 });
 
-describe('readDecompiledAssemblies', () => {
-    let root: string;
-    before(() => {
-        root = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-decompiled-'));
-        const mvid = '11111111-2222-3333-4444-555555555555';
-        fs.mkdirSync(path.join(root, mvid));
-        fs.writeFileSync(path.join(root, mvid, 'manifest.json'), JSON.stringify({
-            Assembly: 'C:\\lib\\Vendor.dll',
-            Mvid: mvid,
-            Documents: [{ Name: 'Vendor\\Calc.cs', File: path.join(root, mvid, 'src', 'Vendor', 'Calc.cs') }],
-        }));
-        fs.mkdirSync(path.join(root, 'interrupted')); // no manifest
-        fs.mkdirSync(path.join(root, 'broken'));
-        fs.writeFileSync(path.join(root, 'broken', 'manifest.json'), '{ not json');
-    });
-    after(() => fs.rmSync(root, { recursive: true, force: true }));
-
-    it('reads every complete manifest and skips folders left by interrupted runs', () => {
-        const assemblies = readDecompiledAssemblies(root);
-        assert.equal(assemblies.length, 1);
-        assert.equal(assemblies[0].assembly, 'C:\\lib\\Vendor.dll');
-        assert.equal(assemblies[0].mvid, '11111111-2222-3333-4444-555555555555');
-        assert.deepEqual(assemblies[0].documents.map((d) => d.name), ['Vendor\\Calc.cs']);
-    });
-
-    it('finds nothing when the cache does not exist yet', () => {
-        assert.deepEqual(readDecompiledAssemblies(path.join(root, 'no-such-folder')), []);
-    });
-});
 
 describe('findSourceLinkJson', () => {
     const map = '{"documents":{"C:\\\\src\\\\*":"https://raw.githubusercontent.com/o/r/abc/*","x":"a \\"}\\" b"}}';

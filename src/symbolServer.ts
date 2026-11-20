@@ -36,9 +36,9 @@ export class SymbolServer {
             this.output.appendLine(`[symbols] ${name}: ${result.reason}${result.tried.length ? ` (tried ${result.tried.join(', ')})` : ''}`);
             const reasons: Record<typeof result.reason, string> = {
                 'not-managed': vscode.l10n.t('{0} is not a .NET assembly.', name),
-                'no-pdb-info': vscode.l10n.t('{0} was built without a PDB, so no symbol server has one. Use "Decompile for Debugging" instead.', name),
-                'windows-pdb': vscode.l10n.t('{0} was built with a Windows PDB, which this debugger cannot read. Use "Decompile for Debugging" instead.', name),
-                'not-found': vscode.l10n.t('No symbol server has the symbols of {0} (details in the ".NET x86 Debugger" output). Use "Decompile for Debugging" instead.', name),
+                'no-pdb-info': vscode.l10n.t('{0} was built without a PDB, so no symbol server has one. The debugger decompiles it to C# when you step into it.', name),
+                'windows-pdb': vscode.l10n.t('{0} was built with a Windows PDB, which this debugger cannot read. The debugger decompiles it to C# instead.', name),
+                'not-found': vscode.l10n.t('No symbol server has the symbols of {0} (details in the ".NET x86 Debugger" output). The debugger decompiles it to C# when you step into it.', name),
             };
             void vscode.window.showWarningMessage(reasons[result.reason]);
             return;

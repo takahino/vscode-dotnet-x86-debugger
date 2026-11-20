@@ -82,7 +82,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | **Source and symbols** | | |
 | [Source in another folder](#debugging-referenced-assemblies-source-in-another-folder) | Find source whose PDB path is not on this machine | launch.json / settings |
 | [Source Link and symbol servers](#source-link-and-symbol-servers) | Download the sources and PDBs of NuGet packages | Automatic / Modules right-click |
-| [Debug decompiled assemblies](#debugging-decompiled-assemblies) | Step into DLLs without symbols as C# | Modules right-click |
+| [Debug decompiled assemblies](#debugging-decompiled-assemblies) | Step into exes and DLLs without symbols as C# | Automatic |
 | **WinForms** | | |
 | [WinForms Controls view](#winforms-controls-view) | The control tree of the open forms | WinForms Controls view |
 | [Highlight on screen](#winforms-controls-view) ★ | Frame a control on the stopped form | Eye icon in the view |
@@ -227,7 +227,7 @@ the exception settings, the exception log, the SQL log and UI freeze detection c
 | `dotnetX86.memoryGraph.enabled` | Memory / CPU / GDI graph (no sampling at all) |
 | `dotnetX86.inlineValues.enabled` | Inline values |
 | `dotnetX86.autos.enabled` | Autos view |
-| `dotnetX86.modules.enabled` | Modules view, Download Symbols, Decompile for Debugging |
+| `dotnetX86.modules.enabled` | Modules view, Download Symbols |
 | `dotnetX86.exceptionSettings.enabled` | Exception Settings view (and stopping on the types checked in it) |
 | `dotnetX86.winforms.enabled` | WinForms Controls view and its commands, Show Data Bindings |
 | `dotnetX86.heapSnapshot.enabled` | Heap Snapshots and GDI leak candidates |
@@ -600,7 +600,7 @@ When the program stops in a file that is not on this machine, the extension down
 
 For an assembly without symbols, right-click it in the **Modules** view and choose **Download Symbols**: its PDB is fetched
 from the NuGet and Microsoft symbol servers (`dotnetX86.symbolServers`), and applies from the next debug session (a button
-restarts the current one). With Source Link, its sources follow. When no server has the PDB, decompile it instead (below).
+restarts the current one). With Source Link, its sources follow. When no server has the PDB, the debugger decompiles the assembly (below).
 **Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *.NET x86 Debugger* output.
 
 #### Debugging decompiled assemblies
@@ -612,13 +612,10 @@ needed for it. The files are written to `%LOCALAPPDATA%\dotnet-x86dbg\decompiled
 are shown as IL. .NET's own assemblies are not decompiled. Set `"decompile": "off"` in launch.json to turn it off. AI clients
 read the decompiled sources with the MCP tool `decompile`.
 
-For an assembly without symbols (e.g. a NuGet package, or a DLL whose source you do not have), right-click it in the
-**Modules** view and choose **Decompile for Debugging...** (or run it from the Command Palette and pick the file). The
-bundled ILSpy engine decompiles it into C# with matching symbols; from the next debug session (a button restarts the
-current one) you can step into it, see its locals and set breakpoints in the decompiled files, with Just My Code on.
-The result is kept in the extension's storage, keyed by the exact build of the assembly, and the assembly's own folder
-is not touched. **Delete Decompiled Symbols** removes them. Needs a .NET 8 or later runtime to run the decompiler.
-Names of locals are the decompiler's, not the original ones.
+When the program itself has no symbols, all of its assemblies without symbols count as your code (Just My Code steps into
+them). When the program has its PDB, a DLL without symbols does not: set `"justMyCode": false` to step into it. The Modules
+view shows such assemblies as *decompiled*. The assembly's own folder is not touched, and names of locals are the
+decompiler's (from their types), not the original ones.
 
 ### WinForms
 

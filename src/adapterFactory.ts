@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { DOTNET_FRAMEWORK_KEY, ENGINE_ARCHITECTURE_KEY, findX86CoreClr } from './configProvider';
 import { isEnabled } from './features';
 import { DapProxy, ExceptionFilterText, ProxyOptions } from './dapProxy';
-import { SYMBOL_DIRS_ENV, readDecompiledAssemblies } from './decompilerCore';
+import { SYMBOL_DIRS_ENV } from './symbolDirs';
 import { SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { isMcpEnabled } from './mcp';
 import { findWriteLines } from './writeSites';
@@ -225,8 +225,8 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         private readonly extensionPath: string,
         private readonly logDir: string,
         private readonly output: vscode.OutputChannel,
-        /** Caches in the extension's storage: decompiled and downloaded symbols (by MVID), Source Link downloads. */
-        private readonly caches: { decompiled: string; symbols: string; sources: string },
+        /** Caches in the extension's storage: downloaded symbols (by MVID), Source Link downloads. */
+        private readonly caches: { symbols: string; sources: string },
         /** Exception types checked in the Exception Settings view. */
         private readonly checkedExceptionTypes: () => string[] = () => [],
     ) {}
@@ -249,17 +249,12 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             this.output.appendLine(`[trace] engine log: ${logFile}`);
         }
         const sourceMap = sourceMapSetup(session, this.output);
-        // Decompiled and downloaded symbols: the engine loads them from these folders by MVID (netcoredbg: patch 0009).
-        // The variable must be set before the engine starts (in the ProxyAdapter constructor).
-        const symbolDirs = [this.caches.decompiled, this.caches.symbols].filter((dir) => hasEntries(dir));
+        // Downloaded symbols: the engine loads them from this folder by MVID (netcoredbg: patch 0009). Assemblies without
+        // symbols are decompiled by the engine itself. The variable must be set before the engine starts (in the
+        // ProxyAdapter constructor).
+        const symbolDirs = [this.caches.symbols].filter((dir) => hasEntries(dir));
         if (symbolDirs.length) {
             env[SYMBOL_DIRS_ENV] = symbolDirs.join(path.delimiter);
-        }
-        // Decompiled PDBs name their documents relatively ("Namespace/Type.cs"): map them to the extracted files.
-        const decompiled = readDecompiledAssemblies(this.caches.decompiled);
-        if (decompiled.length) {
-            sourceMap.mapper.addFilePairs(decompiled.flatMap((a) => a.documents.map((d) => ({ pdbPath: d.name, local: d.file }))));
-            this.output.appendLine(`[decompiler] symbols of ${decompiled.length} decompiled assemblies are available`);
         }
         const sourceLink = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri).get<boolean>('sourceLink.enabled', true)
             ? { cacheRoot: this.caches.sources }

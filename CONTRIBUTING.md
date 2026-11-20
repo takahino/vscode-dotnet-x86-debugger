@@ -2,7 +2,7 @@
 
 ## Building from source
 
-Prerequisites: Node.js, Git, a .NET SDK (test apps and the decompiler helper), and for the debug engine Rust (`rustup`, targets
+Prerequisites: Node.js, Git, a .NET SDK (test apps), and for the debug engine Rust (`rustup`, targets
 `i686-pc-windows-msvc` and `x86_64-pc-windows-msvc`) with the MSVC linker (Visual Studio Build Tools, *Desktop development with C++*).
 The debug engine **dotnet-x86dbg** lives in its own repository; clone it next to this one (`..\dotnet-x86dbg`).
 
@@ -39,7 +39,7 @@ npm run test:e2e  # end-to-end tests: the real engine debugs the apps in test\ap
 $env:DOTNETX86_E2E_ARCH = 'x64'; npm run test:e2e   # the same with the x64 engine and the apps built for x64
 ```
 
-The E2E tests need the engine (`scripts\build-engine.ps1`), the decompiler helper (`scripts\build-decompiler.ps1`), the .NET SDK
+The E2E tests need the engine (`scripts\build-engine.ps1`), the .NET SDK
 and the .NET (Desktop) runtime of the bitness under test. They find the lines they stop at by `// @name` markers in the test apps.
 Set `DOTNETX86_SKIP_UI_TESTS=1` to skip the WinForms tests where no desktop is available, and `DOTNETX86_E2E_DEBUGGER` to run
 them against another engine (for example netcoredbg, to compare). The [CI workflow](.github/workflows/ci.yml) runs the unit

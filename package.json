@@ -54,8 +54,6 @@
     "onCommand:dotnetX86.showDataBindings",
     "onCommand:dotnetX86.generateTest",
     "onCommand:dotnetX86.makeObjectId",
-    "onCommand:dotnetX86.decompileModule",
-    "onCommand:dotnetX86.clearDecompiled",
     "onCommand:dotnetX86.downloadSymbols",
     "onCommand:dotnetX86.showParallelStacks",
     "onCommand:dotnetX86.showHeapSnapshots",
@@ -181,11 +179,7 @@
         "title": "%command.copyAsCSharp%",
         "category": ".NET x86"
       },
-      {
-        "command": "dotnetX86.decompileModule",
-        "title": "%command.decompileModule%",
-        "category": ".NET x86"
-      },
+
       {
         "command": "dotnetX86.showParallelStacks",
         "title": "%command.showParallelStacks%",
@@ -222,11 +216,7 @@
         "title": "%command.clearDownloadedSymbols%",
         "category": ".NET x86"
       },
-      {
-        "command": "dotnetX86.clearDecompiled",
-        "title": "%command.clearDecompiled%",
-        "category": ".NET x86"
-      },
+
       {
         "command": "dotnetX86.makeObjectId",
         "title": "%command.makeObjectId%",
@@ -715,10 +705,7 @@
           "command": "dotnetX86.downloadSymbols",
           "when": "config.dotnetX86.modules.enabled"
         },
-        {
-          "command": "dotnetX86.decompileModule",
-          "when": "config.dotnetX86.modules.enabled"
-        },
+
         {
           "command": "dotnetX86.addExceptionType",
           "when": "config.dotnetX86.exceptionSettings.enabled"
@@ -926,11 +913,7 @@
           "when": "view == dotnetX86.modules && viewItem == dotnetX86.module.noSymbols && config.dotnetX86.modules.enabled",
           "group": "z_dotnetX86@0"
         },
-        {
-          "command": "dotnetX86.decompileModule",
-          "when": "view == dotnetX86.modules && viewItem == dotnetX86.module.noSymbols && config.dotnetX86.modules.enabled",
-          "group": "z_dotnetX86@0"
-        },
+
         {
           "command": "dotnetX86.revealModule",
           "when": "view == dotnetX86.modules && config.dotnetX86.modules.enabled",

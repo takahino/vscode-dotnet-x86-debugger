@@ -35,7 +35,10 @@
 - New: **debugging programs without symbols** — the engine decompiles the program's assemblies that have no PDB to C# by itself
   when you stop or step into them, so an exe shipped without symbols can be debugged in C# (breakpoints, stepping, locals) in the
   same session, with no .NET runtime needed. `decompile` in launch.json and attach (`app` by default, `off`); MCP tool `decompile`.
-  **Decompile for Debugging** (ILSpy) still works and its symbols take precedence.
+  The Modules view marks them *decompiled*.
+- Removed: **Decompile for Debugging** and **Delete Decompiled Symbols** (the bundled ILSpy helper, which needed a .NET 8 runtime and
+  worked from the next session). The engine decompiles by itself instead; the symbols the helper left in the extension's storage are
+  deleted on first start.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
   and from netcoredbg.
 - Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow

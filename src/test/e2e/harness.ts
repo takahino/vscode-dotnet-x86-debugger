@@ -16,7 +16,6 @@ export const ARCH: 'x86' | 'x64' = process.env.DOTNETX86_E2E_ARCH === 'x64' ? 'x
 export const FRAMEWORK: 'net48' | undefined = process.env.DOTNETX86_E2E_FRAMEWORK === 'net48' ? 'net48' : undefined;
 // DOTNETX86_E2E_DEBUGGER points the same tests at another debug engine (for example netcoredbg, to compare).
 export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', `dotnet-x86dbg-${ARCH}`, 'dotnet-x86dbg.exe');
-export const DECOMPILER = path.join(REPO, 'debugger', 'decompiler', 'DotnetX86.Decompiler.dll');
 const APPS = path.join(REPO, 'test', 'apps');
 const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e', FRAMEWORK ? `-${FRAMEWORK}` : ARCH);
 

@@ -69,9 +69,6 @@ jobs:
         shell: pwsh
         run: ./scripts/build-engine.ps1 -EngineRepo engine
 
-      - name: Build the decompiler helper
-        shell: pwsh
-        run: ./scripts/build-decompiler.ps1
 
       - name: E2E tests (x86)
         run: npm run test:e2e

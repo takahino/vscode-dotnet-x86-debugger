@@ -342,7 +342,7 @@ To debug it as x86, set <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</
   <tr><td><a href="#f-modules">Modules view</a></td><td>Loaded assemblies and whether symbols were found</td><td>Modules view</td></tr>
   <tr><td><a href="#f-sourcemap">Source in another folder</a></td><td>Find source whose PDB path is not on this machine</td><td>launch.json / settings</td></tr>
   <tr><td><a href="#f-sourcelink">Source Link and symbol servers</a></td><td>Download the sources and PDBs of NuGet packages</td><td>Automatic / Modules right-click</td></tr>
-  <tr><td><a href="#f-decompile">Debug decompiled assemblies</a></td><td>Step into DLLs without symbols as C#</td><td>Modules right-click</td></tr>
+  <tr><td><a href="#f-decompile">Debug decompiled assemblies</a></td><td>Step into exes and DLLs without symbols as C#</td><td>Automatic</td></tr>
   <tr class="group"><th colspan="3">WinForms</th></tr>
   <tr><td><a href="#f-winforms">WinForms Controls view</a></td><td>The control tree of the open forms</td><td>WinForms Controls view</td></tr>
   <tr><td><a href="#f-winforms">Highlight on screen</a> <span class="badge" title="Not in Visual Studio">★</span></td><td>Frame a control on the stopped form</td><td>Eye icon in the view</td></tr>
@@ -807,66 +807,17 @@ to run backwards.</p>
 <p>When the program stops in a file that is not on this machine and the PDB has a <b>Source Link</b> map — most NuGet packages
 built from GitHub do — the file is downloaded and opened, so you can step through the package's real source. For a DLL
 without symbols, right-click it in <b>Modules</b> and choose <b>Download Symbols</b> to fetch its PDB from the NuGet / Microsoft
-symbol servers (from the next session). If no server has it, <a href="#f-decompile">decompile</a> it.</p>
+symbol servers (from the next session). If no server has it, the debugger <a href="#f-decompile">decompiles</a> it.</p>
 <div class="usecase"><b>Use case:</b> a popular JSON library throws deep inside. Download its symbols, restart, and step into
 its code on GitHub at the exact commit the package was built from.</div>
 
 <h3 id="f-decompile">Debugging decompiled assemblies</h3>
-<p>For a DLL without symbols, right-click it in the <b>Modules</b> view and choose <b>Decompile for Debugging...</b>. From the next debug
-session (a button restarts the current one) you can step into it and set breakpoints in the decompiled C#. The DLL's folder is
-not touched; <b>Delete Decompiled Symbols</b> removes everything generated.</p>
-
-<figure class="figure">
-<svg viewBox="0 0 860 230" role="img" aria-label="Decompiling a module without symbols, then debugging its decompiled C#">
-  <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
-  <!-- 1: Modules view -->
-  <rect x="12" y="12" width="250" height="206" rx="4" fill="var(--ui-side)" stroke="var(--ui-frame)"/>
-  <text x="24" y="32" font-size="11" font-weight="700" fill="var(--ui-text)">▾ MODULES (.NET X86)</text>
-  <g font-size="11.5">
-    <text x="30" y="54" fill="var(--ui-text)">◈ OrderApp.dll <tspan fill="var(--ui-muted)">symbols loaded</tspan></text>
-    <rect x="20" y="62" width="234" height="18" fill="var(--ui-sel)"/>
-    <text x="30" y="75" fill="var(--ui-text)">▤ Pricing.Engine.dll <tspan fill="var(--ui-muted)">no symbols</tspan></text>
-  </g>
-  <rect x="44" y="88" width="210" height="62" rx="4" fill="var(--ui-menu)" stroke="var(--ui-frame)"/>
-  <rect x="48" y="94" width="202" height="20" fill="var(--ui-sel)"/>
-  <g font-size="11.5" fill="var(--ui-text)"><text x="56" y="108">Decompile for Debugging...</text><text x="56" y="134" fill="var(--ui-muted)">Copy Path</text></g>
-  <!-- 2: what is generated -->
-  <path d="M268 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M302 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
-  <rect x="318" y="58" width="200" height="114" rx="6" fill="var(--accent-soft)" stroke="var(--ui-accent)"/>
-  <text x="330" y="80" font-size="12" font-weight="700" fill="var(--ui-text)">ILSpy engine (bundled)</text>
-  <g font-size="11" class="mono" fill="var(--ui-text)"><text x="330" y="102">symbols.pdb</text><text x="330" y="120">src\Pricing\TaxRule.cs …</text></g>
-  <text x="330" y="144" font-size="10.5" fill="var(--ui-muted)">kept in the extension's storage,</text>
-  <text x="330" y="160" font-size="10.5" fill="var(--ui-muted)">by the assembly's exact build</text>
-  <path d="M524 115 h40" stroke="var(--ui-accent)" stroke-width="2" fill="none"/><path d="M558 109 l8 6 -8 6" stroke="var(--ui-accent)" stroke-width="2" fill="none"/>
-  <!-- 3: debugging in the decompiled file -->
-  <rect x="574" y="12" width="274" height="206" rx="4" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
-  <rect x="574" y="12" width="274" height="22" rx="4" fill="var(--ui-bar)"/>
-  <text x="584" y="27" font-size="11.5" fill="var(--ui-text)">TaxRule.cs <tspan fill="var(--ui-muted)">(decompiled)</tspan></text>
-  <g font-size="11" class="mono">
-    <text x="590" y="56" fill="var(--ui-kw)">public decimal <tspan fill="var(--ui-text)">Apply(decimal num)</tspan></text>
-    <text x="590" y="74" fill="var(--ui-text)">{</text>
-    <rect x="578" y="82" width="266" height="16" fill="var(--ui-current)"/>
-    <circle cx="583" cy="90" r="4" fill="var(--ui-bp)"/>
-    <text x="600" y="94" fill="var(--ui-text)">decimal num2 = num * _rate;</text>
-    <text x="600" y="112" fill="var(--ui-kw)">if <tspan fill="var(--ui-text)">(num2 &lt; 0m)</tspan></text>
-    <text x="616" y="130" fill="var(--ui-kw)">throw new <tspan fill="var(--ui-text)">…</tspan></text>
-    <text x="600" y="148" fill="var(--ui-kw)">return <tspan fill="var(--ui-text)">num + num2;</tspan></text>
-    <text x="590" y="166" fill="var(--ui-text)">}</text>
-  </g>
-  <text x="588" y="204" font-size="11" fill="var(--ui-hint)" font-style="italic">num = 100   _rate = 0.1</text>
-  <use href="#c1" x="236" y="94" width="20" height="20"/>
-  <use href="#c2" x="494" y="62" width="20" height="20"/>
-  <use href="#c3" x="822" y="82" width="20" height="20"/>
-</svg>
-<figcaption>The DLL's own folder is never written to.</figcaption>
-<ol class="callouts">
-  <li>Right-click a module without symbols in the Modules view.</li>
-  <li>It is decompiled into C# with matching symbols (a few seconds). Restart debugging when asked.</li>
-  <li>Step into it, set breakpoints and read locals in the decompiled C#, as if it were your code.</li>
-</ol>
-</figure>
-<div class="usecase"><b>Use case:</b> a third-party NuGet package throws <code>ArgumentException</code> from deep inside, and the message
-does not say which value it rejects. Decompile the package, restart, and stop on the <code>throw</code> line: the locals show the value.</div>
+<p>An exe shipped without its PDB, or a DLL of the program whose source you do not have, is decompiled to C# by the debugger itself
+when you stop in it or step into it: the call stack points at the decompiled files, and breakpoints, stepping and locals work in the
+same session, with no .NET runtime needed. Methods that cannot be turned into C# are shown as IL. When the program has its PDB, a DLL
+without symbols is not your code: set <code>"justMyCode": false</code> to step into it. <code>"decompile": "off"</code> turns it off.</p>
+<div class="usecase"><b>Use case:</b> a third-party library throws <code>ArgumentException</code> from deep inside, and the message
+does not say which value it rejects. Turn Just My Code off, step into the call, and stop on the <code>throw</code> line: the locals show the value.</div>
 
 <h3 id="f-objectid">Object IDs</h3>
 <p>Right-click an object in <b>Variables</b> or <b>Watch</b> and choose <b>Make Object ID</b>. The object gets a name, <code>$1</code>, that reaches it
@@ -1219,7 +1170,7 @@ Debugging waits until the process appears:</p>
   <div class="card"><h4>Skip to the call you care about</h4>Step Into Target enters one call of a line and runs the others.</div>
   <div class="card"><h4>Follow one object</h4>Make Object ID, then use <code>$1</code> in Watch and conditions anywhere.</div>
   <div class="card"><h4>Turn a stop into a test</h4>Generate Unit Test from Here writes the method call with the current values.</div>
-  <div class="card"><h4>A library without source</h4>Decompile it from the Modules view and step through the C#.</div>
+  <div class="card"><h4>A library without source</h4>Step into it: the debugger decompiles it to C#.</div>
   <div class="card"><h4>Library built on another machine</h4>Point <code>sourceSearchPaths</code> at your clone.</div>
   <div class="card"><h4>Which SQL ran, with which values?</h4>The SQL Log shows every statement with its parameters, also through your own data access layer; copy it with the values filled in.</div>
   <div class="card"><h4>Evidence for the test report</h4>Capture Evidence saves the form pictures, field values and the SQL in one Markdown file.</div>
@@ -1262,7 +1213,7 @@ Debugging waits until the process appears:</p>
   <tr><td><code>dotnetX86.memoryGraph.enabled</code></td><td>Memory / CPU / GDI graph (no sampling at all)</td></tr>
   <tr><td><code>dotnetX86.inlineValues.enabled</code></td><td>Inline values</td></tr>
   <tr><td><code>dotnetX86.autos.enabled</code></td><td>Autos view</td></tr>
-  <tr><td><code>dotnetX86.modules.enabled</code></td><td>Modules view, Download Symbols, Decompile for Debugging</td></tr>
+  <tr><td><code>dotnetX86.modules.enabled</code></td><td>Modules view, Download Symbols</td></tr>
   <tr><td><code>dotnetX86.exceptionSettings.enabled</code></td><td>Exception Settings view (and stopping on the types checked in it)</td></tr>
   <tr><td><code>dotnetX86.winforms.enabled</code></td><td>WinForms Controls view and its commands, Show Data Bindings</td></tr>
   <tr><td><code>dotnetX86.heapSnapshot.enabled</code></td><td>Heap Snapshots and GDI leak candidates</td></tr>
