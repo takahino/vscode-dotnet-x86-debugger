@@ -1238,10 +1238,12 @@
         },
         "configurationAttributes": {
           "launch": {
-            "required": [
-              "program"
-            ],
+            "required": [],
             "properties": {
+              "dumpPath": {
+                "type": "string",
+                "description": "%debugger.launch.dumpPath%"
+              },
               "program": {
                 "type": "string",
                 "description": "%debugger.launch.program%"
@@ -1428,6 +1430,16 @@
           }
         },
         "configurationSnippets": [
+          {
+            "label": "%snippet.dump.label%",
+            "description": "%snippet.dump.description%",
+            "body": {
+              "name": ".NET x86 Crash Dump",
+              "type": "dotnet-x86",
+              "request": "launch",
+              "dumpPath": "^\"\\${workspaceFolder}/crash.dmp\""
+            }
+          },
           {
             "label": "%snippet.launch.label%",
             "description": "%snippet.launch.description%",

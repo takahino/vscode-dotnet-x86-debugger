@@ -42,7 +42,14 @@
   each stop and no PowerShell; Step Into Target lists the calls from the compiled code (also in decompiled sources), and AI clients
   get them through MCP too (`sql_log`, `exception_log`, `event_trace`, `ui_freeze`, `process_usage`). With a netcoredbg in
   `dotnetX86.debuggerPath` the relay still does them.
-- New: **child processes** — `childProcesses` in launch.json (also attach): `record` (default) logs the processes the program starts`n  with `Process.Start`; `follow` also debugs a .NET child in its own session, from its first line (the child waits until the`n  debugger is attached; a .NET Framework child is attached once its runtime has loaded). The engine picks the child's bitness.`n- Removed: **Decompile for Debugging** and **Delete Decompiled Symbols** (the bundled ILSpy helper, which needed a .NET 8 runtime and
+- New: **crash dumps** — `dumpPath` in launch.json (snippet ".NET x86: Open Crash Dump") opens a .dmp written with full memory
+  (Task Manager, WER LocalDumps, procdump -ma) as a stopped program: threads, call stacks with source lines, variables,
+  the exception and the heap. It cannot continue, step or run functions. A 32-bit process written by a 64-bit tool opens
+  in the x86 engine. No .NET runtime is needed to open a .NET Framework dump.
+- New: **child processes** — `childProcesses` in launch.json (also attach): `record` (default) logs the processes the program starts
+  with `Process.Start`; `follow` also debugs a .NET child in its own session, from its first line (the child waits until the
+  debugger is attached; a .NET Framework child is attached once its runtime has loaded). The engine picks the child's bitness.
+- Removed: **Decompile for Debugging** and **Delete Decompiled Symbols** (the bundled ILSpy helper, which needed a .NET 8 runtime and
   worked from the next session). The engine decompiles by itself instead; the symbols the helper left in the extension's storage are
   deleted on first start.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio

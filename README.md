@@ -188,6 +188,8 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `expressionEvaluationOptions` | With `allowImplicitFuncEval: false`, the Variables view does not run property getters and `ToString()` by itself; they run when expanded (a guard against getters with side effects). Also for attach. |
 | `architecture` | When `program` is a framework-dependent `.dll`: the bitness of the `dotnet.exe` that runs it (`x86` by default, or `x64`). An `.exe` runs as it was built, and the debugger of that bitness is used. |
 | `decompile` | `app` (default): assemblies of the program without symbols are decompiled to C# when needed (see "Debugging decompiled assemblies"); `off`: not. Attach too. |
+| `childProcesses` | Processes the program starts with `Process.Start`: `record` (default) logs them, `follow` also debugs a .NET child in its own session from its first line (a .NET Framework child once its runtime has loaded), `off` ignores them. Attach too. |
+| `dumpPath` | Open this crash dump (`.dmp` with full memory: Task Manager "Create dump file", WER LocalDumps, `procdump -ma`) instead of starting a program. It shows as a stopped program (threads, call stacks, variables, the exception, heap snapshots); it cannot continue, step or run functions. `program` is not needed. |
 | `sourceFileMap` | Replace source path prefixes recorded in PDBs with local folders (see below). Attach too. |
 | `sourceSearchPaths` | Folders searched for source files the PDB records elsewhere (see below). Attach too. |
 

@@ -89,7 +89,8 @@ main a { color: var(--engine); }
 <h2 id="arguments-launch">launch arguments</h2>
 <p>Arguments of <code>launch</code> as the engine receives them. The extension resolves launch.json first: a <code>.dll</code> program becomes <code>program: &lt;dotnet.exe of the chosen bitness&gt;, args: [&lt;dll&gt;, ...]</code>, and a .NET Framework exe gets <code>__dotnetFramework</code>. launch.json properties that only the extension reads (<code>architecture</code>, <code>sourceFileMap</code>, <code>sourceSearchPaths</code>, <code>processName</code>, <code>waitTimeout</code>) are not listed here.</p>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>program</code></td><td>string</td><td>Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe).</td></tr>
+<tr><td><code>program</code></td><td>string</td><td>Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe). Not needed with <code>dumpPath</code>.</td></tr>
+<tr><td><code>dumpPath</code><span class="opt">optional</span></td><td>string</td><td>Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability <code>dotnetX86SupportsDumps</code>). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After <code>configurationDone</code> the engine sends <code>process</code> (without <code>systemProcessId</code>; <code>dumpProcessId</code> is the number in the dump) and <code>stopped</code> (<code>exception</code> on the thread that was throwing, else <code>pause</code>, with the description <code>Crash dump</code>). <code>continue</code>, the steps, <code>pause</code>, <code>goto</code>, <code>setVariable</code>, <code>setExpression</code>, <code>dotnetX86.applyChanges</code>, <code>dotnetX86.freezeThread</code>, <code>dotnetX86.makeObjectId</code>, <code>dotnetX86.processUsage</code> and expressions that run code are refused with the reason.</td></tr>
 <tr><td><code>args</code><span class="opt">optional</span></td><td>string[]</td><td>Command-line arguments.</td></tr>
 <tr><td><code>cwd</code><span class="opt">optional</span></td><td>string</td><td>Working directory of the program.</td></tr>
 <tr><td><code>env</code><span class="opt">optional</span></td><td>{ [name]: string | null }</td><td>Environment variables added for the program. <code>null</code> removes a variable.</td></tr>
@@ -111,6 +112,7 @@ main a { color: var(--engine); }
   &quot;command&quot;: &quot;launch&quot;,
   &quot;arguments&quot;: {
     &quot;program&quot;: &quot;&quot;,
+    &quot;dumpPath&quot;: &quot;&quot;,
     &quot;args&quot;: [
       &quot;&quot;
     ],
@@ -203,6 +205,7 @@ main a { color: var(--engine); }
   &quot;dotnetX86SupportsValueWatches&quot;: true,
   &quot;dotnetX86SupportsUiFreeze&quot;: true,
   &quot;dotnetX86SupportsProcessUsage&quot;: true,
+  &quot;dotnetX86SupportsDumps&quot;: true,
   &quot;exceptionBreakpointFilters&quot;: [
     {
       &quot;filter&quot;: &quot;all&quot;,
@@ -928,9 +931,10 @@ main a { color: var(--engine); }
 <p>Sent once the program is started or attached to (after the <code>configurationDone</code> response). The extension starts the memory graph and the UI freeze watch with <code>systemProcessId</code>.</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>name</code></td><td>string</td><td>The program's path (launch) or the process's exe (attach).</td></tr>
-<tr><td><code>systemProcessId</code></td><td>number</td><td></td></tr>
-<tr><td><code>isLocalProcess</code></td><td><code>true</code></td><td></td></tr>
+<tr><td><code>name</code></td><td>string</td><td>The program's path (launch) or the process's exe (attach; for a crash dump, the exe in the dump).</td></tr>
+<tr><td><code>systemProcessId</code><span class="opt">optional</span></td><td>number</td><td>Absent for a crash dump (its process is not on this machine any more).</td></tr>
+<tr><td><code>dumpProcessId</code><span class="opt">optional</span></td><td>number</td><td>For a crash dump: the process number written in the dump.</td></tr>
+<tr><td><code>isLocalProcess</code></td><td>boolean</td><td><code>false</code> for a crash dump.</td></tr>
 <tr><td><code>startMethod</code></td><td><code>"launch"</code> | <code>"attach"</code></td><td></td></tr>
 </table>
 <details><summary>Example event</summary><pre>{
@@ -940,7 +944,8 @@ main a { color: var(--engine); }
   &quot;body&quot;: {
     &quot;name&quot;: &quot;&quot;,
     &quot;systemProcessId&quot;: 0,
-    &quot;isLocalProcess&quot;: true,
+    &quot;dumpProcessId&quot;: 0,
+    &quot;isLocalProcess&quot;: false,
     &quot;startMethod&quot;: &quot;launch&quot;
   }
 }</pre></details>

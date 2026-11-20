@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { readDumpArchitecture } from './dumpInfo';
 import { engineArchitecture, inspectPe } from './peInfo';
 import { listDotnetProcesses, processArchitecture } from './processPicker';
 import { configurationsForFolder } from './launchSetup';
@@ -73,6 +74,9 @@ export class X86ConfigurationProvider implements vscode.DebugConfigurationProvid
 }
 
 function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfiguration {
+    if (typeof config.dumpPath === 'string' && config.dumpPath) {
+        return resolveDump(config);
+    }
     const program: unknown = config.program;
     if (typeof program !== 'string' || !program) {
         throw new Error(vscode.l10n.t("Set \"program\" (the path to the .exe) in launch.json."));
@@ -109,6 +113,23 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
     }
     // The program runs as it was built (x86, x64, or AnyCPU as 64-bit): the engine of that bitness debugs it.
     config[ENGINE_ARCHITECTURE_KEY] = engineArchitecture(bitness);
+    return config;
+}
+
+/**
+ * A crash dump opens in the engine of the dumped process's bitness (the engine's DAC must match it). A 32-bit process
+ * written by a 64-bit tool counts as x86.
+ */
+function resolveDump(config: vscode.DebugConfiguration): vscode.DebugConfiguration {
+    const dumpPath: string = config.dumpPath;
+    if (!fs.existsSync(dumpPath)) {
+        throw new Error(vscode.l10n.t("Crash dump not found: {0}", dumpPath));
+    }
+    const architecture = readDumpArchitecture(dumpPath);
+    if (!architecture) {
+        throw new Error(vscode.l10n.t("{0} is not a crash dump (.dmp) of an x86 or x64 process.", dumpPath));
+    }
+    config[ENGINE_ARCHITECTURE_KEY] = architecture;
     return config;
 }
 

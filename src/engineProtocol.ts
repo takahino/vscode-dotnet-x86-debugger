@@ -22,8 +22,10 @@
  * @arguments launch
  */
 export interface LaunchArguments {
-    /** Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe). */
+    /** Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe). Not needed with `dumpPath`. */
     program: string;
+    /** Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability `dotnetX86SupportsDumps`). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After `configurationDone` the engine sends `process` (without `systemProcessId`; `dumpProcessId` is the number in the dump) and `stopped` (`exception` on the thread that was throwing, else `pause`, with the description `Crash dump`). `continue`, the steps, `pause`, `goto`, `setVariable`, `setExpression`, `dotnetX86.applyChanges`, `dotnetX86.freezeThread`, `dotnetX86.makeObjectId`, `dotnetX86.processUsage` and expressions that run code are refused with the reason. */
+    dumpPath?: string;
     /** Command-line arguments. */
     args?: string[];
     /** Working directory of the program. */
@@ -329,10 +331,14 @@ export interface PauseForFreezeArguments {
  * @sentBy engine
  */
 export interface ProcessEventBody {
-    /** The program's path (launch) or the process's exe (attach). */
+    /** The program's path (launch) or the process's exe (attach; for a crash dump, the exe in the dump). */
     name: string;
-    systemProcessId: number;
-    isLocalProcess: true;
+    /** Absent for a crash dump (its process is not on this machine any more). */
+    systemProcessId?: number;
+    /** For a crash dump: the process number written in the dump. */
+    dumpProcessId?: number;
+    /** `false` for a crash dump. */
+    isLocalProcess: boolean;
     startMethod: 'launch' | 'attach';
 }
 
@@ -569,6 +575,8 @@ export const ENGINE_CAPABILITIES = {
     dotnetX86SupportsUiFreeze: true,
     /** Custom: `dotnetX86.processUsage`. */
     dotnetX86SupportsProcessUsage: true,
+    /** Custom: crash dumps (launch argument `dumpPath`, read only). */
+    dotnetX86SupportsDumps: true,
     exceptionBreakpointFilters: [{ filter: 'all', label: 'all' }, { filter: 'user-unhandled', label: 'user-unhandled' }],
 } as const;
 

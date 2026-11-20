@@ -8,7 +8,11 @@
     "properties": {
       "program": {
         "type": "string",
-        "description": "Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe)."
+        "description": "Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe). Not needed with `dumpPath`."
+      },
+      "dumpPath": {
+        "type": "string",
+        "description": "Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability `dotnetX86SupportsDumps`). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After `configurationDone` the engine sends `process` (without `systemProcessId`; `dumpProcessId` is the number in the dump) and `stopped` (`exception` on the thread that was throwing, else `pause`, with the description `Crash dump`). `continue`, the steps, `pause`, `goto`, `setVariable`, `setExpression`, `dotnetX86.applyChanges`, `dotnetX86.freezeThread`, `dotnetX86.makeObjectId`, `dotnetX86.processUsage` and expressions that run code are refused with the reason."
       },
       "args": {
         "type": "array",
@@ -1331,13 +1335,19 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The program's path (launch) or the process's exe (attach)."
+            "description": "The program's path (launch) or the process's exe (attach; for a crash dump, the exe in the dump)."
           },
           "systemProcessId": {
-            "type": "number"
+            "type": "number",
+            "description": "Absent for a crash dump (its process is not on this machine any more)."
+          },
+          "dumpProcessId": {
+            "type": "number",
+            "description": "For a crash dump: the process number written in the dump."
           },
           "isLocalProcess": {
-            "const": true
+            "type": "boolean",
+            "description": "`false` for a crash dump."
           },
           "startMethod": {
             "type": "string",
@@ -1349,7 +1359,6 @@
         },
         "required": [
           "name",
-          "systemProcessId",
           "isLocalProcess",
           "startMethod"
         ]
@@ -1594,6 +1603,7 @@
     "dotnetX86SupportsValueWatches": true,
     "dotnetX86SupportsUiFreeze": true,
     "dotnetX86SupportsProcessUsage": true,
+    "dotnetX86SupportsDumps": true,
     "exceptionBreakpointFilters": [
       {
         "filter": "all",

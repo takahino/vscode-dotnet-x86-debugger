@@ -26,6 +26,8 @@
   "The bundled debug engine (dotnet-x86dbg, {0}) was not found: {1}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX.": "同梱のデバッグエンジン (dotnet-x86dbg、{0}) が見つかりません: {1}。scripts\\build-engine.ps1 で配置してから VSIX を作り直してください。",
   ".NET x86 Debugger works on Windows only.": ".NET x86 Debugger は Windows でのみ動作します。",
   "Set \"program\" (the path to the .exe) in launch.json.": "launch.json に \"program\"（.exe へのパス）を指定してください。",
+  "Crash dump not found: {0}": "クラッシュダンプが見つかりません: {0}",
+  "{0} is not a crash dump (.dmp) of an x86 or x64 process.": "{0} は、x86 か x64 のプロセスのクラッシュダンプ（.dmp）ではありません。",
   "program not found: {0}. Check that the project is built and the output path (bin/x86/...) is correct.": "program が見つかりません: {0}。ビルド済みか、出力パス（bin/x86/...）が正しいか確認してください。",
   "Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".": "processId が不正です: {0}。数値の PID か \"${command:pickProcess}\" を指定してください。",
   "The x86 dotnet.exe was not found. Install the x86 .NET runtime (Windows Desktop Runtime x86) or set DOTNET_ROOT(x86).": "x86 版 dotnet.exe が見つかりません。x86 の .NET ランタイム（Windows Desktop Runtime x86）をインストールするか、DOTNET_ROOT(x86) を設定してください。",

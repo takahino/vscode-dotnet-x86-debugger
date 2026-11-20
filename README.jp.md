@@ -187,6 +187,8 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `expressionEvaluationOptions` | `allowImplicitFuncEval: false` にすると、変数ビューでプロパティの getter と `ToString()` を自動では呼ばず、開いたときに呼びます（副作用のある getter への備え）。attach でも使えます。 |
 | `architecture` | `program` がフレームワーク依存の `.dll` のとき、それを動かす `dotnet.exe` のビット数（`x86` 既定 / `x64`）。`.exe` はビルドしたとおりに動き、同じビット数のデバッガーが使われます。 |
 | `decompile` | `app`（既定）: シンボルの無いプログラムのアセンブリを、必要になったときに C# に逆コンパイルします（「逆コンパイルしたソースでのデバッグ」参照）。`off`: 行いません。attach でも使えます。 |
+| `childProcesses` | プログラムが `Process.Start` で起動したプロセス: `record`（既定）はログに残し、`follow` は .NET の子も別のセッションで最初の行からデバッグします（.NET Framework の子は、ランタイムが読み込まれてから）。`off` は扱いません。attach でも使えます。 |
+| `dumpPath` | プログラムを起動する代わりに、このクラッシュダンプ（メモリーを含めて書いた `.dmp`。タスク マネージャーの「ダンプ ファイルの作成」、WER の LocalDumps、`procdump -ma`）を開きます。止まったプログラムとして見え（スレッド、コール スタック、変数、例外、ヒープのスナップショット）、続行、ステップ、関数の実行はできません。`program` は要りません。 |
 | `sourceFileMap` | PDB に記録されたソースのパスの接頭辞を、ローカルのフォルダに置き換えます（下記参照）。attach でも使えます。 |
 | `sourceSearchPaths` | PDB に記録された場所に無いソースを探すフォルダ（下記参照）。attach でも使えます。 |
 
