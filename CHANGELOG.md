@@ -36,6 +36,12 @@
   when you stop or step into them, so an exe shipped without symbols can be debugged in C# (breakpoints, stepping, locals) in the
   same session, with no .NET runtime needed. `decompile` in launch.json and attach (`app` by default, `off`); MCP tool `decompile`.
   The Modules view marks them *decompiled*.
+- Changed: **the engine does the extras itself** — logpoints, hit counts and the breakpoint markers (`#once`, `#after`, `#changed`,
+  `#caller`), Step Into Target, Break on Value Change, the SQL log, the exception log, the event trace, the UI freeze watch and the
+  memory graph's readings, which the extension's relay and PowerShell helpers did. They work the same, with fewer round trips at
+  each stop and no PowerShell; Step Into Target lists the calls from the compiled code (also in decompiled sources), and AI clients
+  get them through MCP too (`sql_log`, `exception_log`, `event_trace`, `ui_freeze`, `process_usage`). With a netcoredbg in
+  `dotnetX86.debuggerPath` the relay still does them.
 - Removed: **Decompile for Debugging** and **Delete Decompiled Symbols** (the bundled ILSpy helper, which needed a .NET 8 runtime and
   worked from the next session). The engine decompiles by itself instead; the symbols the helper left in the extension's storage are
   deleted on first start.

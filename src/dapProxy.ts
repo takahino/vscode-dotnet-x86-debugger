@@ -1,5 +1,8 @@
-// DAP relay between VS Code and netcoredbg that adds what netcoredbg lacks: logpoints, hit-count breakpoints
-// and readable exception filter labels. Kept free of the vscode module so it can be exercised directly against netcoredbg.
+// DAP relay between VS Code and the debug engine. With netcoredbg it adds what netcoredbg lacks: logpoints, hit-count
+// breakpoints, breakpoint markers, Step Into Target, Break on Value Change, the SQL / exception logs and the event trace.
+// The bundled engine (dotnet-x86dbg) does those itself and says so in its initialize capabilities: the relay then passes
+// them through (see EngineFeatures). Readable exception filter labels, path mapping and Source Link stay here.
+// Kept free of the vscode module so it can be exercised directly against netcoredbg.
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -57,6 +60,39 @@ export const FREEZE_PAUSE_REQUEST = 'dotnetX86.pauseForFreeze';
 export const EXCEPTION_TYPES_REQUEST = 'dotnetX86.setExceptionTypes';
 /** Custom DAP request (netcoredbg patch 0010): freeze / thaw a thread (arguments: threadId, frozen). */
 export const FREEZE_THREAD_REQUEST = 'dotnetX86.freezeThread';
+/** Custom DAP request of the bundled engine: the write sites of the watched names (arguments: watches [{name, sites [{path, line}]}]). */
+export const VALUE_WATCHES_REQUEST = 'dotnetX86.setValueWatches';
+/** Custom DAP event of the bundled engine, sent just before it pauses on a frozen UI thread (body: threadId, ms). */
+export const UI_FROZEN_EVENT = 'dotnetX86.uiFrozen';
+/** Custom DAP request of the bundled engine: the process's memory, CPU, GDI / USER objects, handles and address space. */
+export const PROCESS_USAGE_REQUEST = 'dotnetX86.processUsage';
+
+/**
+ * What the engine does itself, read from its initialize capabilities. netcoredbg says none of these: the relay then
+ * emulates them. The bundled engine says all of them: the relay passes the requests through and stays out of its stops.
+ */
+interface EngineFeatures {
+    /** logMessage, hitCondition and the markers in the condition ("#once", ...) are judged by the engine. */
+    breakpoints: boolean;
+    /** stepInTargets and stepIn with a targetId. */
+    stepTargets: boolean;
+    /** The SQL log, the exception log and the event trace (launch arguments sqlLog / exceptionLog, EVENT_TRACE_REQUEST). */
+    records: boolean;
+    /** Break on Value Change: the relay finds the write sites, the engine watches them (VALUE_WATCHES_REQUEST). */
+    valueWatches: boolean;
+    /** The UI freeze watch (launch argument uiFreeze; UI_FROZEN_EVENT before its pause). */
+    uiFreeze: boolean;
+}
+
+function engineFeatures(capabilities: any): EngineFeatures {
+    return {
+        breakpoints: capabilities.supportsLogPoints === true && capabilities.supportsHitConditionalBreakpoints === true,
+        stepTargets: capabilities.supportsStepInTargetsRequest === true,
+        records: capabilities.dotnetX86SupportsJournal === true,
+        valueWatches: capabilities.dotnetX86SupportsValueWatches === true,
+        uiFreeze: capabilities.dotnetX86SupportsUiFreeze === true,
+    };
+}
 
 export interface ExceptionFilterText {
     label: string;
@@ -106,6 +142,8 @@ export interface ProxyOptions {
      * breakpoints, which bind in code without symbols).
      */
     sqlMethods?: string[];
+    /** The UI freeze watch, for an engine that watches itself (passed as its launch argument uiFreeze). */
+    uiFreeze?: { enabled: boolean; thresholdMs: number };
 }
 
 interface WriteSite {
@@ -229,8 +267,15 @@ export class DapProxy {
     private userFunctionBreakpoints: any[] = [];
     /** A "Step Into Target" in progress: a step over the line with a function breakpoint on the target. */
     private pendingTargetStep: { method: string } | undefined;
-    /** The SQL log's provider methods. Their breakpoints are the proxy's: VS Code never sees them. */
-    private readonly sqlMethods: string[];
+    /** What the engine does itself (learned from its initialize response; none until then). */
+    private native: EngineFeatures = engineFeatures({});
+    /**
+     * The SQL log's provider methods when the relay runs the log (netcoredbg). Their breakpoints are the proxy's: VS Code
+     * never sees them. Empty when the engine runs the log itself.
+     */
+    private sqlMethods: string[];
+    /** Whether the relay runs the exception log (netcoredbg); the bundled engine runs it itself. */
+    private exceptionLog: boolean;
     /** Whether a setFunctionBreakpoints (VS Code's, or the proxy's own for the SQL log) reached netcoredbg. */
     private functionBreakpointsSent = false;
     /** VS Code's setFunctionBreakpoints requests by seq -> how many of the breakpoints in the response are VS Code's. */
@@ -251,6 +296,7 @@ export class DapProxy {
         this.mapper = options.sourceMapper ?? new SourcePathMapper();
         this.checkedExceptionTypes = options.breakOnExceptionTypes ?? [];
         this.sqlMethods = options.sqlMethods ?? [];
+        this.exceptionLog = Boolean(options.exceptionLog);
         // Before any message: VS Code sends the breakpoints right after initialize, and they must already carry PDB paths.
         if (this.mapper.enabled) {
             for (const module of options.preloadModules ?? []) {
@@ -281,6 +327,9 @@ export class DapProxy {
         if (message.type === 'request' && message.command === 'stackTrace' && message.seq !== undefined && !message.arguments?.startFrame) {
             this.pendingStackTraces.add(message.seq);
         }
+        if (message.type === 'request' && (message.command === 'launch' || message.command === 'attach')) {
+            message = { ...message, arguments: this.withEngineSettings(message.arguments ?? {}) };
+        }
         if (message.type === 'request' && message.command === 'setExceptionBreakpoints') {
             const args = message.arguments ?? {};
             this.userExceptionArgs = args;
@@ -301,11 +350,11 @@ export class DapProxy {
             void this.pauseForFreeze(message);
             return;
         }
-        if (message.type === 'request' && message.command === 'stepInTargets') {
+        if (message.type === 'request' && message.command === 'stepInTargets' && !this.native.stepTargets) {
             this.respond(message, { targets: this.stepInTargets(Number(message.arguments?.frameId)) });
             return;
         }
-        if (message.type === 'request' && message.command === 'stepIn' && message.arguments?.targetId !== undefined) {
+        if (message.type === 'request' && message.command === 'stepIn' && message.arguments?.targetId !== undefined && !this.native.stepTargets) {
             void this.stepIntoTarget(message);
             return;
         }
@@ -318,7 +367,7 @@ export class DapProxy {
                 message = { ...message, arguments: { ...message.arguments, breakpoints: this.functionBreakpointsForDebugger() } };
             }
         }
-        if (message.type === 'request' && message.command === EVENT_TRACE_REQUEST) {
+        if (message.type === 'request' && message.command === EVENT_TRACE_REQUEST && !this.native.records) {
             void this.setEventTrace(message);
             return;
         }
@@ -338,7 +387,8 @@ export class DapProxy {
             void this.setDataBreakpoints(message);
             return;
         }
-        if (message.type === 'request' && message.command === 'setBreakpoints' && message.seq !== undefined) {
+        // The engine judges logpoints, hit counts and markers itself: the breakpoints go as VS Code sent them.
+        if (message.type === 'request' && message.command === 'setBreakpoints' && message.seq !== undefined && !this.native.breakpoints) {
             const args = message.arguments ?? {};
             const path = normalizePath(args.source?.path ?? '');
             const userBreakpoints: any[] = args.breakpoints ?? [];
@@ -371,7 +421,16 @@ export class DapProxy {
 
     private async fromDebugger(message: DapMessage): Promise<void> {
         if (message.type === 'response' && message.command === 'initialize' && message.success) {
+            this.learnEngine(message.body ?? {});
             message.body = this.extendCapabilities(message.body ?? {});
+        }
+        if (message.type === 'event' && message.event === UI_FROZEN_EVENT && this.native.uiFreeze) {
+            // The engine pauses on the frozen UI thread next: its stop gets the localized reason below.
+            this.pendingFreeze = { threadId: Number(message.body?.threadId), ms: Number(message.body?.ms) || 0 };
+            return;
+        }
+        if (message.type === 'event' && message.event === 'output' && this.pendingFreeze && this.native.uiFreeze && String(message.body?.output ?? '').startsWith('UI not responding for ')) {
+            return; // the engine's English line: the localized one is written with the stop
         }
         if (message.type === 'response' && message.command === 'goto' && message.request_seq !== undefined) {
             this.finishGoto(message);
@@ -456,7 +515,7 @@ export class DapProxy {
                 return;
             }
         }
-        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'exception' && this.options.exceptionLog) {
+        if (message.type === 'event' && message.event === 'stopped' && message.body?.reason === 'exception' && this.exceptionLog) {
             if (await this.handleExceptionStop(message.body.threadId)) {
                 return;
             }
@@ -471,6 +530,35 @@ export class DapProxy {
             }
         }
         this.toClient(message);
+    }
+
+    /**
+     * The engine's initialize response, before any breakpoint or launch: what it does itself is no longer emulated here.
+     * The SQL and exception logs then run in the engine (their settings go with the launch arguments).
+     */
+    private learnEngine(capabilities: any): void {
+        this.native = engineFeatures(capabilities);
+        if (this.native.records) {
+            this.sqlMethods = [];
+            this.exceptionLog = false;
+        }
+    }
+
+    /** The launch / attach arguments with the settings of what the engine does itself (the SQL log, ...). */
+    private withEngineSettings(args: any): any {
+        const settings: any = {};
+        if (this.native.records && this.options.sqlMethods?.length) {
+            settings.sqlLog = { enabled: true, methods: this.options.sqlMethods };
+        }
+        if (this.native.records && this.options.exceptionLog) {
+            settings.exceptionLog = { enabled: true, snapshot: this.options.exceptionSnapshot !== false };
+        }
+        // The engine watches by default: an explicit setting also turns it off.
+        if (this.native.uiFreeze && this.options.uiFreeze) {
+            settings.uiFreeze = this.options.uiFreeze;
+        }
+        // launch.json wins over the extension's settings.
+        return { ...settings, ...args };
     }
 
     private extendCapabilities(body: any): any {
@@ -727,7 +815,7 @@ export class DapProxy {
      * log on, netcoredbg reports every thrown exception and handleExceptionStop decides whether to stop.
      */
     private exceptionArgsForDebugger(): any {
-        const merged = exceptionFiltersForDebugger(this.userExceptionSettings, this.checkedExceptionTypes, Boolean(this.options.exceptionLog));
+        const merged = exceptionFiltersForDebugger(this.userExceptionSettings, this.checkedExceptionTypes, this.exceptionLog);
         return { ...this.userExceptionArgs, ...merged };
     }
 
@@ -735,7 +823,7 @@ export class DapProxy {
     private async setCheckedExceptionTypes(message: DapMessage): Promise<void> {
         const types = message.arguments?.types;
         this.checkedExceptionTypes = Array.isArray(types) ? types.filter((t): t is string => typeof t === 'string') : [];
-        if (!this.options.exceptionLog) {
+        if (!this.exceptionLog) {
             await this.request('setExceptionBreakpoints', this.exceptionArgsForDebugger());
         }
         this.respond(message, {});
@@ -830,6 +918,10 @@ export class DapProxy {
 
     /** Replaces the value-change watches: finds their write sites and (re)sends the affected sources' breakpoints. */
     private async setDataBreakpoints(message: DapMessage): Promise<void> {
+        if (this.native.valueWatches) {
+            await this.setValueWatches(message);
+            return;
+        }
         const results: { verified: boolean; message?: string }[] = [];
         this.dataWatches.clear();
         for (const bp of message.arguments?.breakpoints ?? []) {
@@ -861,6 +953,31 @@ export class DapProxy {
         for (const [path, rawPath] of affected) {
             await this.resendBreakpoints(path, rawPath);
         }
+        this.respond(message, { breakpoints: results });
+    }
+
+    /**
+     * Break on Value Change with an engine that watches values itself: the write sites are found here (the engine has
+     * no workspace) and handed over; the engine stops when a write changes the value.
+     */
+    private async setValueWatches(message: DapMessage): Promise<void> {
+        const watches: { name: string; sites: { path: string; line: number }[] }[] = [];
+        for (const bp of message.arguments?.breakpoints ?? []) {
+            const name = String(bp.dataId ?? '');
+            const sites = name && this.options.findWriteSites ? await this.options.findWriteSites(name) : [];
+            // Write sites are workspace (local) files; the engine knows the PDB's paths.
+            watches.push({ name, sites: sites.map((s) => ({ path: this.mapper.toDebugger(s.path), line: s.line })) });
+        }
+        const r = await this.request(VALUE_WATCHES_REQUEST, { watches: watches.filter((w) => w.sites.length > 0) });
+        if (!r.success) {
+            this.toClient({ type: 'response', seq: this.nextEventSeq++, request_seq: message.seq, command: message.command, success: false, message: r.message, body: {} });
+            return;
+        }
+        const results = watches.map(({ name, sites }) =>
+            sites.length
+                ? { verified: true, message: `${name}: ${sites.length} assignment(s) watched` }
+                : { verified: false, message: `No assignment to ${name} was found in the workspace's C# files.` },
+        );
         this.respond(message, { breakpoints: results });
     }
 

@@ -42,6 +42,12 @@ export interface LaunchArguments {
     editAndContinue?: boolean;
     /** Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `dotnetX86.decompile`. */
     decompile?: 'app' | 'off';
+    /** SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (`dotnetX86.sqlExecuted`). `methods` replaces the provider methods (`Namespace.Type.Method`). The extension sets it from `dotnetX86.sqlLog.*` unless launch.json does. */
+    sqlLog?: boolean | { enabled?: boolean; methods?: string[] };
+    /** Exception log: record every thrown exception, also those that do not stop the program (`dotnetX86.exceptionThrown`); `snapshot` takes the stack and locals at the throw (default true). The extension sets it from `dotnetX86.exceptionLog.*`. */
+    exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
+    /** UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`. */
+    uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
     /** Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed). */
     __dotnetFramework?: boolean;
 }
@@ -61,6 +67,12 @@ export interface AttachArguments {
     expressionEvaluationOptions?: ExpressionEvaluationOptions;
     /** As in launch (the application's folder is the folder of the process's exe). */
     decompile?: 'app' | 'off';
+    /** As in launch. */
+    sqlLog?: boolean | { enabled?: boolean; methods?: string[] };
+    /** As in launch. */
+    exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
+    /** As in launch. */
+    uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
 }
 
 /** The same option as the C# extension's debugger (vsdbg). */
@@ -211,6 +223,69 @@ export interface DecompileResponse {
     truncated?: boolean;
 }
 
+/**
+ * Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends
+ * `dotnetX86.controlEvent`. (With netcoredbg the relay emulates it with function breakpoints it continues from.)
+ * @request dotnetX86.setEventTrace
+ * @handledBy engine
+ */
+export interface SetEventTraceArguments {
+    /** The handlers to trace (added to those already traced). */
+    handlers?: { breakpointName: string; label: string; event?: string; control?: string }[];
+    /** Stop tracing every handler. */
+    clear?: boolean;
+}
+
+/**
+ * Break on Value Change: the names to watch and the lines that write them (the relay finds those in the workspace's C#,
+ * which the engine does not have). Replaces the earlier watches. At a write the engine reads the value, steps over the
+ * line and reads it again: when it changed it stops with reason `data breakpoint` (`text`: `name: old → new`), otherwise
+ * it goes on as if nothing happened. The write-site breakpoints are not reported to the client.
+ * @request dotnetX86.setValueWatches
+ * @handledBy engine
+ */
+export interface SetValueWatchesArguments {
+    /** Each name with its write sites (paths as the PDB has them; the relay maps them through `sourceFileMap`). */
+    watches: { name: string; sites: { path: string; line: number }[] }[];
+}
+
+/** @response dotnetX86.setValueWatches */
+export interface SetValueWatchesResponse {
+    /** Per name: whether a site could be bound now (sites in modules not loaded yet bind when they load), and how many sites. */
+    watches: { name: string; verified: boolean; sites: number }[];
+}
+
+/**
+ * The program's process usage now, read by the engine from the process it debugs (running or stopped). The memory graph
+ * asks for it once a second.
+ * @request dotnetX86.processUsage
+ * @handledBy engine
+ */
+export interface ProcessUsageArguments {}
+
+/** @response dotnetX86.processUsage */
+export interface ProcessUsageResponse {
+    /** Bytes. */
+    privateBytes: number;
+    /** Bytes. */
+    workingSet: number;
+    /** CPU time (kernel + user) since the process started; the usage comes from the change between two readings. */
+    cpuMs: number;
+    gdiObjects: number;
+    userObjects: number;
+    /** The per-process limits of GDI / USER objects (10,000 unless changed in the registry). */
+    gdiQuota: number;
+    userQuota: number;
+    /** Kernel handles. */
+    handles: number;
+    /** A 32-bit process on 64-bit Windows: its address space is measured. */
+    wow64: boolean;
+    /** With wow64: 2 GB, or 4 GB for a large-address-aware exe; reserved + committed bytes; the largest free block. */
+    addressLimit?: number;
+    addressUsed?: number;
+    largestFree?: number;
+}
+
 /* ----------------------------------------------------------------------------------------------------------------
  * Custom requests the relay handles (never sent to the engine)
  * ---------------------------------------------------------------------------------------------------------------- */
@@ -226,26 +301,15 @@ export interface SetExceptionTypesArguments {
 }
 
 /**
- * Pauses the program because this UI thread stopped answering for `ms`; the stop is reported on that thread with the
- * description "UI not responding for N s".
+ * netcoredbg only (the bundled engine watches the UI itself, see `uiFreeze`): pauses the program because this UI thread
+ * stopped answering for `ms`, as the extension's helper found; the stop is reported on that thread with the description
+ * "UI not responding for N s".
  * @request dotnetX86.pauseForFreeze
  * @handledBy proxy
  */
 export interface PauseForFreezeArguments {
     threadId: number;
     ms: number;
-}
-
-/**
- * Traces the firing of event handlers without stopping (function breakpoints the relay continues from).
- * @request dotnetX86.setEventTrace
- * @handledBy proxy
- */
-export interface SetEventTraceArguments {
-    /** The handlers to trace (added to those already traced). */
-    handlers?: { breakpointName: string; label: string; event?: string; control?: string }[];
-    /** Stop tracing every handler. */
-    clear?: boolean;
 }
 
 /* ----------------------------------------------------------------------------------------------------------------
@@ -267,8 +331,9 @@ export interface ProcessEventBody {
 }
 
 /**
- * Standard DAP `stopped`. The engine sends `breakpoint` (also function breakpoints), `step`, `exception`, `pause` (also
- * `Debugger.Break()`) and `entry`; the relay sends `goto`, `data breakpoint` (Break on Value Change) and `step`.
+ * Standard DAP `stopped`. The engine sends `breakpoint` (also function breakpoints), `step` (also arriving in a Step Into
+ * Target), `exception`, `pause` (also `Debugger.Break()` and a UI freeze, with `description`), `entry` and `data breakpoint`
+ * (Break on Value Change, with `description` / `text`); the relay sends `goto` (with netcoredbg also `data breakpoint`).
  * @event stopped
  * @sentBy engine
  */
@@ -330,9 +395,10 @@ export interface ChangesAppliedEventBody {
 }
 
 /**
- * Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.
+ * Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section. (With netcoredbg the relay
+ * sends the events of the breakpoint options, logs and trace below.)
  * @event dotnetX86.trackedValues
- * @sentBy proxy
+ * @sentBy engine
  */
 export interface TrackedValuesEventBody {
     source: { path?: string; name?: string };
@@ -345,7 +411,7 @@ export interface TrackedValuesEventBody {
 /**
  * A temporary (`#once`) breakpoint was hit: the extension removes it from VS Code's list.
  * @event dotnetX86.removeBreakpoint
- * @sentBy proxy
+ * @sentBy engine
  */
 export interface RemoveBreakpointEventBody {
     source: { path?: string; name?: string };
@@ -355,7 +421,7 @@ export interface RemoveBreakpointEventBody {
 /**
  * An exception was thrown (exception log): sent for every throw while the log is on, whether the program stops or not.
  * @event dotnetX86.exceptionThrown
- * @sentBy proxy
+ * @sentBy engine
  */
 export interface ExceptionThrownEventBody {
     time: number;
@@ -375,7 +441,7 @@ export interface ExceptionThrownEventBody {
 /**
  * A statement read from a database command (SQL log), with its parameters and the frames that ran it.
  * @event dotnetX86.sqlExecuted
- * @sentBy proxy
+ * @sentBy engine
  */
 export interface SqlExecutedEventBody {
     time: number;
@@ -399,7 +465,7 @@ export interface SqlExecutedEventBody {
 /**
  * A traced event handler ran (event trace).
  * @event dotnetX86.controlEvent
- * @sentBy proxy
+ * @sentBy engine
  */
 export interface ControlEventEventBody {
     time: number;
@@ -411,6 +477,17 @@ export interface ControlEventEventBody {
     handler: string;
     source?: { path?: string; name?: string };
     line?: number;
+}
+
+/**
+ * A UI thread stopped answering window messages for `ms` while the program ran (launch argument `uiFreeze`): the engine
+ * pauses the program next, on that thread. The relay words the stop's reason in the user's language.
+ * @event dotnetX86.uiFrozen
+ * @sentBy engine
+ */
+export interface UiFrozenEventBody {
+    threadId: number;
+    ms: number;
 }
 
 /* ----------------------------------------------------------------------------------------------------------------
@@ -429,8 +506,8 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'initialize', handledBy: 'engine', notes: 'Answers with the capabilities below, then sends `initialized`. Reads `supportsInvalidatedEvent`.' },
     { command: 'launch', handledBy: 'engine', notes: 'Checks the program (exists, bitness of the engine, .NET Framework 4.x) and remembers it; starts it at `configurationDone`.' },
     { command: 'attach', handledBy: 'engine', notes: 'Checks the process (runtime loaded, bitness of the engine); attaches at `configurationDone`.' },
-    { command: 'configurationDone', handledBy: 'both', notes: 'Starts or attaches, then sends `process`. The relay first sets the SQL log\'s function breakpoints.' },
-    { command: 'setBreakpoints', handledBy: 'both', notes: '`condition` is a C# expression evaluated in the stopped program. The relay keeps `hitCondition`, `logMessage` and the `#once` / `#after` / `#changed` / `#caller` conditions to itself.' },
+    { command: 'configurationDone', handledBy: 'engine', notes: 'Starts or attaches, then sends `process`. (With netcoredbg the relay first sets the SQL log\'s function breakpoints.)' },
+    { command: 'setBreakpoints', handledBy: 'both', notes: '`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). The relay maps paths (with netcoredbg it judges those itself).' },
     { command: 'setFunctionBreakpoints', handledBy: 'both', notes: '`Type.Method`, `Method`, `Namespace.Type.Method` (all overloads). `anyCode: true` binds outside user code too (SQL log, event trace). The relay adds its own breakpoints and cuts the response back to VS Code\'s.' },
     { command: 'setExceptionBreakpoints', handledBy: 'both', notes: 'Filters `all` and `user-unhandled`; `filterOptions[].condition` is `A, B` or `!A, B` (type names).' },
     { command: 'exceptionInfo', handledBy: 'engine', notes: '`exceptionId` is `CLR/<type>`, `breakMode` `always` / `unhandled` / `userUnhandled`, `details` with `message`, `stackTrace`, `innerException`.' },
@@ -443,13 +520,13 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'setExpression', handledBy: 'engine', notes: 'Assigns to any assignable expression.' },
     { command: 'continue', handledBy: 'engine', notes: 'Frozen threads stay suspended.' },
     { command: 'next', handledBy: 'engine', notes: 'Steps over `await` to the same method\'s continuation.' },
-    { command: 'stepIn', handledBy: 'both', notes: 'With `targetId`, the relay steps into the chosen call (Step Into Specific).' },
+    { command: 'stepIn', handledBy: 'engine', notes: 'With `targetId`, steps into the chosen call (Step Into Specific): the engine steps over the line with a breakpoint on the target.' },
     { command: 'stepOut', handledBy: 'engine', notes: 'From an async method, returns to the awaiting caller.' },
-    { command: 'stepInTargets', handledBy: 'proxy', notes: 'The calls on the line, in the order they run.' },
+    { command: 'stepInTargets', handledBy: 'engine', notes: 'The calls of the current statement, read from the IL, in the order they run (`Type.Method`, properties `Type.Name.get`).' },
     { command: 'pause', handledBy: 'engine', notes: 'Stops every thread (reason `pause`).' },
     { command: 'gotoTargets', handledBy: 'engine', notes: 'The lines of the same method that can be the next statement.' },
     { command: 'goto', handledBy: 'both', notes: 'The engine moves the instruction pointer; the relay sends the `stopped` (reason `goto`).' },
-    { command: 'dataBreakpointInfo', handledBy: 'proxy', notes: 'Break on Value Change, emulated with breakpoints on the lines that write the variable.' },
+    { command: 'dataBreakpointInfo', handledBy: 'proxy', notes: 'Break on Value Change for a plain name. `setDataBreakpoints` finds the lines that write it in the workspace and sends them as `dotnetX86.setValueWatches`.' },
     { command: 'cancel', handledBy: 'engine', notes: 'Cancels a running evaluation.' },
     { command: 'terminate', handledBy: 'engine', notes: 'Ends the program; `exited` and `terminated` follow.' },
     { command: 'disconnect', handledBy: 'engine', notes: 'Ends a launched program, detaches from an attached one (`terminateDebuggee` overrides).' },
@@ -473,6 +550,19 @@ export const ENGINE_CAPABILITIES = {
     dotnetX86SupportsApplyChanges: true,
     /** Custom: `dotnetX86.decompile`, and the `decompile` launch / attach argument. */
     dotnetX86SupportsDecompile: true,
+    /** The engine judges logpoints, hit counts and the breakpoint markers. */
+    supportsLogPoints: true,
+    supportsHitConditionalBreakpoints: true,
+    /** Step Into Target: `stepInTargets`, and `stepIn` with `targetId`. */
+    supportsStepInTargetsRequest: true,
+    /** Custom: the SQL log, the exception log and the event trace (launch arguments `sqlLog` / `exceptionLog`, `dotnetX86.setEventTrace`). */
+    dotnetX86SupportsJournal: true,
+    /** Custom: `dotnetX86.setValueWatches` (Break on Value Change). */
+    dotnetX86SupportsValueWatches: true,
+    /** Custom: the UI freeze watch (launch argument `uiFreeze`, `dotnetX86.uiFrozen`). */
+    dotnetX86SupportsUiFreeze: true,
+    /** Custom: `dotnetX86.processUsage`. */
+    dotnetX86SupportsProcessUsage: true,
     exceptionBreakpointFilters: [{ filter: 'all', label: 'all' }, { filter: 'user-unhandled', label: 'user-unhandled' }],
 } as const;
 

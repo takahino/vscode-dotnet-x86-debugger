@@ -2,6 +2,7 @@ import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { PROCESS_USAGE_REQUEST } from './dapProxy';
 import { isEnabled } from './features';
 
 interface Sample {
@@ -16,6 +17,19 @@ interface Sample {
     user: number;
     handles: number;
     /** Reserved + committed 32-bit address space, and its largest free block; null when not a 32-bit process. */
+    addressUsed: number | null;
+    largestFree: number | null;
+}
+
+/** One reading of the process (from the engine or the helper), before the CPU usage is worked out. */
+interface Reading {
+    privateBytes: number;
+    workingSet: number;
+    /** CPU time since the process started. */
+    cpuMs: number;
+    gdi: number;
+    user: number;
+    handles: number;
     addressUsed: number | null;
     largestFree: number | null;
 }
@@ -54,6 +68,8 @@ const SAMPLE_INTERVAL_MS = 1000;
 export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.Disposable {
     private current: SessionMemory | undefined;
     private sampler: cp.ChildProcess | undefined;
+    /** Stops asking the engine for readings (when the engine reads the usage itself). */
+    private stopPolling: (() => void) | undefined;
     private panel: vscode.WebviewPanel | undefined;
 
     constructor(private readonly extensionPath: string, private readonly output: vscode.OutputChannel) {}
@@ -63,13 +79,18 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
         if (!isEnabled('memoryGraph', session.workspaceFolder?.uri)) {
             return undefined;
         }
+        // The bundled engine reads the usage itself (PROCESS_USAGE_REQUEST): no PowerShell helper then.
+        let engineReads = false;
         return {
-            onDidSendMessage: (m: { type?: string; event?: string; body?: { systemProcessId?: number } }) => {
+            onDidSendMessage: (m: { type?: string; event?: string; command?: string; body?: { systemProcessId?: number; dotnetX86SupportsProcessUsage?: boolean } }) => {
+                if (m.type === 'response' && m.command === 'initialize') {
+                    engineReads = m.body?.dotnetX86SupportsProcessUsage === true;
+                }
                 if (m.type !== 'event') {
                     return;
                 }
                 if (m.event === 'process' && m.body?.systemProcessId) {
-                    this.start(session.name, m.body.systemProcessId);
+                    this.start(session, m.body.systemProcessId, engineReads);
                 } else if (m.event === 'stopped') {
                     this.markStopped();
                 } else if (m.event === 'continued') {
@@ -101,14 +122,69 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
         this.panel?.dispose();
     }
 
-    private start(name: string, pid: number): void {
+    private start(debugSession: vscode.DebugSession, pid: number, engineReads: boolean): void {
         this.stopSampler();
-        this.current = { name, pid, startedAt: Date.now(), samples: [], breaks: [], exited: false };
+        this.current = { name: debugSession.name, pid, startedAt: Date.now(), samples: [], breaks: [], exited: false };
         if (vscode.workspace.getConfiguration('dotnetX86.memoryGraph').get<boolean>('autoOpen')) {
             this.show();
         }
+        const record = this.recorder(this.current);
+        if (engineReads) {
+            this.pollEngine(debugSession, this.current, record);
+        } else {
+            this.startHelper(pid, this.current, record);
+        }
+    }
 
-        // One long-running helper is much cheaper than spawning a process per sample.
+    /** Adds a reading to the session's samples (the CPU usage comes from the change of CPU time since the last one). */
+    private recorder(session: SessionMemory): (reading: Reading) => void {
+        const cores = Math.max(1, os.cpus().length);
+        let previous: { wall: number; cpuMs: number } | undefined;
+        return ({ privateBytes, workingSet, cpuMs, gdi, user, handles, addressUsed, largestFree }) => {
+            const wall = Date.now();
+            const cpu = previous && wall > previous.wall
+                ? Math.min(100, Math.max(0, ((cpuMs - previous.cpuMs) / ((wall - previous.wall) * cores)) * 100))
+                : null;
+            previous = { wall, cpuMs };
+            session.samples.push({ t: wall - session.startedAt, privateBytes, workingSet, cpu, gdi, user, handles, addressUsed, largestFree });
+            if (session.samples.length > MAX_SAMPLES) {
+                session.samples.shift();
+            }
+            this.post();
+        };
+    }
+
+    /** The bundled engine reads the usage from the process it debugs: asked once per interval. */
+    private pollEngine(debugSession: vscode.DebugSession, session: SessionMemory, record: (reading: Reading) => void): void {
+        let asking = false;
+        const timer = setInterval(() => {
+            if (asking) {
+                return; // the engine is busy (e.g. evaluating): skip a beat rather than queue requests
+            }
+            asking = true;
+            debugSession.customRequest(PROCESS_USAGE_REQUEST).then(
+                (u) => {
+                    asking = false;
+                    session.info ??= { wow64: u.wow64 === true, addressLimit: u.addressLimit ?? 0, gdiQuota: u.gdiQuota, userQuota: u.userQuota };
+                    record({
+                        privateBytes: u.privateBytes, workingSet: u.workingSet, cpuMs: u.cpuMs, gdi: u.gdiObjects, user: u.userObjects, handles: u.handles,
+                        addressUsed: u.addressUsed ?? null, largestFree: u.largestFree ?? null,
+                    });
+                },
+                () => {
+                    // The process is gone (or the session ended).
+                    asking = false;
+                    clearInterval(timer);
+                    session.exited = true;
+                    this.post();
+                },
+            );
+        }, SAMPLE_INTERVAL_MS);
+        this.stopPolling = () => clearInterval(timer);
+    }
+
+    /** netcoredbg: a PowerShell helper samples the process (one long-running helper is cheaper than a process per sample). */
+    private startHelper(pid: number, session: SessionMemory, record: (reading: Reading) => void): void {
         const script = path.join(this.extensionPath, 'resources', 'processSampler.ps1');
         const sampler = cp.spawn(
             'powershell.exe',
@@ -116,9 +192,6 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
             { windowsHide: true },
         );
         sampler.on('error', (e) => this.output.appendLine(`[memory] could not start PowerShell: ${e.message}`));
-        const session = this.current;
-        const cores = Math.max(1, os.cpus().length);
-        let previous: { wall: number; cpuMs: number } | undefined;
         let pending = '';
         sampler.stdout.on('data', (d: Buffer) => {
             pending += d.toString();
@@ -135,21 +208,8 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
                     continue;
                 }
                 const [privateBytes, workingSet, cpuMs, gdi, user, handles, addressUsed, largestFree] = n;
-                const wall = Date.now();
-                const cpu = previous && wall > previous.wall
-                    ? Math.min(100, Math.max(0, ((cpuMs - previous.cpuMs) / ((wall - previous.wall) * cores)) * 100))
-                    : null;
-                previous = { wall, cpuMs };
-                session.samples.push({
-                    t: wall - session.startedAt, privateBytes, workingSet, cpu, gdi, user, handles,
-                    addressUsed: addressUsed < 0 ? null : addressUsed,
-                    largestFree: largestFree < 0 ? null : largestFree,
-                });
-                if (session.samples.length > MAX_SAMPLES) {
-                    session.samples.shift();
-                }
+                record({ privateBytes, workingSet, cpuMs, gdi, user, handles, addressUsed: addressUsed < 0 ? null : addressUsed, largestFree: largestFree < 0 ? null : largestFree });
             }
-            this.post();
         });
         sampler.stderr.on('data', (d: Buffer) => this.output.appendLine(`[memory] ${d.toString().trimEnd()}`));
         sampler.on('exit', () => {
@@ -179,6 +239,8 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
         this.markContinued();
         this.sampler?.kill();
         this.sampler = undefined;
+        this.stopPolling?.();
+        this.stopPolling = undefined;
     }
 
     private post(): void {

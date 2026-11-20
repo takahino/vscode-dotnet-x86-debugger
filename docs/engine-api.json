@@ -63,6 +63,66 @@
         ],
         "description": "Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `dotnetX86.decompile`."
       },
+      "sqlLog": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "description": "SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (`dotnetX86.sqlExecuted`). `methods` replaces the provider methods (`Namespace.Type.Method`). The extension sets it from `dotnetX86.sqlLog.*` unless launch.json does."
+      },
+      "exceptionLog": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "snapshot": {
+                "type": "boolean"
+              }
+            }
+          }
+        ],
+        "description": "Exception log: record every thrown exception, also those that do not stop the program (`dotnetX86.exceptionThrown`); `snapshot` takes the stack and locals at the throw (default true). The extension sets it from `dotnetX86.exceptionLog.*`."
+      },
+      "uiFreeze": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "thresholdMs": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "description": "UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`."
+      },
       "__dotnetFramework": {
         "type": "boolean",
         "description": "Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed)."
@@ -106,6 +166,66 @@
           "off"
         ],
         "description": "As in launch (the application's folder is the folder of the process's exe)."
+      },
+      "sqlLog": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "description": "As in launch."
+      },
+      "exceptionLog": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "snapshot": {
+                "type": "boolean"
+              }
+            }
+          }
+        ],
+        "description": "As in launch."
+      },
+      "uiFreeze": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "thresholdMs": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "description": "As in launch."
       }
     },
     "required": [
@@ -467,31 +587,79 @@
       }
     },
     {
-      "name": "dotnetX86.pauseForFreeze",
+      "name": "dotnetX86.processUsage",
       "kind": "request",
-      "side": "proxy",
-      "description": "Pauses the program because this UI thread stopped answering for `ms`; the stop is reported on that thread with the description \"UI not responding for N s\".",
+      "side": "engine",
+      "description": "The program's process usage now, read by the engine from the process it debugs (running or stopped). The memory graph asks for it once a second.",
       "arguments": {
         "type": "object",
+        "properties": {}
+      },
+      "response": {
+        "type": "object",
         "properties": {
-          "threadId": {
+          "privateBytes": {
+            "type": "number",
+            "description": "Bytes."
+          },
+          "workingSet": {
+            "type": "number",
+            "description": "Bytes."
+          },
+          "cpuMs": {
+            "type": "number",
+            "description": "CPU time (kernel + user) since the process started; the usage comes from the change between two readings."
+          },
+          "gdiObjects": {
             "type": "number"
           },
-          "ms": {
+          "userObjects": {
+            "type": "number"
+          },
+          "gdiQuota": {
+            "type": "number",
+            "description": "The per-process limits of GDI / USER objects (10,000 unless changed in the registry)."
+          },
+          "userQuota": {
+            "type": "number"
+          },
+          "handles": {
+            "type": "number",
+            "description": "Kernel handles."
+          },
+          "wow64": {
+            "type": "boolean",
+            "description": "A 32-bit process on 64-bit Windows: its address space is measured."
+          },
+          "addressLimit": {
+            "type": "number",
+            "description": "With wow64: 2 GB, or 4 GB for a large-address-aware exe; reserved + committed bytes; the largest free block."
+          },
+          "addressUsed": {
+            "type": "number"
+          },
+          "largestFree": {
             "type": "number"
           }
         },
         "required": [
-          "threadId",
-          "ms"
+          "privateBytes",
+          "workingSet",
+          "cpuMs",
+          "gdiObjects",
+          "userObjects",
+          "gdiQuota",
+          "userQuota",
+          "handles",
+          "wow64"
         ]
       }
     },
     {
       "name": "dotnetX86.setEventTrace",
       "kind": "request",
-      "side": "proxy",
-      "description": "Traces the firing of event handlers without stopping (function breakpoints the relay continues from).",
+      "side": "engine",
+      "description": "Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends `dotnetX86.controlEvent`. (With netcoredbg the relay emulates it with function breakpoints it continues from.)",
       "arguments": {
         "type": "object",
         "properties": {
@@ -525,6 +693,106 @@
             "description": "Stop tracing every handler."
           }
         }
+      }
+    },
+    {
+      "name": "dotnetX86.setValueWatches",
+      "kind": "request",
+      "side": "engine",
+      "description": "Break on Value Change: the names to watch and the lines that write them (the relay finds those in the workspace's C#, which the engine does not have). Replaces the earlier watches. At a write the engine reads the value, steps over the line and reads it again: when it changed it stops with reason `data breakpoint` (`text`: `name: old → new`), otherwise it goes on as if nothing happened. The write-site breakpoints are not reported to the client.",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "watches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "sites": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "line"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "sites"
+              ]
+            },
+            "description": "Each name with its write sites (paths as the PDB has them; the relay maps them through `sourceFileMap`)."
+          }
+        },
+        "required": [
+          "watches"
+        ]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "watches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "verified": {
+                  "type": "boolean"
+                },
+                "sites": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name",
+                "verified",
+                "sites"
+              ]
+            },
+            "description": "Per name: whether a site could be bound now (sites in modules not loaded yet bind when they load), and how many sites."
+          }
+        },
+        "required": [
+          "watches"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.pauseForFreeze",
+      "kind": "request",
+      "side": "proxy",
+      "description": "netcoredbg only (the bundled engine watches the UI itself, see `uiFreeze`): pauses the program because this UI thread stopped answering for `ms`, as the extension's helper found; the stop is reported on that thread with the description \"UI not responding for N s\".",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "number"
+          },
+          "ms": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "threadId",
+          "ms"
+        ]
       }
     },
     {
@@ -635,143 +903,9 @@
       }
     },
     {
-      "name": "dotnetX86.mcpEndpoint",
-      "kind": "event",
-      "side": "engine",
-      "description": "Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `dotnetX86.mcp.enabled`): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\\dotnet-x86dbg\\mcp\\<enginePid>.json` (removed on exit), where `dotnet-x86dbg --mcp-connect` finds it for AI clients outside VS Code.",
-      "body": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "`http://127.0.0.1:<port>/mcp`. Requests from a web page (an `Origin` other than localhost or VS Code) are refused."
-          },
-          "token": {
-            "type": "string",
-            "description": "Required as `Authorization: Bearer <token>`; made anew for every engine."
-          },
-          "enginePid": {
-            "type": "number",
-            "description": "Process id of the engine."
-          }
-        },
-        "required": [
-          "url",
-          "token",
-          "enginePid"
-        ]
-      }
-    },
-    {
-      "name": "output",
-      "kind": "event",
-      "side": "engine",
-      "description": "Standard DAP `output`. Categories: `stdout` / `stderr` (the program's output, decoded as UTF-8 while it is valid, else in the console code page), `console` (Debug.WriteLine and the engine's notes), `important` (an evaluation that had to run the other threads to finish).",
-      "body": {
-        "type": "object",
-        "properties": {
-          "category": {
-            "type": "string",
-            "enum": [
-              "stdout",
-              "stderr",
-              "console",
-              "important"
-            ]
-          },
-          "output": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "category",
-          "output"
-        ]
-      }
-    },
-    {
-      "name": "process",
-      "kind": "event",
-      "side": "engine",
-      "description": "Sent once the program is started or attached to (after the `configurationDone` response). The extension starts the memory graph and the UI freeze watch with `systemProcessId`.",
-      "body": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The program's path (launch) or the process's exe (attach)."
-          },
-          "systemProcessId": {
-            "type": "number"
-          },
-          "isLocalProcess": {
-            "const": true
-          },
-          "startMethod": {
-            "type": "string",
-            "enum": [
-              "launch",
-              "attach"
-            ]
-          }
-        },
-        "required": [
-          "name",
-          "systemProcessId",
-          "isLocalProcess",
-          "startMethod"
-        ]
-      }
-    },
-    {
-      "name": "stopped",
-      "kind": "event",
-      "side": "engine",
-      "description": "Standard DAP `stopped`. The engine sends `breakpoint` (also function breakpoints), `step`, `exception`, `pause` (also `Debugger.Break()`) and `entry`; the relay sends `goto`, `data breakpoint` (Break on Value Change) and `step`.",
-      "body": {
-        "type": "object",
-        "properties": {
-          "reason": {
-            "type": "string",
-            "enum": [
-              "breakpoint",
-              "step",
-              "exception",
-              "pause",
-              "entry",
-              "goto",
-              "data breakpoint"
-            ]
-          },
-          "threadId": {
-            "type": "number"
-          },
-          "allThreadsStopped": {
-            "type": "boolean"
-          },
-          "description": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          },
-          "hitBreakpointIds": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          }
-        },
-        "required": [
-          "reason",
-          "threadId"
-        ]
-      }
-    },
-    {
       "name": "dotnetX86.controlEvent",
       "kind": "event",
-      "side": "proxy",
+      "side": "engine",
       "description": "A traced event handler ran (event trace).",
       "body": {
         "type": "object",
@@ -834,7 +968,7 @@
     {
       "name": "dotnetX86.exceptionThrown",
       "kind": "event",
-      "side": "proxy",
+      "side": "engine",
       "description": "An exception was thrown (exception log): sent for every throw while the log is on, whether the program stops or not.",
       "body": {
         "type": "object",
@@ -887,9 +1021,37 @@
       }
     },
     {
+      "name": "dotnetX86.mcpEndpoint",
+      "kind": "event",
+      "side": "engine",
+      "description": "Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `dotnetX86.mcp.enabled`): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\\dotnet-x86dbg\\mcp\\<enginePid>.json` (removed on exit), where `dotnet-x86dbg --mcp-connect` finds it for AI clients outside VS Code.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "`http://127.0.0.1:<port>/mcp`. Requests from a web page (an `Origin` other than localhost or VS Code) are refused."
+          },
+          "token": {
+            "type": "string",
+            "description": "Required as `Authorization: Bearer <token>`; made anew for every engine."
+          },
+          "enginePid": {
+            "type": "number",
+            "description": "Process id of the engine."
+          }
+        },
+        "required": [
+          "url",
+          "token",
+          "enginePid"
+        ]
+      }
+    },
+    {
       "name": "dotnetX86.removeBreakpoint",
       "kind": "event",
-      "side": "proxy",
+      "side": "engine",
       "description": "A temporary (`#once`) breakpoint was hit: the extension removes it from VS Code's list.",
       "body": {
         "type": "object",
@@ -918,7 +1080,7 @@
     {
       "name": "dotnetX86.sqlExecuted",
       "kind": "event",
-      "side": "proxy",
+      "side": "engine",
       "description": "A statement read from a database command (SQL log), with its parameters and the frames that ran it.",
       "body": {
         "type": "object",
@@ -1033,8 +1195,8 @@
     {
       "name": "dotnetX86.trackedValues",
       "kind": "event",
-      "side": "proxy",
-      "description": "Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.",
+      "side": "engine",
+      "description": "Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section. (With netcoredbg the relay sends the events of the breakpoint options, logs and trace below.)",
       "body": {
         "type": "object",
         "properties": {
@@ -1086,6 +1248,133 @@
           "line",
           "time",
           "values"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.uiFrozen",
+      "kind": "event",
+      "side": "engine",
+      "description": "A UI thread stopped answering window messages for `ms` while the program ran (launch argument `uiFreeze`): the engine pauses the program next, on that thread. The relay words the stop's reason in the user's language.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "number"
+          },
+          "ms": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "threadId",
+          "ms"
+        ]
+      }
+    },
+    {
+      "name": "output",
+      "kind": "event",
+      "side": "engine",
+      "description": "Standard DAP `output`. Categories: `stdout` / `stderr` (the program's output, decoded as UTF-8 while it is valid, else in the console code page), `console` (Debug.WriteLine and the engine's notes), `important` (an evaluation that had to run the other threads to finish).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "stdout",
+              "stderr",
+              "console",
+              "important"
+            ]
+          },
+          "output": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "output"
+        ]
+      }
+    },
+    {
+      "name": "process",
+      "kind": "event",
+      "side": "engine",
+      "description": "Sent once the program is started or attached to (after the `configurationDone` response). The extension starts the memory graph and the UI freeze watch with `systemProcessId`.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The program's path (launch) or the process's exe (attach)."
+          },
+          "systemProcessId": {
+            "type": "number"
+          },
+          "isLocalProcess": {
+            "const": true
+          },
+          "startMethod": {
+            "type": "string",
+            "enum": [
+              "launch",
+              "attach"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "systemProcessId",
+          "isLocalProcess",
+          "startMethod"
+        ]
+      }
+    },
+    {
+      "name": "stopped",
+      "kind": "event",
+      "side": "engine",
+      "description": "Standard DAP `stopped`. The engine sends `breakpoint` (also function breakpoints), `step` (also arriving in a Step Into Target), `exception`, `pause` (also `Debugger.Break()` and a UI freeze, with `description`), `entry` and `data breakpoint` (Break on Value Change, with `description` / `text`); the relay sends `goto` (with netcoredbg also `data breakpoint`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "breakpoint",
+              "step",
+              "exception",
+              "pause",
+              "entry",
+              "goto",
+              "data breakpoint"
+            ]
+          },
+          "threadId": {
+            "type": "number"
+          },
+          "allThreadsStopped": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "hitBreakpointIds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "reason",
+          "threadId"
         ]
       }
     }
@@ -1142,13 +1431,13 @@
     },
     {
       "command": "configurationDone",
-      "handledBy": "both",
-      "notes": "Starts or attaches, then sends `process`. The relay first sets the SQL log's function breakpoints."
+      "handledBy": "engine",
+      "notes": "Starts or attaches, then sends `process`. (With netcoredbg the relay first sets the SQL log's function breakpoints.)"
     },
     {
       "command": "setBreakpoints",
       "handledBy": "both",
-      "notes": "`condition` is a C# expression evaluated in the stopped program. The relay keeps `hitCondition`, `logMessage` and the `#once` / `#after` / `#changed` / `#caller` conditions to itself."
+      "notes": "`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). The relay maps paths (with netcoredbg it judges those itself)."
     },
     {
       "command": "setFunctionBreakpoints",
@@ -1212,8 +1501,8 @@
     },
     {
       "command": "stepIn",
-      "handledBy": "both",
-      "notes": "With `targetId`, the relay steps into the chosen call (Step Into Specific)."
+      "handledBy": "engine",
+      "notes": "With `targetId`, steps into the chosen call (Step Into Specific): the engine steps over the line with a breakpoint on the target."
     },
     {
       "command": "stepOut",
@@ -1222,8 +1511,8 @@
     },
     {
       "command": "stepInTargets",
-      "handledBy": "proxy",
-      "notes": "The calls on the line, in the order they run."
+      "handledBy": "engine",
+      "notes": "The calls of the current statement, read from the IL, in the order they run (`Type.Method`, properties `Type.Name.get`)."
     },
     {
       "command": "pause",
@@ -1243,7 +1532,7 @@
     {
       "command": "dataBreakpointInfo",
       "handledBy": "proxy",
-      "notes": "Break on Value Change, emulated with breakpoints on the lines that write the variable."
+      "notes": "Break on Value Change for a plain name. `setDataBreakpoints` finds the lines that write it in the workspace and sends them as `dotnetX86.setValueWatches`."
     },
     {
       "command": "cancel",
@@ -1276,6 +1565,13 @@
     "supportsCancelRequest": true,
     "dotnetX86SupportsApplyChanges": true,
     "dotnetX86SupportsDecompile": true,
+    "supportsLogPoints": true,
+    "supportsHitConditionalBreakpoints": true,
+    "supportsStepInTargetsRequest": true,
+    "dotnetX86SupportsJournal": true,
+    "dotnetX86SupportsValueWatches": true,
+    "dotnetX86SupportsUiFreeze": true,
+    "dotnetX86SupportsProcessUsage": true,
     "exceptionBreakpointFilters": [
       {
         "filter": "all",

@@ -51,19 +51,22 @@ main a { color: var(--engine); }
 <a class="sub engine" href="#request-dotnetX86-handleStats">req dotnetX86.handleStats</a>
 <a class="sub engine" href="#request-dotnetX86-heapStats">req dotnetX86.heapStats</a>
 <a class="sub engine" href="#request-dotnetX86-makeObjectId">req dotnetX86.makeObjectId</a>
+<a class="sub engine" href="#request-dotnetX86-processUsage">req dotnetX86.processUsage</a>
+<a class="sub engine" href="#request-dotnetX86-setEventTrace">req dotnetX86.setEventTrace</a>
+<a class="sub engine" href="#request-dotnetX86-setValueWatches">req dotnetX86.setValueWatches</a>
 <a class="sub proxy" href="#request-dotnetX86-pauseForFreeze">req dotnetX86.pauseForFreeze</a>
-<a class="sub proxy" href="#request-dotnetX86-setEventTrace">req dotnetX86.setEventTrace</a>
 <a class="sub proxy" href="#request-dotnetX86-setExceptionTypes">req dotnetX86.setExceptionTypes</a>
 <a class="sub engine" href="#event-dotnetX86-changesApplied">evt dotnetX86.changesApplied</a>
+<a class="sub engine" href="#event-dotnetX86-controlEvent">evt dotnetX86.controlEvent</a>
+<a class="sub engine" href="#event-dotnetX86-exceptionThrown">evt dotnetX86.exceptionThrown</a>
 <a class="sub engine" href="#event-dotnetX86-mcpEndpoint">evt dotnetX86.mcpEndpoint</a>
+<a class="sub engine" href="#event-dotnetX86-removeBreakpoint">evt dotnetX86.removeBreakpoint</a>
+<a class="sub engine" href="#event-dotnetX86-sqlExecuted">evt dotnetX86.sqlExecuted</a>
+<a class="sub engine" href="#event-dotnetX86-trackedValues">evt dotnetX86.trackedValues</a>
+<a class="sub engine" href="#event-dotnetX86-uiFrozen">evt dotnetX86.uiFrozen</a>
 <a class="sub engine" href="#event-output">evt output</a>
 <a class="sub engine" href="#event-process">evt process</a>
 <a class="sub engine" href="#event-stopped">evt stopped</a>
-<a class="sub proxy" href="#event-dotnetX86-controlEvent">evt dotnetX86.controlEvent</a>
-<a class="sub proxy" href="#event-dotnetX86-exceptionThrown">evt dotnetX86.exceptionThrown</a>
-<a class="sub proxy" href="#event-dotnetX86-removeBreakpoint">evt dotnetX86.removeBreakpoint</a>
-<a class="sub proxy" href="#event-dotnetX86-sqlExecuted">evt dotnetX86.sqlExecuted</a>
-<a class="sub proxy" href="#event-dotnetX86-trackedValues">evt dotnetX86.trackedValues</a>
 <a href="#values">Value conventions</a>
 <a href="#definitions">Shared types</a>
 </nav>
@@ -96,6 +99,9 @@ main a { color: var(--engine); }
 <tr><td><code>expressionEvaluationOptions</code><span class="opt">optional</span></td><td><a href="#def-ExpressionEvaluationOptions">ExpressionEvaluationOptions</a></td><td>Options for evaluating expressions.</td></tr>
 <tr><td><code>editAndContinue</code><span class="opt">optional</span></td><td>boolean</td><td>Edit and Continue (default true): modules of a Debug build with symbols are loaded so that <code>dotnetX86.applyChanges</code> can update them. The extension sets it from <code>dotnetX86.editAndContinue.enabled</code> unless launch.json does.</td></tr>
 <tr><td><code>decompile</code><span class="opt">optional</span></td><td><code>"app"</code> | <code>"off"</code></td><td>Assemblies of the application without symbols are decompiled to C# by the engine (<code>app</code>, the default), or not (<code>off</code>). See <code>dotnetX86.decompile</code>.</td></tr>
+<tr><td><code>sqlLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (<code>dotnetX86.sqlExecuted</code>). <code>methods</code> replaces the provider methods (<code>Namespace.Type.Method</code>). The extension sets it from <code>dotnetX86.sqlLog.*</code> unless launch.json does.</td></tr>
+<tr><td><code>exceptionLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>Exception log: record every thrown exception, also those that do not stop the program (<code>dotnetX86.exceptionThrown</code>); <code>snapshot</code> takes the stack and locals at the throw (default true). The extension sets it from <code>dotnetX86.exceptionLog.*</code>.</td></tr>
+<tr><td><code>uiFreeze</code><span class="opt">optional</span></td><td>boolean | object</td><td>UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for <code>thresholdMs</code> while the program runs pauses it there (<code>dotnetX86.uiFrozen</code>, then <code>stopped</code> with reason <code>pause</code>). The extension sets it from <code>dotnetX86.uiFreeze.*</code>.</td></tr>
 <tr><td><code>__dotnetFramework</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the extension when <code>program</code> is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed).</td></tr>
 </table>
 <details><summary>Example</summary><pre>{
@@ -117,6 +123,9 @@ main a { color: var(--engine); }
     },
     &quot;editAndContinue&quot;: false,
     &quot;decompile&quot;: &quot;app&quot;,
+    &quot;sqlLog&quot;: false,
+    &quot;exceptionLog&quot;: false,
+    &quot;uiFreeze&quot;: false,
     &quot;__dotnetFramework&quot;: false
   }
 }</pre></details>
@@ -129,6 +138,9 @@ main a { color: var(--engine); }
 <tr><td><code>enableStepFiltering</code><span class="opt">optional</span></td><td>boolean</td><td>As in launch.</td></tr>
 <tr><td><code>expressionEvaluationOptions</code><span class="opt">optional</span></td><td><a href="#def-ExpressionEvaluationOptions">ExpressionEvaluationOptions</a></td><td>As in launch.</td></tr>
 <tr><td><code>decompile</code><span class="opt">optional</span></td><td><code>"app"</code> | <code>"off"</code></td><td>As in launch (the application's folder is the folder of the process's exe).</td></tr>
+<tr><td><code>sqlLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
+<tr><td><code>exceptionLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
+<tr><td><code>uiFreeze</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
 </table>
 
 <h2 id="standard">Standard DAP requests</h2>
@@ -137,8 +149,8 @@ main a { color: var(--engine); }
 <tr><td><code>initialize</code></td><td><span class="badge engine">engine</span></td><td>Answers with the capabilities below, then sends <code>initialized</code>. Reads <code>supportsInvalidatedEvent</code>.</td></tr>
 <tr><td><code>launch</code></td><td><span class="badge engine">engine</span></td><td>Checks the program (exists, bitness of the engine, .NET Framework 4.x) and remembers it; starts it at <code>configurationDone</code>.</td></tr>
 <tr><td><code>attach</code></td><td><span class="badge engine">engine</span></td><td>Checks the process (runtime loaded, bitness of the engine); attaches at <code>configurationDone</code>.</td></tr>
-<tr><td><code>configurationDone</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td>Starts or attaches, then sends <code>process</code>. The relay first sets the SQL log's function breakpoints.</td></tr>
-<tr><td><code>setBreakpoints</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td><code>condition</code> is a C# expression evaluated in the stopped program. The relay keeps <code>hitCondition</code>, <code>logMessage</code> and the <code>#once</code> / <code>#after</code> / <code>#changed</code> / <code>#caller</code> conditions to itself.</td></tr>
+<tr><td><code>configurationDone</code></td><td><span class="badge engine">engine</span></td><td>Starts or attaches, then sends <code>process</code>. (With netcoredbg the relay first sets the SQL log's function breakpoints.)</td></tr>
+<tr><td><code>setBreakpoints</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td><code>condition</code> is a C# expression evaluated in the stopped program, or a marker (<code>#once</code>, <code>#after File.cs:12</code>, <code>#changed expr</code>, <code>#caller A, B</code>). The engine also judges <code>hitCondition</code> (<code>N</code>, <code>==N</code>, <code>&gt;=N</code>, <code>&gt;N</code>, <code>%N</code>) and <code>logMessage</code> (<code>{expr}</code>, <code>$FUNCTION</code>, <code>$TID</code>, <code>#track:</code>, <code>#timer-start:</code> / <code>#timer-end:</code>). The relay maps paths (with netcoredbg it judges those itself).</td></tr>
 <tr><td><code>setFunctionBreakpoints</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td><code>Type.Method</code>, <code>Method</code>, <code>Namespace.Type.Method</code> (all overloads). <code>anyCode: true</code> binds outside user code too (SQL log, event trace). The relay adds its own breakpoints and cuts the response back to VS Code's.</td></tr>
 <tr><td><code>setExceptionBreakpoints</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td>Filters <code>all</code> and <code>user-unhandled</code>; <code>filterOptions[].condition</code> is <code>A, B</code> or <code>!A, B</code> (type names).</td></tr>
 <tr><td><code>exceptionInfo</code></td><td><span class="badge engine">engine</span></td><td><code>exceptionId</code> is <code>CLR/&lt;type&gt;</code>, <code>breakMode</code> <code>always</code> / <code>unhandled</code> / <code>userUnhandled</code>, <code>details</code> with <code>message</code>, <code>stackTrace</code>, <code>innerException</code>.</td></tr>
@@ -151,13 +163,13 @@ main a { color: var(--engine); }
 <tr><td><code>setExpression</code></td><td><span class="badge engine">engine</span></td><td>Assigns to any assignable expression.</td></tr>
 <tr><td><code>continue</code></td><td><span class="badge engine">engine</span></td><td>Frozen threads stay suspended.</td></tr>
 <tr><td><code>next</code></td><td><span class="badge engine">engine</span></td><td>Steps over <code>await</code> to the same method's continuation.</td></tr>
-<tr><td><code>stepIn</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td>With <code>targetId</code>, the relay steps into the chosen call (Step Into Specific).</td></tr>
+<tr><td><code>stepIn</code></td><td><span class="badge engine">engine</span></td><td>With <code>targetId</code>, steps into the chosen call (Step Into Specific): the engine steps over the line with a breakpoint on the target.</td></tr>
 <tr><td><code>stepOut</code></td><td><span class="badge engine">engine</span></td><td>From an async method, returns to the awaiting caller.</td></tr>
-<tr><td><code>stepInTargets</code></td><td><span class="badge proxy">extension relay</span></td><td>The calls on the line, in the order they run.</td></tr>
+<tr><td><code>stepInTargets</code></td><td><span class="badge engine">engine</span></td><td>The calls of the current statement, read from the IL, in the order they run (<code>Type.Method</code>, properties <code>Type.Name.get</code>).</td></tr>
 <tr><td><code>pause</code></td><td><span class="badge engine">engine</span></td><td>Stops every thread (reason <code>pause</code>).</td></tr>
 <tr><td><code>gotoTargets</code></td><td><span class="badge engine">engine</span></td><td>The lines of the same method that can be the next statement.</td></tr>
 <tr><td><code>goto</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td>The engine moves the instruction pointer; the relay sends the <code>stopped</code> (reason <code>goto</code>).</td></tr>
-<tr><td><code>dataBreakpointInfo</code></td><td><span class="badge proxy">extension relay</span></td><td>Break on Value Change, emulated with breakpoints on the lines that write the variable.</td></tr>
+<tr><td><code>dataBreakpointInfo</code></td><td><span class="badge proxy">extension relay</span></td><td>Break on Value Change for a plain name. <code>setDataBreakpoints</code> finds the lines that write it in the workspace and sends them as <code>dotnetX86.setValueWatches</code>.</td></tr>
 <tr><td><code>cancel</code></td><td><span class="badge engine">engine</span></td><td>Cancels a running evaluation.</td></tr>
 <tr><td><code>terminate</code></td><td><span class="badge engine">engine</span></td><td>Ends the program; <code>exited</code> and <code>terminated</code> follow.</td></tr>
 <tr><td><code>disconnect</code></td><td><span class="badge engine">engine</span></td><td>Ends a launched program, detaches from an attached one (<code>terminateDebuggee</code> overrides).</td></tr>
@@ -180,6 +192,13 @@ main a { color: var(--engine); }
   &quot;supportsCancelRequest&quot;: true,
   &quot;dotnetX86SupportsApplyChanges&quot;: true,
   &quot;dotnetX86SupportsDecompile&quot;: true,
+  &quot;supportsLogPoints&quot;: true,
+  &quot;supportsHitConditionalBreakpoints&quot;: true,
+  &quot;supportsStepInTargetsRequest&quot;: true,
+  &quot;dotnetX86SupportsJournal&quot;: true,
+  &quot;dotnetX86SupportsValueWatches&quot;: true,
+  &quot;dotnetX86SupportsUiFreeze&quot;: true,
+  &quot;dotnetX86SupportsProcessUsage&quot;: true,
   &quot;exceptionBreakpointFilters&quot;: [
     {
       &quot;filter&quot;: &quot;all&quot;,
@@ -443,27 +462,54 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
-<section class="op" id="request-dotnetX86-pauseForFreeze"><h3><span class="verb request">request</span> <code>dotnetX86.pauseForFreeze</code> <span class="badge proxy">extension relay</span></h3>
-<p>Pauses the program because this UI thread stopped answering for <code>ms</code>; the stop is reported on that thread with the description &quot;UI not responding for N s&quot;.</p>
+<section class="op" id="request-dotnetX86-processUsage"><h3><span class="verb request">request</span> <code>dotnetX86.processUsage</code> <span class="badge engine">engine</span></h3>
+<p>The program's process usage now, read by the engine from the process it debugs (running or stopped). The memory graph asks for it once a second.</p>
 <h4>arguments</h4>
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>threadId</code></td><td>number</td><td></td></tr>
-<tr><td><code>ms</code></td><td>number</td><td></td></tr>
-</table>
+<p class="none">No fields.</p>
 <details><summary>Example request</summary><pre>{
   &quot;type&quot;: &quot;request&quot;,
   &quot;seq&quot;: 1,
-  &quot;command&quot;: &quot;dotnetX86.pauseForFreeze&quot;,
-  &quot;arguments&quot;: {
-    &quot;threadId&quot;: 0,
-    &quot;ms&quot;: 0
-  }
+  &quot;command&quot;: &quot;dotnetX86.processUsage&quot;,
+  &quot;arguments&quot;: {}
 }</pre></details>
 <h4>response body</h4>
-<p class="none">None (an empty body; <code>success</code> tells the result).</p>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>privateBytes</code></td><td>number</td><td>Bytes.</td></tr>
+<tr><td><code>workingSet</code></td><td>number</td><td>Bytes.</td></tr>
+<tr><td><code>cpuMs</code></td><td>number</td><td>CPU time (kernel + user) since the process started; the usage comes from the change between two readings.</td></tr>
+<tr><td><code>gdiObjects</code></td><td>number</td><td></td></tr>
+<tr><td><code>userObjects</code></td><td>number</td><td></td></tr>
+<tr><td><code>gdiQuota</code></td><td>number</td><td>The per-process limits of GDI / USER objects (10,000 unless changed in the registry).</td></tr>
+<tr><td><code>userQuota</code></td><td>number</td><td></td></tr>
+<tr><td><code>handles</code></td><td>number</td><td>Kernel handles.</td></tr>
+<tr><td><code>wow64</code></td><td>boolean</td><td>A 32-bit process on 64-bit Windows: its address space is measured.</td></tr>
+<tr><td><code>addressLimit</code><span class="opt">optional</span></td><td>number</td><td>With wow64: 2 GB, or 4 GB for a large-address-aware exe; reserved + committed bytes; the largest free block.</td></tr>
+<tr><td><code>addressUsed</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>largestFree</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;dotnetX86.processUsage&quot;,
+  &quot;body&quot;: {
+    &quot;privateBytes&quot;: 0,
+    &quot;workingSet&quot;: 0,
+    &quot;cpuMs&quot;: 0,
+    &quot;gdiObjects&quot;: 0,
+    &quot;userObjects&quot;: 0,
+    &quot;gdiQuota&quot;: 0,
+    &quot;userQuota&quot;: 0,
+    &quot;handles&quot;: 0,
+    &quot;wow64&quot;: false,
+    &quot;addressLimit&quot;: 0,
+    &quot;addressUsed&quot;: 0,
+    &quot;largestFree&quot;: 0
+  }
+}</pre></details>
 </section>
-<section class="op" id="request-dotnetX86-setEventTrace"><h3><span class="verb request">request</span> <code>dotnetX86.setEventTrace</code> <span class="badge proxy">extension relay</span></h3>
-<p>Traces the firing of event handlers without stopping (function breakpoints the relay continues from).</p>
+<section class="op" id="request-dotnetX86-setEventTrace"><h3><span class="verb request">request</span> <code>dotnetX86.setEventTrace</code> <span class="badge engine">engine</span></h3>
+<p>Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends <code>dotnetX86.controlEvent</code>. (With netcoredbg the relay emulates it with function breakpoints it continues from.)</p>
 <h4>arguments</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
 <tr><td><code>handlers</code><span class="opt">optional</span></td><td>object[]</td><td>The handlers to trace (added to those already traced).</td></tr>
@@ -487,6 +533,76 @@ main a { color: var(--engine); }
       }
     ],
     &quot;clear&quot;: false
+  }
+}</pre></details>
+<h4>response body</h4>
+<p class="none">None (an empty body; <code>success</code> tells the result).</p>
+</section>
+<section class="op" id="request-dotnetX86-setValueWatches"><h3><span class="verb request">request</span> <code>dotnetX86.setValueWatches</code> <span class="badge engine">engine</span></h3>
+<p>Break on Value Change: the names to watch and the lines that write them (the relay finds those in the workspace's C#, which the engine does not have). Replaces the earlier watches. At a write the engine reads the value, steps over the line and reads it again: when it changed it stops with reason <code>data breakpoint</code> (<code>text</code>: <code>name: old → new</code>), otherwise it goes on as if nothing happened. The write-site breakpoints are not reported to the client.</p>
+<h4>arguments</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>watches</code></td><td>object[]</td><td>Each name with its write sites (paths as the PDB has them; the relay maps them through <code>sourceFileMap</code>).</td></tr>
+<tr><td><code>watches[].name</code></td><td>string</td><td></td></tr>
+<tr><td><code>watches[].sites</code></td><td>object[]</td><td></td></tr>
+<tr><td><code>watches[].sites[].path</code></td><td>string</td><td></td></tr>
+<tr><td><code>watches[].sites[].line</code></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;dotnetX86.setValueWatches&quot;,
+  &quot;arguments&quot;: {
+    &quot;watches&quot;: [
+      {
+        &quot;name&quot;: &quot;&quot;,
+        &quot;sites&quot;: [
+          {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;line&quot;: 0
+          }
+        ]
+      }
+    ]
+  }
+}</pre></details>
+<h4>response body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>watches</code></td><td>object[]</td><td>Per name: whether a site could be bound now (sites in modules not loaded yet bind when they load), and how many sites.</td></tr>
+<tr><td><code>watches[].name</code></td><td>string</td><td></td></tr>
+<tr><td><code>watches[].verified</code></td><td>boolean</td><td></td></tr>
+<tr><td><code>watches[].sites</code></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;dotnetX86.setValueWatches&quot;,
+  &quot;body&quot;: {
+    &quot;watches&quot;: [
+      {
+        &quot;name&quot;: &quot;&quot;,
+        &quot;verified&quot;: false,
+        &quot;sites&quot;: 0
+      }
+    ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="request-dotnetX86-pauseForFreeze"><h3><span class="verb request">request</span> <code>dotnetX86.pauseForFreeze</code> <span class="badge proxy">extension relay</span></h3>
+<p>netcoredbg only (the bundled engine watches the UI itself, see <code>uiFreeze</code>): pauses the program because this UI thread stopped answering for <code>ms</code>, as the extension's helper found; the stop is reported on that thread with the description &quot;UI not responding for N s&quot;.</p>
+<h4>arguments</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>threadId</code></td><td>number</td><td></td></tr>
+<tr><td><code>ms</code></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;dotnetX86.pauseForFreeze&quot;,
+  &quot;arguments&quot;: {
+    &quot;threadId&quot;: 0,
+    &quot;ms&quot;: 0
   }
 }</pre></details>
 <h4>response body</h4>
@@ -554,91 +670,7 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
-<section class="op" id="event-dotnetX86-mcpEndpoint"><h3><span class="verb event">event</span> <code>dotnetX86.mcpEndpoint</code> <span class="badge engine">engine</span></h3>
-<p>Sent once after <code>initialize</code> when the engine was started with <code>--mcp-listen</code> (setting <code>dotnetX86.mcp.enabled</code>): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to <code>%LOCALAPPDATA%\dotnet-x86dbg\mcp\&lt;enginePid&gt;.json</code> (removed on exit), where <code>dotnet-x86dbg --mcp-connect</code> finds it for AI clients outside VS Code.</p>
-<h4>body</h4>
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>url</code></td><td>string</td><td><code>http://127.0.0.1:&lt;port&gt;/mcp</code>. Requests from a web page (an <code>Origin</code> other than localhost or VS Code) are refused.</td></tr>
-<tr><td><code>token</code></td><td>string</td><td>Required as <code>Authorization: Bearer &lt;token&gt;</code>; made anew for every engine.</td></tr>
-<tr><td><code>enginePid</code></td><td>number</td><td>Process id of the engine.</td></tr>
-</table>
-<details><summary>Example event</summary><pre>{
-  &quot;type&quot;: &quot;event&quot;,
-  &quot;seq&quot;: 1,
-  &quot;event&quot;: &quot;dotnetX86.mcpEndpoint&quot;,
-  &quot;body&quot;: {
-    &quot;url&quot;: &quot;&quot;,
-    &quot;token&quot;: &quot;&quot;,
-    &quot;enginePid&quot;: 0
-  }
-}</pre></details>
-</section>
-<section class="op" id="event-output"><h3><span class="verb event">event</span> <code>output</code> <span class="badge engine">engine</span></h3>
-<p>Standard DAP <code>output</code>. Categories: <code>stdout</code> / <code>stderr</code> (the program's output, decoded as UTF-8 while it is valid, else in the console code page), <code>console</code> (Debug.WriteLine and the engine's notes), <code>important</code> (an evaluation that had to run the other threads to finish).</p>
-<h4>body</h4>
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>category</code></td><td><code>"stdout"</code> | <code>"stderr"</code> | <code>"console"</code> | <code>"important"</code></td><td></td></tr>
-<tr><td><code>output</code></td><td>string</td><td></td></tr>
-</table>
-<details><summary>Example event</summary><pre>{
-  &quot;type&quot;: &quot;event&quot;,
-  &quot;seq&quot;: 1,
-  &quot;event&quot;: &quot;output&quot;,
-  &quot;body&quot;: {
-    &quot;category&quot;: &quot;stdout&quot;,
-    &quot;output&quot;: &quot;&quot;
-  }
-}</pre></details>
-</section>
-<section class="op" id="event-process"><h3><span class="verb event">event</span> <code>process</code> <span class="badge engine">engine</span></h3>
-<p>Sent once the program is started or attached to (after the <code>configurationDone</code> response). The extension starts the memory graph and the UI freeze watch with <code>systemProcessId</code>.</p>
-<h4>body</h4>
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>name</code></td><td>string</td><td>The program's path (launch) or the process's exe (attach).</td></tr>
-<tr><td><code>systemProcessId</code></td><td>number</td><td></td></tr>
-<tr><td><code>isLocalProcess</code></td><td><code>true</code></td><td></td></tr>
-<tr><td><code>startMethod</code></td><td><code>"launch"</code> | <code>"attach"</code></td><td></td></tr>
-</table>
-<details><summary>Example event</summary><pre>{
-  &quot;type&quot;: &quot;event&quot;,
-  &quot;seq&quot;: 1,
-  &quot;event&quot;: &quot;process&quot;,
-  &quot;body&quot;: {
-    &quot;name&quot;: &quot;&quot;,
-    &quot;systemProcessId&quot;: 0,
-    &quot;isLocalProcess&quot;: true,
-    &quot;startMethod&quot;: &quot;launch&quot;
-  }
-}</pre></details>
-</section>
-<section class="op" id="event-stopped"><h3><span class="verb event">event</span> <code>stopped</code> <span class="badge engine">engine</span></h3>
-<p>Standard DAP <code>stopped</code>. The engine sends <code>breakpoint</code> (also function breakpoints), <code>step</code>, <code>exception</code>, <code>pause</code> (also <code>Debugger.Break()</code>) and <code>entry</code>; the relay sends <code>goto</code>, <code>data breakpoint</code> (Break on Value Change) and <code>step</code>.</p>
-<h4>body</h4>
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-<tr><td><code>reason</code></td><td><code>"breakpoint"</code> | <code>"step"</code> | <code>"exception"</code> | <code>"pause"</code> | <code>"entry"</code> | <code>"goto"</code> | <code>"data breakpoint"</code></td><td></td></tr>
-<tr><td><code>threadId</code></td><td>number</td><td></td></tr>
-<tr><td><code>allThreadsStopped</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
-<tr><td><code>description</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
-<tr><td><code>text</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
-<tr><td><code>hitBreakpointIds</code><span class="opt">optional</span></td><td>number[]</td><td></td></tr>
-</table>
-<details><summary>Example event</summary><pre>{
-  &quot;type&quot;: &quot;event&quot;,
-  &quot;seq&quot;: 1,
-  &quot;event&quot;: &quot;stopped&quot;,
-  &quot;body&quot;: {
-    &quot;reason&quot;: &quot;breakpoint&quot;,
-    &quot;threadId&quot;: 0,
-    &quot;allThreadsStopped&quot;: false,
-    &quot;description&quot;: &quot;&quot;,
-    &quot;text&quot;: &quot;&quot;,
-    &quot;hitBreakpointIds&quot;: [
-      0
-    ]
-  }
-}</pre></details>
-</section>
-<section class="op" id="event-dotnetX86-controlEvent"><h3><span class="verb event">event</span> <code>dotnetX86.controlEvent</code> <span class="badge proxy">extension relay</span></h3>
+<section class="op" id="event-dotnetX86-controlEvent"><h3><span class="verb event">event</span> <code>dotnetX86.controlEvent</code> <span class="badge engine">engine</span></h3>
 <p>A traced event handler ran (event trace).</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
@@ -680,7 +712,7 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
-<section class="op" id="event-dotnetX86-exceptionThrown"><h3><span class="verb event">event</span> <code>dotnetX86.exceptionThrown</code> <span class="badge proxy">extension relay</span></h3>
+<section class="op" id="event-dotnetX86-exceptionThrown"><h3><span class="verb event">event</span> <code>dotnetX86.exceptionThrown</code> <span class="badge engine">engine</span></h3>
 <p>An exception was thrown (exception log): sent for every throw while the log is on, whether the program stops or not.</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
@@ -716,7 +748,26 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
-<section class="op" id="event-dotnetX86-removeBreakpoint"><h3><span class="verb event">event</span> <code>dotnetX86.removeBreakpoint</code> <span class="badge proxy">extension relay</span></h3>
+<section class="op" id="event-dotnetX86-mcpEndpoint"><h3><span class="verb event">event</span> <code>dotnetX86.mcpEndpoint</code> <span class="badge engine">engine</span></h3>
+<p>Sent once after <code>initialize</code> when the engine was started with <code>--mcp-listen</code> (setting <code>dotnetX86.mcp.enabled</code>): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to <code>%LOCALAPPDATA%\dotnet-x86dbg\mcp\&lt;enginePid&gt;.json</code> (removed on exit), where <code>dotnet-x86dbg --mcp-connect</code> finds it for AI clients outside VS Code.</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>url</code></td><td>string</td><td><code>http://127.0.0.1:&lt;port&gt;/mcp</code>. Requests from a web page (an <code>Origin</code> other than localhost or VS Code) are refused.</td></tr>
+<tr><td><code>token</code></td><td>string</td><td>Required as <code>Authorization: Bearer &lt;token&gt;</code>; made anew for every engine.</td></tr>
+<tr><td><code>enginePid</code></td><td>number</td><td>Process id of the engine.</td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;dotnetX86.mcpEndpoint&quot;,
+  &quot;body&quot;: {
+    &quot;url&quot;: &quot;&quot;,
+    &quot;token&quot;: &quot;&quot;,
+    &quot;enginePid&quot;: 0
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-dotnetX86-removeBreakpoint"><h3><span class="verb event">event</span> <code>dotnetX86.removeBreakpoint</code> <span class="badge engine">engine</span></h3>
 <p>A temporary (<code>#once</code>) breakpoint was hit: the extension removes it from VS Code's list.</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
@@ -738,7 +789,7 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
-<section class="op" id="event-dotnetX86-sqlExecuted"><h3><span class="verb event">event</span> <code>dotnetX86.sqlExecuted</code> <span class="badge proxy">extension relay</span></h3>
+<section class="op" id="event-dotnetX86-sqlExecuted"><h3><span class="verb event">event</span> <code>dotnetX86.sqlExecuted</code> <span class="badge engine">engine</span></h3>
 <p>A statement read from a database command (SQL log), with its parameters and the frames that ran it.</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
@@ -798,8 +849,8 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
-<section class="op" id="event-dotnetX86-trackedValues"><h3><span class="verb event">event</span> <code>dotnetX86.trackedValues</code> <span class="badge proxy">extension relay</span></h3>
-<p>Values of a <code>#track:</code> logpoint hit, or the time of a <code>#timer-start:</code> / <code>#timer-end:</code> section.</p>
+<section class="op" id="event-dotnetX86-trackedValues"><h3><span class="verb event">event</span> <code>dotnetX86.trackedValues</code> <span class="badge engine">engine</span></h3>
+<p>Values of a <code>#track:</code> logpoint hit, or the time of a <code>#timer-start:</code> / <code>#timer-end:</code> section. (With netcoredbg the relay sends the events of the breakpoint options, logs and trace below.)</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
 <tr><td><code>source</code></td><td>object</td><td></td></tr>
@@ -831,6 +882,88 @@ main a { color: var(--engine); }
         &quot;type&quot;: &quot;&quot;,
         &quot;error&quot;: &quot;&quot;
       }
+    ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-dotnetX86-uiFrozen"><h3><span class="verb event">event</span> <code>dotnetX86.uiFrozen</code> <span class="badge engine">engine</span></h3>
+<p>A UI thread stopped answering window messages for <code>ms</code> while the program ran (launch argument <code>uiFreeze</code>): the engine pauses the program next, on that thread. The relay words the stop's reason in the user's language.</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>threadId</code></td><td>number</td><td></td></tr>
+<tr><td><code>ms</code></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;dotnetX86.uiFrozen&quot;,
+  &quot;body&quot;: {
+    &quot;threadId&quot;: 0,
+    &quot;ms&quot;: 0
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-output"><h3><span class="verb event">event</span> <code>output</code> <span class="badge engine">engine</span></h3>
+<p>Standard DAP <code>output</code>. Categories: <code>stdout</code> / <code>stderr</code> (the program's output, decoded as UTF-8 while it is valid, else in the console code page), <code>console</code> (Debug.WriteLine and the engine's notes), <code>important</code> (an evaluation that had to run the other threads to finish).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>category</code></td><td><code>"stdout"</code> | <code>"stderr"</code> | <code>"console"</code> | <code>"important"</code></td><td></td></tr>
+<tr><td><code>output</code></td><td>string</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;output&quot;,
+  &quot;body&quot;: {
+    &quot;category&quot;: &quot;stdout&quot;,
+    &quot;output&quot;: &quot;&quot;
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-process"><h3><span class="verb event">event</span> <code>process</code> <span class="badge engine">engine</span></h3>
+<p>Sent once the program is started or attached to (after the <code>configurationDone</code> response). The extension starts the memory graph and the UI freeze watch with <code>systemProcessId</code>.</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>name</code></td><td>string</td><td>The program's path (launch) or the process's exe (attach).</td></tr>
+<tr><td><code>systemProcessId</code></td><td>number</td><td></td></tr>
+<tr><td><code>isLocalProcess</code></td><td><code>true</code></td><td></td></tr>
+<tr><td><code>startMethod</code></td><td><code>"launch"</code> | <code>"attach"</code></td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;process&quot;,
+  &quot;body&quot;: {
+    &quot;name&quot;: &quot;&quot;,
+    &quot;systemProcessId&quot;: 0,
+    &quot;isLocalProcess&quot;: true,
+    &quot;startMethod&quot;: &quot;launch&quot;
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-stopped"><h3><span class="verb event">event</span> <code>stopped</code> <span class="badge engine">engine</span></h3>
+<p>Standard DAP <code>stopped</code>. The engine sends <code>breakpoint</code> (also function breakpoints), <code>step</code> (also arriving in a Step Into Target), <code>exception</code>, <code>pause</code> (also <code>Debugger.Break()</code> and a UI freeze, with <code>description</code>), <code>entry</code> and <code>data breakpoint</code> (Break on Value Change, with <code>description</code> / <code>text</code>); the relay sends <code>goto</code> (with netcoredbg also <code>data breakpoint</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>reason</code></td><td><code>"breakpoint"</code> | <code>"step"</code> | <code>"exception"</code> | <code>"pause"</code> | <code>"entry"</code> | <code>"goto"</code> | <code>"data breakpoint"</code></td><td></td></tr>
+<tr><td><code>threadId</code></td><td>number</td><td></td></tr>
+<tr><td><code>allThreadsStopped</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+<tr><td><code>description</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>text</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>hitBreakpointIds</code><span class="opt">optional</span></td><td>number[]</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;stopped&quot;,
+  &quot;body&quot;: {
+    &quot;reason&quot;: &quot;breakpoint&quot;,
+    &quot;threadId&quot;: 0,
+    &quot;allThreadsStopped&quot;: false,
+    &quot;description&quot;: &quot;&quot;,
+    &quot;text&quot;: &quot;&quot;,
+    &quot;hitBreakpointIds&quot;: [
+      0
     ]
   }
 }</pre></details>

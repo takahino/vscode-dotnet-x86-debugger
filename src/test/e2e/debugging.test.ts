@@ -4,11 +4,9 @@ import * as assert from 'assert/strict';
 import * as fs from 'fs';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
-import { FREEZE_PAUSE_REQUEST } from '../../dapProxy';
 import { MAKE_OBJECT_ID_REQUEST } from '../../objectIds';
 import { SourcePathMapper } from '../../sourceMapCore';
 import { captureValues, findMethodSignature, generateTest, parseFrameName } from '../../testGenCore';
-import { UiFreezeWatch } from '../../uiFreezeWatch';
 import { DapSession, IS_NETCOREDBG, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 120_000;
@@ -90,7 +88,8 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
         const stop = await first;
         const frame = await s.topFrame(stop.body.threadId);
         const targets = (await s.request('stepInTargets', { frameId: frame.id })).body.targets;
-        assert.deepEqual(targets.map((t: { label: string }) => t.label), ['Inner1', 'Inner2', 'Outer']);
+        // The bundled engine reads the calls from the IL and names them Type.Method; the relay (netcoredbg) as written in the source.
+        assert.deepEqual(targets.map((t: { label: string }) => t.label), IS_NETCOREDBG ? ['Inner1', 'Inner2', 'Outer'] : ['Program.Inner1', 'Program.Inner2', 'Program.Outer']);
         const stepped = s.nextStop();
         await s.request('stepIn', { threadId: stop.body.threadId, targetId: targets[1].id });
         const arrived = await stepped;
@@ -174,27 +173,21 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
 });
 
 describe('UI freeze detection', { skip: e2eSkip || (process.env.DOTNETX86_SKIP_UI_TESTS ? 'DOTNETX86_SKIP_UI_TESTS is set' : false) }, () => {
-    it('pauses on the UI thread that stopped answering', { timeout: TIMEOUT }, async () => {
+    it('pauses on the UI thread that stopped answering', { timeout: TIMEOUT, skip: IS_NETCOREDBG ? 'netcoredbg does not watch the UI (the extension\'s helper does)' : false }, async () => {
         const program = path.join(buildApp('Freeze'), 'Freeze.exe');
-        const s = new DapSession({ freezeDescription: (ms) => `UI not responding for ${(ms / 1000).toFixed(1)} s` });
-        let watch: UiFreezeWatch | undefined;
+        // The engine watches the UI itself (with the extension's settings); the relay gives the stop the extension's words.
+        const s = new DapSession({ freezeDescription: (ms) => `Frozen for ${(ms / 1000).toFixed(1)} s`, uiFreeze: { enabled: true, thresholdMs: 2000 } });
         try {
-            const started = s.waitFor((m) => m.event === 'process', TIMEOUT, 'the process event');
+            const paused = s.nextStop(TIMEOUT);
             await s.launch(program);
-            const pid = (await started).body.systemProcessId;
-            const hung = await new Promise<{ threadId: number; ms: number }>((resolve) => {
-                watch = new UiFreezeWatch(REPO, pid, 2000, (threadId, ms) => resolve({ threadId, ms }), () => undefined);
-            });
-            watch!.pause();
-            const paused = s.nextStop();
-            assert.equal((await s.request(FREEZE_PAUSE_REQUEST, { threadId: hung.threadId, ms: hung.ms })).success, true);
             const stop = await paused;
-            assert.equal(stop.body.threadId, hung.threadId);
-            assert.match(stop.body.description, /^UI not responding for \d\.\d s$/);
+            assert.equal(stop.body.reason, 'pause');
+            assert.match(stop.body.description, /^Frozen for \d\.\d s$/);
+            const console = s.events.filter((m) => m.event === 'output').map((m) => String(m.body?.output)).join('');
+            assert.ok(console.includes(`${stop.body.description}\n`) && !console.includes('UI not responding'), console);
             const names = (await s.frames(stop.body.threadId)).map((f) => f.name);
             assert.ok(names.some((n) => /Program\.Freeze\(/.test(n)), names.join(', '));
         } finally {
-            watch?.dispose();
             await s.close();
         }
     });

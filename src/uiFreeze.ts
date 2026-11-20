@@ -29,6 +29,8 @@ export class UiFreezeDetector implements vscode.DebugAdapterTrackerFactory {
         let watch: UiFreezeWatch | undefined;
         // Stopped by the debugger (or a freeze pause on its way): the watch is paused meanwhile.
         let stopped = false;
+        // The bundled engine watches the UI itself (with these settings, see adapterFactory): no helper then.
+        let engineWatches = false;
 
         const onHung = (threadId: number, ms: number) => {
             if (stopped) {
@@ -51,8 +53,11 @@ export class UiFreezeDetector implements vscode.DebugAdapterTrackerFactory {
                     watch?.resume();
                 }
             },
-            onDidSendMessage: (m: { type?: string; event?: string; body?: { systemProcessId?: number } }) => {
-                if (m.type !== 'event') {
+            onDidSendMessage: (m: { type?: string; event?: string; command?: string; body?: { systemProcessId?: number; dotnetX86SupportsUiFreeze?: boolean } }) => {
+                if (m.type === 'response' && m.command === 'initialize') {
+                    engineWatches = m.body?.dotnetX86SupportsUiFreeze === true;
+                }
+                if (m.type !== 'event' || engineWatches) {
                     return;
                 }
                 if (m.event === 'process' && m.body?.systemProcessId && !watch) {

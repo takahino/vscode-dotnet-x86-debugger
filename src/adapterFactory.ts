@@ -138,6 +138,12 @@ function sqlMethods(): string[] {
     return configured.filter((m): m is string => typeof m === 'string' && /^[\w.]+\.\w+\.\w+$/.test(m.trim())).map((m) => m.trim());
 }
 
+/** The UI freeze watch settings, for an engine that watches itself (see UiFreezeDetector for netcoredbg). */
+function uiFreezeSetting(): { enabled: boolean; thresholdMs: number } {
+    const config = vscode.workspace.getConfiguration('dotnetX86.uiFreeze');
+    return { enabled: config.get<boolean>('enabled', true), thresholdMs: Math.max(500, config.get<number>('thresholdMs', 2000)) };
+}
+
 function missingSourceMessage(unresolved: UnresolvedSource): string {
     if (unresolved.candidates.length > 1) {
         return vscode.l10n.t('Several files match the source {0}: {1}. Narrow "sourceSearchPaths", or add a "sourceFileMap" entry for its folder.', unresolved.pdbPath, unresolved.candidates.join(', '));
@@ -171,6 +177,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 breakOnExceptionTypes,
                 sqlMethods: sqlMethods(),
                 freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
+                uiFreeze: uiFreezeSetting(),
                 ...symbols,
             },
         );
