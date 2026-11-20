@@ -1305,6 +1305,16 @@
                 "default": "app",
                 "description": "%debugger.launch.decompile%"
               },
+              "childProcesses": {
+                "type": "string",
+                "enum": [
+                  "record",
+                  "follow",
+                  "off"
+                ],
+                "default": "record",
+                "description": "%debugger.childProcesses%"
+              },
               "expressionEvaluationOptions": {
                 "type": "object",
                 "description": "%debugger.expressionEvaluationOptions%",
@@ -1367,6 +1377,16 @@
                 ],
                 "default": "app",
                 "description": "%debugger.attach.decompile%"
+              },
+              "childProcesses": {
+                "type": "string",
+                "enum": [
+                  "record",
+                  "follow",
+                  "off"
+                ],
+                "default": "record",
+                "description": "%debugger.childProcesses%"
               },
               "expressionEvaluationOptions": {
                 "type": "object",

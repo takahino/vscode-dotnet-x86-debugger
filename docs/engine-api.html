@@ -102,6 +102,7 @@ main a { color: var(--engine); }
 <tr><td><code>sqlLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (<code>dotnetX86.sqlExecuted</code>). <code>methods</code> replaces the provider methods (<code>Namespace.Type.Method</code>). The extension sets it from <code>dotnetX86.sqlLog.*</code> unless launch.json does.</td></tr>
 <tr><td><code>exceptionLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>Exception log: record every thrown exception, also those that do not stop the program (<code>dotnetX86.exceptionThrown</code>); <code>snapshot</code> takes the stack and locals at the throw (default true). The extension sets it from <code>dotnetX86.exceptionLog.*</code>.</td></tr>
 <tr><td><code>uiFreeze</code><span class="opt">optional</span></td><td>boolean | object</td><td>UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for <code>thresholdMs</code> while the program runs pauses it there (<code>dotnetX86.uiFrozen</code>, then <code>stopped</code> with reason <code>pause</code>). The extension sets it from <code>dotnetX86.uiFreeze.*</code>.</td></tr>
+<tr><td><code>childProcesses</code><span class="opt">optional</span></td><td><code>"record"</code> | <code>"follow"</code> | <code>"off"</code></td><td>Processes the program starts with <code>Process.Start</code>: <code>record</code> (default) logs them (<code>dotnetX86.childProcess</code>), <code>follow</code> also suspends a .NET child and sends the reverse request <code>startDebugging</code> (<code>attach</code> with <code>processId</code> and <code>__resumeChild</code>) so that the client debugs it in its own session, <code>off</code> ignores them.</td></tr>
 <tr><td><code>__dotnetFramework</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the extension when <code>program</code> is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed).</td></tr>
 </table>
 <details><summary>Example</summary><pre>{
@@ -126,6 +127,7 @@ main a { color: var(--engine); }
     &quot;sqlLog&quot;: false,
     &quot;exceptionLog&quot;: false,
     &quot;uiFreeze&quot;: false,
+    &quot;childProcesses&quot;: &quot;record&quot;,
     &quot;__dotnetFramework&quot;: false
   }
 }</pre></details>
@@ -141,6 +143,8 @@ main a { color: var(--engine); }
 <tr><td><code>sqlLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
 <tr><td><code>exceptionLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
 <tr><td><code>uiFreeze</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
+<tr><td><code>childProcesses</code><span class="opt">optional</span></td><td><code>"record"</code> | <code>"follow"</code> | <code>"off"</code></td><td>As in launch.</td></tr>
+<tr><td><code>__resumeChild</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the parent's engine in its <code>startDebugging</code> request: the process is a child it suspended before its runtime started. The engine registers for the runtime's start and then resumes it (a .NET Framework child is resumed and attached once its runtime has loaded).</td></tr>
 </table>
 
 <h2 id="standard">Standard DAP requests</h2>

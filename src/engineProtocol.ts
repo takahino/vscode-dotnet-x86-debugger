@@ -48,6 +48,8 @@ export interface LaunchArguments {
     exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
     /** UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`. */
     uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
+    /** Processes the program starts with `Process.Start`: `record` (default) logs them (`dotnetX86.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them. */
+    childProcesses?: 'record' | 'follow' | 'off';
     /** Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed). */
     __dotnetFramework?: boolean;
 }
@@ -73,6 +75,10 @@ export interface AttachArguments {
     exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
     /** As in launch. */
     uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
+    /** As in launch. */
+    childProcesses?: 'record' | 'follow' | 'off';
+    /** Set by the parent's engine in its `startDebugging` request: the process is a child it suspended before its runtime started. The engine registers for the runtime's start and then resumes it (a .NET Framework child is resumed and attached once its runtime has loaded). */
+    __resumeChild?: boolean;
 }
 
 /** The same option as the C# extension's debugger (vsdbg). */

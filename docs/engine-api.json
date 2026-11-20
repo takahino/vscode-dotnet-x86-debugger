@@ -123,6 +123,15 @@
         ],
         "description": "UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`."
       },
+      "childProcesses": {
+        "type": "string",
+        "enum": [
+          "record",
+          "follow",
+          "off"
+        ],
+        "description": "Processes the program starts with `Process.Start`: `record` (default) logs them (`dotnetX86.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them."
+      },
       "__dotnetFramework": {
         "type": "boolean",
         "description": "Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed)."
@@ -226,6 +235,19 @@
           }
         ],
         "description": "As in launch."
+      },
+      "childProcesses": {
+        "type": "string",
+        "enum": [
+          "record",
+          "follow",
+          "off"
+        ],
+        "description": "As in launch."
+      },
+      "__resumeChild": {
+        "type": "boolean",
+        "description": "Set by the parent's engine in its `startDebugging` request: the process is a child it suspended before its runtime started. The engine registers for the runtime's start and then resumes it (a .NET Framework child is resumed and attached once its runtime has loaded)."
       }
     },
     "required": [
