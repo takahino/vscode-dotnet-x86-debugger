@@ -32,6 +32,10 @@
   the new code at its next statement; methods, fields, properties and classes can be added (.NET and .NET Framework). Changes
   that need a restart and compile errors are shown with their place. Debug builds started by the debugger; needs the .NET SDK 9
   or later. `dotnetX86.editAndContinue.enabled`, `dotnetX86.editAndContinue.applyOnSave`; MCP tool `debug_apply_changes`.
+- New: **debugging programs without symbols** — the engine decompiles the program's assemblies that have no PDB to C# by itself
+  when you stop or step into them, so an exe shipped without symbols can be debugged in C# (breakpoints, stepping, locals) in the
+  same session, with no .NET runtime needed. `decompile` in launch.json and attach (`app` by default, `off`); MCP tool `decompile`.
+  **Decompile for Debugging** (ILSpy) still works and its symbols take precedence.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
   and from netcoredbg.
 - Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow

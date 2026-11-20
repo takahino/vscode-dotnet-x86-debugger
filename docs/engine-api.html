@@ -46,6 +46,7 @@ main a { color: var(--engine); }
 <a href="#standard">Standard requests</a>
 <a href="#capabilities">Capabilities</a>
 <a class="sub engine" href="#request-dotnetX86-applyChanges">req dotnetX86.applyChanges</a>
+<a class="sub engine" href="#request-dotnetX86-decompile">req dotnetX86.decompile</a>
 <a class="sub engine" href="#request-dotnetX86-freezeThread">req dotnetX86.freezeThread</a>
 <a class="sub engine" href="#request-dotnetX86-handleStats">req dotnetX86.handleStats</a>
 <a class="sub engine" href="#request-dotnetX86-heapStats">req dotnetX86.heapStats</a>
@@ -94,6 +95,7 @@ main a { color: var(--engine); }
 <tr><td><code>enableStepFiltering</code><span class="opt">optional</span></td><td>boolean</td><td>Step over property accessors and operators when stepping in (default true).</td></tr>
 <tr><td><code>expressionEvaluationOptions</code><span class="opt">optional</span></td><td><a href="#def-ExpressionEvaluationOptions">ExpressionEvaluationOptions</a></td><td>Options for evaluating expressions.</td></tr>
 <tr><td><code>editAndContinue</code><span class="opt">optional</span></td><td>boolean</td><td>Edit and Continue (default true): modules of a Debug build with symbols are loaded so that <code>dotnetX86.applyChanges</code> can update them. The extension sets it from <code>dotnetX86.editAndContinue.enabled</code> unless launch.json does.</td></tr>
+<tr><td><code>decompile</code><span class="opt">optional</span></td><td><code>"app"</code> | <code>"off"</code></td><td>Assemblies of the application without symbols are decompiled to C# by the engine (<code>app</code>, the default), or not (<code>off</code>). See <code>dotnetX86.decompile</code>.</td></tr>
 <tr><td><code>__dotnetFramework</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the extension when <code>program</code> is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed).</td></tr>
 </table>
 <details><summary>Example</summary><pre>{
@@ -114,6 +116,7 @@ main a { color: var(--engine); }
       &quot;allowImplicitFuncEval&quot;: false
     },
     &quot;editAndContinue&quot;: false,
+    &quot;decompile&quot;: &quot;app&quot;,
     &quot;__dotnetFramework&quot;: false
   }
 }</pre></details>
@@ -125,6 +128,7 @@ main a { color: var(--engine); }
 <tr><td><code>justMyCode</code><span class="opt">optional</span></td><td>boolean</td><td>As in launch.</td></tr>
 <tr><td><code>enableStepFiltering</code><span class="opt">optional</span></td><td>boolean</td><td>As in launch.</td></tr>
 <tr><td><code>expressionEvaluationOptions</code><span class="opt">optional</span></td><td><a href="#def-ExpressionEvaluationOptions">ExpressionEvaluationOptions</a></td><td>As in launch.</td></tr>
+<tr><td><code>decompile</code><span class="opt">optional</span></td><td><code>"app"</code> | <code>"off"</code></td><td>As in launch (the application's folder is the folder of the process's exe).</td></tr>
 </table>
 
 <h2 id="standard">Standard DAP requests</h2>
@@ -139,7 +143,7 @@ main a { color: var(--engine); }
 <tr><td><code>setExceptionBreakpoints</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td>Filters <code>all</code> and <code>user-unhandled</code>; <code>filterOptions[].condition</code> is <code>A, B</code> or <code>!A, B</code> (type names).</td></tr>
 <tr><td><code>exceptionInfo</code></td><td><span class="badge engine">engine</span></td><td><code>exceptionId</code> is <code>CLR/&lt;type&gt;</code>, <code>breakMode</code> <code>always</code> / <code>unhandled</code> / <code>userUnhandled</code>, <code>details</code> with <code>message</code>, <code>stackTrace</code>, <code>innerException</code>.</td></tr>
 <tr><td><code>threads</code></td><td><span class="badge engine">engine</span></td><td>The OS thread id is the DAP thread id. Names are <code>Thread.Name</code>; else the process's first thread is <code>Main Thread</code> (listed first) and the others <code>&lt;No name&gt;</code>.</td></tr>
-<tr><td><code>stackTrace</code></td><td><span class="badge engine">engine</span></td><td>Every managed frame, named <code>Namespace.Type.Method()</code> with the real type arguments; <code>startFrame</code> / <code>levels</code> page them.</td></tr>
+<tr><td><code>stackTrace</code></td><td><span class="badge engine">engine</span></td><td>Every managed frame, named <code>Namespace.Type.Method()</code> with the real type arguments; <code>startFrame</code> / <code>levels</code> page them. A frame in an assembly without symbols points at its decompiled file (see <code>dotnetX86.decompile</code>).</td></tr>
 <tr><td><code>scopes</code></td><td><span class="badge engine">engine</span></td><td>One scope, <code>Locals</code>. A step over a call puts <code>&lt;Type.Method&gt; returned</code> first.</td></tr>
 <tr><td><code>variables</code></td><td><span class="badge engine">engine</span></td><td>See the value conventions. Children carry <code>evaluateName</code>. <code>Static members</code> and <code>Raw View</code> are nodes of their own.</td></tr>
 <tr><td><code>evaluate</code></td><td><span class="badge engine">engine</span> <span class="badge proxy">extension relay</span></td><td>C# expressions with the compiler's values and types (lambdas, LINQ, <code>await</code> waited synchronously, pointers). The relay rewrites <code>$N</code> object ids.</td></tr>
@@ -175,6 +179,7 @@ main a { color: var(--engine); }
   &quot;supportsTerminateRequest&quot;: true,
   &quot;supportsCancelRequest&quot;: true,
   &quot;dotnetX86SupportsApplyChanges&quot;: true,
+  &quot;dotnetX86SupportsDecompile&quot;: true,
   &quot;exceptionBreakpointFilters&quot;: [
     {
       &quot;filter&quot;: &quot;all&quot;,
@@ -243,6 +248,75 @@ main a { color: var(--engine); }
     &quot;details&quot;: [
       &quot;&quot;
     ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="request-dotnetX86-decompile"><h3><span class="verb request">request</span> <code>dotnetX86.decompile</code> <span class="badge engine">engine</span></h3>
+<p>Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file, or this request. The C# files are written to <code>%LOCALAPPDATA%\dotnet-x86dbg\decompiled\&lt;MVID&gt;-v&lt;version&gt;</code> and the symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have names. The engine then sends <code>module</code> (<code>changed</code>, <code>symbolStatus</code> <code>Symbols decompiled.</code>). Symbols found on disk or in <code>NETCOREDBG_SYMBOL_DIRS</code> (**Decompile for Debugging**) take precedence. Methods it cannot turn into C# are shown as IL. Without <code>module</code>, lists the assemblies decompiled on demand. The MCP tool <code>decompile</code> sends this request.</p>
+<h4>arguments</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>module</code><span class="opt">optional</span></td><td>string</td><td>File name (<code>MyApp.dll</code>) or full path of a loaded assembly. Omitted: list the assemblies decompiled on demand.</td></tr>
+<tr><td><code>type</code><span class="opt">optional</span></td><td>string</td><td>With module: a type (<code>Namespace.Type</code>, <code>Type</code>, <code>Outer.Inner</code> or <code>Outer+Inner</code>); returns the numbered lines of its file.</td></tr>
+<tr><td><code>method</code><span class="opt">optional</span></td><td>string</td><td>With type: a member name (method, constructor = the type's name, property, event); only its lines (all overloads).</td></tr>
+<tr><td><code>maxLines</code><span class="opt">optional</span></td><td>number</td><td>Most lines to return (default 400).</td></tr>
+</table>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;dotnetX86.decompile&quot;,
+  &quot;arguments&quot;: {
+    &quot;module&quot;: &quot;&quot;,
+    &quot;type&quot;: &quot;&quot;,
+    &quot;method&quot;: &quot;&quot;,
+    &quot;maxLines&quot;: 0
+  }
+}</pre></details>
+<h4>response body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>modules</code><span class="opt">optional</span></td><td>object[]</td><td>Without <code>module</code>: the assemblies decompiled on demand.</td></tr>
+<tr><td><code>modules[].path</code></td><td>string</td><td></td></tr>
+<tr><td><code>modules[].state</code></td><td><code>"notYet"</code> | <code>"decompiled"</code> | <code>"failed"</code></td><td></td></tr>
+<tr><td><code>module</code><span class="opt">optional</span></td><td>string</td><td>The assembly.</td></tr>
+<tr><td><code>files</code><span class="opt">optional</span></td><td>string[]</td><td>With <code>module</code> only: the decompiled files.</td></tr>
+<tr><td><code>file</code><span class="opt">optional</span></td><td>string</td><td>With <code>type</code>: the file of the type, the line ranges returned (from 1, inclusive), the lines, and whether <code>maxLines</code> cut them.</td></tr>
+<tr><td><code>ranges</code><span class="opt">optional</span></td><td>object[]</td><td></td></tr>
+<tr><td><code>ranges[].startLine</code></td><td>number</td><td></td></tr>
+<tr><td><code>ranges[].endLine</code></td><td>number</td><td></td></tr>
+<tr><td><code>lines</code><span class="opt">optional</span></td><td>object[]</td><td></td></tr>
+<tr><td><code>lines[].line</code></td><td>number</td><td></td></tr>
+<tr><td><code>lines[].text</code></td><td>string</td><td></td></tr>
+<tr><td><code>truncated</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;dotnetX86.decompile&quot;,
+  &quot;body&quot;: {
+    &quot;modules&quot;: [
+      {
+        &quot;path&quot;: &quot;&quot;,
+        &quot;state&quot;: &quot;notYet&quot;
+      }
+    ],
+    &quot;module&quot;: &quot;&quot;,
+    &quot;files&quot;: [
+      &quot;&quot;
+    ],
+    &quot;file&quot;: &quot;&quot;,
+    &quot;ranges&quot;: [
+      {
+        &quot;startLine&quot;: 0,
+        &quot;endLine&quot;: 0
+      }
+    ],
+    &quot;lines&quot;: [
+      {
+        &quot;line&quot;: 0,
+        &quot;text&quot;: &quot;&quot;
+      }
+    ],
+    &quot;truncated&quot;: false
   }
 }</pre></details>
 </section>

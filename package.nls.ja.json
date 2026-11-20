@@ -39,6 +39,8 @@
   "debugger.launch.architecture": "フレームワーク依存の .dll を program にしたとき、それを動かす dotnet.exe のビット数 (既定は x86)。.exe はビルドしたとおり (x86、x64、AnyCPU は 64bit) に動き、同じビット数のデバッガーを使います。",
   "debugger.launch.justMyCode": "ユーザーコードのみをデバッグします。",
   "debugger.launch.enableStepFiltering": "プロパティや演算子をステップオーバーします。",
+  "debugger.launch.decompile": "シンボル（PDB）の無いプログラムのアセンブリを、ステップ インしたときや止まったときにデバッガーが C# に逆コンパイルし、同じセッションでブレークポイント・ステップ・ローカル変数を使えるようにします（app、既定）。.NET 自体のアセンブリは対象外です。off で逆コンパイルしません。",
+  "debugger.attach.decompile": "アタッチしたプロセスの exe のフォルダーにある、シンボル（PDB）の無いアセンブリを、必要になったときにデバッガーが C# に逆コンパイルします（app、既定）。off で逆コンパイルしません。",
   "debugger.launch.editAndContinue": "エディット コンティニュ: デバッグ中に、プログラムの C# のソースの変更を、再起動せずに当てます（デバッガーから起動した Debug ビルド。.NET SDK 9 以降が要ります）。既定は設定 dotnetX86.editAndContinue.enabled の値です。",
   "debugger.attach.processId": "アタッチするプロセス ID。${command:pickProcess} を指定すると一覧から選べます。",
   "debugger.attach.justMyCode": "ユーザーコードのみをデバッグします。",

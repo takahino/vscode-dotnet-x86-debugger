@@ -187,6 +187,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `enableStepFiltering` | Step over properties and operators (default `true`). |
 | `expressionEvaluationOptions` | With `allowImplicitFuncEval: false`, the Variables view does not run property getters and `ToString()` by itself; they run when expanded (a guard against getters with side effects). Also for attach. |
 | `architecture` | When `program` is a framework-dependent `.dll`: the bitness of the `dotnet.exe` that runs it (`x86` by default, or `x64`). An `.exe` runs as it was built, and the debugger of that bitness is used. |
+| `decompile` | `app` (default): assemblies of the program without symbols are decompiled to C# when needed (see "Debugging decompiled assemblies"); `off`: not. Attach too. |
 | `sourceFileMap` | Replace source path prefixes recorded in PDBs with local folders (see below). Attach too. |
 | `sourceSearchPaths` | Folders searched for source files the PDB records elsewhere (see below). Attach too. |
 
@@ -603,6 +604,13 @@ restarts the current one). With Source Link, its sources follow. When no server 
 **Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *.NET x86 Debugger* output.
 
 #### Debugging decompiled assemblies
+
+The debugger decompiles the program's own assemblies that have no symbols (an exe shipped without its PDB, a DLL whose
+source you do not have) by itself, when you first stop in them, step into them or set a breakpoint in their decompiled file:
+the call stack then points at C# files, and breakpoints, stepping and locals work in the same session. No .NET runtime is
+needed for it. The files are written to `%LOCALAPPDATA%\dotnet-x86dbg\decompiled`; methods that cannot be turned into C#
+are shown as IL. .NET's own assemblies are not decompiled. Set `"decompile": "off"` in launch.json to turn it off. AI clients
+read the decompiled sources with the MCP tool `decompile`.
 
 For an assembly without symbols (e.g. a NuGet package, or a DLL whose source you do not have), right-click it in the
 **Modules** view and choose **Decompile for Debugging...** (or run it from the Command Palette and pick the file). The

@@ -30,7 +30,9 @@ describe('engine API document', () => {
         for (const name of [proxy.EXCEPTION_TYPES_REQUEST, proxy.FREEZE_PAUSE_REQUEST, proxy.EVENT_TRACE_REQUEST]) {
             assert.equal(requests.get(name), 'proxy', name);
         }
-        assert.equal(requests.size, 8, [...requests.keys()].join(', '));
+        // The engine's own: sent by its MCP tool `decompile` (and by clients that want the decompiled files), not by the extension.
+        assert.equal(requests.get('dotnetX86.decompile'), 'engine');
+        assert.equal(requests.size, 9, [...requests.keys()].join(', '));
     });
 
     it('lists every custom event the relay sends', () => {

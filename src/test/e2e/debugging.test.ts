@@ -11,7 +11,7 @@ import { MAKE_OBJECT_ID_REQUEST } from '../../objectIds';
 import { SourcePathMapper } from '../../sourceMapCore';
 import { captureValues, findMethodSignature, generateTest, parseFrameName } from '../../testGenCore';
 import { UiFreezeWatch } from '../../uiFreezeWatch';
-import { DECOMPILER, DapSession, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DECOMPILER, DapSession, IS_NETCOREDBG, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 120_000;
 const PROGRAM_CS = appSource('Basic', 'Program.cs');
@@ -154,6 +154,24 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
         const frame = await s.topFrame(stop.body.threadId);
         assert.match(frame.name, /MappedLib\.Calc\.Add\(/);
         assert.equal(path.resolve(frame.source.path).toLowerCase(), path.resolve(calc).toLowerCase());
+    });
+
+    it('steps into an assembly without symbols, which the engine decompiles to C#', { timeout: TIMEOUT, skip: IS_NETCOREDBG ? 'netcoredbg does not decompile' : false }, async () => {
+        // The program has its PDB, so NoPdbLib is not user code: step in with Just My Code off to enter it. The line first
+        // makes its decimal arguments (.NET's own code, no source: the step comes back to the line), so step in until there.
+        const s = session();
+        const first = s.nextStop();
+        await s.launch(program, { [PROGRAM_CS]: [{ line: line('call-nopdb') }] }, { justMyCode: false });
+        const stop = await first;
+        let frame = await s.topFrame(stop.body.threadId);
+        for (let i = 0; i < 5 && !/NoPdbLib/.test(frame.name); i++) {
+            const stepped = s.nextStop();
+            await s.request('stepIn', { threadId: stop.body.threadId });
+            frame = await s.topFrame((await stepped).body.threadId);
+        }
+        assert.match(frame.name, /NoPdbLib\.Pricing\.WithTax\(/);
+        assert.match(frame.source.path, /\\dotnet-x86dbg\\decompiled\\.*\\Pricing\.cs$/i);
+        assert.ok(fs.readFileSync(frame.source.path, 'utf8').split(/\r?\n/)[frame.line - 1].trim().length > 0, 'the frame\'s line has code');
     });
 
     it('steps into a decompiled assembly', { timeout: TIMEOUT, skip: fs.existsSync(DECOMPILER) ? false : 'the decompiler helper is not built' }, async () => {

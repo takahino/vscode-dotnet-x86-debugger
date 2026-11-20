@@ -40,6 +40,8 @@ export interface LaunchArguments {
     expressionEvaluationOptions?: ExpressionEvaluationOptions;
     /** Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `dotnetX86.applyChanges` can update them. The extension sets it from `dotnetX86.editAndContinue.enabled` unless launch.json does. */
     editAndContinue?: boolean;
+    /** Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `dotnetX86.decompile`. */
+    decompile?: 'app' | 'off';
     /** Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed). */
     __dotnetFramework?: boolean;
 }
@@ -57,6 +59,8 @@ export interface AttachArguments {
     enableStepFiltering?: boolean;
     /** As in launch. */
     expressionEvaluationOptions?: ExpressionEvaluationOptions;
+    /** As in launch (the application's folder is the folder of the process's exe). */
+    decompile?: 'app' | 'off';
 }
 
 /** The same option as the C# extension's debugger (vsdbg). */
@@ -168,6 +172,43 @@ export interface ApplyChangesResponse {
     problems: { file: string; line: number; column: number; message: string }[];
     /** Further reasons, one per line (the helper could not start, the source changed before debugging, ...). */
     details: string[];
+}
+
+/**
+ * Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB
+ * (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file,
+ * or this request. The C# files are written to `%LOCALAPPDATA%\dotnet-x86dbg\decompiled\<MVID>-v<version>` and the
+ * symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have
+ * names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in
+ * `NETCOREDBG_SYMBOL_DIRS` (**Decompile for Debugging**) take precedence. Methods it cannot turn into C# are shown as IL.
+ * Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.
+ * @request dotnetX86.decompile
+ * @handledBy engine
+ */
+export interface DecompileArguments {
+    /** File name (`MyApp.dll`) or full path of a loaded assembly. Omitted: list the assemblies decompiled on demand. */
+    module?: string;
+    /** With module: a type (`Namespace.Type`, `Type`, `Outer.Inner` or `Outer+Inner`); returns the numbered lines of its file. */
+    type?: string;
+    /** With type: a member name (method, constructor = the type's name, property, event); only its lines (all overloads). */
+    method?: string;
+    /** Most lines to return (default 400). */
+    maxLines?: number;
+}
+
+/** @response dotnetX86.decompile */
+export interface DecompileResponse {
+    /** Without `module`: the assemblies decompiled on demand. */
+    modules?: { path: string; state: 'notYet' | 'decompiled' | 'failed' }[];
+    /** The assembly. */
+    module?: string;
+    /** With `module` only: the decompiled files. */
+    files?: string[];
+    /** With `type`: the file of the type, the line ranges returned (from 1, inclusive), the lines, and whether `maxLines` cut them. */
+    file?: string;
+    ranges?: { startLine: number; endLine: number }[];
+    lines?: { line: number; text: string }[];
+    truncated?: boolean;
 }
 
 /* ----------------------------------------------------------------------------------------------------------------
@@ -394,7 +435,7 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'setExceptionBreakpoints', handledBy: 'both', notes: 'Filters `all` and `user-unhandled`; `filterOptions[].condition` is `A, B` or `!A, B` (type names).' },
     { command: 'exceptionInfo', handledBy: 'engine', notes: '`exceptionId` is `CLR/<type>`, `breakMode` `always` / `unhandled` / `userUnhandled`, `details` with `message`, `stackTrace`, `innerException`.' },
     { command: 'threads', handledBy: 'engine', notes: 'The OS thread id is the DAP thread id. Names are `Thread.Name`; else the process\'s first thread is `Main Thread` (listed first) and the others `<No name>`.' },
-    { command: 'stackTrace', handledBy: 'engine', notes: 'Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them.' },
+    { command: 'stackTrace', handledBy: 'engine', notes: 'Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `dotnetX86.decompile`).' },
     { command: 'scopes', handledBy: 'engine', notes: 'One scope, `Locals`. A step over a call puts `<Type.Method> returned` first.' },
     { command: 'variables', handledBy: 'engine', notes: 'See the value conventions. Children carry `evaluateName`. `Static members` and `Raw View` are nodes of their own.' },
     { command: 'evaluate', handledBy: 'both', notes: 'C# expressions with the compiler\'s values and types (lambdas, LINQ, `await` waited synchronously, pointers). The relay rewrites `$N` object ids.' },
@@ -430,6 +471,8 @@ export const ENGINE_CAPABILITIES = {
     supportsCancelRequest: true,
     /** Custom: `dotnetX86.applyChanges` (Edit and Continue). */
     dotnetX86SupportsApplyChanges: true,
+    /** Custom: `dotnetX86.decompile`, and the `decompile` launch / attach argument. */
+    dotnetX86SupportsDecompile: true,
     exceptionBreakpointFilters: [{ filter: 'all', label: 'all' }, { filter: 'user-unhandled', label: 'user-unhandled' }],
 } as const;
 

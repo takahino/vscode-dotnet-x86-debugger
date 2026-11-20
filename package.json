@@ -1313,6 +1313,15 @@
                 "default": true,
                 "description": "%debugger.launch.editAndContinue%"
               },
+              "decompile": {
+                "type": "string",
+                "enum": [
+                  "app",
+                  "off"
+                ],
+                "default": "app",
+                "description": "%debugger.launch.decompile%"
+              },
               "expressionEvaluationOptions": {
                 "type": "object",
                 "description": "%debugger.expressionEvaluationOptions%",
@@ -1366,6 +1375,15 @@
                 "type": "boolean",
                 "default": true,
                 "description": "%debugger.attach.enableStepFiltering%"
+              },
+              "decompile": {
+                "type": "string",
+                "enum": [
+                  "app",
+                  "off"
+                ],
+                "default": "app",
+                "description": "%debugger.attach.decompile%"
               },
               "expressionEvaluationOptions": {
                 "type": "object",
