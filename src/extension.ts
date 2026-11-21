@@ -19,6 +19,7 @@ import { HeapSnapshots } from './heapSnapshots';
 import { EnvironmentCheck } from './environmentCheck';
 import { generateLaunchJsonCommand } from './launchSetup';
 import { PerfTips } from './perfTips';
+import { CoverageHighlighter } from './coverage';
 import { PinnedValues } from './pinnedValues';
 import { ModuleList, copyModulePath, revealModule } from './moduleList';
 import { McpIntegration } from './mcp';
@@ -55,6 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const stepHistory = new StepHistory();
     const moduleList = new ModuleList();
     const perfTips = new PerfTips();
+    const coverage = new CoverageHighlighter();
     const autos = new AutosView();
     const breakpointCommands = new BreakpointCommands();
     const pinnedValues = new PinnedValues(context.workspaceState);
@@ -138,6 +140,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('dotnetX86.revealModule', revealModule),
         perfTips,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
+        coverage,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new UiFreezeDetector(context.extensionPath, output)),
         autos,
         vscode.window.createTreeView('dotnetX86.autos', { treeDataProvider: autos }),

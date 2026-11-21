@@ -90,6 +90,7 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
     if (typeof config.editAndContinue !== 'boolean') {
         config.editAndContinue = isEnabled('editAndContinue');
     }
+    applyCoverageSetting(config);
 
     const isDll = path.extname(program).toLowerCase() === '.dll';
     if (isDll) {
@@ -156,6 +157,22 @@ function warnIfWindowsPdb(program: string): void {
     }
 }
 
+/**
+ * Code coverage (setting dotnetX86.coverage.*) unless launch.json says otherwise: the engine counts the lines and branches
+ * the program runs, the editor colors them (CoverageHighlighter), and the Cobertura XML is written at the end.
+ */
+function applyCoverageSetting(config: vscode.DebugConfiguration): void {
+    if (config.coverage !== undefined) {
+        return;
+    }
+    const settings = vscode.workspace.getConfiguration('dotnetX86.coverage');
+    if (!settings.get<boolean>('enabled', false)) {
+        return;
+    }
+    const folder = settings.get<string>('folder', '').trim();
+    config.coverage = folder ? { enabled: true, folder } : true;
+}
+
 async function resolveAttach(config: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration | undefined> {
     if (config.processId === undefined && typeof config.processName === 'string' && config.processName.trim()) {
         const pid = await waitForProcess(config.processName.trim(), Number(config.waitTimeout ?? 120));
@@ -169,6 +186,7 @@ async function resolveAttach(config: vscode.DebugConfiguration): Promise<vscode.
         throw new Error(vscode.l10n.t("Invalid processId: {0}. Specify a numeric PID or \"${command:pickProcess}\".", String(config.processId)));
     }
     config.processId = pid;
+    applyCoverageSetting(config);
     config[ENGINE_ARCHITECTURE_KEY] = await processArchitecture(pid);
     return config;
 }

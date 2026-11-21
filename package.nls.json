@@ -157,5 +157,11 @@
   "config.editAndContinue.enabled": "Edit and Continue: while debugging a Debug build started by the debugger, apply the edits of its C# sources without restarting (**.NET x86: Apply Code Changes**, or on save). Changed methods run the new code from their next call, and a method that is stopped moves to the new code at its next statement. Needs the .NET SDK 9 or later (its compiler builds the change). Takes effect from the next debug session.",
   "config.editAndContinue.applyOnSave": "Apply the edit when a C# source of the program being debugged is saved.",
   "config.evidence.enabled": "Capture Evidence (Command Palette, Call Stack and WinForms Controls views): pictures of the open forms, the control values, the variables, the call stack and the SQL since the previous capture, saved as Markdown and PNG files.",
-  "config.evidence.folder": "Folder where Capture Evidence saves (a new sub folder per capture). A relative path is taken from the workspace folder."
+  "config.evidence.folder": "Folder where Capture Evidence saves (a new sub folder per capture). A relative path is taken from the workspace folder.",
+  "debugger.coverage": "Code coverage: count the lines and branches the program runs while you debug. The editor colors them (setting dotnetX86.coverage.showInEditor) and the status bar shows the rates; the Cobertura XML is written when the session ends (or with \"Write Coverage XML\"). true, or { \"enabled\": true, \"folder\": \"<absolute folder>\" }. Defaults to the setting dotnetX86.coverage.enabled.",
+  "debugger.coverage.folder": "The folder (absolute) to write the Cobertura XML into, as <program>-<time>.cobertura.xml.",
+  "config.coverage.enabled": "Count code coverage (lines run, branches taken) in new debug sessions, unless launch.json sets \"coverage\". The editor colors run, partly run and not run lines.",
+  "config.coverage.folder": "The folder (absolute) to write the Cobertura XML into. Empty: %LOCALAPPDATA%\\dotnet-x86dbg\\coverage.",
+  "config.coverage.showInEditor": "Color the lines in the editor while counting coverage: run, partly run (some branch outcomes not taken), not run.",
+  "command.writeCoverage": "Write Coverage XML"
 }

@@ -50,6 +50,8 @@ export interface LaunchArguments {
     exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
     /** UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`. */
     uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
+    /** Code coverage: count the lines and branches the program runs (`dotnetX86.coverageChanged`, `dotnetX86.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\dotnet-x86dbg\coverage`. The extension sets it from `dotnetX86.coverage.*` unless launch.json does. */
+    coverage?: boolean | { enabled?: boolean; folder?: string };
     /** Processes the program starts with `Process.Start`: `record` (default) logs them (`dotnetX86.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them. */
     childProcesses?: 'record' | 'follow' | 'off';
     /** Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed). */
@@ -77,6 +79,8 @@ export interface AttachArguments {
     exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
     /** As in launch. */
     uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
+    /** As in launch. */
+    coverage?: boolean | { enabled?: boolean; folder?: string };
     /** As in launch. */
     childProcesses?: 'record' | 'follow' | 'off';
     /** Set by the parent's engine in its `startDebugging` request: the process is a child it suspended before its runtime started. The engine registers for the runtime's start and then resumes it (a .NET Framework child is resumed and attached once its runtime has loaded). */
@@ -294,6 +298,35 @@ export interface ProcessUsageResponse {
     largestFree?: number;
 }
 
+/**
+ * Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that
+ * file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).
+ * @request dotnetX86.coverage
+ * @handledBy engine
+ */
+export interface CoverageArguments {
+    file?: string;
+    write?: boolean;
+    folder?: string;
+}
+
+/** @response dotnetX86.coverage */
+export interface CoverageResponse {
+    enabled: boolean;
+    linesCovered: number;
+    linesValid: number;
+    lineRate: number;
+    branchesCovered: number;
+    branchesValid: number;
+    branchRate: number;
+    /** Branches whose outcome cannot be counted (e.g. a switch on a computed value). */
+    uncountableBranches: number;
+    /** The Cobertura XML written last. */
+    path?: string;
+    /** With `file`: each line that has code. A line that ran but did not take every branch outcome has branchesCovered < branchesValid. */
+    lines?: { line: number; hit: boolean; branchesCovered?: number; branchesValid?: number; uncountableBranches?: number }[];
+}
+
 /* ----------------------------------------------------------------------------------------------------------------
  * Custom requests the relay handles (never sent to the engine)
  * ---------------------------------------------------------------------------------------------------------------- */
@@ -491,6 +524,15 @@ export interface ControlEventEventBody {
     line?: number;
 }
 
+/**
+ * Lines were counted (at most 4 times a second): the rates as in `dotnetX86.coverage`, and the source files whose marks
+ * changed (read their lines with `dotnetX86.coverage { file }`).
+ * @event dotnetX86.coverageChanged
+ * @sentBy engine
+ */
+export interface CoverageChangedEventBody extends CoverageResponse {
+    files: string[];
+}
 /**
  * A UI thread stopped answering window messages for `ms` while the program ran (launch argument `uiFreeze`): the engine
  * pauses the program next, on that thread. The relay words the stop's reason in the user's language.

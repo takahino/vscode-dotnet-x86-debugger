@@ -258,6 +258,10 @@
         "category": ".NET x86"
       },
       {
+        "command": "dotnetX86.writeCoverage",
+        "title": "%command.writeCoverage%",
+        "category": ".NET x86"
+      },      {
         "command": "dotnetX86.clearStepHistory",
         "title": "%command.clearStepHistory%",
         "category": ".NET x86",
@@ -1051,7 +1055,21 @@
           "default": true,
           "description": "%config.stepHistory.enabled%"
         },
-        "dotnetX86.perfTips.enabled": {
+        "dotnetX86.coverage.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.coverage.enabled%"
+        },
+        "dotnetX86.coverage.folder": {
+          "type": "string",
+          "default": "",
+          "description": "%config.coverage.folder%"
+        },
+        "dotnetX86.coverage.showInEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.coverage.showInEditor%"
+        },        "dotnetX86.perfTips.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.perfTips.enabled%"
@@ -1307,7 +1325,22 @@
                 "default": "app",
                 "description": "%debugger.launch.decompile%"
               },
-              "childProcesses": {
+              "coverage": {
+                "type": [
+                  "boolean",
+                  "object"
+                ],
+                "description": "%debugger.coverage%",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "folder": {
+                    "type": "string",
+                    "description": "%debugger.coverage.folder%"
+                  }
+                }
+              },              "childProcesses": {
                 "type": "string",
                 "enum": [
                   "record",
@@ -1380,7 +1413,22 @@
                 "default": "app",
                 "description": "%debugger.attach.decompile%"
               },
-              "childProcesses": {
+              "coverage": {
+                "type": [
+                  "boolean",
+                  "object"
+                ],
+                "description": "%debugger.coverage%",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "folder": {
+                    "type": "string",
+                    "description": "%debugger.coverage.folder%"
+                  }
+                }
+              },              "childProcesses": {
                 "type": "string",
                 "enum": [
                   "record",

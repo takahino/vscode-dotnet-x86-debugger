@@ -393,5 +393,11 @@
   "{0} was left as it was: it could not be read ({1}).": "{0} は読めなかったので、変えていません（{1}）。",
   "Start debugging a .NET x86 program to apply code changes.": "コードの変更を適用するには、.NET x86 のプログラムのデバッグを始めてください。",
   "Could not apply the code changes: {0}": "コードの変更を適用できませんでした: {0}",
-  "Show Details": "詳細を表示"
+  "Show Details": "詳細を表示",
+  "Code coverage of this debug session (lines run, branches taken). Click to write the Cobertura XML.": "このデバッグ セッションのカバレッジ (通った行、通った分岐)。押すと Cobertura XML を書きます。",
+  "Coverage: branches {0}/{1} taken": "カバレッジ: 分岐 {0}/{1} を通った",
+  "lines": "行",
+  "branches": "分岐",
+  "No .NET x86 debug session is counting coverage. Turn on dotnetX86.coverage.enabled and start debugging.": "カバレッジを数えている .NET x86 のデバッグ セッションがありません。dotnetX86.coverage.enabled を入れてデバッグを始めてください。",
+  "Coverage written: {0}": "カバレッジを書きました: {0}"
 }

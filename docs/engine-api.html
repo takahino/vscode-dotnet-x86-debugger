@@ -46,6 +46,7 @@ main a { color: var(--engine); }
 <a href="#standard">Standard requests</a>
 <a href="#capabilities">Capabilities</a>
 <a class="sub engine" href="#request-dotnetX86-applyChanges">req dotnetX86.applyChanges</a>
+<a class="sub engine" href="#request-dotnetX86-coverage">req dotnetX86.coverage</a>
 <a class="sub engine" href="#request-dotnetX86-decompile">req dotnetX86.decompile</a>
 <a class="sub engine" href="#request-dotnetX86-freezeThread">req dotnetX86.freezeThread</a>
 <a class="sub engine" href="#request-dotnetX86-handleStats">req dotnetX86.handleStats</a>
@@ -58,6 +59,7 @@ main a { color: var(--engine); }
 <a class="sub proxy" href="#request-dotnetX86-setExceptionTypes">req dotnetX86.setExceptionTypes</a>
 <a class="sub engine" href="#event-dotnetX86-changesApplied">evt dotnetX86.changesApplied</a>
 <a class="sub engine" href="#event-dotnetX86-controlEvent">evt dotnetX86.controlEvent</a>
+<a class="sub engine" href="#event-dotnetX86-coverageChanged">evt dotnetX86.coverageChanged</a>
 <a class="sub engine" href="#event-dotnetX86-exceptionThrown">evt dotnetX86.exceptionThrown</a>
 <a class="sub engine" href="#event-dotnetX86-mcpEndpoint">evt dotnetX86.mcpEndpoint</a>
 <a class="sub engine" href="#event-dotnetX86-removeBreakpoint">evt dotnetX86.removeBreakpoint</a>
@@ -103,6 +105,7 @@ main a { color: var(--engine); }
 <tr><td><code>sqlLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (<code>dotnetX86.sqlExecuted</code>). <code>methods</code> replaces the provider methods (<code>Namespace.Type.Method</code>). The extension sets it from <code>dotnetX86.sqlLog.*</code> unless launch.json does.</td></tr>
 <tr><td><code>exceptionLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>Exception log: record every thrown exception, also those that do not stop the program (<code>dotnetX86.exceptionThrown</code>); <code>snapshot</code> takes the stack and locals at the throw (default true). The extension sets it from <code>dotnetX86.exceptionLog.*</code>.</td></tr>
 <tr><td><code>uiFreeze</code><span class="opt">optional</span></td><td>boolean | object</td><td>UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for <code>thresholdMs</code> while the program runs pauses it there (<code>dotnetX86.uiFrozen</code>, then <code>stopped</code> with reason <code>pause</code>). The extension sets it from <code>dotnetX86.uiFreeze.*</code>.</td></tr>
+<tr><td><code>coverage</code><span class="opt">optional</span></td><td>boolean | object</td><td>Code coverage: count the lines and branches the program runs (<code>dotnetX86.coverageChanged</code>, <code>dotnetX86.coverage</code>); the Cobertura XML is written when the session ends, into <code>folder</code> (absolute) or <code>%LOCALAPPDATA%\dotnet-x86dbg\coverage</code>. The extension sets it from <code>dotnetX86.coverage.*</code> unless launch.json does.</td></tr>
 <tr><td><code>childProcesses</code><span class="opt">optional</span></td><td><code>"record"</code> | <code>"follow"</code> | <code>"off"</code></td><td>Processes the program starts with <code>Process.Start</code>: <code>record</code> (default) logs them (<code>dotnetX86.childProcess</code>), <code>follow</code> also suspends a .NET child and sends the reverse request <code>startDebugging</code> (<code>attach</code> with <code>processId</code> and <code>__resumeChild</code>) so that the client debugs it in its own session, <code>off</code> ignores them.</td></tr>
 <tr><td><code>__dotnetFramework</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the extension when <code>program</code> is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed).</td></tr>
 </table>
@@ -129,6 +132,7 @@ main a { color: var(--engine); }
     &quot;sqlLog&quot;: false,
     &quot;exceptionLog&quot;: false,
     &quot;uiFreeze&quot;: false,
+    &quot;coverage&quot;: false,
     &quot;childProcesses&quot;: &quot;record&quot;,
     &quot;__dotnetFramework&quot;: false
   }
@@ -145,6 +149,7 @@ main a { color: var(--engine); }
 <tr><td><code>sqlLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
 <tr><td><code>exceptionLog</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
 <tr><td><code>uiFreeze</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
+<tr><td><code>coverage</code><span class="opt">optional</span></td><td>boolean | object</td><td>As in launch.</td></tr>
 <tr><td><code>childProcesses</code><span class="opt">optional</span></td><td><code>"record"</code> | <code>"follow"</code> | <code>"off"</code></td><td>As in launch.</td></tr>
 <tr><td><code>__resumeChild</code><span class="opt">optional</span></td><td>boolean</td><td>Set by the parent's engine in its <code>startDebugging</code> request: the process is a child it suspended before its runtime started. The engine registers for the runtime's start and then resumes it (a .NET Framework child is resumed and attached once its runtime has loaded).</td></tr>
 </table>
@@ -273,6 +278,69 @@ main a { color: var(--engine); }
     ],
     &quot;details&quot;: [
       &quot;&quot;
+    ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="request-dotnetX86-coverage"><h3><span class="verb request">request</span> <code>dotnetX86.coverage</code> <span class="badge engine">engine</span></h3>
+<p>Code coverage of the session (launch argument <code>coverage</code>): the rates, and with <code>file</code> the state of each line of that file (the editor colors them). With <code>write</code>, writes the Cobertura XML now (into <code>folder</code>, absolute, when given).</p>
+<h4>arguments</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>file</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>write</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+<tr><td><code>folder</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+</table>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;dotnetX86.coverage&quot;,
+  &quot;arguments&quot;: {
+    &quot;file&quot;: &quot;&quot;,
+    &quot;write&quot;: false,
+    &quot;folder&quot;: &quot;&quot;
+  }
+}</pre></details>
+<h4>response body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>enabled</code></td><td>boolean</td><td></td></tr>
+<tr><td><code>linesCovered</code></td><td>number</td><td></td></tr>
+<tr><td><code>linesValid</code></td><td>number</td><td></td></tr>
+<tr><td><code>lineRate</code></td><td>number</td><td></td></tr>
+<tr><td><code>branchesCovered</code></td><td>number</td><td></td></tr>
+<tr><td><code>branchesValid</code></td><td>number</td><td></td></tr>
+<tr><td><code>branchRate</code></td><td>number</td><td></td></tr>
+<tr><td><code>uncountableBranches</code></td><td>number</td><td>Branches whose outcome cannot be counted (e.g. a switch on a computed value).</td></tr>
+<tr><td><code>path</code><span class="opt">optional</span></td><td>string</td><td>The Cobertura XML written last.</td></tr>
+<tr><td><code>lines</code><span class="opt">optional</span></td><td>object[]</td><td>With <code>file</code>: each line that has code. A line that ran but did not take every branch outcome has branchesCovered &lt; branchesValid.</td></tr>
+<tr><td><code>lines[].line</code></td><td>number</td><td></td></tr>
+<tr><td><code>lines[].hit</code></td><td>boolean</td><td></td></tr>
+<tr><td><code>lines[].branchesCovered</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>lines[].branchesValid</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>lines[].uncountableBranches</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;dotnetX86.coverage&quot;,
+  &quot;body&quot;: {
+    &quot;enabled&quot;: false,
+    &quot;linesCovered&quot;: 0,
+    &quot;linesValid&quot;: 0,
+    &quot;lineRate&quot;: 0,
+    &quot;branchesCovered&quot;: 0,
+    &quot;branchesValid&quot;: 0,
+    &quot;branchRate&quot;: 0,
+    &quot;uncountableBranches&quot;: 0,
+    &quot;path&quot;: &quot;&quot;,
+    &quot;lines&quot;: [
+      {
+        &quot;line&quot;: 0,
+        &quot;hit&quot;: false,
+        &quot;branchesCovered&quot;: 0,
+        &quot;branchesValid&quot;: 0,
+        &quot;uncountableBranches&quot;: 0
+      }
     ]
   }
 }</pre></details>
@@ -716,6 +784,23 @@ main a { color: var(--engine); }
       &quot;name&quot;: &quot;&quot;
     },
     &quot;line&quot;: 0
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-dotnetX86-coverageChanged"><h3><span class="verb event">event</span> <code>dotnetX86.coverageChanged</code> <span class="badge engine">engine</span></h3>
+<p>Lines were counted (at most 4 times a second): the rates as in <code>dotnetX86.coverage</code>, and the source files whose marks changed (read their lines with <code>dotnetX86.coverage { file }</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>files</code></td><td>string[]</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;dotnetX86.coverageChanged&quot;,
+  &quot;body&quot;: {
+    &quot;files&quot;: [
+      &quot;&quot;
+    ]
   }
 }</pre></details>
 </section>

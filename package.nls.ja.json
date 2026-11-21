@@ -157,5 +157,11 @@
   "config.editAndContinue.enabled": "エディット コンティニュ: デバッガーから起動した Debug ビルドのデバッグ中に、C# のソースの変更を再起動せずに当てます（**.NET x86: コードの変更を適用**、または保存したとき）。変えたメソッドは次に呼ばれたときから新しいコードで動き、止まっているメソッドは次の文から新しいコードに乗り換わります。.NET SDK 9 以降が要ります（そのコンパイラーで変更を作ります）。次のデバッグのセッションから効きます。",
   "config.editAndContinue.applyOnSave": "デバッグ中のプログラムの C# のソースを保存したときに、その変更を当てます。",
   "config.evidence.enabled": "エビデンスの取得（コマンド パレット・コール スタック・WinForms コントロール ビュー）: 開いているフォームの画像、コントロールの値、変数、コール スタック、前回の取得以降の SQL を、Markdown と PNG で保存します。",
-  "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。"
+  "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。",
+  "debugger.coverage": "カバレッジ: デバッグの間にプログラムが通った行と分岐を数えます。エディターで色を付け (設定 dotnetX86.coverage.showInEditor)、ステータス バーに率を出します。Cobertura XML は、セッションの終わり (または「カバレッジの XML を書く」) で書きます。true か { \"enabled\": true, \"folder\": \"<絶対パスのフォルダー>\" }。省略すると設定 dotnetX86.coverage.enabled に従います。",
+  "debugger.coverage.folder": "Cobertura XML を書くフォルダー (絶対パス)。<プログラム名>-<日時>.cobertura.xml として書きます。",
+  "config.coverage.enabled": "新しいデバッグ セッションでカバレッジ (通った行、通った分岐) を数えます (launch.json の \"coverage\" があればそちら)。エディターで、通った行・一部の行・通っていない行に色を付けます。",
+  "config.coverage.folder": "Cobertura XML を書くフォルダー (絶対パス)。空なら %LOCALAPPDATA%\\dotnet-x86dbg\\coverage。",
+  "config.coverage.showInEditor": "カバレッジを数えている間、エディターの行に色を付けます: 通った、一部 (分岐の片方だけ)、通っていない。",
+  "command.writeCoverage": "カバレッジの XML を書く"
 }

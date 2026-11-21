@@ -66,6 +66,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | [Dump, table, image, C# initializer, string viewer, snapshots](#more-commands-in-the-variables-view-context-menu) | Read and compare complex values | Variables right-click |
 | **Time, memory and performance** | | |
 | [PerfTips](#perftips) | Time of the last step or continue at the line | Automatic |
+| [Code coverage](#code-coverage) | Lines run, partly run and not run, colored in the editor; Cobertura XML | Setting |
 | [Section timing, value trend](#section-timing) ★ | Time a section or chart values on every pass, without stopping | Editor right-click |
 | [Memory / CPU graph](#memory--cpu-graph) | Private Bytes, Working Set and CPU over time | Command Palette |
 | [GDI / USER objects, handles, address space](#memory--cpu-graph) ★ | Catch GDI leaks and a full 32-bit address space before the app crashes | Command Palette |
@@ -213,6 +214,9 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `dotnetX86.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
 | `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
 | `dotnetX86.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
+| `dotnetX86.coverage.enabled` | Count code coverage in new debug sessions, unless launch.json sets `coverage` (default `false`). |
+| `dotnetX86.coverage.folder` | The folder (absolute) for the Cobertura XML (default `%LOCALAPPDATA%\dotnet-x86dbg\coverage`). |
+| `dotnetX86.coverage.showInEditor` | Color the lines in the editor while counting coverage (default `true`). |
 | `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
 | `dotnetX86.heapSnapshot.collectGarbage` | Run a garbage collection right before each heap snapshot (default `true`). |
 | `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
@@ -456,6 +460,13 @@ or run **.NET x86: Dump Expression...** from the Command Palette, to open the wh
 
 After a step or continue, the stopped line shows the elapsed time (e.g. `≤ 12 ms elapsed`). It includes the debugger's
 own overhead, hence "≤".
+
+#### Code coverage
+
+Turn on `dotnetX86.coverage.enabled` (or set `"coverage": true` in launch.json) and debug. The engine counts the lines
+and branches the program runs, and the editor colors the lines as they run: green run, yellow partly run (hover for the
+branches taken), red not run. The status bar shows the rates; click it (or **Write Coverage XML**) to write the Cobertura
+XML, which is also written when the session ends. The colors stay after the session to review them.
 
 #### Section timing
 

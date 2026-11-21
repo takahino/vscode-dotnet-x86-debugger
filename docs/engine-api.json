@@ -127,6 +127,25 @@
         ],
         "description": "UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`."
       },
+      "coverage": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "folder": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "Code coverage: count the lines and branches the program runs (`dotnetX86.coverageChanged`, `dotnetX86.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\\dotnet-x86dbg\\coverage`. The extension sets it from `dotnetX86.coverage.*` unless launch.json does."
+      },
       "childProcesses": {
         "type": "string",
         "enum": [
@@ -234,6 +253,25 @@
               },
               "thresholdMs": {
                 "type": "number"
+              }
+            }
+          }
+        ],
+        "description": "As in launch."
+      },
+      "coverage": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "folder": {
+                "type": "string"
               }
             }
           }
@@ -354,6 +392,98 @@
           "applied",
           "problems",
           "details"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.coverage",
+      "kind": "request",
+      "side": "engine",
+      "description": "Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "write": {
+            "type": "boolean"
+          },
+          "folder": {
+            "type": "string"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "linesCovered": {
+            "type": "number"
+          },
+          "linesValid": {
+            "type": "number"
+          },
+          "lineRate": {
+            "type": "number"
+          },
+          "branchesCovered": {
+            "type": "number"
+          },
+          "branchesValid": {
+            "type": "number"
+          },
+          "branchRate": {
+            "type": "number"
+          },
+          "uncountableBranches": {
+            "type": "number",
+            "description": "Branches whose outcome cannot be counted (e.g. a switch on a computed value)."
+          },
+          "path": {
+            "type": "string",
+            "description": "The Cobertura XML written last."
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "type": "number"
+                },
+                "hit": {
+                  "type": "boolean"
+                },
+                "branchesCovered": {
+                  "type": "number"
+                },
+                "branchesValid": {
+                  "type": "number"
+                },
+                "uncountableBranches": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "line",
+                "hit"
+              ]
+            },
+            "description": "With `file`: each line that has code. A line that ran but did not take every branch outcome has branchesCovered < branchesValid."
+          }
+        },
+        "required": [
+          "enabled",
+          "linesCovered",
+          "linesValid",
+          "lineRate",
+          "branchesCovered",
+          "branchesValid",
+          "branchRate",
+          "uncountableBranches"
         ]
       }
     },
@@ -988,6 +1118,26 @@
           "labels",
           "controls",
           "handler"
+        ]
+      }
+    },
+    {
+      "name": "dotnetX86.coverageChanged",
+      "kind": "event",
+      "side": "engine",
+      "description": "Lines were counted (at most 4 times a second): the rates as in `dotnetX86.coverage`, and the source files whose marks changed (read their lines with `dotnetX86.coverage { file }`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "files"
         ]
       }
     },

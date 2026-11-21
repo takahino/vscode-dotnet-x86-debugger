@@ -65,6 +65,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | [ダンプ・表・画像・C# 初期化子・文字列ビューアー・スナップショット](#変数ビューの右クリックメニューにあるその他のコマンド) | 複雑な値を読む・比べる | 変数ビューの右クリック |
 | **時間・メモリ・パフォーマンス** | | |
 | [PerfTips](#perftips) | 直前のステップや続行にかかった時間を行に表示 | 自動 |
+| [カバレッジ](#カバレッジ) | 通った行・一部の行・通っていない行をエディターで色分け、Cobertura XML | 設定 |
 | [区間の時間計測・値の推移](#区間の時間計測) ★ | 止めずに毎回の時間や値を記録してグラフ化 | エディターの右クリック |
 | [メモリ / CPU グラフ](#メモリ--cpu-グラフ) | Private Bytes・Working Set・CPU の推移 | コマンド パレット |
 | [GDI / USER オブジェクト・ハンドル・アドレス空間](#メモリ--cpu-グラフ) ★ | GDI リークや 32bit アドレス空間の枯渇を、落ちる前に見つける | コマンド パレット |
@@ -212,6 +213,9 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | `dotnetX86.uiFreeze.enabled` | UI が応答しなくなったらプログラムを一時停止します（既定値 `true`）。 |
 | `dotnetX86.uiFreeze.thresholdMs` | UI スレッドが応答しない状態がこの時間続いたら一時停止します（既定値 `2000` ミリ秒）。 |
 | `dotnetX86.perfTips.enabled` | ステップ実行や続行の後、停止行に経過時間を表示します（既定値 `true`）。 |
+| `dotnetX86.coverage.enabled` | 新しいデバッグ セッションでカバレッジを数えます。launch.json に `coverage` があればそちら（既定値 `false`）。 |
+| `dotnetX86.coverage.folder` | Cobertura XML を書くフォルダー（絶対パス。既定は `%LOCALAPPDATA%\dotnet-x86dbg\coverage`）。 |
+| `dotnetX86.coverage.showInEditor` | カバレッジを数えている間、エディターの行に色を付けます（既定値 `true`）。 |
 | `dotnetX86.memoryGraph.autoOpen` | デバッグ開始時にメモリグラフを自動で開きます（既定値 `false`）。 |
 | `dotnetX86.heapSnapshot.collectGarbage` | ヒープ スナップショットの直前にガベージ コレクションを実行します（既定値 `true`）。 |
 | `dotnetX86.dump.maxDepth` | *Dump Variable* で展開する入れ子の深さ（既定値 `3`）。 |
@@ -442,6 +446,13 @@ VS Code の設定 `debug.inlineValues` で無効にできます。
 #### PerfTips
 
 ステップ実行や続行の後、停止行に経過時間（例: `≤ 12 ms 経過`）を表示します。デバッガ自体の処理時間を含むため「≤」を付けています。
+
+#### カバレッジ
+
+`dotnetX86.coverage.enabled` を入れて（または launch.json に `"coverage": true`）デバッグします。エンジンがプログラムの通った行と分岐を数え、
+エディターでは、通った行を緑、一部（分岐の片方だけ。マウスを載せると数）を黄、通っていない行を赤で、動いている間に色分けします。
+ステータス バーに率を出し、押すと（または **カバレッジの XML を書く**）Cobertura XML を書きます。セッションの終わりにも書きます。
+色はセッションのあとも残るので、見直せます。
 
 #### 区間の時間計測
 
