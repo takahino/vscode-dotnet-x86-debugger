@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { DOTNET_FRAMEWORK_KEY, ENGINE_ARCHITECTURE_KEY, findX86CoreClr } from './configProvider';
+import { ENGINE_ARCHITECTURE_KEY } from './configProvider';
 import { isEnabled } from './features';
 import { DapProxy, ExceptionFilterText, ProxyOptions } from './dapProxy';
 import { SYMBOL_DIRS_ENV } from './symbolDirs';
@@ -27,7 +27,7 @@ function exceptionFilterTexts(): Record<string, ExceptionFilterText> {
     };
 }
 
-/** Lines of the workspace's C# files that assign to `name`, for the "Break on Value Change" emulation. */
+/** Lines of the workspace's C# files that assign to `name`, for "Break on Value Change" (the engine watches them). */
 async function findWriteSites(name: string): Promise<{ path: string; line: number }[]> {
     const files = await vscode.workspace.findFiles('**/*.cs', '**/{bin,obj,node_modules,.git}/**', 5000);
     const sites: { path: string; line: number }[] = [];
@@ -138,7 +138,7 @@ function sqlMethods(): string[] {
     return configured.filter((m): m is string => typeof m === 'string' && /^[\w.]+\.\w+\.\w+$/.test(m.trim())).map((m) => m.trim());
 }
 
-/** The UI freeze watch settings, for an engine that watches itself (see UiFreezeDetector for netcoredbg). */
+/** The UI freeze watch settings (the engine watches the program's UI threads). */
 function uiFreezeSetting(): { enabled: boolean; thresholdMs: number } {
     const config = vscode.workspace.getConfiguration('dotnetX86.uiFreeze');
     return { enabled: config.get<boolean>('enabled', true), thresholdMs: Math.max(500, config.get<number>('thresholdMs', 2000)) };
@@ -178,6 +178,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 sqlMethods: sqlMethods(),
                 freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
                 uiFreeze: uiFreezeSetting(),
+                unsupportedEngineMessage: vscode.l10n.t('The debugger is not the bundled engine (dotnet-x86dbg): netcoredbg and other debuggers are no longer supported. Clear the setting dotnetX86.debuggerPath.'),
                 ...symbols,
             },
         );
@@ -194,26 +195,6 @@ class ProxyAdapter implements vscode.DebugAdapter {
 }
 
 /**
- * Environment for netcoredbg's .NET Framework support (patch 0007), used only when dotnetX86.debuggerPath points to a
- * netcoredbg: NETCOREDBG_DESKTOP_CLR launches the program with the .NET Framework CLR, and NETCOREDBG_HOST_CORECLR is the
- * CoreCLR netcoredbg runs its own managed part on. The bundled engine (dotnet-x86dbg) needs neither: it reads the
- * "__dotnetFramework" launch argument and debugs .NET Framework apps without any .NET runtime of its own.
- */
-function debuggerEnvironment(config: vscode.DebugConfiguration): Record<string, string> {
-    const framework = config.request === 'launch' && config[DOTNET_FRAMEWORK_KEY] === true;
-    let hostCoreClr: string | undefined;
-    try {
-        hostCoreClr = findX86CoreClr();
-    } catch (e) {
-        if (framework) {
-            throw e; // Required to launch a .NET Framework app.
-        }
-        return {}; // Attach to a .NET Framework process is then unavailable; .NET (Core) does not need it.
-    }
-    return framework ? { NETCOREDBG_DESKTOP_CLR: '1', NETCOREDBG_HOST_CORECLR: hostCoreClr } : { NETCOREDBG_HOST_CORECLR: hostCoreClr };
-}
-
-/**
  * Folder (relative to the extension root) holding the bundled debug engine of a bitness (dotnet-x86dbg, with dbgshim.dll).
  * ICorDebug needs a debugger of the same bitness as the program, so there is one engine for x86 and one for x64.
  */
@@ -221,11 +202,6 @@ function bundledDebuggerDir(architecture: 'x86' | 'x64'): string {
     return path.join('debugger', `dotnet-x86dbg-${architecture}`);
 }
 const BUNDLED_DEBUGGER_EXE = 'dotnet-x86dbg.exe';
-
-/** Whether the engine is netcoredbg (an old one set in dotnetX86.debuggerPath), which needs its own environment. */
-function isNetcoredbg(engine: string): boolean {
-    return path.basename(engine).toLowerCase() === 'netcoredbg.exe';
-}
 
 export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     constructor(
@@ -242,10 +218,10 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const architecture = session.configuration[ENGINE_ARCHITECTURE_KEY] === 'x64' ? 'x64' : 'x86';
         const debugger_ = this.locateDebugger(architecture);
         this.output.appendLine(`[session] using ${debugger_}`);
-        const env = isNetcoredbg(debugger_) ? debuggerEnvironment(session.configuration) : {};
+        const env: Record<string, string> = {};
         const args = ['--interpreter=vscode'];
         // MCP: the engine also listens on 127.0.0.1 (with a token) for AI clients and announces where (see McpIntegration).
-        if (isMcpEnabled() && !isNetcoredbg(debugger_)) {
+        if (isMcpEnabled()) {
             args.push('--mcp-listen');
         }
         // With tracing on, the engine also writes its own log (flushed per line, so it survives a hang or crash).
@@ -256,7 +232,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             this.output.appendLine(`[trace] engine log: ${logFile}`);
         }
         const sourceMap = sourceMapSetup(session, this.output);
-        // Downloaded symbols: the engine loads them from this folder by MVID (netcoredbg: patch 0009). Assemblies without
+        // Downloaded symbols: the engine loads them from this folder by MVID. Assemblies without
         // symbols are decompiled by the engine itself. The variable must be set before the engine starts (in the
         // ProxyAdapter constructor).
         const symbolDirs = [this.caches.symbols].filter((dir) => hasEntries(dir));
@@ -266,7 +242,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const sourceLink = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri).get<boolean>('sourceLink.enabled', true)
             ? { cacheRoot: this.caches.sources }
             : undefined;
-        // The engine runs behind a DAP relay that adds logpoints (see DapProxy).
+        // The engine runs behind a DAP relay that adds what needs the workspace (see DapProxy).
         const adapter = new ProxyAdapter(debugger_, args, this.output, env, sourceMap, this.checkedExceptionTypes(), { symbolDirs, sourceLink });
         if (sourceMap.mapper.enabled) {
             // Generated files under obj\ are never on another machine's disk and are not worth reporting.

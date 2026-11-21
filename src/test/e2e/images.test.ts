@@ -1,4 +1,4 @@
-// E2E: "View as Image" makes the debuggee save Image / Bitmap / Icon variables as PNG (netcoredbg cannot copy them).
+// E2E: "View as Image" makes the debuggee save Image / Bitmap / Icon variables as PNG.
 
 import * as assert from 'assert/strict';
 import * as fs from 'fs';

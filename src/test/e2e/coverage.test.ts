@@ -5,9 +5,9 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { COVERAGE_CHANGED_EVENT, COVERAGE_REQUEST, coverageMarks, samePath } from '../../coverageCore';
-import { DapSession, IS_NETCOREDBG, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
-describe('code coverage in the editor', { skip: e2eSkip || (IS_NETCOREDBG && 'netcoredbg does not count coverage') }, () => {
+describe('code coverage in the editor', { skip: e2eSkip }, () => {
     let s: DapSession;
     const source = appSource('Basic', 'Program.cs');
 

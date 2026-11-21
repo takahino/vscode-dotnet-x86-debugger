@@ -198,7 +198,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 
 | Setting | Description |
 |---|---|
-| `dotnetX86.debuggerPath` | For x86 programs, use another x86 debug engine (`dotnet-x86dbg.exe`, or the `netcoredbg.exe` of 1.x) instead of the bundled one. |
+| `dotnetX86.debuggerPath` | For x86 programs, use another build of the x86 debug engine (`dotnet-x86dbg.exe`) instead of the bundled one. |
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
 | `dotnetX86.sourceLink.enabled` | Download sources through the PDB's Source Link map (default `true`). |
 | `dotnetX86.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
@@ -754,8 +754,8 @@ filtering; Step Into Specific; Set Next Statement; return values; Object IDs; `D
 
 Up to 1.x the extension bundled an x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg) (MIT) with 13 patches.
 From 2.0 it bundles **dotnet-x86dbg** (Rust), a debug engine made for this extension. Its DAP messages and the way it writes
-values are kept the same as netcoredbg's, so every feature of the extension works as before. Setting `dotnetX86.debuggerPath`
-to a netcoredbg.exe still uses the old engine (for x86 programs).
+values are kept the same as netcoredbg's, so every feature of the extension works as before. netcoredbg itself is no longer
+supported (`dotnetX86.debuggerPath` takes only builds of dotnet-x86dbg).
 
 | | netcoredbg (1.x) | dotnet-x86dbg (2.0) |
 |---|---|---|

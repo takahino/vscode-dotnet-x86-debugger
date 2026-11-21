@@ -5,7 +5,7 @@ import * as assert from 'assert/strict';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { MCP_ENDPOINT_EVENT, McpEndpoint, parseEndpoint } from '../../mcpCore';
-import { DapSession, IS_NETCOREDBG, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 120_000;
 const PROGRAM_CS = appSource('Basic', 'Program.cs');
@@ -32,7 +32,7 @@ async function callTool(endpoint: McpEndpoint, name: string, args: Record<string
     return result.content[0].text;
 }
 
-describe('MCP through the relay', { skip: e2eSkip || (IS_NETCOREDBG && 'netcoredbg has no MCP') }, () => {
+describe('MCP through the relay', { skip: e2eSkip }, () => {
     let program = '';
     let session: DapSession | undefined;
 

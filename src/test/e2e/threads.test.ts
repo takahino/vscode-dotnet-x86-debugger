@@ -1,4 +1,4 @@
-// E2E: Parallel Stacks (all threads' stacks merged) and freezing threads (netcoredbg patch 0010).
+// E2E: Parallel Stacks (all threads' stacks merged) and freezing threads.
 
 import * as assert from 'assert/strict';
 import * as path from 'path';

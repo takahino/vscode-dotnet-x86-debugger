@@ -237,7 +237,7 @@ export interface DecompileResponse {
 
 /**
  * Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends
- * `dotnetX86.controlEvent`. (With netcoredbg the relay emulates it with function breakpoints it continues from.)
+ * `dotnetX86.controlEvent`.
  * @request dotnetX86.setEventTrace
  * @handledBy engine
  */
@@ -341,18 +341,6 @@ export interface SetExceptionTypesArguments {
     types: string[];
 }
 
-/**
- * netcoredbg only (the bundled engine watches the UI itself, see `uiFreeze`): pauses the program because this UI thread
- * stopped answering for `ms`, as the extension's helper found; the stop is reported on that thread with the description
- * "UI not responding for N s".
- * @request dotnetX86.pauseForFreeze
- * @handledBy proxy
- */
-export interface PauseForFreezeArguments {
-    threadId: number;
-    ms: number;
-}
-
 /* ----------------------------------------------------------------------------------------------------------------
  * Events
  * ---------------------------------------------------------------------------------------------------------------- */
@@ -378,7 +366,7 @@ export interface ProcessEventBody {
 /**
  * Standard DAP `stopped`. The engine sends `breakpoint` (also function breakpoints), `step` (also arriving in a Step Into
  * Target), `exception`, `pause` (also `Debugger.Break()` and a UI freeze, with `description`), `entry` and `data breakpoint`
- * (Break on Value Change, with `description` / `text`); the relay sends `goto` (with netcoredbg also `data breakpoint`).
+ * (Break on Value Change, with `description` / `text`); the relay sends `goto`.
  * @event stopped
  * @sentBy engine
  */
@@ -440,8 +428,7 @@ export interface ChangesAppliedEventBody {
 }
 
 /**
- * Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section. (With netcoredbg the relay
- * sends the events of the breakpoint options, logs and trace below.)
+ * Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.
  * @event dotnetX86.trackedValues
  * @sentBy engine
  */
@@ -560,9 +547,9 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'initialize', handledBy: 'engine', notes: 'Answers with the capabilities below, then sends `initialized`. Reads `supportsInvalidatedEvent`.' },
     { command: 'launch', handledBy: 'engine', notes: 'Checks the program (exists, bitness of the engine, .NET Framework 4.x) and remembers it; starts it at `configurationDone`.' },
     { command: 'attach', handledBy: 'engine', notes: 'Checks the process (runtime loaded, bitness of the engine); attaches at `configurationDone`.' },
-    { command: 'configurationDone', handledBy: 'engine', notes: 'Starts or attaches, then sends `process`. (With netcoredbg the relay first sets the SQL log\'s function breakpoints.)' },
-    { command: 'setBreakpoints', handledBy: 'both', notes: '`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). The relay maps paths (with netcoredbg it judges those itself).' },
-    { command: 'setFunctionBreakpoints', handledBy: 'both', notes: '`Type.Method`, `Method`, `Namespace.Type.Method` (all overloads). `anyCode: true` binds outside user code too (SQL log, event trace). The relay adds its own breakpoints and cuts the response back to VS Code\'s.' },
+    { command: 'configurationDone', handledBy: 'engine', notes: 'Starts or attaches, then sends `process`.' },
+    { command: 'setBreakpoints', handledBy: 'both', notes: '`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). The relay maps paths.' },
+    { command: 'setFunctionBreakpoints', handledBy: 'engine', notes: '`Type.Method`, `Method`, `Namespace.Type.Method` (all overloads). `anyCode: true` binds outside user code too.' },
     { command: 'setExceptionBreakpoints', handledBy: 'both', notes: 'Filters `all` and `user-unhandled`; `filterOptions[].condition` is `A, B` or `!A, B` (type names).' },
     { command: 'exceptionInfo', handledBy: 'engine', notes: '`exceptionId` is `CLR/<type>`, `breakMode` `always` / `unhandled` / `userUnhandled`, `details` with `message`, `stackTrace`, `innerException`.' },
     { command: 'threads', handledBy: 'engine', notes: 'The OS thread id is the DAP thread id. Names are `Thread.Name`; else the process\'s first thread is `Main Thread` (listed first) and the others `<No name>`.' },

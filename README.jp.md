@@ -197,7 +197,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 | 設定 | 説明 |
 |---|---|
-| `dotnetX86.debuggerPath` | x86 のプログラムに、同梱版の代わりに別の x86 のデバッグ エンジン（`dotnet-x86dbg.exe`、または 1.x の `netcoredbg.exe`）を使います。 |
+| `dotnetX86.debuggerPath` | x86 のプログラムに、同梱版の代わりに別のビルドの x86 のデバッグ エンジン（`dotnet-x86dbg.exe`）を使います。 |
 | `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | 全構成に共通の `sourceFileMap` / `sourceSearchPaths`（`${workspaceFolder}` が使えます）。 |
 | `dotnetX86.sourceLink.enabled` | PDB の Source Link の対応表からソースをダウンロードします（既定値 `true`）。 |
 | `dotnetX86.symbolServers` | **シンボルをダウンロード** が使うシンボル サーバー（既定は NuGet と Microsoft）。 |
@@ -724,7 +724,7 @@ Step Into Specific、次のステートメントの設定、戻り値、オブ�
 
 1.x はデバッグ エンジンに [netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）の x86 ビルドにパッチを 13 枚当てて同梱していました。
 2.0 からは、この拡張のために作った **dotnet-x86dbg**（Rust）を同梱します。DAP のやり取りと値の書き方は netcoredbg と同じにしてあり、
-拡張の機能はそのまま使えます。`dotnetX86.debuggerPath` に netcoredbg.exe を指定すれば、前のエンジンでも動きます（x86 のプログラムだけ）。
+拡張の機能はそのまま使えます。netcoredbg そのものは、もう使えません（`dotnetX86.debuggerPath` に指定できるのは dotnet-x86dbg のビルドだけです）。
 
 | | netcoredbg（1.x） | dotnet-x86dbg（2.0） |
 |---|---|---|

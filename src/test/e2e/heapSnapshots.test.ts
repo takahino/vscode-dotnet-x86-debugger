@@ -1,4 +1,4 @@
-// E2E: heap snapshots (netcoredbg patch 0011) and their difference, as the Heap Snapshots panel takes them.
+// E2E: heap snapshots and their difference, as the Heap Snapshots panel takes them.
 
 import * as assert from 'assert/strict';
 import * as path from 'path';

@@ -8,7 +8,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { APPLY_CHANGES_REQUEST, CHANGES_APPLIED_EVENT } from '../../editAndContinueCore';
-import { ARCH, DapSession, FRAMEWORK, IS_NETCOREDBG, REPO, e2eSkip, lineOf } from './harness';
+import { ARCH, DapSession, FRAMEWORK, REPO, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 180_000;
 
@@ -32,7 +32,7 @@ function buildCopy(): { program: string; source: string } {
     return { program: path.join(out, 'EditAndContinue.exe'), source: path.join(work, 'Program.cs') };
 }
 
-describe('Edit and Continue through the relay', { skip: e2eSkip || (IS_NETCOREDBG && 'netcoredbg has no Edit and Continue') }, () => {
+describe('Edit and Continue through the relay', { skip: e2eSkip }, () => {
     let app = { program: '', source: '' };
     let session: DapSession | undefined;
 

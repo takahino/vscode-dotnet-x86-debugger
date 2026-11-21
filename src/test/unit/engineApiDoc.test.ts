@@ -28,15 +28,15 @@ describe('engine API document', () => {
         for (const name of [HEAP_STATS_REQUEST, HANDLE_STATS_REQUEST, MAKE_OBJECT_ID_REQUEST, proxy.FREEZE_THREAD_REQUEST, APPLY_CHANGES_REQUEST, proxy.EVENT_TRACE_REQUEST, proxy.VALUE_WATCHES_REQUEST, proxy.PROCESS_USAGE_REQUEST, COVERAGE_REQUEST]) {
             assert.equal(requests.get(name), 'engine', name);
         }
-        for (const name of [proxy.EXCEPTION_TYPES_REQUEST, proxy.FREEZE_PAUSE_REQUEST]) {
+        for (const name of [proxy.EXCEPTION_TYPES_REQUEST]) {
             assert.equal(requests.get(name), 'proxy', name);
         }
         // The engine's own: sent by its MCP tool `decompile` (and by clients that want the decompiled files), not by the extension.
         assert.equal(requests.get('dotnetX86.decompile'), 'engine');
-        assert.equal(requests.size, 12, [...requests.keys()].join(', '));
+        assert.equal(requests.size, 11, [...requests.keys()].join(', '));
     });
 
-    it('lists the custom events the engine sends for the extension (the relay sends them only with netcoredbg)', () => {
+    it('lists the custom events the engine sends for the extension', () => {
         const events = new Map(api.messages.filter((m) => m.kind === 'event').map((m) => [m.name, m.side]));
         for (const name of [proxy.EVENT_TRACE_EVENT, proxy.EXCEPTION_EVENT, proxy.REMOVE_BREAKPOINT_EVENT, proxy.SQL_EVENT, proxy.TRACK_EVENT, proxy.UI_FROZEN_EVENT, COVERAGE_CHANGED_EVENT]) {
             assert.equal(events.get(name), 'engine', name);

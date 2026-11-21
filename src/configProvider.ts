@@ -227,31 +227,6 @@ export function x86DotnetRoots(): string[] {
     ].filter((p): p is string => !!p);
 }
 
-/**
- * coreclr.dll of the newest installed x86 .NET runtime. Only netcoredbg (set in dotnetX86.debuggerPath) needs it: it runs
- * its managed part (PDB reading, expression parsing) on it when the debuggee is a .NET Framework app.
- */
-export function findX86CoreClr(): string {
-    for (const root of x86DotnetRoots()) {
-        const shared = path.join(root, 'shared', 'Microsoft.NETCore.App');
-        let versions: string[];
-        try {
-            versions = fs.readdirSync(shared);
-        } catch {
-            continue;
-        }
-        const newest = versions
-            .filter((v) => fs.existsSync(path.join(shared, v, 'coreclr.dll')))
-            .sort((a, b) => compareVersions(b, a))[0];
-        if (newest) {
-            return path.join(shared, newest, 'coreclr.dll');
-        }
-    }
-    throw new Error(
-        vscode.l10n.t("Debugging a .NET Framework app needs the x86 .NET runtime (8 or later) for the debugger itself, but it was not found. Install the .NET Runtime x86, or set DOTNET_ROOT(x86)."),
-    );
-}
-
 /** Where the x64 .NET is installed (only for .dll programs with "architecture": "x64"). */
 export function x64DotnetRoots(): string[] {
     return [

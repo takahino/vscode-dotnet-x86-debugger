@@ -33,7 +33,6 @@ import { SymbolServer } from './symbolServer';
 import { generateTestCommand } from './testGenerator';
 import { viewAsImageCommand } from './imageVisualizer';
 import { viewAsTableCommand } from './tableVisualizer';
-import { UiFreezeDetector } from './uiFreeze';
 import { ValueTracker } from './valueTracker';
 import { WindowHighlighter } from './windowHighlight';
 import { pickProcess } from './processPicker';
@@ -141,7 +140,6 @@ export function activate(context: vscode.ExtensionContext): void {
         perfTips,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
         coverage,
-        vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new UiFreezeDetector(context.extensionPath, output)),
         autos,
         vscode.window.createTreeView('dotnetX86.autos', { treeDataProvider: autos }),
         breakpointCommands,

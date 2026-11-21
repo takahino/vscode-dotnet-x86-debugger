@@ -1,27 +1,9 @@
-// The DAP relay's pure helpers: hit counts, breakpoint markers, frame names, Source path rewriting, object IDs.
+// The DAP relay's pure helpers: breakpoint markers, Source path rewriting, object IDs.
 
 import * as assert from 'assert/strict';
 import { describe, it } from 'node:test';
-import { frameIsMethod, mapSourcePaths, parseHitCondition, parseMarker } from '../../dapProxy';
+import { mapSourcePaths, parseMarker } from '../../dapProxy';
 import { requestWithDebuggerObjectIds, responseWithClientObjectIds, toClientObjectIds, toDebuggerObjectIds } from '../../objectIds';
-
-describe('parseHitCondition', () => {
-    const hits = (text: string) => [1, 2, 3, 4, 5, 6].filter((n) => parseHitCondition(text)!(n));
-
-    it('understands Visual Studio hit counts', () => {
-        assert.deepEqual(hits('3'), [3]);
-        assert.deepEqual(hits('==3'), [3]);
-        assert.deepEqual(hits('>=5'), [5, 6]);
-        assert.deepEqual(hits('>5'), [6]);
-        assert.deepEqual(hits('%2'), [2, 4, 6]);
-    });
-
-    it('rejects anything else', () => {
-        for (const text of ['abc', '<3', '%0', '']) {
-            assert.equal(parseHitCondition(text), undefined, text);
-        }
-    });
-});
 
 describe('parseMarker', () => {
     it('reads the breakpoint markers', () => {
@@ -36,16 +18,6 @@ describe('parseMarker', () => {
         assert.equal(parseMarker('x > 1'), undefined);
         assert.equal(parseMarker('#caller '), undefined);
         assert.equal(parseMarker(undefined), undefined);
-    });
-});
-
-describe('frameIsMethod', () => {
-    it('matches whole dot-separated parts from the end, ignoring case', () => {
-        assert.equal(frameIsMethod('MyLib.Orders.Save()', 'Save'), true);
-        assert.equal(frameIsMethod('MyLib.Orders.Save()', 'orders.save'), true);
-        assert.equal(frameIsMethod('MyLib.Orders.Save()', 'MyLib.Orders.Save'), true);
-        assert.equal(frameIsMethod('MyLib.Orders.SaveAll()', 'Save'), false);
-        assert.equal(frameIsMethod('MyLib.Orders.Save()', ''), false);
     });
 });
 

@@ -1,4 +1,4 @@
-// E2E: the relay's features against the real netcoredbg and the test/apps programs.
+// E2E: the relay and the engine's features against the test/apps programs.
 
 import * as assert from 'assert/strict';
 import * as fs from 'fs';
@@ -7,7 +7,7 @@ import { after, before, describe, it } from 'node:test';
 import { MAKE_OBJECT_ID_REQUEST } from '../../objectIds';
 import { SourcePathMapper } from '../../sourceMapCore';
 import { captureValues, findMethodSignature, generateTest, parseFrameName } from '../../testGenCore';
-import { DapSession, IS_NETCOREDBG, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { DapSession, REPO, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 120_000;
 const PROGRAM_CS = appSource('Basic', 'Program.cs');
@@ -88,8 +88,8 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
         const stop = await first;
         const frame = await s.topFrame(stop.body.threadId);
         const targets = (await s.request('stepInTargets', { frameId: frame.id })).body.targets;
-        // The bundled engine reads the calls from the IL and names them Type.Method; the relay (netcoredbg) as written in the source.
-        assert.deepEqual(targets.map((t: { label: string }) => t.label), IS_NETCOREDBG ? ['Inner1', 'Inner2', 'Outer'] : ['Program.Inner1', 'Program.Inner2', 'Program.Outer']);
+        // The engine reads the calls from the IL and names them Type.Method.
+        assert.deepEqual(targets.map((t: { label: string }) => t.label), ['Program.Inner1', 'Program.Inner2', 'Program.Outer']);
         const stepped = s.nextStop();
         await s.request('stepIn', { threadId: stop.body.threadId, targetId: targets[1].id });
         const arrived = await stepped;
@@ -153,7 +153,7 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
         assert.equal(path.resolve(frame.source.path).toLowerCase(), path.resolve(calc).toLowerCase());
     });
 
-    it('steps into an assembly without symbols, which the engine decompiles to C#', { timeout: TIMEOUT, skip: IS_NETCOREDBG ? 'netcoredbg does not decompile' : false }, async () => {
+    it('steps into an assembly without symbols, which the engine decompiles to C#', { timeout: TIMEOUT }, async () => {
         // The program has its PDB, so NoPdbLib is not user code: step in with Just My Code off to enter it. The line first
         // makes its decimal arguments (.NET's own code, no source: the step comes back to the line), so step in until there.
         const s = session();
@@ -173,7 +173,7 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
 });
 
 describe('UI freeze detection', { skip: e2eSkip || (process.env.DOTNETX86_SKIP_UI_TESTS ? 'DOTNETX86_SKIP_UI_TESTS is set' : false) }, () => {
-    it('pauses on the UI thread that stopped answering', { timeout: TIMEOUT, skip: IS_NETCOREDBG ? 'netcoredbg does not watch the UI (the extension\'s helper does)' : false }, async () => {
+    it('pauses on the UI thread that stopped answering', { timeout: TIMEOUT }, async () => {
         const program = path.join(buildApp('Freeze'), 'Freeze.exe');
         // The engine watches the UI itself (with the extension's settings); the relay gives the stop the extension's words.
         const s = new DapSession({ freezeDescription: (ms) => `Frozen for ${(ms / 1000).toFixed(1)} s`, uiFreeze: { enabled: true, thresholdMs: 2000 } });

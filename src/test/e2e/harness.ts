@@ -14,16 +14,14 @@ export const REPO = path.resolve(__dirname, '..', '..', '..');
 export const ARCH: 'x86' | 'x64' = process.env.DOTNETX86_E2E_ARCH === 'x64' ? 'x64' : 'x86';
 /** DOTNETX86_E2E_FRAMEWORK=net48 builds the apps for .NET Framework 4.8 (default: as their projects say, .NET 10). */
 export const FRAMEWORK: 'net48' | undefined = process.env.DOTNETX86_E2E_FRAMEWORK === 'net48' ? 'net48' : undefined;
-// DOTNETX86_E2E_DEBUGGER points the same tests at another debug engine (for example netcoredbg, to compare).
-export const NETCOREDBG = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', `dotnet-x86dbg-${ARCH}`, 'dotnet-x86dbg.exe');
+// DOTNETX86_E2E_DEBUGGER points the same tests at another build of the engine (for example the engine repository's dist).
+export const ENGINE = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', `dotnet-x86dbg-${ARCH}`, 'dotnet-x86dbg.exe');
 const APPS = path.join(REPO, 'test', 'apps');
 const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e', FRAMEWORK ? `-${FRAMEWORK}` : ARCH);
 
-/** Whether the engine under test is netcoredbg (some of its limitations are tested as they are). */
-export const IS_NETCOREDBG = /netcoredbg\.exe$/i.test(NETCOREDBG);
 
 /** Why the E2E tests cannot run here, or false when they can. */
-export const e2eSkip: string | false = fs.existsSync(NETCOREDBG) ? false : `the debugger is missing (${NETCOREDBG}): run scripts/build-engine.ps1, or fix DOTNETX86_E2E_DEBUGGER`;
+export const e2eSkip: string | false = fs.existsSync(ENGINE) ? false : `the debugger is missing (${ENGINE}): run scripts/build-engine.ps1, or fix DOTNETX86_E2E_DEBUGGER`;
 
 const built = new Map<string, string>();
 
@@ -75,7 +73,7 @@ export class DapSession {
 
     /** `engineArgs` are added to the engine's command line (as the extension adds `--mcp-listen`). */
     constructor(options: ProxyOptions = {}, engineArgs: string[] = []) {
-        this.proxy = new DapProxy(NETCOREDBG, ['--interpreter=vscode', ...engineArgs], path.dirname(NETCOREDBG), (m) => this.receive(m as Message), () => undefined, options);
+        this.proxy = new DapProxy(ENGINE, ['--interpreter=vscode', ...engineArgs], path.dirname(ENGINE), (m) => this.receive(m as Message), () => undefined, options);
     }
 
     /** Sends a request; resolves with the whole response (check `success`). */
@@ -140,10 +138,10 @@ export class DapSession {
         return next;
     }
 
-    /** Ends the debuggee and netcoredbg, and waits until netcoredbg has exited (so its files can be deleted). */
+    /** Ends the debuggee and the engine, and waits until the engine has exited (so its files can be deleted). */
     async close(): Promise<void> {
         await this.request('disconnect', { terminateDebuggee: true }, 5_000).catch(() => undefined);
-        // Only the netcoredbg this session started (never by process name: the user may be debugging too).
+        // Only the engine this session started (never by process name: the user may be debugging too).
         this.proxy.dispose();
         await Promise.race([this.proxy.whenExited(), new Promise((resolve) => setTimeout(resolve, 10_000))]);
     }

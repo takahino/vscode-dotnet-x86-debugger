@@ -1,4 +1,4 @@
-// E2E: GDI leak candidates - objects holding native resources, and how many are not disposed (netcoredbg patch 0012).
+// E2E: GDI leak candidates - objects holding native resources, and how many are not disposed.
 
 import * as assert from 'assert/strict';
 import * as path from 'path';

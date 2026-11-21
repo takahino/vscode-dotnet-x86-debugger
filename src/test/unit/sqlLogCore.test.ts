@@ -1,170 +1,19 @@
-// SQL log without a debugger: reading a command through a fake expression reader, and the SQL with the values filled in.
+// SQL log without a debugger: the SQL with the values filled in, its summary, and who ran it.
 
 import * as assert from 'assert/strict';
 import { describe, it } from 'node:test';
 import {
-    DEFAULT_SQL_METHODS,
-    EvalResult,
-    ExpressionReader,
-    MAX_PARAMETERS,
     SqlCommandInfo,
     SqlParameter,
     callerOf,
-    captureSqlCommand,
     dialectOf,
     normalizeSql,
     shortFrameName,
     substituteParameters,
     summarizeSql,
-    unquoteDebuggerString,
 } from '../../sqlLogCore';
-
-/** An expression reader answering from a table, as netcoredbg would (strings as C# literals, objects as {Type}). */
-function reader(values: Record<string, EvalResult | string>, variables: Record<number, { name: string; value: string }[]> = {}): ExpressionReader & { asked: string[] } {
-    const asked: string[] = [];
-    return {
-        asked,
-        evaluate: async (expression) => {
-            asked.push(expression);
-            const v = values[expression];
-            if (v === undefined) {
-                return { ok: false, result: '' };
-            }
-            return typeof v === 'string' ? { ok: true, result: v } : v;
-        },
-        variables: async (ref) => variables[ref] ?? [],
-    };
-}
-
 const param = (name: string, kind: SqlParameter['kind'], value: string, direction = 'Input'): SqlParameter => ({ name, kind, value, direction });
 const command = (commandText: string, parameters: SqlParameter[], extra: Partial<SqlCommandInfo> = {}): SqlCommandInfo => ({ commandText, commandType: 'Text', parameters, ...extra });
-
-describe('unquoteDebuggerString', () => {
-    it('reads the C# literal netcoredbg shows for a string', () => {
-        assert.equal(unquoteDebuggerString('"O\'Brien"'), "O'Brien");
-        assert.equal(unquoteDebuggerString('"a\\"b\\\\c"'), 'a"b\\c');
-        assert.equal(unquoteDebuggerString('"line1\\r\\nline2\\tx"'), 'line1\r\nline2\tx');
-        assert.equal(unquoteDebuggerString('"\\u3042\\x41"'), 'あA');
-    });
-
-    it('leaves anything that is not a string literal as it is', () => {
-        assert.equal(unquoteDebuggerString('42'), '42');
-        assert.equal(unquoteDebuggerString('{System.DateTime}'), '{System.DateTime}');
-        assert.equal(unquoteDebuggerString('null'), 'null');
-    });
-});
-
-describe('captureSqlCommand', () => {
-    const p = (i: number) => `this.Parameters[${i}]`;
-
-    it('reads the text, the type, Oracle\'s BindByName, the data source and each parameter by its type', async () => {
-        const r = reader({
-            'this.CommandText': '"SELECT * FROM EMP WHERE ENAME = :name"',
-            'this.CommandType.ToString()': '"Text"',
-            'this.BindByName': 'true',
-            'this.Connection.DataSource': '"db01/orcl"',
-            'this.Parameters.Count': '6',
-            [`${p(0)}.ParameterName`]: '":name"',
-            [`${p(0)}.Direction.ToString()`]: '"Input"',
-            [`${p(0)}.Value`]: { ok: true, result: '"O\'Brien"', type: 'string' },
-            [`${p(1)}.ParameterName`]: '"since"',
-            [`${p(1)}.Direction.ToString()`]: '"Input"',
-            [`${p(1)}.Value`]: { ok: true, result: '{System.DateTime}', type: 'System.DateTime', variablesReference: 3 },
-            [`${p(1)}.Value.ToString("yyyy-MM-dd HH:mm:ss.fff")`]: '"2024-04-01 13:05:09.123"',
-            [`${p(2)}.ParameterName`]: '"sal"',
-            [`${p(2)}.Direction.ToString()`]: '"Input"',
-            [`${p(2)}.Value`]: { ok: true, result: '{double}', type: 'double', variablesReference: 4 },
-            [`${p(2)}.Value.ToString()`]: '"2.5"',
-            [`${p(3)}.ParameterName`]: '"no"',
-            [`${p(3)}.Direction.ToString()`]: '"Input"',
-            [`${p(3)}.Value`]: { ok: true, result: '{System.DBNull}', type: 'System.DBNull' },
-            [`${p(4)}.ParameterName`]: '"img"',
-            [`${p(4)}.Direction.ToString()`]: '"Input"',
-            [`${p(4)}.Value`]: { ok: true, result: '{byte[3]}', type: 'byte[]', variablesReference: 7 },
-            [`${p(5)}.ParameterName`]: '"result"',
-            [`${p(5)}.Direction.ToString()`]: '"Output"',
-            [`${p(5)}.Value`]: { ok: true, result: 'null', type: 'object' },
-        }, { 7: [{ name: '[0]', value: '1' }, { name: '[1]', value: '171' }, { name: '[2]', value: '255' }] });
-
-        const info = await captureSqlCommand(r, 'Oracle.ManagedDataAccess.Client.OracleCommand');
-        assert.deepEqual(info, {
-            commandText: 'SELECT * FROM EMP WHERE ENAME = :name',
-            commandType: 'Text',
-            bindByName: true,
-            dataSource: 'db01/orcl',
-            truncated: undefined,
-            parameters: [
-                param('name', 'string', "O'Brien"),
-                param('since', 'datetime', '2024-04-01 13:05:09.123'),
-                param('sal', 'number', '2.5'),
-                param('no', 'null', ''),
-                param('img', 'binary', '01abff'),
-                param('result', 'null', '', 'Output'),
-            ],
-        });
-    });
-
-    it('asks BindByName of Oracle commands only', async () => {
-        const values = { 'this.CommandText': '"SELECT 1"', 'this.Parameters.Count': '0' };
-        const sql = reader(values);
-        await captureSqlCommand(sql, 'System.Data.SqlClient.SqlCommand');
-        assert.ok(!sql.asked.includes('this.BindByName'));
-        const oracle = reader(values);
-        const info = await captureSqlCommand(oracle, 'Oracle.DataAccess.Client.OracleCommand');
-        assert.ok(oracle.asked.includes('this.BindByName'));
-        assert.equal(info?.bindByName, false); // not readable: the default (by position)
-    });
-
-    it('returns nothing when the stopped frame is not a command', async () => {
-        assert.equal(await captureSqlCommand(reader({}), 'X.Command'), undefined);
-    });
-
-    it('treats a null CommandText as empty and keeps what it can when a value cannot be read', async () => {
-        const info = await captureSqlCommand(reader({
-            'this.CommandText': 'null',
-            'this.Parameters.Count': '1',
-            // ParameterName, Direction and Value all fail
-        }), 'X.Command');
-        assert.equal(info?.commandText, '');
-        assert.equal(info?.commandType, 'Text');
-        assert.deepEqual(info?.parameters, [param('#1', 'other', '?')]);
-    });
-
-    it('reads at most MAX_PARAMETERS parameters and says so', async () => {
-        const r = reader({ 'this.CommandText': '"INSERT"', 'this.Parameters.Count': String(MAX_PARAMETERS + 5) });
-        const info = await captureSqlCommand(r, 'X.Command');
-        assert.equal(info?.parameters.length, MAX_PARAMETERS);
-        assert.equal(info?.truncated, true);
-    });
-
-    it('cuts long binary values and marks them', async () => {
-        const bytes = Array.from({ length: 40 }, (_v, i) => ({ name: `[${i}]`, value: String(i) }));
-        const info = await captureSqlCommand(reader({
-            'this.CommandText': '"X"',
-            'this.Parameters.Count': '1',
-            'this.Parameters[0].ParameterName': '"b"',
-            'this.Parameters[0].Value': { ok: true, result: '{byte[40]}', type: 'byte[]', variablesReference: 1 },
-        }, { 1: bytes }), 'X.Command');
-        const value = info!.parameters[0].value;
-        assert.equal(value.length, 32 * 2 + 1);
-        assert.ok(value.startsWith('000102'));
-        assert.ok(value.endsWith('…'));
-    });
-
-    it('falls back to the shown value when ToString() fails, and calls non-numbers "other"', async () => {
-        const info = await captureSqlCommand(reader({
-            'this.CommandText': '"X"',
-            'this.Parameters.Count': '2',
-            'this.Parameters[0].Value': { ok: true, result: '1234.5', type: 'decimal' },
-            'this.Parameters[1].Value': { ok: true, result: '{System.Guid}', type: 'System.Guid' },
-            'this.Parameters[1].Value.ToString()': '"11111111-2222-3333-4444-555555555555"',
-        }), 'X.Command');
-        assert.deepEqual(info?.parameters.map((x) => [x.kind, x.value]), [
-            ['number', '1234.5'],
-            ['other', '11111111-2222-3333-4444-555555555555'],
-        ]);
-    });
-});
 
 describe('dialectOf', () => {
     it('tells the SQL flavor from the command type', () => {
@@ -174,12 +23,6 @@ describe('dialectOf', () => {
         assert.equal(dialectOf('Microsoft.Data.SqlClient.SqlCommand'), 'sqlserver');
         assert.equal(dialectOf('System.Data.OleDb.OleDbCommand'), 'generic');
         assert.equal(dialectOf('Npgsql.NpgsqlCommand'), 'generic');
-    });
-
-    it('covers every default provider method', () => {
-        for (const m of DEFAULT_SQL_METHODS) {
-            assert.match(m, /^[\w.]+\.\w+Command\.Execute(Reader|NonQuery|Scalar)$/);
-        }
     });
 });
 

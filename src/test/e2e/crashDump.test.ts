@@ -7,9 +7,9 @@ import * as os from 'os';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { readDumpArchitecture } from '../../dumpInfo';
-import { ARCH, DapSession, IS_NETCOREDBG, appSource, buildApp, e2eSkip, lineOf } from './harness';
+import { ARCH, DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
-describe('crash dumps', { skip: e2eSkip || (IS_NETCOREDBG && 'netcoredbg does not open dumps') }, () => {
+describe('crash dumps', { skip: e2eSkip }, () => {
     let s: DapSession;
     let thread = 0;
     const source = appSource('CrashDump', 'Program.cs');

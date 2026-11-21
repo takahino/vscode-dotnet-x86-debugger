@@ -20,7 +20,7 @@
   "command.compareWithSnapshot": "スナップショットと比較",
   "command.showMemoryGraph": "メモリ / CPU グラフを表示",
   "config.title": ".NET x86 Debugger",
-  "config.debuggerPath": "x86 のプログラムに使う、ほかの x86 のデバッグエンジン (dotnet-x86dbg.exe、または netcoredbg.exe) のフルパス。空の場合は同梱のものを使います。64bit のプログラムには、常に同梱の x64 版を使います。",
+  "config.debuggerPath": "x86 のプログラムに使う、別のビルドの x86 のデバッグエンジン (dotnet-x86dbg.exe) のフルパス。空の場合は同梱のものを使います。64bit のプログラムには、常に同梱の x64 版を使います。",
   "config.trace": "トラブル調査用。デバッガとの通信を出力パネル「.NET x86 Debugger」に記録し、デバッグエンジンのログファイルも出力します（パスは同パネルに表示）。",
   "config.mcp.enabled": "AI クライアントから MCP（Model Context Protocol）でデバッグできるようにします。デバッグのセッションごとに、127.0.0.1 でセッションごとのトークン付きで待ち受けます。VS Code の AI には MCP サーバー「.NET x86 Debugger」、Cursor の AI には「dotnet-x86」として見えます。Claude Code、GitHub Copilot CLI、Codex、Claude Desktop などからは **.NET x86: MCP サーバーを AI クライアントに登録** を実行してください。ツールは式を評価し、プログラムの画面を操作するので、使うときだけオンにしてください。",
   "config.memoryGraph.autoOpen": "dotnet-x86 のデバッグ開始時にメモリ / CPU グラフを自動で開きます。",

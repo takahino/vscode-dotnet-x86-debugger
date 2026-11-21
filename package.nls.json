@@ -20,7 +20,7 @@
   "command.compareWithSnapshot": "Compare with Snapshot",
   "command.showMemoryGraph": "Show Memory / CPU Graph",
   "config.title": ".NET x86 Debugger",
-  "config.debuggerPath": "Full path to another x86 debug engine (dotnet-x86dbg.exe, or netcoredbg.exe), used for x86 programs. When empty, the bundled engine is used. 64-bit programs always use the bundled x64 engine.",
+  "config.debuggerPath": "Full path to another build of the x86 debug engine (dotnet-x86dbg.exe), used for x86 programs. When empty, the bundled engine is used. 64-bit programs always use the bundled x64 engine.",
   "config.trace": "Troubleshooting: log the debug adapter protocol traffic to the \".NET x86 Debugger\" output channel and write a log file of the debug engine (its path is shown in that channel).",
   "config.mcp.enabled": "Let AI clients debug through MCP (Model Context Protocol): each debug session also listens on 127.0.0.1 with a per-session token. VS Code's AI sees it as the MCP server \".NET x86 Debugger\" and Cursor's AI as \"dotnet-x86\"; for Claude Code, GitHub Copilot CLI, Codex, Claude Desktop and others, run **.NET x86: Register the MCP Server with AI Clients**. The tools evaluate expressions and operate the program's windows, so turn this on only when you use them.",
   "config.memoryGraph.autoOpen": "Open the memory / CPU graph automatically when a dotnet-x86 debug session starts.",
