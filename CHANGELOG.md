@@ -5,7 +5,7 @@
 - **Renamed to netdbg (breaking).** The extension (`takahino.netdbg`), its display name, the debug type (`"type": "netdbg"`), the
   settings and commands (`netdbg.*`), the bundled engine (`netdbg.exe`) and its folders (`%LOCALAPPDATA%\netdbg`) and the
   environment variable `NETDBG_SYMBOL_DIRS` all use the new name. The old names (`dotnet-x86`, `dotnetX86.*`,
-  `DOTNET_X86DBG_SYMBOL_DIRS`) are no longer read: change `launch.json` and the settings.
+  `NETCOREDBG_SYMBOL_DIRS`) are no longer read: change `launch.json` and the settings.
 - **New debug engine.** The extension bundles **dotnet-x86dbg** (Rust), a debug engine made for it, instead of netcoredbg. It speaks the
   same DAP and writes values the same way, so every feature works as before; the differences are listed in the README
   ("Differences from netcoredbg (1.x)"). `dotnetX86.debuggerPath` can still point at a netcoredbg.exe (x86 programs).

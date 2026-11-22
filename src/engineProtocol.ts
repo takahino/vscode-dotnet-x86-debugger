@@ -204,7 +204,7 @@ export interface ApplyChangesResponse {
  * or this request. The C# files are written to `%LOCALAPPDATA%\netdbg\decompiled\<MVID>-v<version>` and the
  * symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have
  * names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in
- * `NETCOREDBG_SYMBOL_DIRS` (downloaded ones) take precedence. Methods it cannot turn into C# are shown as IL.
+ * `NETDBG_SYMBOL_DIRS` (downloaded ones) take precedence. Methods it cannot turn into C# are shown as IL.
  * Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.
  * @request netdbg.decompile
  * @handledBy engine
@@ -615,7 +615,7 @@ export const ENGINE_STARTUP: readonly { name: string; notes: string }[] = [
     { name: '--log=<file>', notes: 'Writes the DAP traffic and the engine\'s own log, flushed per line (setting `netdbg.trace`).' },
     { name: '--mcp-listen', notes: 'Also accepts MCP on 127.0.0.1 with a token, and sends `netdbg.mcpEndpoint` (setting `netdbg.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events.' },
     { name: '--mcp-connect[=<enginePid>]', notes: 'Not used by the extension: run by AI clients outside VS Code, a stdio MCP server that relays to the latest engine started with `--mcp-listen` (or the given one).' },
-    { name: 'NETCOREDBG_SYMBOL_DIRS', notes: 'Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (downloaded symbols).' },
+    { name: 'NETDBG_SYMBOL_DIRS', notes: 'Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (downloaded symbols).' },
 ];
 
 /** How the engine writes values; the extension parses these strings. */
