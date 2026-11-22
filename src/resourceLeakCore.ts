@@ -3,7 +3,7 @@
 // No vscode dependency, so it can be unit tested.
 
 /** Custom DAP request (netcoredbg patch 0012): `{ types: ResourceType[] }` for the given handle fields. */
-export const HANDLE_STATS_REQUEST = 'dotnetX86.handleStats';
+export const HANDLE_STATS_REQUEST = 'netdbg.handleStats';
 
 /** What the handle is: GDI+ objects live in native memory, icons, cursors and windows are USER objects. */
 export type ResourceKind = 'GDI+' | 'USER';
@@ -32,7 +32,7 @@ export function handleStatsArguments(): { fields: { type: string; field: string 
     return { fields: RESOURCE_FIELDS.flatMap((r) => r.fields.map((field) => ({ type: r.type, field }))) };
 }
 
-/** One type, as `dotnetX86.handleStats` returns it. */
+/** One type, as `netdbg.handleStats` returns it. */
 export interface ResourceType {
     name: string;
     /** Instances on the heap. */

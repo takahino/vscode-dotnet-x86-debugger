@@ -1,4 +1,4 @@
-// DAP relay between VS Code and the bundled debug engine (dotnet-x86dbg). The engine does the debugging itself (logpoints,
+// DAP relay between VS Code and the bundled debug engine (netdbg). The engine does the debugging itself (logpoints,
 // hit counts, breakpoint markers, Step Into Target, the SQL / exception logs, the event trace, value watches, the UI
 // freeze watch); the relay adds what needs the workspace or the user's machine: readable exception filter labels, the
 // Exception Settings view's types, path mapping (sourceFileMap / sourceSearchPaths), Source Link downloads, object IDs,
@@ -36,34 +36,34 @@ const OWN_SEQ_BASE = 1_000_000_000;
 /** A logpoint whose message starts with this records values for the value trend view instead of printing (the engine reads it). */
 export const TRACK_PREFIX = '#track:';
 /** Custom DAP event carrying the values of a "#track:" logpoint hit. */
-export const TRACK_EVENT = 'dotnetX86.trackedValues';
+export const TRACK_EVENT = 'netdbg.trackedValues';
 /** Logpoints marking the start / end of a timed section; the elapsed time is reported like a tracked value. */
 export const TIMER_START_PREFIX = '#timer-start:';
 export const TIMER_END_PREFIX = '#timer-end:';
 /** Custom DAP event asking the extension to remove a temporary ("#once") breakpoint that was just hit. */
-export const REMOVE_BREAKPOINT_EVENT = 'dotnetX86.removeBreakpoint';
+export const REMOVE_BREAKPOINT_EVENT = 'netdbg.removeBreakpoint';
 /** Custom DAP event for every exception thrown while the exception log is on. */
-export const EXCEPTION_EVENT = 'dotnetX86.exceptionThrown';
+export const EXCEPTION_EVENT = 'netdbg.exceptionThrown';
 /** Custom DAP event for every statement the SQL log reads from a command. */
-export const SQL_EVENT = 'dotnetX86.sqlExecuted';
+export const SQL_EVENT = 'netdbg.sqlExecuted';
 /** Custom DAP request: trace the firing of these event handlers (arguments: handlers [{breakpointName, label, event?, control?}], or clear). */
-export const EVENT_TRACE_REQUEST = 'dotnetX86.setEventTrace';
+export const EVENT_TRACE_REQUEST = 'netdbg.setEventTrace';
 /** Custom DAP event for every firing of a traced event handler. */
-export const EVENT_TRACE_EVENT = 'dotnetX86.controlEvent';
+export const EVENT_TRACE_EVENT = 'netdbg.controlEvent';
 /** Custom DAP request: the exception types checked in the Exception Settings view changed (arguments: types). */
-export const EXCEPTION_TYPES_REQUEST = 'dotnetX86.setExceptionTypes';
+export const EXCEPTION_TYPES_REQUEST = 'netdbg.setExceptionTypes';
 /** Custom DAP request: freeze / thaw a thread (arguments: threadId, frozen). */
-export const FREEZE_THREAD_REQUEST = 'dotnetX86.freezeThread';
+export const FREEZE_THREAD_REQUEST = 'netdbg.freezeThread';
 /** Custom DAP request of the engine: the write sites of the watched names (arguments: watches [{name, sites [{path, line}]}]). */
-export const VALUE_WATCHES_REQUEST = 'dotnetX86.setValueWatches';
+export const VALUE_WATCHES_REQUEST = 'netdbg.setValueWatches';
 /** Custom DAP event of the engine, sent just before it pauses on a frozen UI thread (body: threadId, ms). */
-export const UI_FROZEN_EVENT = 'dotnetX86.uiFrozen';
+export const UI_FROZEN_EVENT = 'netdbg.uiFrozen';
 /** Custom DAP request of the engine: the process's memory, CPU, GDI / USER objects, handles and address space. */
-export const PROCESS_USAGE_REQUEST = 'dotnetX86.processUsage';
+export const PROCESS_USAGE_REQUEST = 'netdbg.processUsage';
 
 /** What only the bundled engine says in its initialize capabilities (another debugger, e.g. netcoredbg, is not supported). */
 function isBundledEngine(capabilities: any): boolean {
-    return capabilities.dotnetX86SupportsJournal === true && capabilities.supportsLogPoints === true;
+    return capabilities.netdbgSupportsJournal === true && capabilities.supportsLogPoints === true;
 }
 
 export interface ExceptionFilterText {
@@ -109,7 +109,7 @@ export interface ProxyOptions {
     sqlMethods?: string[];
     /** The UI freeze watch (launch argument uiFreeze). */
     uiFreeze?: { enabled: boolean; thresholdMs: number };
-    /** Console text when the debugger is not the bundled engine (dotnetX86.debuggerPath pointing at another one). */
+    /** Console text when the debugger is not the bundled engine (netdbg.debuggerPath pointing at another one). */
     unsupportedEngineMessage?: string;
 }
 
@@ -192,7 +192,7 @@ export class DapProxy {
     fromClient(message: DapMessage): void {
         if (message.type === 'request' && this.mapper.enabled && message.arguments) {
             message = { ...message, arguments: mapSourcePaths(message.arguments, (p) => this.mapper.toDebugger(p)) };
-            // The files of dotnetX86.applyChanges are plain paths (not DAP sources): the engine knows the PDB's paths.
+            // The files of netdbg.applyChanges are plain paths (not DAP sources): the engine knows the PDB's paths.
             if (message.command === APPLY_CHANGES_REQUEST && Array.isArray(message.arguments.files)) {
                 message = { ...message, arguments: { ...message.arguments, files: message.arguments.files.map((f: unknown) => (typeof f === 'string' ? this.mapper.toDebugger(f) : f)) } };
             }
@@ -250,7 +250,7 @@ export class DapProxy {
     private async fromDebugger(message: DapMessage): Promise<void> {
         if (message.type === 'response' && message.command === 'initialize' && message.success) {
             if (!isBundledEngine(message.body ?? {})) {
-                this.fail(this.options.unsupportedEngineMessage ?? 'This debugger is not the bundled engine (dotnet-x86dbg). Clear the setting dotnetX86.debuggerPath.');
+                this.fail(this.options.unsupportedEngineMessage ?? 'This debugger is not the bundled engine (netdbg). Clear the setting netdbg.debuggerPath.');
             }
             message.body = this.extendCapabilities(message.body ?? {});
         }

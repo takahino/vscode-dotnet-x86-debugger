@@ -58,7 +58,7 @@ describe('inspectPe', () => {
         return file;
     };
     before(() => {
-        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-pe-'));
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'netdbg-pe-'));
     });
     after(() => fs.rmSync(dir, { recursive: true, force: true }));
 

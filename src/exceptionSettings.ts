@@ -24,7 +24,7 @@ const CATALOG: Record<string, string[]> = {
     'System.Text.Json': ['JsonException'],
     'System.Security': ['SecurityException'],
 };
-const STATE_KEY = 'dotnetX86.exceptionSettings';
+const STATE_KEY = 'netdbg.exceptionSettings';
 
 type Node = { kind: 'group'; namespace: string } | { kind: 'type'; fullName: string; custom: boolean };
 
@@ -90,7 +90,7 @@ export class ExceptionSettings implements vscode.TreeDataProvider<Node>, vscode.
         const item = new vscode.TreeItem(node.fullName.slice(node.fullName.lastIndexOf('.') + 1));
         item.tooltip = node.fullName;
         item.checkboxState = this.state.checked.includes(node.fullName) ? vscode.TreeItemCheckboxState.Checked : vscode.TreeItemCheckboxState.Unchecked;
-        item.contextValue = node.custom ? 'dotnetX86.exceptionType.custom' : 'dotnetX86.exceptionType';
+        item.contextValue = node.custom ? 'netdbg.exceptionType.custom' : 'netdbg.exceptionType';
         item.iconPath = new vscode.ThemeIcon(node.custom ? 'symbol-event' : 'symbol-class');
         return item;
     }

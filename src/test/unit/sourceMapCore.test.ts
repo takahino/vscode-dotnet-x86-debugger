@@ -41,7 +41,7 @@ describe('SourcePathMapper with sourceFileMap', () => {
 });
 
 describe('SourcePathMapper with sourceSearchPaths', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-map-'));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'netdbg-map-'));
     const write = (relative: string) => {
         const file = path.join(root, relative);
         fs.mkdirSync(path.dirname(file), { recursive: true });

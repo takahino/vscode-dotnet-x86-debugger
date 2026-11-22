@@ -17,7 +17,7 @@ describe('parseEndpoint', () => {
     });
 });
 
-const engine = 'C:\\Users\\a b\\AppData\\Local\\dotnet-x86dbg\\bin\\dotnet-x86dbg.exe';
+const engine = 'C:\\Users\\a b\\AppData\\Local\\netdbg\\bin\\netdbg.exe';
 const folders: ClientFolders = { home: 'C:\\Users\\a b', claudeDesktop: 'C:\\Users\\a b\\AppData\\Roaming\\Claude' };
 
 function registration(id: AiClientId): Registration {
@@ -37,13 +37,13 @@ describe('AI_CLIENTS', () => {
         assert.deepEqual(registration('claudeCode'), {
             kind: 'cli',
             program: 'claude',
-            remove: 'claude mcp remove --scope user dotnet-x86',
-            add: `claude mcp add --scope user dotnet-x86 -- "${engine}" --mcp-connect`,
+            remove: 'claude mcp remove --scope user netdbg',
+            add: `claude mcp add --scope user netdbg -- "${engine}" --mcp-connect`,
         });
     });
 
     it('registers with GitHub Copilot CLI', () => {
-        assert.deepEqual(registration('copilotCli'), { kind: 'cli', program: 'copilot', remove: 'copilot mcp remove dotnet-x86', add: `copilot mcp add dotnet-x86 -- "${engine}" --mcp-connect` });
+        assert.deepEqual(registration('copilotCli'), { kind: 'cli', program: 'copilot', remove: 'copilot mcp remove netdbg', add: `copilot mcp add netdbg -- "${engine}" --mcp-connect` });
     });
 
     it('knows where each client keeps its settings', () => {
@@ -61,30 +61,30 @@ describe('AI_CLIENTS', () => {
 
     it('adds the bridge to an mcpServers file and keeps the rest', () => {
         const updated = file('claudeDesktop').update('{"preferences":{"x":1},"mcpServers":{"other":{"command":"o"}}}');
-        assert.deepEqual(JSON.parse(updated), { preferences: { x: 1 }, mcpServers: { other: { command: 'o' }, 'dotnet-x86': { command: engine, args: ['--mcp-connect'] } } });
+        assert.deepEqual(JSON.parse(updated), { preferences: { x: 1 }, mcpServers: { other: { command: 'o' }, 'netdbg': { command: engine, args: ['--mcp-connect'] } } });
     });
 
     it('writes opencode\'s local server with the command and arguments in one array', () => {
-        assert.deepEqual(JSON.parse(file('opencode').update(undefined)), { mcp: { 'dotnet-x86': { type: 'local', command: [engine, '--mcp-connect'], enabled: true } } });
+        assert.deepEqual(JSON.parse(file('opencode').update(undefined)), { mcp: { 'netdbg': { type: 'local', command: [engine, '--mcp-connect'], enabled: true } } });
     });
 
     it('copies the same settings it would register', () => {
         const settings = Object.fromEntries(AI_CLIENTS.map((c) => [c.id, c.settings(engine)]));
-        assert.equal(settings.claudeCode, `claude mcp add --scope user dotnet-x86 -- "${engine}" --mcp-connect`);
-        assert.deepEqual(JSON.parse(settings.windsurf), { mcpServers: { 'dotnet-x86': { command: engine, args: ['--mcp-connect'] } } });
-        assert.equal(settings.codex, `[mcp_servers.dotnet-x86]\ncommand = "C:\\\\Users\\\\a b\\\\AppData\\\\Local\\\\dotnet-x86dbg\\\\bin\\\\dotnet-x86dbg.exe"\nargs = ["--mcp-connect"]\n`);
-        assert.deepEqual(JSON.parse(genericSettings(engine)), { mcpServers: { 'dotnet-x86': { command: engine, args: ['--mcp-connect'] } } });
+        assert.equal(settings.claudeCode, `claude mcp add --scope user netdbg -- "${engine}" --mcp-connect`);
+        assert.deepEqual(JSON.parse(settings.windsurf), { mcpServers: { 'netdbg': { command: engine, args: ['--mcp-connect'] } } });
+        assert.equal(settings.codex, `[mcp_servers.netdbg]\ncommand = "C:\\\\Users\\\\a b\\\\AppData\\\\Local\\\\netdbg\\\\bin\\\\netdbg.exe"\nargs = ["--mcp-connect"]\n`);
+        assert.deepEqual(JSON.parse(genericSettings(engine)), { mcpServers: { 'netdbg': { command: engine, args: ['--mcp-connect'] } } });
     });
 });
 
 describe('withJsonServer', () => {
     it('creates the settings when there are none', () => {
-        assert.deepEqual(JSON.parse(withJsonServer(undefined, ['mcpServers'], { command: 'e' })), { mcpServers: { 'dotnet-x86': { command: 'e' } } });
-        assert.deepEqual(JSON.parse(withJsonServer('  \n', ['mcpServers'], { command: 'e' })), { mcpServers: { 'dotnet-x86': { command: 'e' } } });
+        assert.deepEqual(JSON.parse(withJsonServer(undefined, ['mcpServers'], { command: 'e' })), { mcpServers: { 'netdbg': { command: 'e' } } });
+        assert.deepEqual(JSON.parse(withJsonServer('  \n', ['mcpServers'], { command: 'e' })), { mcpServers: { 'netdbg': { command: 'e' } } });
     });
 
     it('replaces an earlier entry and reads a file with a BOM', () => {
-        assert.deepEqual(JSON.parse(withJsonServer('\uFEFF{"mcpServers":{"dotnet-x86":{"command":"old"}}}', ['mcpServers'], { command: 'new' })), { mcpServers: { 'dotnet-x86': { command: 'new' } } });
+        assert.deepEqual(JSON.parse(withJsonServer('\uFEFF{"mcpServers":{"netdbg":{"command":"old"}}}', ['mcpServers'], { command: 'new' })), { mcpServers: { 'netdbg': { command: 'new' } } });
     });
 
     it('leaves a file it cannot keep as it was', () => {
@@ -94,23 +94,23 @@ describe('withJsonServer', () => {
     });
 
     it('uses opencode\'s newer mcp.servers when the file has it', () => {
-        assert.deepEqual(JSON.parse(withJsonServer('{"mcp":{"servers":{}}}', ['mcp'], { type: 'local' })), { mcp: { servers: { 'dotnet-x86': { type: 'local' } } } });
+        assert.deepEqual(JSON.parse(withJsonServer('{"mcp":{"servers":{}}}', ['mcp'], { type: 'local' })), { mcp: { servers: { 'netdbg': { type: 'local' } } } });
     });
 });
 
 describe('withTomlServer', () => {
     it('creates the table when there is no file', () => {
-        assert.equal(withTomlServer(undefined, 'C:\\e.exe'), '[mcp_servers.dotnet-x86]\ncommand = "C:\\\\e.exe"\nargs = ["--mcp-connect"]\n');
+        assert.equal(withTomlServer(undefined, 'C:\\e.exe'), '[mcp_servers.netdbg]\ncommand = "C:\\\\e.exe"\nargs = ["--mcp-connect"]\n');
     });
 
     it('replaces an earlier table with its sub-tables and keeps the rest, comments included', () => {
         const before = [
             'model = "x" # comment',
             '',
-            '[mcp_servers.dotnet-x86]',
+            '[mcp_servers.netdbg]',
             'command = "old"',
             '',
-            '[mcp_servers.dotnet-x86.env]',
+            '[mcp_servers.netdbg.env]',
             'A = "1"',
             '',
             '[mcp_servers.other]',
@@ -119,17 +119,17 @@ describe('withTomlServer', () => {
         ].join('\r\n');
         assert.equal(
             withTomlServer(before, 'C:\\e.exe'),
-            ['model = "x" # comment', '', '[mcp_servers.other]', 'command = "o"', '', '[mcp_servers.dotnet-x86]', 'command = "C:\\\\e.exe"', 'args = ["--mcp-connect"]', ''].join('\r\n'),
+            ['model = "x" # comment', '', '[mcp_servers.other]', 'command = "o"', '', '[mcp_servers.netdbg]', 'command = "C:\\\\e.exe"', 'args = ["--mcp-connect"]', ''].join('\r\n'),
         );
     });
 
     it('recognizes a quoted table name', () => {
-        assert.equal(withTomlServer('[mcp_servers."dotnet-x86"]\ncommand = "old"\n', 'e'), '[mcp_servers.dotnet-x86]\ncommand = "e"\nargs = ["--mcp-connect"]\n');
+        assert.equal(withTomlServer('[mcp_servers."netdbg"]\ncommand = "old"\n', 'e'), '[mcp_servers.netdbg]\ncommand = "e"\nargs = ["--mcp-connect"]\n');
     });
 });
 
 describe('cursorServer', () => {
     it('registers the bridge as a stdio server, which needs no token', () => {
-        assert.deepEqual(cursorServer('C:\\x\\dotnet-x86dbg.exe'), { name: 'dotnet-x86', server: { command: 'C:\\x\\dotnet-x86dbg.exe', args: ['--mcp-connect'], env: {} } });
+        assert.deepEqual(cursorServer('C:\\x\\netdbg.exe'), { name: 'netdbg', server: { command: 'C:\\x\\netdbg.exe', args: ['--mcp-connect'], env: {} } });
     });
 });

@@ -217,7 +217,7 @@ function order(m: Message): number {
     return (m.kind === 'request' ? 0 : 2) + (m.side === 'engine' ? 0 : 1);
 }
 
-/** The requests dotnet-x86dbg dispatches (`"command" =>` in src/debugger/engine.rs; src/adapter.rs before the engine was split), to compare with the document. */
+/** The requests netdbg dispatches (`"command" =>` in src/debugger/engine.rs; src/adapter.rs before the engine was split), to compare with the document. */
 export function engineDispatchedRequests(engineRepo: string): string[] {
     const file = [path.join(engineRepo, 'src', 'debugger', 'engine.rs'), path.join(engineRepo, 'src', 'adapter.rs')].find((f) => fs.existsSync(f)) ?? path.join(engineRepo, 'src', 'debugger', 'engine.rs');
     const text = fs.readFileSync(file, 'utf8');
@@ -403,8 +403,8 @@ ${nav}
 </nav>
 <main>
 <h1 id="overview">${esc(api.title)}</h1>
-<p>The extension talks to its debug engine, <strong>dotnet-x86dbg</strong>, with the <a href="https://microsoft.github.io/debug-adapter-protocol/specification">Debug Adapter Protocol</a> (DAP) over the engine's stdin and stdout. Between VS Code and the engine sits the extension's DAP relay (<code>DapProxy</code>), which adds logpoints, hit counts, Step Into Specific, the exception log, the SQL log and more on top of what the engine offers.</p>
-<pre class="diagram">VS Code  &lt;-- DAP --&gt;  DapProxy (extension)  &lt;-- DAP over stdin/stdout --&gt;  dotnet-x86dbg.exe (x86 or x64)</pre>
+<p>The extension talks to its debug engine, <strong>netdbg</strong>, with the <a href="https://microsoft.github.io/debug-adapter-protocol/specification">Debug Adapter Protocol</a> (DAP) over the engine's stdin and stdout. Between VS Code and the engine sits the extension's DAP relay (<code>DapProxy</code>), which adds logpoints, hit counts, Step Into Specific, the exception log, the SQL log and more on top of what the engine offers.</p>
+<pre class="diagram">VS Code  &lt;-- DAP --&gt;  DapProxy (extension)  &lt;-- DAP over stdin/stdout --&gt;  netdbg.exe (x86 or x64)</pre>
 <p>${sideBadge('engine')} marks messages that cross the engine boundary; ${sideBadge('proxy')} marks messages the relay handles or sends itself (they never reach the engine). The engine of the program's bitness is started: ICorDebug needs a debugger of the same bitness as the program.</p>
 <p>Generated from <code>src/engineProtocol.ts</code> by <code>npm run docs:api</code>; the same data as JSON Schema is in <a href="engine-api.json">engine-api.json</a>.</p>
 

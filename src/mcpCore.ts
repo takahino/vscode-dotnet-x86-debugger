@@ -1,16 +1,16 @@
 // MCP (Model Context Protocol) without the vscode module: the engine's endpoint event and how AI clients register the
-// engine's bridge. The engine does the work (dotnet-x86dbg --mcp-listen / --mcp-connect); the extension only shows the
+// engine's bridge. The engine does the work (netdbg --mcp-listen / --mcp-connect); the extension only shows the
 // editor's AI where it listens, and registers the bridge with other AI clients.
 
 import * as path from 'path';
 
 /** Name the server is registered under in the AI clients. */
-export const MCP_SERVER_NAME = 'dotnet-x86';
+export const MCP_SERVER_NAME = 'netdbg';
 
 /** The custom DAP event an engine started with `--mcp-listen` sends with its endpoint. */
-export const MCP_ENDPOINT_EVENT = 'dotnetX86.mcpEndpoint';
+export const MCP_ENDPOINT_EVENT = 'netdbg.mcpEndpoint';
 
-/** Where an engine started with `--mcp-listen` accepts MCP (the `dotnetX86.mcpEndpoint` event). */
+/** Where an engine started with `--mcp-listen` accepts MCP (the `netdbg.mcpEndpoint` event). */
 export interface McpEndpoint {
     /** `http://127.0.0.1:<port>/mcp`. */
     url: string;

@@ -13,7 +13,7 @@ jobs:
     env:
       # E2E のテストアプリ（x86）を動かす x86 版 .NET ランタイムの場所
       DOTNET_ROOT(x86): C:\Program Files (x86)\dotnet
-      # 同梱するデバッグエンジン (dotnet-x86dbg) の版 (タグかコミット)
+      # 同梱するデバッグエンジン (netdbg) の版 (タグかコミット)
       ENGINE_REF: main
     steps:
       - uses: actions/checkout@v4
@@ -51,11 +51,11 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      # デバッグエンジン dotnet-x86dbg (Rust) を取得してビルドし、debugger/dotnet-x86dbg-x86 と -x64 に置く。
+      # デバッグエンジン netdbg (Rust) を取得してビルドし、debugger/netdbg-x86 と -x64 に置く。
       # ENGINE_REF でエンジンの版を固定する (エンジンを新しくするときは、ここを書き換えて E2E を通す)。
       - uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/dotnet-x86dbg
+          repository: ${{ github.repository_owner }}/netdbg
           ref: ${{ env.ENGINE_REF }}
           path: engine
 
@@ -77,6 +77,6 @@ jobs:
       - name: E2E tests (x64)
         shell: pwsh
         run: |
-          $env:DOTNETX86_E2E_ARCH = 'x64'
+          $env:NETDBG_E2E_ARCH = 'x64'
           npm run test:e2e
           if ($LASTEXITCODE -ne 0) { throw "x64 の E2E テストが失敗しました (exit code $LASTEXITCODE)。" }

@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "Feature Tour (.NET 10, x86)",
-      "type": "dotnet-x86",
+      "type": "netdbg",
       "request": "launch",
       "preLaunchTask": "build",
       "program": "${workspaceFolder}/bin/x86/Debug/net10.0-windows/FeatureTour.exe",
@@ -11,7 +11,7 @@
     },
     {
       "name": "Feature Tour (.NET Framework 4.8, x86)",
-      "type": "dotnet-x86",
+      "type": "netdbg",
       "request": "launch",
       "preLaunchTask": "build",
       "program": "${workspaceFolder}/bin/x86/Debug/net48/FeatureTour.exe",
@@ -19,13 +19,13 @@
     },
     {
       "name": "Attach (pick a process)",
-      "type": "dotnet-x86",
+      "type": "netdbg",
       "request": "attach",
       "processId": "${command:pickProcess}"
     },
     {
       "name": "Attach (wait for FeatureTour to start)",
-      "type": "dotnet-x86",
+      "type": "netdbg",
       "request": "attach",
       "processName": "FeatureTour",
       "waitTimeout": 120

@@ -2,7 +2,7 @@
 
   <!-- Built optimized and without any PDB (no CodeView entry either), for the decompiling tests. -->
   <PropertyGroup>
-    <!-- net48 too: the E2E tests also run against .NET Framework apps (DOTNETX86_E2E_FRAMEWORK=net48). -->
+    <!-- net48 too: the E2E tests also run against .NET Framework apps (NETDBG_E2E_FRAMEWORK=net48). -->
     <TargetFrameworks>net10.0;net48</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Optimize>true</Optimize>

@@ -1,15 +1,15 @@
 // Object IDs ("Make Object ID", netcoredbg patch 0008). Users write "$1" as in Visual Studio; C# allows no digit
-// right after '$', so the relay sends netcoredbg the identifier "__DOTNETX86_OBJID_1" and shows "$1" in what comes back.
+// right after '$', so the relay sends netcoredbg the identifier "__NETDBG_OBJID_1" and shows "$1" in what comes back.
 // Kept free of the vscode module.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** Custom DAP request: gives the object behind a variablesReference an ID; answers { id }. */
-export const MAKE_OBJECT_ID_REQUEST = 'dotnetX86.makeObjectId';
+export const MAKE_OBJECT_ID_REQUEST = 'netdbg.makeObjectId';
 
-const DEBUGGER_PREFIX = '__DOTNETX86_OBJID_';
+const DEBUGGER_PREFIX = '__NETDBG_OBJID_';
 
-/** "$1" -> "__DOTNETX86_OBJID_1" outside string literals ("$1" inside quotes, and interpolated $"..." strings, stay as they are). */
+/** "$1" -> "__NETDBG_OBJID_1" outside string literals ("$1" inside quotes, and interpolated $"..." strings, stay as they are). */
 export function toDebuggerObjectIds(expression: string): string {
     if (!expression.includes('$')) {
         return expression;
@@ -43,7 +43,7 @@ export function toDebuggerObjectIds(expression: string): string {
     return result;
 }
 
-/** "__DOTNETX86_OBJID_1" coming back from netcoredbg (a child's evaluateName, an error message) -> "$1". */
+/** "__NETDBG_OBJID_1" coming back from netcoredbg (a child's evaluateName, an error message) -> "$1". */
 export function toClientObjectIds(text: string): string {
     return text.split(DEBUGGER_PREFIX).join('$');
 }
@@ -59,7 +59,7 @@ export function requestWithDebuggerObjectIds(command: string | undefined, args: 
     return args;
 }
 
-/** A response from netcoredbg with "__DOTNETX86_OBJID_N" in its error message / evaluateNames shown as "$N". */
+/** A response from netcoredbg with "__NETDBG_OBJID_N" in its error message / evaluateNames shown as "$N". */
 export function responseWithClientObjectIds<T extends { type: string; message?: string; body?: any }>(message: T): T {
     if (message.type !== 'response') {
         return message;

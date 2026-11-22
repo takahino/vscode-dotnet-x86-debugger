@@ -82,9 +82,9 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
         // The bundled engine reads the usage itself (PROCESS_USAGE_REQUEST): no PowerShell helper then.
         let engineReads = false;
         return {
-            onDidSendMessage: (m: { type?: string; event?: string; command?: string; body?: { systemProcessId?: number; dotnetX86SupportsProcessUsage?: boolean } }) => {
+            onDidSendMessage: (m: { type?: string; event?: string; command?: string; body?: { systemProcessId?: number; netdbgSupportsProcessUsage?: boolean } }) => {
                 if (m.type === 'response' && m.command === 'initialize') {
-                    engineReads = m.body?.dotnetX86SupportsProcessUsage === true;
+                    engineReads = m.body?.netdbgSupportsProcessUsage === true;
                 }
                 if (m.type !== 'event') {
                     return;
@@ -107,7 +107,7 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
             return;
         }
         this.panel = vscode.window.createWebviewPanel(
-            'dotnetX86.memory',
+            'netdbg.memory',
             vscode.l10n.t('Memory / CPU (.NET x86)'),
             { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
             { enableScripts: true, retainContextWhenHidden: true },
@@ -125,7 +125,7 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
     private start(debugSession: vscode.DebugSession, pid: number, engineReads: boolean): void {
         this.stopSampler();
         this.current = { name: debugSession.name, pid, startedAt: Date.now(), samples: [], breaks: [], exited: false };
-        if (vscode.workspace.getConfiguration('dotnetX86.memoryGraph').get<boolean>('autoOpen')) {
+        if (vscode.workspace.getConfiguration('netdbg.memoryGraph').get<boolean>('autoOpen')) {
             this.show();
         }
         const record = this.recorder(this.current);
@@ -254,7 +254,7 @@ export class MemoryMonitor implements vscode.DebugAdapterTrackerFactory, vscode.
 function localizedStrings() {
     return {
         title: vscode.l10n.t('Process memory, CPU and handles'),
-        waiting: vscode.l10n.t('Start debugging with the dotnet-x86 debugger to see memory.'),
+        waiting: vscode.l10n.t('Start debugging with the netdbg debugger to see memory.'),
         privateNow: vscode.l10n.t('Private Bytes (now)'),
         privatePeak: vscode.l10n.t('Private Bytes (peak)'),
         workingSetNow: vscode.l10n.t('Working Set (now)'),

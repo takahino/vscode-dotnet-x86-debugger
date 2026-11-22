@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": ".NET Framework x86 Launch",
-      "type": "dotnet-x86",
+      "type": "netdbg",
       "request": "launch",
       "preLaunchTask": "build",
       "program": "${workspaceFolder}/bin/x86/Debug/net48/WinFormsNet48X86.exe",
@@ -13,7 +13,7 @@
     },
     {
       "name": ".NET Framework x86 Attach",
-      "type": "dotnet-x86",
+      "type": "netdbg",
       "request": "attach",
       "processId": "${command:pickProcess}"
     }

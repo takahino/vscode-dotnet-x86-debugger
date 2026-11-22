@@ -26,7 +26,7 @@ export class ParallelStacks implements vscode.Disposable {
 
     async show(): Promise<void> {
         if (!this.panel) {
-            this.panel = vscode.window.createWebviewPanel('dotnetX86.parallelStacks', vscode.l10n.t('Parallel Stacks (.NET x86)'), vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
+            this.panel = vscode.window.createWebviewPanel('netdbg.parallelStacks', vscode.l10n.t('Parallel Stacks (.NET x86)'), vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
             this.panel.onDidDispose(() => (this.panel = undefined));
             this.panel.webview.onDidReceiveMessage((m) => this.onMessage(m));
         }

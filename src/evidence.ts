@@ -67,7 +67,7 @@ export class EvidenceCapture implements vscode.Disposable {
         if (!base) {
             return undefined;
         }
-        const configured = vscode.workspace.getConfiguration('dotnetX86.evidence', session.workspaceFolder?.uri).get<string>('folder', 'evidence').trim() || 'evidence';
+        const configured = vscode.workspace.getConfiguration('netdbg.evidence', session.workspaceFolder?.uri).get<string>('folder', 'evidence').trim() || 'evidence';
         return path.isAbsolute(configured) ? configured : path.join(base, configured);
     }
 

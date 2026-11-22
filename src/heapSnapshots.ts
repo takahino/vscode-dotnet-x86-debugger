@@ -35,7 +35,7 @@ export class HeapSnapshots implements vscode.Disposable {
 
     show(): void {
         if (!this.panel) {
-            this.panel = vscode.window.createWebviewPanel('dotnetX86.heapSnapshots', vscode.l10n.t('Heap Snapshots (.NET x86)'), vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
+            this.panel = vscode.window.createWebviewPanel('netdbg.heapSnapshots', vscode.l10n.t('Heap Snapshots (.NET x86)'), vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
             this.panel.onDidDispose(() => (this.panel = undefined));
             this.panel.webview.onDidReceiveMessage((m: { type?: string; collect?: boolean }) => {
                 if (m.type === 'take') {
@@ -50,7 +50,7 @@ export class HeapSnapshots implements vscode.Disposable {
         this.render();
     }
 
-    /** Takes a snapshot of the stopped program; `collect` overrides the dotnetX86.heapSnapshot.collectGarbage setting. */
+    /** Takes a snapshot of the stopped program; `collect` overrides the netdbg.heapSnapshot.collectGarbage setting. */
     async take(collect?: boolean): Promise<void> {
         const session = vscode.debug.activeDebugSession;
         const item = vscode.debug.activeStackItem as { threadId?: number; frameId?: number } | undefined;
@@ -59,7 +59,7 @@ export class HeapSnapshots implements vscode.Disposable {
             return;
         }
         this.show();
-        collect ??= vscode.workspace.getConfiguration('dotnetX86').get<boolean>('heapSnapshot.collectGarbage', true);
+        collect ??= vscode.workspace.getConfiguration('netdbg').get<boolean>('heapSnapshot.collectGarbage', true);
         try {
             let collected = false;
             if (collect) {
@@ -120,7 +120,7 @@ export class HeapSnapshots implements vscode.Disposable {
             candidate: vscode.l10n.t('leak candidate'),
             noResources: vscode.l10n.t('No objects holding native resources.'),
         };
-        const collect = vscode.workspace.getConfiguration('dotnetX86').get<boolean>('heapSnapshot.collectGarbage', true);
+        const collect = vscode.workspace.getConfiguration('netdbg').get<boolean>('heapSnapshot.collectGarbage', true);
         this.panel.webview.html = page({ snapshots: list, text: t, collect });
     }
 }

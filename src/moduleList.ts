@@ -56,7 +56,7 @@ export class ModuleList implements vscode.TreeDataProvider<ModuleInfo>, vscode.D
         // Icon shape and the description text both say whether symbols are loaded, not color alone.
         item.iconPath = new vscode.ThemeIcon(loaded ? 'symbol-namespace' : 'library');
         // Symbols can be downloaded for modules without them.
-        item.contextValue = loaded ? 'dotnetX86.module' : 'dotnetX86.module.noSymbols';
+        item.contextValue = loaded ? 'netdbg.module' : 'netdbg.module.noSymbols';
         item.resourceUri = m.path ? vscode.Uri.file(m.path) : undefined;
         return item;
     }

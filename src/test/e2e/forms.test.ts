@@ -10,7 +10,7 @@ const colorDisplay = (name: string, argb: string) => (FRAMEWORK === 'net48' ? `\
 
 const BUTTON = 'System.Windows.Forms.Application.OpenForms[0].Controls[0].Controls[0]';
 
-describe('changing control properties', { skip: e2eSkip || (process.env.DOTNETX86_SKIP_UI_TESTS ? 'DOTNETX86_SKIP_UI_TESTS is set' : false) }, () => {
+describe('changing control properties', { skip: e2eSkip || (process.env.NETDBG_SKIP_UI_TESTS ? 'NETDBG_SKIP_UI_TESTS is set' : false) }, () => {
     let s: DapSession;
     let frameId = 0;
 

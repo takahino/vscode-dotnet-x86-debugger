@@ -114,7 +114,7 @@ describe('readEventKeys', () => {
 
 describe('downloadSymbols', () => {
     it('gives up without asking any server for a file that is not a .NET assembly', async () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-symbols-'));
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'netdbg-symbols-'));
         try {
             const file = path.join(dir, 'native.dll');
             fs.writeFileSync(file, Buffer.from('MZ not really a program'));

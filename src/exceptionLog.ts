@@ -71,7 +71,7 @@ export class ExceptionLog implements vscode.TreeDataProvider<Node>, vscode.Dispo
         item.tooltip = new vscode.MarkdownString().appendCodeblock(`${e.typeName}\n${e.message}\n\n${e.snapshot?.stackTrace ?? `${e.functionName ?? ''}  ${location}`}\nbreakMode: ${e.breakMode}`, 'text');
         // Unhandled exceptions get the error icon; the description text also says whether it stopped.
         item.iconPath = new vscode.ThemeIcon(e.breakMode === 'always' ? 'warning' : 'error');
-        item.contextValue = 'dotnetX86.exception';
+        item.contextValue = 'netdbg.exception';
         if (e.source?.path && e.line) {
             item.command = {
                 command: 'vscode.open',

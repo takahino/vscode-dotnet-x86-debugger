@@ -8,7 +8,7 @@ import { configurationsForFolder } from './launchSetup';
 import { compareVersions } from './projectSetupCore';
 import { isEnabled } from './features';
 
-export const DEBUG_TYPE = 'dotnet-x86';
+export const DEBUG_TYPE = 'netdbg';
 /** Set on a launch configuration whose program is a .NET Framework exe (not written by users). */
 export const DOTNET_FRAMEWORK_KEY = '__dotnetFramework';
 /** Set on every configuration: the bitness of the debug engine to start ('x86' or 'x64'), that of the program. */
@@ -45,7 +45,7 @@ export class X86ConfigurationProvider implements vscode.DebugConfigurationProvid
         config: vscode.DebugConfiguration,
     ): vscode.ProviderResult<vscode.DebugConfiguration> {
         if (process.platform !== 'win32') {
-            void vscode.window.showErrorMessage(vscode.l10n.t(".NET x86 Debugger works on Windows only."));
+            void vscode.window.showErrorMessage(vscode.l10n.t("netdbg works on Windows only."));
             return undefined;
         }
         // F5 without launch.json: ask VS Code to open launch.json with our initial configuration.
@@ -85,7 +85,7 @@ function resolveLaunch(config: vscode.DebugConfiguration): vscode.DebugConfigura
         throw new Error(vscode.l10n.t("program not found: {0}. Check that the project is built and the output path (bin/x86/...) is correct.", program));
     }
 
-    // Edit and Continue (setting dotnetX86.editAndContinue.enabled) unless launch.json says otherwise. The engine prepares
+    // Edit and Continue (setting netdbg.editAndContinue.enabled) unless launch.json says otherwise. The engine prepares
     // the modules for it as they load, so it is decided at launch.
     if (typeof config.editAndContinue !== 'boolean') {
         config.editAndContinue = isEnabled('editAndContinue');
@@ -158,14 +158,14 @@ function warnIfWindowsPdb(program: string): void {
 }
 
 /**
- * Code coverage (setting dotnetX86.coverage.*) unless launch.json says otherwise: the engine counts the lines and branches
+ * Code coverage (setting netdbg.coverage.*) unless launch.json says otherwise: the engine counts the lines and branches
  * the program runs, the editor colors them (CoverageHighlighter), and the Cobertura XML is written at the end.
  */
 function applyCoverageSetting(config: vscode.DebugConfiguration): void {
     if (config.coverage !== undefined) {
         return;
     }
-    const settings = vscode.workspace.getConfiguration('dotnetX86.coverage');
+    const settings = vscode.workspace.getConfiguration('netdbg.coverage');
     if (!settings.get<boolean>('enabled', false)) {
         return;
     }

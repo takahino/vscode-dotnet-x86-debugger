@@ -336,7 +336,7 @@ export class ControlTree implements vscode.TreeDataProvider<ControlNode>, vscode
         }
     }
 
-    /** Evaluates in the selected stack frame of a stopped dotnet-x86 session, or undefined when there is none. */
+    /** Evaluates in the selected stack frame of a stopped netdbg session, or undefined when there is none. */
     private evaluator(): Evaluate | undefined {
         const frame = vscode.debug.activeStackItem;
         if (!(frame instanceof vscode.DebugStackFrame) || frame.session.type !== DEBUG_TYPE) {

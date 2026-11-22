@@ -1,9 +1,9 @@
 // Edit and Continue: the parts without VS Code (deciding when to apply, and how to word the result).
 
 /** Custom request: apply the saved edits of the program's sources to the running program. */
-export const APPLY_CHANGES_REQUEST = 'dotnetX86.applyChanges';
-/** Custom event: the result of `dotnetX86.applyChanges` (also sent when the change came from MCP). */
-export const CHANGES_APPLIED_EVENT = 'dotnetX86.changesApplied';
+export const APPLY_CHANGES_REQUEST = 'netdbg.applyChanges';
+/** Custom event: the result of `netdbg.applyChanges` (also sent when the change came from MCP). */
+export const CHANGES_APPLIED_EVENT = 'netdbg.changesApplied';
 
 export type ApplyStatus = 'applied' | 'noChanges' | 'rude' | 'errors' | 'failed';
 

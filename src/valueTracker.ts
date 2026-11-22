@@ -121,7 +121,7 @@ export class ValueTracker implements vscode.Disposable {
             return;
         }
         this.panel = vscode.window.createWebviewPanel(
-            'dotnetX86.valueTrend',
+            'netdbg.valueTrend',
             vscode.l10n.t('Value Trend (.NET x86)'),
             { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
             { enableScripts: true, retainContextWhenHidden: true },

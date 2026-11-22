@@ -6,7 +6,7 @@ import { COVERAGE_CHANGED_EVENT, COVERAGE_REQUEST, CoverageLine, CoverageMarks, 
 
 /**
  * Code coverage in the editor: while a session counts coverage (launch argument `coverage`, from the setting
- * `dotnetX86.coverage.enabled`), the engine sends `dotnetX86.coverageChanged` with the files whose marks changed; the
+ * `netdbg.coverage.enabled`), the engine sends `netdbg.coverageChanged` with the files whose marks changed; the
  * visible editors of those files are colored as run, partly run (some branch outcomes not taken) and not run. The marks
  * stay after the session ends (to review them) and are cleared when the next session starts. The status bar shows the
  * rates; clicking it writes the Cobertura XML.
@@ -24,7 +24,7 @@ export class CoverageHighlighter implements vscode.Disposable {
     private readonly disposables: vscode.Disposable[] = [];
 
     constructor() {
-        this.status.command = 'dotnetX86.writeCoverage';
+        this.status.command = 'netdbg.writeCoverage';
         this.status.tooltip = vscode.l10n.t('Code coverage of this debug session (lines run, branches taken). Click to write the Cobertura XML.');
         this.disposables.push(
             vscode.debug.onDidStartDebugSession((s) => {
@@ -46,8 +46,8 @@ export class CoverageHighlighter implements vscode.Disposable {
                 }
             }),
             vscode.window.onDidChangeVisibleTextEditors(() => void this.loadVisible()),
-            vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('dotnetX86.coverage.showInEditor') && this.render()),
-            vscode.commands.registerCommand('dotnetX86.writeCoverage', () => this.write()),
+            vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('netdbg.coverage.showInEditor') && this.render()),
+            vscode.commands.registerCommand('netdbg.writeCoverage', () => this.write()),
         );
     }
 
@@ -92,7 +92,7 @@ export class CoverageHighlighter implements vscode.Disposable {
     }
 
     private render(): void {
-        const show = vscode.workspace.getConfiguration('dotnetX86.coverage').get<boolean>('showInEditor', true);
+        const show = vscode.workspace.getConfiguration('netdbg.coverage').get<boolean>('showInEditor', true);
         for (const editor of vscode.window.visibleTextEditors) {
             const marks = show ? this.marks.get(key(editor.document.uri.fsPath)) : undefined;
             const lineRange = (line: number) => editor.document.lineAt(Math.min(line, editor.document.lineCount - 1)).range;
@@ -110,15 +110,15 @@ export class CoverageHighlighter implements vscode.Disposable {
         this.status.show();
     }
 
-    /** Writes the Cobertura XML of the debug session (`dotnetX86.coverage { write }`) and tells where. */
+    /** Writes the Cobertura XML of the debug session (`netdbg.coverage { write }`) and tells where. */
     private async write(): Promise<void> {
         const session = this.session ?? (vscode.debug.activeDebugSession?.type === DEBUG_TYPE ? vscode.debug.activeDebugSession : undefined);
         if (!session) {
-            void vscode.window.showErrorMessage(vscode.l10n.t('No .NET x86 debug session is counting coverage. Turn on dotnetX86.coverage.enabled and start debugging.'));
+            void vscode.window.showErrorMessage(vscode.l10n.t('No .NET x86 debug session is counting coverage. Turn on netdbg.coverage.enabled and start debugging.'));
             return;
         }
         try {
-            const folder = vscode.workspace.getConfiguration('dotnetX86.coverage').get<string>('folder', '').trim();
+            const folder = vscode.workspace.getConfiguration('netdbg.coverage').get<string>('folder', '').trim();
             const body = await session.customRequest(COVERAGE_REQUEST, folder ? { write: true, folder } : { write: true });
             this.showStatus(body);
             void vscode.window.showInformationMessage(vscode.l10n.t('Coverage written: {0}', String(body?.path ?? '')));

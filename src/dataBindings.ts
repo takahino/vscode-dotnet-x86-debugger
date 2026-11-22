@@ -60,7 +60,7 @@ export class DataBindingsPanel implements vscode.Disposable {
 
     private render(bindings: DataBindings): void {
         if (!this.panel) {
-            this.panel = vscode.window.createWebviewPanel('dotnetX86.dataBindings', vscode.l10n.t('Data Bindings (.NET x86)'), vscode.ViewColumn.Beside, { enableScripts: true });
+            this.panel = vscode.window.createWebviewPanel('netdbg.dataBindings', vscode.l10n.t('Data Bindings (.NET x86)'), vscode.ViewColumn.Beside, { enableScripts: true });
             this.panel.onDidDispose(() => (this.panel = undefined));
             this.panel.webview.onDidReceiveMessage((m: { type?: string; row?: number }) => {
                 if (m?.type === 'refresh') {
@@ -80,7 +80,7 @@ export class DataBindingsPanel implements vscode.Disposable {
     }
 }
 
-/** Evaluates in the selected stack frame of a stopped dotnet-x86 session; strings come back without their quotes. */
+/** Evaluates in the selected stack frame of a stopped netdbg session; strings come back without their quotes. */
 function evaluator(): ((expression: string) => Promise<string>) | undefined {
     const frame = vscode.debug.activeStackItem;
     if (!(frame instanceof vscode.DebugStackFrame) || frame.session.type !== DEBUG_TYPE) {

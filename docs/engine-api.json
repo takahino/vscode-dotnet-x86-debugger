@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": ".NET x86 Debugger - debug engine API",
+  "title": "netdbg - debug engine API",
   "version": "2.0.0",
   "launch": {
     "description": "Arguments of `launch` as the engine receives them. The extension resolves launch.json first: a `.dll` program becomes `program: <dotnet.exe of the chosen bitness>, args: [<dll>, ...]`, and a .NET Framework exe gets `__dotnetFramework`. launch.json properties that only the extension reads (`architecture`, `sourceFileMap`, `sourceSearchPaths`, `processName`, `waitTimeout`) are not listed here.",
@@ -12,7 +12,7 @@
       },
       "dumpPath": {
         "type": "string",
-        "description": "Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability `dotnetX86SupportsDumps`). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After `configurationDone` the engine sends `process` (without `systemProcessId`; `dumpProcessId` is the number in the dump) and `stopped` (`exception` on the thread that was throwing, else `pause`, with the description `Crash dump`). `continue`, the steps, `pause`, `goto`, `setVariable`, `setExpression`, `dotnetX86.applyChanges`, `dotnetX86.freezeThread`, `dotnetX86.makeObjectId`, `dotnetX86.processUsage` and expressions that run code are refused with the reason."
+        "description": "Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability `netdbgSupportsDumps`). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After `configurationDone` the engine sends `process` (without `systemProcessId`; `dumpProcessId` is the number in the dump) and `stopped` (`exception` on the thread that was throwing, else `pause`, with the description `Crash dump`). `continue`, the steps, `pause`, `goto`, `setVariable`, `setExpression`, `netdbg.applyChanges`, `netdbg.freezeThread`, `netdbg.makeObjectId`, `netdbg.processUsage` and expressions that run code are refused with the reason."
       },
       "args": {
         "type": "array",
@@ -57,7 +57,7 @@
       },
       "editAndContinue": {
         "type": "boolean",
-        "description": "Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `dotnetX86.applyChanges` can update them. The extension sets it from `dotnetX86.editAndContinue.enabled` unless launch.json does."
+        "description": "Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `netdbg.applyChanges` can update them. The extension sets it from `netdbg.editAndContinue.enabled` unless launch.json does."
       },
       "decompile": {
         "type": "string",
@@ -65,7 +65,7 @@
           "app",
           "off"
         ],
-        "description": "Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `dotnetX86.decompile`."
+        "description": "Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `netdbg.decompile`."
       },
       "sqlLog": {
         "anyOf": [
@@ -87,7 +87,7 @@
             }
           }
         ],
-        "description": "SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (`dotnetX86.sqlExecuted`). `methods` replaces the provider methods (`Namespace.Type.Method`). The extension sets it from `dotnetX86.sqlLog.*` unless launch.json does."
+        "description": "SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (`netdbg.sqlExecuted`). `methods` replaces the provider methods (`Namespace.Type.Method`). The extension sets it from `netdbg.sqlLog.*` unless launch.json does."
       },
       "exceptionLog": {
         "anyOf": [
@@ -106,7 +106,7 @@
             }
           }
         ],
-        "description": "Exception log: record every thrown exception, also those that do not stop the program (`dotnetX86.exceptionThrown`); `snapshot` takes the stack and locals at the throw (default true). The extension sets it from `dotnetX86.exceptionLog.*`."
+        "description": "Exception log: record every thrown exception, also those that do not stop the program (`netdbg.exceptionThrown`); `snapshot` takes the stack and locals at the throw (default true). The extension sets it from `netdbg.exceptionLog.*`."
       },
       "uiFreeze": {
         "anyOf": [
@@ -125,7 +125,7 @@
             }
           }
         ],
-        "description": "UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`."
+        "description": "UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`netdbg.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `netdbg.uiFreeze.*`."
       },
       "coverage": {
         "anyOf": [
@@ -144,7 +144,7 @@
             }
           }
         ],
-        "description": "Code coverage: count the lines and branches the program runs (`dotnetX86.coverageChanged`, `dotnetX86.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\\dotnet-x86dbg\\coverage`. The extension sets it from `dotnetX86.coverage.*` unless launch.json does."
+        "description": "Code coverage: count the lines and branches the program runs (`netdbg.coverageChanged`, `netdbg.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\\netdbg\\coverage`. The extension sets it from `netdbg.coverage.*` unless launch.json does."
       },
       "childProcesses": {
         "type": "string",
@@ -153,7 +153,7 @@
           "follow",
           "off"
         ],
-        "description": "Processes the program starts with `Process.Start`: `record` (default) logs them (`dotnetX86.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them."
+        "description": "Processes the program starts with `Process.Start`: `record` (default) logs them (`netdbg.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them."
       },
       "__dotnetFramework": {
         "type": "boolean",
@@ -298,10 +298,10 @@
   },
   "messages": [
     {
-      "name": "dotnetX86.applyChanges",
+      "name": "netdbg.applyChanges",
       "kind": "request",
       "side": "engine",
-      "description": "Edit and Continue: applies the saved edits of the program's C# sources to the program, without restarting (launched, not attached; a Debug build). The engine has its helper (`encdelta`, run with the Roslyn of the installed .NET SDK 9+) build the change against the sources as they were when debugging started, applies it with `ApplyChanges`, and moves breakpoints to the new code. Changed methods run the new code from their next call; a method that is running moves to the new code at its next statement unless that statement's line was changed. A running program is paused for the moment it takes. Also sends `dotnetX86.changesApplied`, `output` and, when applied, `invalidated`.",
+      "description": "Edit and Continue: applies the saved edits of the program's C# sources to the program, without restarting (launched, not attached; a Debug build). The engine has its helper (`encdelta`, run with the Roslyn of the installed .NET SDK 9+) build the change against the sources as they were when debugging started, applies it with `ApplyChanges`, and moves breakpoints to the new code. Changed methods run the new code from their next call; a method that is running moves to the new code at its next statement unless that statement's line was changed. A running program is paused for the moment it takes. Also sends `netdbg.changesApplied`, `output` and, when applied, `invalidated`.",
       "arguments": {
         "type": "object",
         "properties": {
@@ -396,7 +396,7 @@
       }
     },
     {
-      "name": "dotnetX86.coverage",
+      "name": "netdbg.coverage",
       "kind": "request",
       "side": "engine",
       "description": "Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).",
@@ -488,10 +488,10 @@
       }
     },
     {
-      "name": "dotnetX86.decompile",
+      "name": "netdbg.decompile",
       "kind": "request",
       "side": "engine",
-      "description": "Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file, or this request. The C# files are written to `%LOCALAPPDATA%\\dotnet-x86dbg\\decompiled\\<MVID>-v<version>` and the symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in `NETCOREDBG_SYMBOL_DIRS` (downloaded ones) take precedence. Methods it cannot turn into C# are shown as IL. Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.",
+      "description": "Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file, or this request. The C# files are written to `%LOCALAPPDATA%\\netdbg\\decompiled\\<MVID>-v<version>` and the symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in `NETCOREDBG_SYMBOL_DIRS` (downloaded ones) take precedence. Methods it cannot turn into C# are shown as IL. Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.",
       "arguments": {
         "type": "object",
         "properties": {
@@ -598,7 +598,7 @@
       }
     },
     {
-      "name": "dotnetX86.freezeThread",
+      "name": "netdbg.freezeThread",
       "kind": "request",
       "side": "engine",
       "description": "Freezes or thaws a thread: a frozen thread stays suspended across `continue`, steps and evaluations until thawed.",
@@ -620,7 +620,7 @@
       }
     },
     {
-      "name": "dotnetX86.handleStats",
+      "name": "netdbg.handleStats",
       "kind": "request",
       "side": "engine",
       "description": "For the types that hold a native handle in a field, counts the objects and those whose handle is not 0 (not disposed). The field may be declared by a base type (`Bitmap` holds `Image._nativeImage`).",
@@ -688,7 +688,7 @@
       }
     },
     {
-      "name": "dotnetX86.heapStats",
+      "name": "netdbg.heapStats",
       "kind": "request",
       "side": "engine",
       "description": "Counts the objects on the GC heap by type, while the program is stopped. Fails while a GC is in progress.",
@@ -713,10 +713,10 @@
       }
     },
     {
-      "name": "dotnetX86.makeObjectId",
+      "name": "netdbg.makeObjectId",
       "kind": "request",
       "side": "engine",
-      "description": "Gives the object a value refers to an id (`$1`) that stays valid while the program runs (a weak GC handle: it does not keep the object alive, and reads `null` once the object is collected). In expressions the extension writes `$1` as `__DOTNETX86_OBJID_1`; values of objects with an id end with ` {$1}`.",
+      "description": "Gives the object a value refers to an id (`$1`) that stays valid while the program runs (a weak GC handle: it does not keep the object alive, and reads `null` once the object is collected). In expressions the extension writes `$1` as `__NETDBG_OBJID_1`; values of objects with an id end with ` {$1}`.",
       "arguments": {
         "type": "object",
         "properties": {
@@ -743,7 +743,7 @@
       }
     },
     {
-      "name": "dotnetX86.processUsage",
+      "name": "netdbg.processUsage",
       "kind": "request",
       "side": "engine",
       "description": "The program's process usage now, read by the engine from the process it debugs (running or stopped). The memory graph asks for it once a second.",
@@ -812,10 +812,10 @@
       }
     },
     {
-      "name": "dotnetX86.setEventTrace",
+      "name": "netdbg.setEventTrace",
       "kind": "request",
       "side": "engine",
-      "description": "Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends `dotnetX86.controlEvent`.",
+      "description": "Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends `netdbg.controlEvent`.",
       "arguments": {
         "type": "object",
         "properties": {
@@ -852,7 +852,7 @@
       }
     },
     {
-      "name": "dotnetX86.setValueWatches",
+      "name": "netdbg.setValueWatches",
       "kind": "request",
       "side": "engine",
       "description": "Break on Value Change: the names to watch and the lines that write them (the relay finds those in the workspace's C#, which the engine does not have). Replaces the earlier watches. At a write the engine reads the value, steps over the line and reads it again: when it changed it stops with reason `data breakpoint` (`text`: `name: old → new`), otherwise it goes on as if nothing happened. The write-site breakpoints are not reported to the client.",
@@ -931,7 +931,7 @@
       }
     },
     {
-      "name": "dotnetX86.setExceptionTypes",
+      "name": "netdbg.setExceptionTypes",
       "kind": "request",
       "side": "proxy",
       "description": "The exception types checked in the Exception Settings view changed: the relay stops on these when they are thrown.",
@@ -952,10 +952,10 @@
       }
     },
     {
-      "name": "dotnetX86.changesApplied",
+      "name": "netdbg.changesApplied",
       "kind": "event",
       "side": "engine",
-      "description": "The result of applying code changes (Edit and Continue), whether VS Code asked (`dotnetX86.applyChanges`) or an AI client did through MCP (`debug_apply_changes`). The body is the response of `dotnetX86.applyChanges`.",
+      "description": "The result of applying code changes (Edit and Continue), whether VS Code asked (`netdbg.applyChanges`) or an AI client did through MCP (`debug_apply_changes`). The body is the response of `netdbg.applyChanges`.",
       "body": {
         "type": "object",
         "properties": {
@@ -968,7 +968,7 @@
               "errors",
               "failed"
             ],
-            "description": "As in the response of `dotnetX86.applyChanges`."
+            "description": "As in the response of `netdbg.applyChanges`."
           },
           "message": {
             "type": "string",
@@ -1038,7 +1038,7 @@
       }
     },
     {
-      "name": "dotnetX86.controlEvent",
+      "name": "netdbg.controlEvent",
       "kind": "event",
       "side": "engine",
       "description": "A traced event handler ran (event trace).",
@@ -1101,10 +1101,10 @@
       }
     },
     {
-      "name": "dotnetX86.coverageChanged",
+      "name": "netdbg.coverageChanged",
       "kind": "event",
       "side": "engine",
-      "description": "Lines were counted (at most 4 times a second): the rates as in `dotnetX86.coverage`, and the source files whose marks changed (read their lines with `dotnetX86.coverage { file }`).",
+      "description": "Lines were counted (at most 4 times a second): the rates as in `netdbg.coverage`, and the source files whose marks changed (read their lines with `netdbg.coverage { file }`).",
       "body": {
         "type": "object",
         "properties": {
@@ -1121,7 +1121,7 @@
       }
     },
     {
-      "name": "dotnetX86.exceptionThrown",
+      "name": "netdbg.exceptionThrown",
       "kind": "event",
       "side": "engine",
       "description": "An exception was thrown (exception log): sent for every throw while the log is on, whether the program stops or not.",
@@ -1176,10 +1176,10 @@
       }
     },
     {
-      "name": "dotnetX86.mcpEndpoint",
+      "name": "netdbg.mcpEndpoint",
       "kind": "event",
       "side": "engine",
-      "description": "Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `dotnetX86.mcp.enabled`): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\\dotnet-x86dbg\\mcp\\<enginePid>.json` (removed on exit), where `dotnet-x86dbg --mcp-connect` finds it for AI clients outside VS Code.",
+      "description": "Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `netdbg.mcp.enabled`): where AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\\netdbg\\mcp\\<enginePid>.json` (removed on exit), where `netdbg --mcp-connect` finds it for AI clients outside VS Code.",
       "body": {
         "type": "object",
         "properties": {
@@ -1204,7 +1204,7 @@
       }
     },
     {
-      "name": "dotnetX86.removeBreakpoint",
+      "name": "netdbg.removeBreakpoint",
       "kind": "event",
       "side": "engine",
       "description": "A temporary (`#once`) breakpoint was hit: the extension removes it from VS Code's list.",
@@ -1233,7 +1233,7 @@
       }
     },
     {
-      "name": "dotnetX86.sqlExecuted",
+      "name": "netdbg.sqlExecuted",
       "kind": "event",
       "side": "engine",
       "description": "A statement read from a database command (SQL log), with its parameters and the frames that ran it.",
@@ -1348,7 +1348,7 @@
       }
     },
     {
-      "name": "dotnetX86.trackedValues",
+      "name": "netdbg.trackedValues",
       "kind": "event",
       "side": "engine",
       "description": "Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.",
@@ -1407,7 +1407,7 @@
       }
     },
     {
-      "name": "dotnetX86.uiFrozen",
+      "name": "netdbg.uiFrozen",
       "kind": "event",
       "side": "engine",
       "description": "A UI thread stopped answering window messages for `ms` while the program ran (launch argument `uiFreeze`): the engine pauses the program next, on that thread. The relay words the stop's reason in the user's language.",
@@ -1622,7 +1622,7 @@
     {
       "command": "stackTrace",
       "handledBy": "engine",
-      "notes": "Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `dotnetX86.decompile`)."
+      "notes": "Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `netdbg.decompile`)."
     },
     {
       "command": "scopes",
@@ -1692,7 +1692,7 @@
     {
       "command": "dataBreakpointInfo",
       "handledBy": "proxy",
-      "notes": "Break on Value Change for a plain name. `setDataBreakpoints` finds the lines that write it in the workspace and sends them as `dotnetX86.setValueWatches`."
+      "notes": "Break on Value Change for a plain name. `setDataBreakpoints` finds the lines that write it in the workspace and sends them as `netdbg.setValueWatches`."
     },
     {
       "command": "cancel",
@@ -1723,16 +1723,16 @@
     "supportTerminateDebuggee": true,
     "supportsTerminateRequest": true,
     "supportsCancelRequest": true,
-    "dotnetX86SupportsApplyChanges": true,
-    "dotnetX86SupportsDecompile": true,
+    "netdbgSupportsApplyChanges": true,
+    "netdbgSupportsDecompile": true,
     "supportsLogPoints": true,
     "supportsHitConditionalBreakpoints": true,
     "supportsStepInTargetsRequest": true,
-    "dotnetX86SupportsJournal": true,
-    "dotnetX86SupportsValueWatches": true,
-    "dotnetX86SupportsUiFreeze": true,
-    "dotnetX86SupportsProcessUsage": true,
-    "dotnetX86SupportsDumps": true,
+    "netdbgSupportsJournal": true,
+    "netdbgSupportsValueWatches": true,
+    "netdbgSupportsUiFreeze": true,
+    "netdbgSupportsProcessUsage": true,
+    "netdbgSupportsDumps": true,
     "exceptionBreakpointFilters": [
       {
         "filter": "all",
@@ -1751,11 +1751,11 @@
     },
     {
       "name": "--log=<file>",
-      "notes": "Writes the DAP traffic and the engine's own log, flushed per line (setting `dotnetX86.trace`)."
+      "notes": "Writes the DAP traffic and the engine's own log, flushed per line (setting `netdbg.trace`)."
     },
     {
       "name": "--mcp-listen",
-      "notes": "Also accepts MCP on 127.0.0.1 with a token, and sends `dotnetX86.mcpEndpoint` (setting `dotnetX86.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events."
+      "notes": "Also accepts MCP on 127.0.0.1 with a token, and sends `netdbg.mcpEndpoint` (setting `netdbg.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events."
     },
     {
       "name": "--mcp-connect[=<enginePid>]",
@@ -1785,7 +1785,7 @@
     },
     {
       "what": "Object ids",
-      "rule": "A value with an id ends with ` {$N}`; in expressions `$N` is sent as `__DOTNETX86_OBJID_N`."
+      "rule": "A value with an id ends with ` {$N}`; in expressions `$N` is sent as `__NETDBG_OBJID_N`."
     },
     {
       "what": "Enums",

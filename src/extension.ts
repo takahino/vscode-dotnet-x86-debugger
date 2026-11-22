@@ -48,7 +48,7 @@ import {
 } from './variableDump';
 
 export function activate(context: vscode.ExtensionContext): void {
-    const output = vscode.window.createOutputChannel('.NET x86 Debugger');
+    const output = vscode.window.createOutputChannel('netdbg');
     const snapshots = new SnapshotStore();
     const memory = new MemoryMonitor(context.extensionPath, output);
     const valueTracker = new ValueTracker();
@@ -60,22 +60,22 @@ export function activate(context: vscode.ExtensionContext): void {
     const breakpointCommands = new BreakpointCommands();
     const pinnedValues = new PinnedValues(context.workspaceState);
     const controlTree = new ControlTree();
-    const controlView = vscode.window.createTreeView('dotnetX86.controls', { treeDataProvider: controlTree });
+    const controlView = vscode.window.createTreeView('netdbg.controls', { treeDataProvider: controlTree });
     controlTree.attach(controlView);
     const highlighter = new WindowHighlighter(context.extensionPath, (line) => output.appendLine(line));
     const dataBindings = new DataBindingsPanel((node) => controlTree.highlight(node, highlighter));
     const exceptionLog = new ExceptionLog();
-    const exceptionView = vscode.window.createTreeView('dotnetX86.exceptions', { treeDataProvider: exceptionLog });
+    const exceptionView = vscode.window.createTreeView('netdbg.exceptions', { treeDataProvider: exceptionLog });
     exceptionLog.attach(exceptionView);
     const eventTrace = new EventTrace();
-    const eventTraceView = vscode.window.createTreeView('dotnetX86.eventTrace', { treeDataProvider: eventTrace });
+    const eventTraceView = vscode.window.createTreeView('netdbg.eventTrace', { treeDataProvider: eventTrace });
     eventTrace.attach(eventTraceView);
     const sqlLog = new SqlLog();
     const evidence = new EvidenceCapture(context.extensionPath, sqlLog, (line) => output.appendLine(line));
-    const sqlView = vscode.window.createTreeView('dotnetX86.sqlLog', { treeDataProvider: sqlLog });
+    const sqlView = vscode.window.createTreeView('netdbg.sqlLog', { treeDataProvider: sqlLog });
     sqlLog.attach(sqlView);
     const exceptionSettings = new ExceptionSettings(context.workspaceState);
-    const exceptionSettingsView = vscode.window.createTreeView('dotnetX86.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
+    const exceptionSettingsView = vscode.window.createTreeView('netdbg.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
     exceptionSettings.attach(exceptionSettingsView);
     // The ILSpy helper (Decompile for Debugging, 1.x) left its symbols here; the engine now decompiles by itself.
     removeOldDecompiledCache(path.join(context.globalStorageUri.fsPath, 'decompiled'), output);
@@ -92,108 +92,108 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new X86ConfigurationProvider()),
         vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new X86AdapterFactory(context.extensionPath, context.logUri.fsPath, output, { symbols: symbolServer.symbolCache, sources: symbolServer.sourceCache }, () => (isEnabled('exceptionSettings') ? exceptionSettings.checkedTypes() : []))),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, new DapTraceFactory(output)),
-        vscode.commands.registerCommand('dotnetX86.pickProcess', pickProcess),
-        vscode.commands.registerCommand('dotnetX86.dumpVariable', dumpVariableCommand),
-        vscode.commands.registerCommand('dotnetX86.dumpExpression', dumpExpressionCommand),
-        vscode.commands.registerCommand('dotnetX86.copyAsCSharp', copyAsCSharpCommand),
-        vscode.commands.registerCommand('dotnetX86.makeObjectId', makeObjectIdCommand),
-        vscode.commands.registerCommand('dotnetX86.generateTest', generateTestCommand),
+        vscode.commands.registerCommand('netdbg.pickProcess', pickProcess),
+        vscode.commands.registerCommand('netdbg.dumpVariable', dumpVariableCommand),
+        vscode.commands.registerCommand('netdbg.dumpExpression', dumpExpressionCommand),
+        vscode.commands.registerCommand('netdbg.copyAsCSharp', copyAsCSharpCommand),
+        vscode.commands.registerCommand('netdbg.makeObjectId', makeObjectIdCommand),
+        vscode.commands.registerCommand('netdbg.generateTest', generateTestCommand),
 
         parallelStacks,
-        vscode.commands.registerCommand('dotnetX86.showParallelStacks', () => parallelStacks.show()),
-        vscode.commands.registerCommand('dotnetX86.freezeThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, true)),
+        vscode.commands.registerCommand('netdbg.showParallelStacks', () => parallelStacks.show()),
+        vscode.commands.registerCommand('netdbg.freezeThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, true)),
         heapSnapshots,
         environmentCheck,
-        vscode.commands.registerCommand('dotnetX86.checkEnvironment', () => environmentCheck.show()),
-        vscode.commands.registerCommand('dotnetX86.generateLaunchJson', generateLaunchJsonCommand),
-        vscode.commands.registerCommand('dotnetX86.gettingStarted', () =>
-            vscode.commands.executeCommand('workbench.action.openWalkthrough', `${context.extension.id}#dotnetX86.gettingStarted`, false)),
-        vscode.commands.registerCommand('dotnetX86.showHeapSnapshots', () => heapSnapshots.show()),
-        vscode.commands.registerCommand('dotnetX86.takeHeapSnapshot', () => heapSnapshots.take()),
-        vscode.commands.registerCommand('dotnetX86.thawThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, false)),
-        vscode.commands.registerCommand('dotnetX86.downloadSymbols', (module?: { name?: string; path?: string }) => symbolServer.download(module)),
-        vscode.commands.registerCommand('dotnetX86.clearDownloadedSymbols', () => symbolServer.clearCache()),
-        vscode.commands.registerCommand('dotnetX86.viewString', viewStringCommand),
-        vscode.commands.registerCommand('dotnetX86.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
-        vscode.commands.registerCommand('dotnetX86.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),
+        vscode.commands.registerCommand('netdbg.checkEnvironment', () => environmentCheck.show()),
+        vscode.commands.registerCommand('netdbg.generateLaunchJson', generateLaunchJsonCommand),
+        vscode.commands.registerCommand('netdbg.gettingStarted', () =>
+            vscode.commands.executeCommand('workbench.action.openWalkthrough', `${context.extension.id}#netdbg.gettingStarted`, false)),
+        vscode.commands.registerCommand('netdbg.showHeapSnapshots', () => heapSnapshots.show()),
+        vscode.commands.registerCommand('netdbg.takeHeapSnapshot', () => heapSnapshots.take()),
+        vscode.commands.registerCommand('netdbg.thawThread', (arg?: { threadId?: number; sessionId?: string }) => parallelStacks.setFrozen(arg, false)),
+        vscode.commands.registerCommand('netdbg.downloadSymbols', (module?: { name?: string; path?: string }) => symbolServer.download(module)),
+        vscode.commands.registerCommand('netdbg.clearDownloadedSymbols', () => symbolServer.clearCache()),
+        vscode.commands.registerCommand('netdbg.viewString', viewStringCommand),
+        vscode.commands.registerCommand('netdbg.takeSnapshot', (arg) => takeSnapshotCommand(snapshots, arg)),
+        vscode.commands.registerCommand('netdbg.compareWithSnapshot', (arg) => compareWithSnapshotCommand(snapshots, arg)),
         vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshots),
         memory,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, memory),
-        vscode.commands.registerCommand('dotnetX86.showMemoryGraph', () => memory.show()),
+        vscode.commands.registerCommand('netdbg.showMemoryGraph', () => memory.show()),
         vscode.languages.registerInlineValuesProvider('csharp', new CSharpInlineValuesProvider()),
         valueTracker,
-        vscode.commands.registerCommand('dotnetX86.trackValue', () => valueTracker.addTracker()),
-        vscode.commands.registerCommand('dotnetX86.showValueTrend', () => valueTracker.show()),
-        vscode.commands.registerCommand('dotnetX86.startTimer', () => valueTracker.addTimerStart()),
-        vscode.commands.registerCommand('dotnetX86.endTimer', () => valueTracker.addTimerEnd()),
+        vscode.commands.registerCommand('netdbg.trackValue', () => valueTracker.addTracker()),
+        vscode.commands.registerCommand('netdbg.showValueTrend', () => valueTracker.show()),
+        vscode.commands.registerCommand('netdbg.startTimer', () => valueTracker.addTimerStart()),
+        vscode.commands.registerCommand('netdbg.endTimer', () => valueTracker.addTimerEnd()),
         stepHistory,
-        vscode.window.createTreeView('dotnetX86.stepHistory', { treeDataProvider: stepHistory }),
+        vscode.window.createTreeView('netdbg.stepHistory', { treeDataProvider: stepHistory }),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, stepHistory),
-        vscode.commands.registerCommand('dotnetX86.clearStepHistory', () => stepHistory.clear()),
-        vscode.commands.registerCommand('dotnetX86.viewAsTable', viewAsTableCommand),
-        vscode.commands.registerCommand('dotnetX86.viewAsImage', viewAsImageCommand),
+        vscode.commands.registerCommand('netdbg.clearStepHistory', () => stepHistory.clear()),
+        vscode.commands.registerCommand('netdbg.viewAsTable', viewAsTableCommand),
+        vscode.commands.registerCommand('netdbg.viewAsImage', viewAsImageCommand),
         moduleList,
-        vscode.window.createTreeView('dotnetX86.modules', { treeDataProvider: moduleList }),
+        vscode.window.createTreeView('netdbg.modules', { treeDataProvider: moduleList }),
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, moduleList),
-        vscode.commands.registerCommand('dotnetX86.copyModulePath', copyModulePath),
-        vscode.commands.registerCommand('dotnetX86.revealModule', revealModule),
+        vscode.commands.registerCommand('netdbg.copyModulePath', copyModulePath),
+        vscode.commands.registerCommand('netdbg.revealModule', revealModule),
         perfTips,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, perfTips),
         coverage,
         autos,
-        vscode.window.createTreeView('dotnetX86.autos', { treeDataProvider: autos }),
+        vscode.window.createTreeView('netdbg.autos', { treeDataProvider: autos }),
         breakpointCommands,
-        vscode.commands.registerCommand('dotnetX86.addTemporaryBreakpoint', () => breakpointCommands.addTemporary()),
-        vscode.commands.registerCommand('dotnetX86.addDependentBreakpoint', () => breakpointCommands.addDependent()),
-        vscode.commands.registerCommand('dotnetX86.addWhenChangedBreakpoint', () => breakpointCommands.addWhenChanged()),
-        vscode.commands.registerCommand('dotnetX86.addCallerBreakpoint', () => breakpointCommands.addCallerFiltered()),
+        vscode.commands.registerCommand('netdbg.addTemporaryBreakpoint', () => breakpointCommands.addTemporary()),
+        vscode.commands.registerCommand('netdbg.addDependentBreakpoint', () => breakpointCommands.addDependent()),
+        vscode.commands.registerCommand('netdbg.addWhenChangedBreakpoint', () => breakpointCommands.addWhenChanged()),
+        vscode.commands.registerCommand('netdbg.addCallerBreakpoint', () => breakpointCommands.addCallerFiltered()),
         pinnedValues,
-        vscode.commands.registerCommand('dotnetX86.pinValue', () => pinnedValues.pin()),
-        vscode.commands.registerCommand('dotnetX86.unpinValue', () => pinnedValues.unpin()),
-        vscode.commands.registerCommand('dotnetX86.clearPinnedValues', () => pinnedValues.clear()),
+        vscode.commands.registerCommand('netdbg.pinValue', () => pinnedValues.pin()),
+        vscode.commands.registerCommand('netdbg.unpinValue', () => pinnedValues.unpin()),
+        vscode.commands.registerCommand('netdbg.clearPinnedValues', () => pinnedValues.clear()),
         controlTree,
         controlView,
-        vscode.commands.registerCommand('dotnetX86.refreshControlTree', () => controlTree.refresh()),
-        vscode.commands.registerCommand('dotnetX86.dumpControl', (node: ControlNode) => dumpExpressionCommand(node?.expression)),
+        vscode.commands.registerCommand('netdbg.refreshControlTree', () => controlTree.refresh()),
+        vscode.commands.registerCommand('netdbg.dumpControl', (node: ControlNode) => dumpExpressionCommand(node?.expression)),
         highlighter,
-        vscode.commands.registerCommand('dotnetX86.breakOnControlEvent', (node?: ControlNode) => controlTree.breakOnEvent(node ?? controlView.selection[0])),
-        vscode.commands.registerCommand('dotnetX86.editControlProperty', (node?: ControlNode) => controlTree.editProperty(node ?? controlView.selection[0])),
-        vscode.commands.registerCommand('dotnetX86.highlightControl', (node?: ControlNode) => controlTree.highlight(node ?? controlView.selection[0], highlighter)),
-        vscode.commands.registerCommand('dotnetX86.copyControlExpression', (node: ControlNode) => node && vscode.env.clipboard.writeText(node.expression)),
+        vscode.commands.registerCommand('netdbg.breakOnControlEvent', (node?: ControlNode) => controlTree.breakOnEvent(node ?? controlView.selection[0])),
+        vscode.commands.registerCommand('netdbg.editControlProperty', (node?: ControlNode) => controlTree.editProperty(node ?? controlView.selection[0])),
+        vscode.commands.registerCommand('netdbg.highlightControl', (node?: ControlNode) => controlTree.highlight(node ?? controlView.selection[0], highlighter)),
+        vscode.commands.registerCommand('netdbg.copyControlExpression', (node: ControlNode) => node && vscode.env.clipboard.writeText(node.expression)),
         dataBindings,
         // From a control: that control and the ones inside it; from the view title or the Command Palette: every open form.
-        vscode.commands.registerCommand('dotnetX86.showDataBindings', (node?: ControlNode) => dataBindings.show(node)),
+        vscode.commands.registerCommand('netdbg.showDataBindings', (node?: ControlNode) => dataBindings.show(node)),
         exceptionLog,
         exceptionView,
-        vscode.commands.registerCommand('dotnetX86.clearExceptionLog', () => exceptionLog.clear()),
+        vscode.commands.registerCommand('netdbg.clearExceptionLog', () => exceptionLog.clear()),
         evidence,
-        vscode.commands.registerCommand('dotnetX86.captureEvidence', () => evidence.capture()),
+        vscode.commands.registerCommand('netdbg.captureEvidence', () => evidence.capture()),
         eventTrace,
         eventTraceView,
-        vscode.commands.registerCommand('dotnetX86.traceControlEvents', (node?: ControlNode) => controlTree.traceEvents(node ?? controlView.selection[0])),
-        vscode.commands.registerCommand('dotnetX86.clearEventTrace', () => eventTrace.clear()),
-        vscode.commands.registerCommand('dotnetX86.exportEventTrace', () => eventTrace.export()),
+        vscode.commands.registerCommand('netdbg.traceControlEvents', (node?: ControlNode) => controlTree.traceEvents(node ?? controlView.selection[0])),
+        vscode.commands.registerCommand('netdbg.clearEventTrace', () => eventTrace.clear()),
+        vscode.commands.registerCommand('netdbg.exportEventTrace', () => eventTrace.export()),
         sqlLog,
         sqlView,
-        vscode.commands.registerCommand('dotnetX86.clearSqlLog', () => sqlLog.clear()),
-        vscode.commands.registerCommand('dotnetX86.exportSqlLog', () => sqlLog.export()),
-        vscode.commands.registerCommand('dotnetX86.copySqlWithValues', (entry) => sqlLog.copy(entry, true)),
-        vscode.commands.registerCommand('dotnetX86.copySql', (entry) => sqlLog.copy(entry, false)),
-        vscode.commands.registerCommand('dotnetX86.openSql', (entry) => sqlLog.open(entry)),
+        vscode.commands.registerCommand('netdbg.clearSqlLog', () => sqlLog.clear()),
+        vscode.commands.registerCommand('netdbg.exportSqlLog', () => sqlLog.export()),
+        vscode.commands.registerCommand('netdbg.copySqlWithValues', (entry) => sqlLog.copy(entry, true)),
+        vscode.commands.registerCommand('netdbg.copySql', (entry) => sqlLog.copy(entry, false)),
+        vscode.commands.registerCommand('netdbg.openSql', (entry) => sqlLog.open(entry)),
         exceptionSettings,
         exceptionSettingsView,
-        vscode.commands.registerCommand('dotnetX86.addExceptionType', () => exceptionSettings.addType()),
-        vscode.commands.registerCommand('dotnetX86.removeExceptionType', (node) => exceptionSettings.removeType(node)),
-        vscode.commands.registerCommand('dotnetX86.uncheckExceptionTypes', () => exceptionSettings.uncheckAll()),
-        vscode.commands.registerCommand('dotnetX86.breakOnExceptionType', (entry?: { typeName?: string }) => entry?.typeName && exceptionSettings.addType(entry.typeName)),
+        vscode.commands.registerCommand('netdbg.addExceptionType', () => exceptionSettings.addType()),
+        vscode.commands.registerCommand('netdbg.removeExceptionType', (node) => exceptionSettings.removeType(node)),
+        vscode.commands.registerCommand('netdbg.uncheckExceptionTypes', () => exceptionSettings.uncheckAll()),
+        vscode.commands.registerCommand('netdbg.breakOnExceptionType', (entry?: { typeName?: string }) => entry?.typeName && exceptionSettings.addType(entry.typeName)),
         sessionReport,
         vscode.debug.registerDebugAdapterTrackerFactory(DEBUG_TYPE, sessionReport),
-        vscode.commands.registerCommand('dotnetX86.exportSessionReport', () => sessionReport.export()),
+        vscode.commands.registerCommand('netdbg.exportSessionReport', () => sessionReport.export()),
         mcp,
-        vscode.commands.registerCommand('dotnetX86.copyMcpConnectionSettings', () => mcp.copyConnectionSettings()),
-        vscode.commands.registerCommand('dotnetX86.registerMcpServer', () => mcp.registerWithClients()),
+        vscode.commands.registerCommand('netdbg.copyMcpConnectionSettings', () => mcp.copyConnectionSettings()),
+        vscode.commands.registerCommand('netdbg.registerMcpServer', () => mcp.registerWithClients()),
         editAndContinue,
-        vscode.commands.registerCommand('dotnetX86.applyCodeChanges', () => editAndContinue.applyCommand()),
+        vscode.commands.registerCommand('netdbg.applyCodeChanges', () => editAndContinue.applyCommand()),
     );
 }
 

@@ -1,10 +1,10 @@
-.NET x86 Debugger - Third Party Notices
+netdbg - Third Party Notices
 =======================================
 
-This extension bundles its debug engine, dotnet-x86dbg (x86 and x64 builds), with the Rust crates statically linked into it
+This extension bundles its debug engine, netdbg (x86 and x64 builds), with the Rust crates statically linked into it
 and the .NET debugging shim (dbgshim.dll). The original copyright notices and license terms are reproduced below.
 -------------------------------------------------------------------------------
-serde_json 1.0.154 (statically linked into dotnet-x86dbg; licensed under MIT OR Apache-2.0, used under MIT)
+serde_json 1.0.154 (statically linked into netdbg; licensed under MIT OR Apache-2.0, used under MIT)
 https://github.com/serde-rs/json
 -------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 -------------------------------------------------------------------------------
-serde_core 1.0.229 (statically linked into dotnet-x86dbg; licensed under MIT OR Apache-2.0, used under MIT)
+serde_core 1.0.229 (statically linked into netdbg; licensed under MIT OR Apache-2.0, used under MIT)
 https://github.com/serde-rs/serde
 -------------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 -------------------------------------------------------------------------------
-itoa 1.0.19 (statically linked into dotnet-x86dbg; licensed under MIT OR Apache-2.0, used under MIT)
+itoa 1.0.19 (statically linked into netdbg; licensed under MIT OR Apache-2.0, used under MIT)
 https://github.com/dtolnay/itoa
 -------------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 -------------------------------------------------------------------------------
-memchr 2.8.3 (statically linked into dotnet-x86dbg; licensed under Unlicense OR MIT, used under MIT)
+memchr 2.8.3 (statically linked into netdbg; licensed under Unlicense OR MIT, used under MIT)
 https://github.com/BurntSushi/memchr
 -------------------------------------------------------------------------------
 
@@ -118,7 +118,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 -------------------------------------------------------------------------------
-zmij 1.0.23 (statically linked into dotnet-x86dbg; licensed under MIT, used under MIT)
+zmij 1.0.23 (statically linked into netdbg; licensed under MIT, used under MIT)
 https://github.com/dtolnay/zmij
 -------------------------------------------------------------------------------
 

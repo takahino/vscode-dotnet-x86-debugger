@@ -44,21 +44,21 @@ describe('mapSourcePaths', () => {
 
 describe('object IDs', () => {
     it('turns $N into the identifier netcoredbg resolves, outside string literals', () => {
-        assert.equal(toDebuggerObjectIds('$1.Count + $12'), '__DOTNETX86_OBJID_1.Count + __DOTNETX86_OBJID_12');
-        assert.equal(toDebuggerObjectIds('"$1" + \'$\' + $2'), '"$1" + \'$\' + __DOTNETX86_OBJID_2');
+        assert.equal(toDebuggerObjectIds('$1.Count + $12'), '__NETDBG_OBJID_1.Count + __NETDBG_OBJID_12');
+        assert.equal(toDebuggerObjectIds('"$1" + \'$\' + $2'), '"$1" + \'$\' + __NETDBG_OBJID_2');
         assert.equal(toDebuggerObjectIds('x$1 + $exception'), 'x$1 + $exception');
     });
 
     it('shows the identifier as $N again in what comes back', () => {
-        assert.equal(toClientObjectIds('__DOTNETX86_OBJID_1._items'), '$1._items');
-        const response = responseWithClientObjectIds({ type: 'response', message: 'no __DOTNETX86_OBJID_9', body: { variables: [{ evaluateName: '__DOTNETX86_OBJID_1.a' }] } });
+        assert.equal(toClientObjectIds('__NETDBG_OBJID_1._items'), '$1._items');
+        const response = responseWithClientObjectIds({ type: 'response', message: 'no __NETDBG_OBJID_9', body: { variables: [{ evaluateName: '__NETDBG_OBJID_1.a' }] } });
         assert.equal(response.message, 'no $9');
         assert.equal(response.body.variables[0].evaluateName, '$1.a');
     });
 
     it('rewrites the expressions of evaluate, setExpression and breakpoint conditions only', () => {
-        assert.equal(requestWithDebuggerObjectIds('evaluate', { expression: '$1' }).expression, '__DOTNETX86_OBJID_1');
-        assert.equal(requestWithDebuggerObjectIds('setBreakpoints', { breakpoints: [{ line: 1, condition: 'x == $2' }] }).breakpoints[0].condition, 'x == __DOTNETX86_OBJID_2');
+        assert.equal(requestWithDebuggerObjectIds('evaluate', { expression: '$1' }).expression, '__NETDBG_OBJID_1');
+        assert.equal(requestWithDebuggerObjectIds('setBreakpoints', { breakpoints: [{ line: 1, condition: 'x == $2' }] }).breakpoints[0].condition, 'x == __NETDBG_OBJID_2');
         const other = { expression: '$1' };
         assert.equal(requestWithDebuggerObjectIds('completions', other), other);
     });

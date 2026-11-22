@@ -93,7 +93,7 @@ export async function generateLaunchJsonCommand(): Promise<void> {
     if (needsFix) {
         const pick = await vscode.window.showWarningMessage(`${message} ${vscode.l10n.t('Some projects need a change before they can be debugged as x86.')}`, check);
         if (pick === check) {
-            await vscode.commands.executeCommand('dotnetX86.checkEnvironment');
+            await vscode.commands.executeCommand('netdbg.checkEnvironment');
         }
     } else {
         void vscode.window.showInformationMessage(message);

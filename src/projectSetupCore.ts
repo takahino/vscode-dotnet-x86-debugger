@@ -144,7 +144,7 @@ export function launchConfigurations(
             const program = candidates.find((c) => exists(path.join(dir, c))) ?? candidates[0];
             configs.push({
                 name: several && tfm ? `${project.name} (${tfm}, x86)` : `${project.name} (x86)`,
-                type: 'dotnet-x86',
+                type: 'netdbg',
                 request: 'launch',
                 ...(task ? { preLaunchTask: task } : {}),
                 program: `${base}/${program}`,
@@ -154,7 +154,7 @@ export function launchConfigurations(
             });
         }
     }
-    configs.push({ name: 'Attach (.NET process)', type: 'dotnet-x86', request: 'attach', processId: '${command:pickProcess}' });
+    configs.push({ name: 'Attach (.NET process)', type: 'netdbg', request: 'attach', processId: '${command:pickProcess}' });
     return configs;
 }
 

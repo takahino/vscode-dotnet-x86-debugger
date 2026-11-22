@@ -136,7 +136,7 @@ export function buildReport(data: ReportData, t: Translate, relative: (p: string
         lines.push(table([t('Module with symbols'), t('Path')], withSymbols.map((m) => [m.name, m.path ? code(m.path) : ''])));
     }
 
-    lines.push('', `---`, t('Created by .NET x86 Debugger at {0}.', formatTime(data.createdAt, true)), '');
+    lines.push('', `---`, t('Created by netdbg at {0}.', formatTime(data.createdAt, true)), '');
     return lines.join('\n');
 }
 

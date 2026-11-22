@@ -10,18 +10,18 @@ import { DapProxy, ProxyOptions } from '../../dapProxy';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const REPO = path.resolve(__dirname, '..', '..', '..');
-/** DOTNETX86_E2E_ARCH=x64 runs the tests with the x64 engine against the apps built for x64 (default x86). */
-export const ARCH: 'x86' | 'x64' = process.env.DOTNETX86_E2E_ARCH === 'x64' ? 'x64' : 'x86';
-/** DOTNETX86_E2E_FRAMEWORK=net48 builds the apps for .NET Framework 4.8 (default: as their projects say, .NET 10). */
-export const FRAMEWORK: 'net48' | undefined = process.env.DOTNETX86_E2E_FRAMEWORK === 'net48' ? 'net48' : undefined;
-// DOTNETX86_E2E_DEBUGGER points the same tests at another build of the engine (for example the engine repository's dist).
-export const ENGINE = process.env.DOTNETX86_E2E_DEBUGGER || path.join(REPO, 'debugger', `dotnet-x86dbg-${ARCH}`, 'dotnet-x86dbg.exe');
+/** NETDBG_E2E_ARCH=x64 runs the tests with the x64 engine against the apps built for x64 (default x86). */
+export const ARCH: 'x86' | 'x64' = process.env.NETDBG_E2E_ARCH === 'x64' ? 'x64' : 'x86';
+/** NETDBG_E2E_FRAMEWORK=net48 builds the apps for .NET Framework 4.8 (default: as their projects say, .NET 10). */
+export const FRAMEWORK: 'net48' | undefined = process.env.NETDBG_E2E_FRAMEWORK === 'net48' ? 'net48' : undefined;
+// NETDBG_E2E_DEBUGGER points the same tests at another build of the engine (for example the engine repository's dist).
+export const ENGINE = process.env.NETDBG_E2E_DEBUGGER || path.join(REPO, 'debugger', `netdbg-${ARCH}`, 'netdbg.exe');
 const APPS = path.join(REPO, 'test', 'apps');
-const OUT = path.join(os.tmpdir(), 'dotnetx86-e2e', FRAMEWORK ? `-${FRAMEWORK}` : ARCH);
+const OUT = path.join(os.tmpdir(), 'netdbg-e2e', FRAMEWORK ? `-${FRAMEWORK}` : ARCH);
 
 
 /** Why the E2E tests cannot run here, or false when they can. */
-export const e2eSkip: string | false = fs.existsSync(ENGINE) ? false : `the debugger is missing (${ENGINE}): run scripts/build-engine.ps1, or fix DOTNETX86_E2E_DEBUGGER`;
+export const e2eSkip: string | false = fs.existsSync(ENGINE) ? false : `the debugger is missing (${ENGINE}): run scripts/build-engine.ps1, or fix NETDBG_E2E_DEBUGGER`;
 
 const built = new Map<string, string>();
 
@@ -106,7 +106,7 @@ export class DapSession {
 
     /** initialize, launch, the breakpoints by file and the exception filters, then configurationDone (as VS Code does). */
     async launch(program: string, breakpoints: Record<string, any[]> = {}, extra: Record<string, unknown> = {}, exceptionFilters: Record<string, unknown> = { filters: [] }): Promise<void> {
-        await this.request('initialize', { adapterID: 'dotnet-x86', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
+        await this.request('initialize', { adapterID: 'netdbg', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
         const launched = await this.request('launch', { program, cwd: path.dirname(program), args: [], ...extra });
         if (!launched.success) {
             throw new Error(`launch failed: ${launched.message}`);

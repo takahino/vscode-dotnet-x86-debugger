@@ -4,13 +4,13 @@
 
 前提: Node.js、Git、.NET SDK（テスト アプリ用）、デバッグ エンジン用に Rust（`rustup`。ターゲット
 `i686-pc-windows-msvc` と `x86_64-pc-windows-msvc`）と MSVC のリンカー（Visual Studio Build Tools の「C++ によるデスクトップ開発」）。
-デバッグ エンジン **dotnet-x86dbg** は別のリポジトリです。このリポジトリの隣（`..\dotnet-x86dbg`）に clone してください。
+デバッグ エンジン **netdbg** は別のリポジトリです。このリポジトリの隣（`..\dotnet-x86dbg`）に clone してください。
 
 ```powershell
-# デバッグ エンジンをビルド（x86 と x64。debugger\dotnet-x86dbg-x86 / -x64 に配置）し、コンパイル・VSIX 作成・VS Code へのインストールまで行う
+# デバッグ エンジンをビルド（x86 と x64。debugger\netdbg-x86 / -x64 に配置）し、コンパイル・VSIX 作成・VS Code へのインストールまで行う
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
-# VSIX の作成のみ（out\dotnet-x86-debugger.vsix）
+# VSIX の作成のみ（out\netdbg.vsix）
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 
 # エンジンのビルドと配置だけ。別の場所なら -EngineRepo、ビルドせずに dist\ を写すだけなら -SkipBuild
@@ -18,9 +18,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..
 ```
 
 `scripts\build-engine.ps1` は、エンジンの `build.ps1`（`dbgshim.dll` を版を固定して NuGet から取得します）を呼び、両方のビット数の
-`dotnet-x86dbg.exe`、`dbgshim.dll`、エディット コンティニュの補助（`encdelta\`。C#。.NET SDK 9 以降でビルドし、デバッグのときは利用者の SDK の Roslyn で動きます）を写します。ICorDebug はプログラムと同じビット数のデバッガーでしか動かないため、拡張はセッションごとに
+`netdbg.exe`、`dbgshim.dll`、エディット コンティニュの補助（`encdelta\`。C#。.NET SDK 9 以降でビルドし、デバッグのときは利用者の SDK の Roslyn で動きます）を写します。ICorDebug はプログラムと同じビット数のデバッガーでしか動かないため、拡張はセッションごとに
 x86 か x64 のエンジンを起動します（`configProvider.ts` の `ENGINE_ARCHITECTURE_KEY`）。CI とリリースのワークフローは
-`<owner>/dotnet-x86dbg` を `ENGINE_REF` の版で取得します。エンジンを新しくするときは、`ENGINE_REF` を書き換えて E2E テストを実行します。
+`<owner>/netdbg` を `ENGINE_REF` の版で取得します。エンジンを新しくするときは、`ENGINE_REF` を書き換えて E2E テストを実行します。
 
 拡張機能自体をデバッグするには、このフォルダを VS Code で開き **Run Extension**（F5）を実行します。
 
@@ -36,12 +36,12 @@ x86 か x64 のエンジンを起動します（`configProvider.ts` の `ENGINE_
 ```powershell
 npm test          # デバッガーを使わないロジックの単体テスト（高速）
 npm run test:e2e  # E2E テスト: 本物のエンジンで test\apps のアプリをデバッグする（x86）
-$env:DOTNETX86_E2E_ARCH = 'x64'; npm run test:e2e   # 同じものを x64 のエンジンと、x64 でビルドしたアプリで
+$env:NETDBG_E2E_ARCH = 'x64'; npm run test:e2e   # 同じものを x64 のエンジンと、x64 でビルドしたアプリで
 ```
 
 E2E テストには、エンジン（`scripts\build-engine.ps1`）、.NET SDK、
 試すビット数の .NET（Desktop）ランタイムが必要です。停止する行はテスト アプリの `// @名前` マーカーで探します。
-デスクトップの無い環境では `DOTNETX86_SKIP_UI_TESTS=1` で WinForms のテストを飛ばせます。`DOTNETX86_E2E_DEBUGGER` で、
+デスクトップの無い環境では `NETDBG_SKIP_UI_TESTS=1` で WinForms のテストを飛ばせます。`NETDBG_E2E_DEBUGGER` で、
 別のエンジン（見比べるための netcoredbg など）に対して実行できます。[CI ワークフロー](.github/workflows/ci.yml) が push のたびに、
 単体テストと両方のビット数の E2E テストを実行します。
 
@@ -62,5 +62,5 @@ DAP を返すエンジンの代役 `fakeDebugger.ts` に対してテストし、
    ```
 
 [Release ワークフロー](.github/workflows/release.yml)が `ENGINE_REF` のデバッグ エンジン（x86 と x64）のビルド・VSIX の作成を行い、
-`dotnet-x86-debugger-<version>.vsix` と `install-vsix.ps1` を添付した GitHub Release を作成します。
+`netdbg-<version>.vsix` と `install-vsix.ps1` を添付した GitHub Release を作成します。
 手動実行（*workflow_dispatch*）の場合は、ファイルをビルド成果物 (artifact) としてアップロードするだけです。

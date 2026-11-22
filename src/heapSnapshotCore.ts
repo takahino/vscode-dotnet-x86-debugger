@@ -2,9 +2,9 @@
 // No vscode dependency, so it can be unit tested.
 
 /** Custom DAP request (netcoredbg patch 0011): `{ types: HeapType[] }` of the stopped program, largest first. */
-export const HEAP_STATS_REQUEST = 'dotnetX86.heapStats';
+export const HEAP_STATS_REQUEST = 'netdbg.heapStats';
 
-/** One type on the GC heap, as `dotnetX86.heapStats` returns it. */
+/** One type on the GC heap, as `netdbg.heapStats` returns it. */
 export interface HeapType {
     name: string;
     count: number;

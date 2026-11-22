@@ -6,7 +6,7 @@ import { after, before, describe, it } from 'node:test';
 import { DataBindings, readDataBindings } from '../../dataBindingsCore';
 import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
-describe('data bindings', { skip: e2eSkip || (process.env.DOTNETX86_SKIP_UI_TESTS ? 'DOTNETX86_SKIP_UI_TESTS is set' : false) }, () => {
+describe('data bindings', { skip: e2eSkip || (process.env.NETDBG_SKIP_UI_TESTS ? 'NETDBG_SKIP_UI_TESTS is set' : false) }, () => {
     let s: DapSession;
     let bindings: DataBindings;
 

@@ -2,7 +2,7 @@
 
   <!-- PDB embedded in the DLL, with deterministic "/_/" paths, for the PDB reader and source mapping tests. -->
   <PropertyGroup>
-    <!-- net48 too: the E2E tests also run against .NET Framework apps (DOTNETX86_E2E_FRAMEWORK=net48). -->
+    <!-- net48 too: the E2E tests also run against .NET Framework apps (NETDBG_E2E_FRAMEWORK=net48). -->
     <TargetFrameworks>net10.0;net48</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <DebugType>embedded</DebugType>

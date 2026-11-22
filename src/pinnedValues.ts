@@ -11,7 +11,7 @@ interface Pin {
     error?: boolean;
 }
 
-const STATE_KEY = 'dotnetX86.pinnedValues';
+const STATE_KEY = 'netdbg.pinnedValues';
 /** Long values (e.g. big strings) would push everything else off screen. */
 const MAX_VALUE_LENGTH = 120;
 

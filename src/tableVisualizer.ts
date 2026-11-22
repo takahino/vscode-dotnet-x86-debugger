@@ -94,7 +94,7 @@ async function readDataTable(target: Target): Promise<{ table: Table; truncated:
 
 function showTable(expression: string, table: Table, truncated: boolean): void {
     const panel = vscode.window.createWebviewPanel(
-        'dotnetX86.table',
+        'netdbg.table',
         vscode.l10n.t('Table: {0}', expression),
         { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
         { enableScripts: true },

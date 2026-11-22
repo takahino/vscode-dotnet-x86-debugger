@@ -81,18 +81,18 @@ function stringArray(value: unknown, where: string, output: vscode.OutputChannel
 }
 
 /**
- * sourceFileMap / sourceSearchPaths from launch.json merged over the dotnetX86.* settings (launch.json wins on the
+ * sourceFileMap / sourceSearchPaths from launch.json merged over the netdbg.* settings (launch.json wins on the
  * same prefix; folders from both are searched). VS Code substitutes variables in launch.json only, so the settings'
  * ${workspaceFolder} and ${userHome} are expanded here; relative folders are taken from the workspace folder.
  */
 function sourceMapSetup(session: vscode.DebugSession, output: vscode.OutputChannel): SourceMapSetup {
     const config = session.configuration;
     const folder = session.workspaceFolder?.uri.fsPath;
-    const settings = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri);
+    const settings = vscode.workspace.getConfiguration('netdbg', session.workspaceFolder?.uri);
     const expand = (s: string) => s.replace(/\$\{workspaceFolder\}/g, folder ?? '${workspaceFolder}').replace(/\$\{userHome\}/g, os.homedir());
     const absolute = (p: string) => (folder && !path.isAbsolute(p) ? path.resolve(folder, p) : p);
 
-    const fromSettings = stringMap(settings.get('sourceFileMap'), 'dotnetX86.sourceFileMap', output);
+    const fromSettings = stringMap(settings.get('sourceFileMap'), 'netdbg.sourceFileMap', output);
     const sourceFileMap: Record<string, string> = {};
     for (const [from, to] of Object.entries(fromSettings)) {
         sourceFileMap[from] = absolute(expand(to));
@@ -102,7 +102,7 @@ function sourceMapSetup(session: vscode.DebugSession, output: vscode.OutputChann
     }
     const sourceSearchPaths = [
         ...stringArray(config.sourceSearchPaths, 'sourceSearchPaths', output),
-        ...stringArray(settings.get('sourceSearchPaths'), 'dotnetX86.sourceSearchPaths', output).map(expand),
+        ...stringArray(settings.get('sourceSearchPaths'), 'netdbg.sourceSearchPaths', output).map(expand),
     ].map(absolute);
 
     const mapper = new SourcePathMapper({ sourceFileMap, sourceSearchPaths });
@@ -134,13 +134,13 @@ function sqlMethods(): string[] {
     if (!isEnabled('sqlLog')) {
         return [];
     }
-    const configured = vscode.workspace.getConfiguration('dotnetX86.sqlLog').get<unknown[]>('methods', []);
+    const configured = vscode.workspace.getConfiguration('netdbg.sqlLog').get<unknown[]>('methods', []);
     return configured.filter((m): m is string => typeof m === 'string' && /^[\w.]+\.\w+\.\w+$/.test(m.trim())).map((m) => m.trim());
 }
 
 /** The UI freeze watch settings (the engine watches the program's UI threads). */
 function uiFreezeSetting(): { enabled: boolean; thresholdMs: number } {
-    const config = vscode.workspace.getConfiguration('dotnetX86.uiFreeze');
+    const config = vscode.workspace.getConfiguration('netdbg.uiFreeze');
     return { enabled: config.get<boolean>('enabled', true), thresholdMs: Math.max(500, config.get<number>('thresholdMs', 2000)) };
 }
 
@@ -167,8 +167,8 @@ class ProxyAdapter implements vscode.DebugAdapter {
             {
                 env,
                 exceptionFilters: exceptionFilterTexts(),
-                exceptionLog: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('enabled', true),
-                exceptionSnapshot: vscode.workspace.getConfiguration('dotnetX86.exceptionLog').get<boolean>('captureLocals', true),
+                exceptionLog: vscode.workspace.getConfiguration('netdbg.exceptionLog').get<boolean>('enabled', true),
+                exceptionSnapshot: vscode.workspace.getConfiguration('netdbg.exceptionLog').get<boolean>('captureLocals', true),
                 findWriteSites,
                 gotoFailedMessage: vscode.l10n.t('The next statement can only be set to a line in the method that is executing, and not into or out of a catch / finally block.'),
                 sourceMapper: sourceMap.mapper,
@@ -178,7 +178,7 @@ class ProxyAdapter implements vscode.DebugAdapter {
                 sqlMethods: sqlMethods(),
                 freezeDescription: (ms) => vscode.l10n.t('UI not responding for {0} s', (ms / 1000).toFixed(1)),
                 uiFreeze: uiFreezeSetting(),
-                unsupportedEngineMessage: vscode.l10n.t('The debugger is not the bundled engine (dotnet-x86dbg): netcoredbg and other debuggers are no longer supported. Clear the setting dotnetX86.debuggerPath.'),
+                unsupportedEngineMessage: vscode.l10n.t('The debugger is not the bundled engine (netdbg): netcoredbg and other debuggers are no longer supported. Clear the setting netdbg.debuggerPath.'),
                 ...symbols,
             },
         );
@@ -195,13 +195,13 @@ class ProxyAdapter implements vscode.DebugAdapter {
 }
 
 /**
- * Folder (relative to the extension root) holding the bundled debug engine of a bitness (dotnet-x86dbg, with dbgshim.dll).
+ * Folder (relative to the extension root) holding the bundled debug engine of a bitness (netdbg, with dbgshim.dll).
  * ICorDebug needs a debugger of the same bitness as the program, so there is one engine for x86 and one for x64.
  */
 function bundledDebuggerDir(architecture: 'x86' | 'x64'): string {
-    return path.join('debugger', `dotnet-x86dbg-${architecture}`);
+    return path.join('debugger', `netdbg-${architecture}`);
 }
-const BUNDLED_DEBUGGER_EXE = 'dotnet-x86dbg.exe';
+const BUNDLED_DEBUGGER_EXE = 'netdbg.exe';
 
 export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     constructor(
@@ -225,7 +225,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
             args.push('--mcp-listen');
         }
         // With tracing on, the engine also writes its own log (flushed per line, so it survives a hang or crash).
-        if (vscode.workspace.getConfiguration('dotnetX86').get<boolean>('trace')) {
+        if (vscode.workspace.getConfiguration('netdbg').get<boolean>('trace')) {
             fs.mkdirSync(this.logDir, { recursive: true });
             const logFile = path.join(this.logDir, `${path.basename(debugger_, '.exe')}-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
             args.push(`--log=${logFile}`);
@@ -239,7 +239,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         if (symbolDirs.length) {
             env[SYMBOL_DIRS_ENV] = symbolDirs.join(path.delimiter);
         }
-        const sourceLink = vscode.workspace.getConfiguration('dotnetX86', session.workspaceFolder?.uri).get<boolean>('sourceLink.enabled', true)
+        const sourceLink = vscode.workspace.getConfiguration('netdbg', session.workspaceFolder?.uri).get<boolean>('sourceLink.enabled', true)
             ? { cacheRoot: this.caches.sources }
             : undefined;
         // The engine runs behind a DAP relay that adds what needs the workspace (see DapProxy).
@@ -256,12 +256,12 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
     }
 
     private locateDebugger(architecture: 'x86' | 'x64'): string {
-        // dotnetX86.debuggerPath is an x86 engine: x64 programs always use the bundled x64 engine.
-        const configured = architecture === 'x86' ? vscode.workspace.getConfiguration('dotnetX86').get<string>('debuggerPath') : undefined;
+        // netdbg.debuggerPath is an x86 engine: x64 programs always use the bundled x64 engine.
+        const configured = architecture === 'x86' ? vscode.workspace.getConfiguration('netdbg').get<string>('debuggerPath') : undefined;
         if (configured) {
             if (!fs.existsSync(configured)) {
                 throw new Error(
-                    vscode.l10n.t("The debug engine in the dotnetX86.debuggerPath setting was not found: {0}. Fix the path, or clear it to use the bundled one.", configured),
+                    vscode.l10n.t("The debug engine in the netdbg.debuggerPath setting was not found: {0}. Fix the path, or clear it to use the bundled one.", configured),
                 );
             }
             return configured;
@@ -269,7 +269,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const bundled = path.join(this.extensionPath, bundledDebuggerDir(architecture), BUNDLED_DEBUGGER_EXE);
         if (!fs.existsSync(bundled)) {
             throw new Error(
-                vscode.l10n.t("The bundled debug engine (dotnet-x86dbg, {0}) was not found: {1}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX.", architecture, bundled),
+                vscode.l10n.t("The bundled debug engine (netdbg, {0}) was not found: {1}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX.", architecture, bundled),
             );
         }
         return bundled;

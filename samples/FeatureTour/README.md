@@ -1,6 +1,6 @@
 # Feature Tour
 
-A WinForms app for trying every feature of the .NET x86 Debugger. One button is one demo; the lines to stop on are
+A WinForms app for trying every feature of the netdbg. One button is one demo; the lines to stop on are
 marked with `[n]` comments in [Demos.cs](Demos.cs). [日本語](README.jp.md)
 
 The same source is built for **.NET 10** and **.NET Framework 4.8** (both x86), so each demo can be tried on either runtime.

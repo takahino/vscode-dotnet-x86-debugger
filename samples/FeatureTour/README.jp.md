@@ -1,6 +1,6 @@
 # Feature Tour（機能ツアー）
 
-.NET x86 Debugger の機能をひととおり試せる WinForms アプリです。ボタン 1 つが 1 つのデモで、止める行は
+netdbg の機能をひととおり試せる WinForms アプリです。ボタン 1 つが 1 つのデモで、止める行は
 [Demos.cs](Demos.cs) の `[番号]` コメントで示しています。[English](README.md)
 
 同じソースを **.NET 10** と **.NET Framework 4.8**（どちらも x86）でビルドするので、各デモをどちらのランタイムでも試せます。

@@ -37,7 +37,7 @@ export class EnvironmentCheck implements vscode.Disposable {
 
     async show(): Promise<void> {
         if (!this.panel) {
-            this.panel = vscode.window.createWebviewPanel('dotnetX86.environment', vscode.l10n.t('Environment Check (.NET x86)'), vscode.ViewColumn.Active, { enableScripts: true });
+            this.panel = vscode.window.createWebviewPanel('netdbg.environment', vscode.l10n.t('Environment Check (.NET x86)'), vscode.ViewColumn.Active, { enableScripts: true });
             this.panel.onDidDispose(() => (this.panel = undefined));
             this.panel.webview.onDidReceiveMessage((m) => this.onMessage(m));
         }
@@ -78,9 +78,9 @@ export class EnvironmentCheck implements vscode.Disposable {
         }
         // One engine per bitness (the program's bitness picks it).
         for (const architecture of ['x86', 'x64']) {
-            const debuggerExe = path.join(this.extensionPath, 'debugger', `dotnet-x86dbg-${architecture}`, 'dotnet-x86dbg.exe');
+            const debuggerExe = path.join(this.extensionPath, 'debugger', `netdbg-${architecture}`, 'netdbg.exe');
             items.push(fs.existsSync(debuggerExe)
-                ? { level: 'ok', title: t('Bundled debugger (dotnet-x86dbg {0})', architecture), detail: debuggerExe }
+                ? { level: 'ok', title: t('Bundled debugger (netdbg {0})', architecture), detail: debuggerExe }
                 : { level: 'error', title: t('The bundled debugger is missing'), detail: t('{0} was not found. Reinstall the extension.', debuggerExe) });
         }
 
@@ -149,7 +149,7 @@ export class EnvironmentCheck implements vscode.Disposable {
                     : {
                         level: 'warning', title: t('No .NET x86 configuration in launch.json'),
                         detail: t('Generate one from the projects, with a build task.'),
-                        fixes: [{ label: t('Generate launch.json'), action: { type: 'command', command: 'dotnetX86.generateLaunchJson' } }],
+                        fixes: [{ label: t('Generate launch.json'), action: { type: 'command', command: 'netdbg.generateLaunchJson' } }],
                     });
             }
             sections.push({ title: t('Workspace: {0}', folder.name), items });
@@ -239,7 +239,7 @@ function page(sections: { title: string; items: Item[] }[], status: string): { h
   button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
   .bar { display: flex; gap: 12px; align-items: center; }
 </style></head><body>
-<h1>${esc(vscode.l10n.t('.NET x86 Debugger: Environment Check'))}</h1>
+<h1>${esc(vscode.l10n.t('netdbg: Environment Check'))}</h1>
 <div class="bar"><span>${esc(summary)}</span><button class="secondary" id="refresh">${esc(vscode.l10n.t('Check Again'))}</button></div>
 ${body}
 <script nonce="${nonce}">

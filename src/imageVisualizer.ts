@@ -22,7 +22,7 @@ export async function viewAsImageCommand(arg?: VariablesContextArg): Promise<voi
         return String(r?.result ?? '');
     };
 
-    const dir = path.join(os.tmpdir(), 'dotnetx86-images');
+    const dir = path.join(os.tmpdir(), 'netdbg-images');
     const png = path.join(dir, `${crypto.randomUUID()}.png`);
     try {
         const typeName = (await evaluate(`(${target.expression}).GetType().FullName`)).replace(/^"|"$/g, '');
@@ -51,7 +51,7 @@ export async function viewAsImageCommand(arg?: VariablesContextArg): Promise<voi
 }
 
 function show(expression: string, png: Buffer, size: { width: number; height: number }, info: [string, string][]): void {
-    const panel = vscode.window.createWebviewPanel('dotnetX86.image', vscode.l10n.t('Image: {0}', expression), vscode.ViewColumn.Beside, { enableScripts: true });
+    const panel = vscode.window.createWebviewPanel('netdbg.image', vscode.l10n.t('Image: {0}', expression), vscode.ViewColumn.Beside, { enableScripts: true });
     const nonce = crypto.randomUUID().replace(/-/g, '');
     const t = { fit: vscode.l10n.t('Fit'), actual: vscode.l10n.t('Actual size') };
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

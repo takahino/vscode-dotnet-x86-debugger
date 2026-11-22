@@ -82,8 +82,8 @@ export class SqlLog implements vscode.TreeDataProvider<Node>, vscode.Disposable 
         item.description = parts.filter(Boolean).join(' · ');
         item.tooltip = new vscode.MarkdownString().appendCodeblock(this.sqlWithValues(e), 'sql');
         item.iconPath = e.repeat >= REPEAT_WARNING ? new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground')) : new vscode.ThemeIcon('database');
-        item.contextValue = 'dotnetX86.sql';
-        item.command = { command: 'dotnetX86.openSql', title: vscode.l10n.t('Open SQL'), arguments: [e] };
+        item.contextValue = 'netdbg.sql';
+        item.command = { command: 'netdbg.openSql', title: vscode.l10n.t('Open SQL'), arguments: [e] };
         return item;
     }
 

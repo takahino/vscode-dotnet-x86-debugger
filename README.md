@@ -1,24 +1,24 @@
 <p align="center"><img src="media/icon.png" width="128" alt=""></p>
 
-<h1 align="center">.NET x86 Debugger</h1>
+<h1 align="center">netdbg</h1>
 
 <p align="center"><b>Debug 32-bit (x86) .NET and .NET Framework apps — WinForms included — in Visual Studio Code.</b></p>
 
-<p align="center"><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-dotnet-x86-debugger" alt="Release"></a> <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<p align="center"><a href="https://github.com/takahino/vscode-netdbg/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-netdbg" alt="Release"></a> <a href="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
 
-<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
+<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-netdbg/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
 
 ![Debugging a WinForms app: breakpoints, variables, call stack, exception log, step history](media/readme/debugging.png)
 
 The C# extension's debugger (vsdbg) ships only for x64 and arm64, so an app built with `<PlatformTarget>x86</PlatformTarget>`
-cannot be debugged in VS Code. This extension bundles its own debug engine for x86, **dotnet-x86dbg** (Rust, x86 and x64),
+cannot be debugged in VS Code. This extension bundles its own debug engine for x86, **netdbg** (Rust, x86 and x64),
 behind a relay that adds the Visual Studio features you miss — and a few Visual Studio does not have. The debugger itself
 uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET installed.
 
 ## Quick start
 
 1. Install the **.NET Desktop Runtime x86** (8 or later) from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet), and a .NET SDK.
-2. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
+2. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-netdbg/releases) and run **Extensions: Install from VSIX...**.
 3. Open your project folder and run **.NET x86: Getting Started** — or just press **F5**: launch.json and the build task are made from your `.csproj`.
 
 **.NET x86: Check Environment** tells you what is missing, and fixes the project file (x86, Portable PDB) with one click.
@@ -42,7 +42,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 
 ## Features
 
-★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
+★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-netdbg/usage.html).
 
 | Feature | What it does | Where |
 |---|---|---|
@@ -103,8 +103,8 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 
 ## Installation
 
-1. Download `dotnet-x86-debugger-<version>.vsix` and `install-vsix.ps1` from
-   [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) into the same folder.
+1. Download `netdbg-<version>.vsix` and `install-vsix.ps1` from
+   [Releases](https://github.com/takahino/vscode-netdbg/releases) into the same folder.
 2. Run:
 
    ```powershell
@@ -133,7 +133,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
    ```jsonc
    {
      "name": ".NET x86 Launch",
-     "type": "dotnet-x86",
+     "type": "netdbg",
      "request": "launch",
      "preLaunchTask": "build",
      "program": "${workspaceFolder}/bin/x86/Debug/net10.0-windows/MyApp.exe",
@@ -148,7 +148,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
    ```jsonc
    {
      "name": ".NET x86 Attach",
-     "type": "dotnet-x86",
+     "type": "netdbg",
      "request": "attach",
      "processId": "${command:pickProcess}"
    }
@@ -160,7 +160,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
    ```jsonc
    {
      "name": ".NET x86 Attach (wait for process)",
-     "type": "dotnet-x86",
+     "type": "netdbg",
      "request": "attach",
      "processName": "MyApp",
      "waitTimeout": 120
@@ -198,29 +198,29 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 
 | Setting | Description |
 |---|---|
-| `dotnetX86.debuggerPath` | For x86 programs, use another build of the x86 debug engine (`dotnet-x86dbg.exe`) instead of the bundled one. |
-| `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
-| `dotnetX86.sourceLink.enabled` | Download sources through the PDB's Source Link map (default `true`). |
-| `dotnetX86.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
-| `dotnetX86.trace` | Troubleshooting: log the debug adapter traffic to the *.NET x86 Debugger* output channel and write a log of the debug engine (its path is shown there). |
-| `dotnetX86.mcp.enabled` | Let AI clients debug through MCP (default `false`; see [AI clients](#ai-clients-mcp)). |
-| `dotnetX86.editAndContinue.enabled` | Edit and Continue (default `true`; see [Edit and Continue](#edit-and-continue)). |
-| `dotnetX86.editAndContinue.applyOnSave` | Apply the edit when a C# source is saved while debugging (default `true`). |
-| `dotnetX86.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
-| `dotnetX86.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
-| `dotnetX86.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
-| `dotnetX86.sqlLog.methods` | Provider methods the SQL log reads commands at, as `Namespace.Type.Method` (default: ODP.NET, SqlClient, OleDb, Odbc). |
-| `dotnetX86.evidence.folder` | Where Capture Evidence saves, relative to the workspace folder (default `evidence`). |
-| `dotnetX86.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
-| `dotnetX86.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
-| `dotnetX86.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
-| `dotnetX86.coverage.enabled` | Count code coverage in new debug sessions, unless launch.json sets `coverage` (default `false`). |
-| `dotnetX86.coverage.folder` | The folder (absolute) for the Cobertura XML (default `%LOCALAPPDATA%\dotnet-x86dbg\coverage`). |
-| `dotnetX86.coverage.showInEditor` | Color the lines in the editor while counting coverage (default `true`). |
-| `dotnetX86.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
-| `dotnetX86.heapSnapshot.collectGarbage` | Run a garbage collection right before each heap snapshot (default `true`). |
-| `dotnetX86.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
-| `dotnetX86.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
+| `netdbg.debuggerPath` | For x86 programs, use another build of the x86 debug engine (`netdbg.exe`) instead of the bundled one. |
+| `netdbg.sourceFileMap` / `netdbg.sourceSearchPaths` | `sourceFileMap` / `sourceSearchPaths` for every configuration (`${workspaceFolder}` can be used). |
+| `netdbg.sourceLink.enabled` | Download sources through the PDB's Source Link map (default `true`). |
+| `netdbg.symbolServers` | Symbol servers for **Download Symbols** (default NuGet and Microsoft). |
+| `netdbg.trace` | Troubleshooting: log the debug adapter traffic to the *netdbg* output channel and write a log of the debug engine (its path is shown there). |
+| `netdbg.mcp.enabled` | Let AI clients debug through MCP (default `false`; see [AI clients](#ai-clients-mcp)). |
+| `netdbg.editAndContinue.enabled` | Edit and Continue (default `true`; see [Edit and Continue](#edit-and-continue)). |
+| `netdbg.editAndContinue.applyOnSave` | Apply the edit when a C# source is saved while debugging (default `true`). |
+| `netdbg.stepHistory.enabled` | Record every stop in the Step History view (default `true`). |
+| `netdbg.exceptionLog.captureLocals` | Record the call stack and locals with each logged exception (default `true`). |
+| `netdbg.exceptionLog.enabled` | Record every thrown exception in the Exception Log view without stopping (default `true`). |
+| `netdbg.sqlLog.methods` | Provider methods the SQL log reads commands at, as `Namespace.Type.Method` (default: ODP.NET, SqlClient, OleDb, Odbc). |
+| `netdbg.evidence.folder` | Where Capture Evidence saves, relative to the workspace folder (default `evidence`). |
+| `netdbg.uiFreeze.enabled` | Pause the program when its UI stops responding (default `true`). |
+| `netdbg.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
+| `netdbg.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
+| `netdbg.coverage.enabled` | Count code coverage in new debug sessions, unless launch.json sets `coverage` (default `false`). |
+| `netdbg.coverage.folder` | The folder (absolute) for the Cobertura XML (default `%LOCALAPPDATA%\netdbg\coverage`). |
+| `netdbg.coverage.showInEditor` | Color the lines in the editor while counting coverage (default `true`). |
+| `netdbg.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
+| `netdbg.heapSnapshot.collectGarbage` | Run a garbage collection right before each heap snapshot (default `true`). |
+| `netdbg.dump.maxDepth` | Nesting depth expanded by *Dump Variable* (default `3`). |
+| `netdbg.dump.maxNodes` | Stop expanding once this many values have been collected (default `2000`). |
 
 #### Turning features off
 
@@ -230,28 +230,28 @@ the exception settings, the exception log, the SQL log and UI freeze detection c
 
 | Setting | Feature |
 |---|---|
-| `dotnetX86.memoryGraph.enabled` | Memory / CPU / GDI graph (no sampling at all) |
-| `dotnetX86.inlineValues.enabled` | Inline values |
-| `dotnetX86.autos.enabled` | Autos view |
-| `dotnetX86.modules.enabled` | Modules view, Download Symbols |
-| `dotnetX86.exceptionSettings.enabled` | Exception Settings view (and stopping on the types checked in it) |
-| `dotnetX86.winforms.enabled` | WinForms Controls view and its commands, Show Data Bindings |
-| `dotnetX86.heapSnapshot.enabled` | Heap Snapshots and GDI leak candidates |
-| `dotnetX86.parallelStacks.enabled` | Parallel Stacks, Freeze / Thaw Thread |
-| `dotnetX86.valueTrend.enabled` | Value trend and section timing |
-| `dotnetX86.pinnedValues.enabled` | Pinned values (kept, shown again when turned back on) |
-| `dotnetX86.breakpointCommands.enabled` | The breakpoint commands of the editor context menu (the `#once` / `#after` / `#changed` / `#caller` conditions keep working) |
-| `dotnetX86.variableTools.enabled` | Variables / Watch context menu commands (Dump, View as Table / Image, Copy as C#, View String, snapshots, Object ID) |
-| `dotnetX86.generateTest.enabled` | Generate Unit Test from Here |
-| `dotnetX86.sessionReport.enabled` | Export Debug Session Report |
-| `dotnetX86.stepHistory.enabled` | Step History view and recording |
-| `dotnetX86.exceptionLog.enabled` | Exception Log view and recording |
-| `dotnetX86.sqlLog.enabled` | SQL Log view and recording |
-| `dotnetX86.eventTrace.enabled` | Trace Events and the Event Trace view |
-| `dotnetX86.evidence.enabled` | Capture Evidence |
-| `dotnetX86.perfTips.enabled` | PerfTips |
-| `dotnetX86.uiFreeze.enabled` | UI freeze detection |
-| `dotnetX86.sourceLink.enabled` | Source Link downloads |
+| `netdbg.memoryGraph.enabled` | Memory / CPU / GDI graph (no sampling at all) |
+| `netdbg.inlineValues.enabled` | Inline values |
+| `netdbg.autos.enabled` | Autos view |
+| `netdbg.modules.enabled` | Modules view, Download Symbols |
+| `netdbg.exceptionSettings.enabled` | Exception Settings view (and stopping on the types checked in it) |
+| `netdbg.winforms.enabled` | WinForms Controls view and its commands, Show Data Bindings |
+| `netdbg.heapSnapshot.enabled` | Heap Snapshots and GDI leak candidates |
+| `netdbg.parallelStacks.enabled` | Parallel Stacks, Freeze / Thaw Thread |
+| `netdbg.valueTrend.enabled` | Value trend and section timing |
+| `netdbg.pinnedValues.enabled` | Pinned values (kept, shown again when turned back on) |
+| `netdbg.breakpointCommands.enabled` | The breakpoint commands of the editor context menu (the `#once` / `#after` / `#changed` / `#caller` conditions keep working) |
+| `netdbg.variableTools.enabled` | Variables / Watch context menu commands (Dump, View as Table / Image, Copy as C#, View String, snapshots, Object ID) |
+| `netdbg.generateTest.enabled` | Generate Unit Test from Here |
+| `netdbg.sessionReport.enabled` | Export Debug Session Report |
+| `netdbg.stepHistory.enabled` | Step History view and recording |
+| `netdbg.exceptionLog.enabled` | Exception Log view and recording |
+| `netdbg.sqlLog.enabled` | SQL Log view and recording |
+| `netdbg.eventTrace.enabled` | Trace Events and the Event Trace view |
+| `netdbg.evidence.enabled` | Capture Evidence |
+| `netdbg.perfTips.enabled` | PerfTips |
+| `netdbg.uiFreeze.enabled` | UI freeze detection |
+| `netdbg.sourceLink.enabled` | Source Link downloads |
 
 ### .NET Framework 4.x
 
@@ -271,7 +271,7 @@ Menus, settings and messages are shown in English, or in Japanese when VS Code's
 
 ## Feature guide
 
-The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
+The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-netdbg/usage.html).
 
 ### Stopping where you want
 
@@ -327,9 +327,9 @@ Breakpoints view.
 #### UI freeze detection
 
 When the program's UI stops responding — a UI thread does not process window messages for 2 seconds
-(`dotnetX86.uiFreeze.thresholdMs`) — the program is paused on that thread, so the Call Stack shows the code that holds
+(`netdbg.uiFreeze.thresholdMs`) — the program is paused on that thread, so the Call Stack shows the code that holds
 the UI up, and the pause is labeled *UI not responding for 2.0 s*. Steps and stops at breakpoints never count as freezes.
-Visual Studio has no such option. Turn it off with `dotnetX86.uiFreeze.enabled`.
+Visual Studio has no such option. Turn it off with `netdbg.uiFreeze.enabled`.
 
 If the UI thread is waiting inside native code (e.g. `Thread.Sleep`, a lock), the top frames are framework / native ones:
 look a few frames down for your code. Expressions cannot be evaluated in such a frame (pick one of your own frames).
@@ -366,7 +366,7 @@ Code Changes** (the flame on the debug toolbar) does the same for every source.
   message). Compile errors are shown the same way and nothing is applied.
 - It works for a Debug build started by the debugger (not attached), with portable PDBs. The change is built by the
   compiler of the installed **.NET SDK 9 or later**, from the sources as they were when debugging started.
-- Settings: `dotnetX86.editAndContinue.enabled` (off: modules load as before) and `dotnetX86.editAndContinue.applyOnSave`.
+- Settings: `netdbg.editAndContinue.enabled` (off: modules load as before) and `netdbg.editAndContinue.applyOnSave`.
   AI clients apply their edits with the MCP tool `debug_apply_changes`.
 
 #### Return values
@@ -463,7 +463,7 @@ own overhead, hence "≤".
 
 #### Code coverage
 
-Turn on `dotnetX86.coverage.enabled` (or set `"coverage": true` in launch.json) and debug. The engine counts the lines
+Turn on `netdbg.coverage.enabled` (or set `"coverage": true` in launch.json) and debug. The engine counts the lines
 and branches the program runs, and the editor colors the lines as they run: green run, yellow partly run (hover for the
 branches taken), red not run. The status bar shows the rates; click it (or **Write Coverage XML**) to write the Cobertura
 XML, which is also written when the session ends. The colors stay after the session to review them.
@@ -483,7 +483,7 @@ so it is removed like any breakpoint.
 
 #### Memory / CPU graph
 
-Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `dotnetX86.memoryGraph.autoOpen` to `true`)
+Run **.NET x86: Show Memory / CPU Graph** from the Command Palette (or set `netdbg.memoryGraph.autoOpen` to `true`)
 to see the debuggee's **Private Bytes** and **Working Set**, plus its **CPU usage** (% of all cores, as in Task Manager)
 in a second chart, once per second, like the process memory / CPU graphs of Visual Studio's Diagnostic Tools. Periods stopped at a breakpoint or step are shaded; hover to read the values,
 and open *Data table* for the latest samples.
@@ -505,7 +505,7 @@ While stopped, right-click in the Call Stack view and choose **Take Heap Snapsho
 the number of objects and their bytes per type on the GC heap are listed, largest first, as in Visual Studio's Memory Usage.
 Take another one at a later stop to see what changed per type (**Δ Count**, **Δ Size**); pick any two snapshots to compare,
 sort by a column, filter by name, or show **Increases only**. A garbage collection runs right before each snapshot so that
-only objects still in use are counted (`dotnetX86.heapSnapshot.collectGarbage`).
+only objects still in use are counted (`netdbg.heapSnapshot.collectGarbage`).
 
 Above the types, **GDI leak candidates** lists the objects that hold a native resource — GDI+ fonts, brushes, pens, images,
 graphics, regions and paths; icons, cursors and windows — with how many are **not disposed** (they still hold their handle)
@@ -520,18 +520,18 @@ cannot tell a disposed object from one that was not. Works for .NET and .NET Fra
 The **Step History (.NET x86)** view in Run and Debug records the location and the local variables at every stop,
 newest first. Values that changed since the previous stop in the same method are marked *changed* / *new*, so you can
 look back at "the value three steps ago" (it is a history to browse; execution does not run backwards).
-Click an entry to open its location. Turn it off with `dotnetX86.stepHistory.enabled`.
+Click an entry to open its location. Turn it off with `netdbg.stepHistory.enabled`.
 
 #### Exception log
 
 The **Exception Log (.NET x86)** view lists every exception thrown in the debuggee, including ones that are caught
 and swallowed, with type, message and the first location in your code (click to open it). They are also written to the
 Debug Console like Visual Studio's `Exception thrown: …` lines. Execution only stops where your exception settings say so.
-Apps that throw very many exceptions run slower while it is on (`dotnetX86.exceptionLog.enabled`).
+Apps that throw very many exceptions run slower while it is on (`netdbg.exceptionLog.enabled`).
 
 Each entry expands into a **snapshot taken at the throw**: the call stack (click a frame to open it) and the locals of the
 first three frames of your code, so you can see the values of an exception you ran through without stopping. Visual
-Studio does not keep them. Objects are not expanded; see `dotnetX86.exceptionLog.captureLocals`.
+Studio does not keep them. Objects are not expanded; see `netdbg.exceptionLog.captureLocals`.
 
 #### Event trace
 
@@ -539,17 +539,17 @@ Right-click a control in the WinForms Controls view and choose **Trace Events...
 **Event Trace (.NET x86)** view then lists every firing in order — the event, the control that fired it (the handler's
 `sender`), the handler, the time and the gap to the previous one — without stopping, so a chain such as `Validating` →
 `TextChanged` → `SelectedIndexChanged` can be read at a glance. Click an entry to open the handler. **Export Event Trace**
-writes the list to a text file. A handler you also set a breakpoint on still stops. `dotnetX86.eventTrace.enabled`.
+writes the list to a text file. A handler you also set a breakpoint on still stops. `netdbg.eventTrace.enabled`.
 
 #### Capture evidence
 
 **.NET x86: Capture Evidence** (Command Palette, Call Stack context menu, WinForms Controls view title) saves what a test
-report needs from the stopped screen into a new folder (`evidence/<date-time>/`, see `dotnetX86.evidence.folder`): a **picture of
+report needs from the stopped screen into a new folder (`evidence/<date-time>/`, see `netdbg.evidence.folder`): a **picture of
 every open form**, the **values of their controls** (text, checked, selected index, the first cells of each DataGridView and the
 state hidden / disabled), the variables of the selected frame, the call stack and the SQL run since the previous capture,
 as `evidence.md` plus PNG files. The pictures are the desktop compositor's last image of the stopped windows, shown on top for
 a moment, so they work when the form is behind VS Code; a form has to be on a screen (not minimized). At most 300 controls
-are read per form. `dotnetX86.evidence.enabled`.
+are read per form. `netdbg.evidence.enabled`.
 
 #### SQL log
 
@@ -561,8 +561,8 @@ is honored. A statement that runs five times or more is flagged, the usual shape
 title) writes them all to a `.sql` file as evidence of what the program ran.
 
 It hooks the provider, not your code, so statements run by a home-made data access component are logged too. Each
-statement pauses the program for a moment while it is read (`dotnetX86.sqlLog.enabled`, new sessions only). To log another
-provider, add its command type to `dotnetX86.sqlLog.methods` (e.g. `Npgsql.NpgsqlCommand.ExecuteReader`). The time a
+statement pauses the program for a moment while it is read (`netdbg.sqlLog.enabled`, new sessions only). To log another
+provider, add its command type to `netdbg.sqlLog.methods` (e.g. `Npgsql.NpgsqlCommand.ExecuteReader`). The time a
 statement took is not recorded, and `Async` methods are only logged where the provider calls its synchronous method.
 
 #### Debug session report
@@ -601,7 +601,7 @@ machine, tell the debugger where the source is:
 - The library's PDB must be readable: embedded in the .dll or next to it (Portable PDB).
 - The PDBs of the assemblies next to the launched program are read before the session starts, so breakpoints in the
   library work from the beginning; assemblies loaded later (and attach) get their breakpoints moved when they load.
-- Both can also be set for every configuration with `dotnetX86.sourceFileMap` / `dotnetX86.sourceSearchPaths`.
+- Both can also be set for every configuration with `netdbg.sourceFileMap` / `netdbg.sourceSearchPaths`.
 - When a stop has no source on this machine, the Debug Console says which PDB path to map.
 
 #### Source Link and symbol servers
@@ -609,19 +609,19 @@ machine, tell the debugger where the source is:
 Most NuGet packages built from GitHub carry a **Source Link** map in their PDB (the .NET 8+ SDK adds one by default).
 When the program stops in a file that is not on this machine, the extension downloads it from the URL the map gives
 (e.g. raw.githubusercontent.com) into its storage and opens it; breakpoints in it work. Turn it off with
-`dotnetX86.sourceLink.enabled`.
+`netdbg.sourceLink.enabled`.
 
 For an assembly without symbols, right-click it in the **Modules** view and choose **Download Symbols**: its PDB is fetched
-from the NuGet and Microsoft symbol servers (`dotnetX86.symbolServers`), and applies from the next debug session (a button
+from the NuGet and Microsoft symbol servers (`netdbg.symbolServers`), and applies from the next debug session (a button
 restarts the current one). With Source Link, its sources follow. When no server has the PDB, the debugger decompiles the assembly (below).
-**Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *.NET x86 Debugger* output.
+**Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *netdbg* output.
 
 #### Debugging decompiled assemblies
 
 The debugger decompiles the program's own assemblies that have no symbols (an exe shipped without its PDB, a DLL whose
 source you do not have) by itself, when you first stop in them, step into them or set a breakpoint in their decompiled file:
 the call stack then points at C# files, and breakpoints, stepping and locals work in the same session. No .NET runtime is
-needed for it. The files are written to `%LOCALAPPDATA%\dotnet-x86dbg\decompiled`; methods that cannot be turned into C#
+needed for it. The files are written to `%LOCALAPPDATA%\netdbg\decompiled`; methods that cannot be turned into C#
 are shown as IL. .NET's own assemblies are not decompiled. Set `"decompile": "off"` in launch.json to turn it off. AI clients
 read the decompiled sources with the MCP tool `decompile`.
 
@@ -668,24 +668,24 @@ the screen. A form with many controls takes a few seconds (about 5 evaluations p
 
 ### AI clients (MCP)
 
-Turn on `dotnetX86.mcp.enabled` and AI assistants can debug the program you started in VS Code through MCP (Model Context
+Turn on `netdbg.mcp.enabled` and AI assistants can debug the program you started in VS Code through MCP (Model Context
 Protocol): set breakpoints, continue and step, read the call stack, variables and expressions — and operate the program's
 windows to reproduce a problem, then look at where it stopped. The Run and Debug views follow what the AI does, and your
 breakpoints and the AI's do not remove each other. The setting is off by default: the tools evaluate expressions and
 operate windows in your program.
 
 - **VS Code's AI** (Copilot Chat in agent mode, VS Code 1.101 or later): while debugging, the session is the MCP server
-  *.NET x86 Debugger*. Enable its tools in the chat's tool picker.
-- **Cursor's AI**: in Cursor, while the setting is on, the server *dotnet-x86* is registered for you (Cursor's MCP
+  *netdbg*. Enable its tools in the chat's tool picker.
+- **Cursor's AI**: in Cursor, while the setting is on, the server *netdbg* is registered for you (Cursor's MCP
   extension API). Enable it in Cursor's MCP settings if Cursor asks.
 - **Other AI clients**: run **.NET x86: Register the MCP Server with AI Clients** once and pick the clients (the ones
-  found on this PC come first). Clients started afterwards (or their new sessions) see the server *dotnet-x86*.
+  found on this PC come first). Clients started afterwards (or their new sessions) see the server *netdbg*.
 
   | Client | How it is registered |
   |---|---|
-  | Claude Code (the terminal and the Claude Code extension) | `claude mcp add --scope user dotnet-x86 -- "<path>" --mcp-connect` |
-  | GitHub Copilot CLI | `copilot mcp add dotnet-x86 -- "<path>" --mcp-connect` |
-  | Codex (the CLI, the IDE extension and the ChatGPT app) | `[mcp_servers.dotnet-x86]` in `~/.codex/config.toml` |
+  | Claude Code (the terminal and the Claude Code extension) | `claude mcp add --scope user netdbg -- "<path>" --mcp-connect` |
+  | GitHub Copilot CLI | `copilot mcp add netdbg -- "<path>" --mcp-connect` |
+  | Codex (the CLI, the IDE extension and the ChatGPT app) | `[mcp_servers.netdbg]` in `~/.codex/config.toml` |
   | Gemini CLI | `mcpServers` in `~/.gemini/settings.json` |
   | Claude Desktop | `mcpServers` in `claude_desktop_config.json` (the Microsoft Store app's own copy when installed from there) |
   | Cursor (when you debug in VS Code) | `mcpServers` in `~/.cursor/mcp.json` |
@@ -693,12 +693,12 @@ operate windows in your program.
   | LM Studio | `mcpServers` in `~/.lmstudio/mcp.json` |
   | opencode | `mcp` in `~/.config/opencode/opencode.json` |
 
-  A settings file keeps everything else; the file before the change is saved beside it as `<file>.dotnet-x86.bak`. A file
+  A settings file keeps everything else; the file before the change is saved beside it as `<file>.netdbg.bak`. A file
   with comments is left alone (the command says so and offers to copy the settings). For a client not in the list, or to
   register by hand, run **.NET x86: Copy MCP Connection Settings for AI Clients**: it copies the command or the settings
   for the client you pick, or an `mcpServers` JSON, which most clients read.
 
-  `<path>` is a copy of the debug engine in `%LOCALAPPDATA%\dotnet-x86dbg\bin` that the extension keeps up to date, so you
+  `<path>` is a copy of the debug engine in `%LOCALAPPDATA%\netdbg\bin` that the extension keeps up to date, so you
   register it once. It connects to the latest debug session started in VS Code or Cursor (with the setting on); while there is none,
   its tools say so.
 
@@ -753,11 +753,11 @@ filtering; Step Into Specific; Set Next Statement; return values; Object IDs; `D
 ## Differences from netcoredbg (1.x)
 
 Up to 1.x the extension bundled an x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg) (MIT) with 13 patches.
-From 2.0 it bundles **dotnet-x86dbg** (Rust), a debug engine made for this extension. Its DAP messages and the way it writes
+From 2.0 it bundles **netdbg** (Rust), a debug engine made for this extension. Its DAP messages and the way it writes
 values are kept the same as netcoredbg's, so every feature of the extension works as before. netcoredbg itself is no longer
-supported (`dotnetX86.debuggerPath` takes only builds of dotnet-x86dbg).
+supported (`netdbg.debuggerPath` takes only builds of netdbg).
 
-| | netcoredbg (1.x) | dotnet-x86dbg (2.0) |
+| | netcoredbg (1.x) | netdbg (2.0) |
 |---|---|---|
 | .NET used by the debugger itself | x86 .NET 8 or later required (also for .NET Framework apps) | None: .NET Framework apps can be debugged on a Windows without .NET |
 | x64 / AnyCPU apps | Not debuggable (a warning only) | Debugged with the x64 engine (the engine is picked by the program's bitness) |
@@ -782,7 +782,7 @@ node (with the base types' members).
 ## Debug engine API
 
 The contract between the extension and its debug engine (DAP requests, responses and events, custom requests, launch / attach
-arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)
+arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-netdbg/engine-api.html)
 (JSON Schema: [engine-api.json](docs/engine-api.json)). It is generated from the types in `src/engineProtocol.ts` with `npm run docs:api`.
 ## Contributing
 

@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    .NET x86 Debugger の VSIX を VS Code にインストールする。
+    netdbg の VSIX を VS Code にインストールする。
 .DESCRIPTION
     GitHub Releases からダウンロードした VSIX と同じフォルダに置いて実行する。
-    -VsixPath を省略すると、このスクリプトと同じフォルダにある最新の dotnet-x86-debugger*.vsix を使う。
+    -VsixPath を省略すると、このスクリプトと同じフォルダにある最新の netdbg*.vsix を使う。
 .PARAMETER VsixPath
     インストールする VSIX のパス。
 .PARAMETER CodePath
@@ -24,10 +24,10 @@ function Find-Vsix {
         if (-not (Test-Path $VsixPath)) { throw "指定された VSIX が見つかりません: $VsixPath" }
         return (Resolve-Path $VsixPath).Path
     }
-    $found = Get-ChildItem -Path $PSScriptRoot -Filter 'dotnet-x86-debugger*.vsix' -File |
+    $found = Get-ChildItem -Path $PSScriptRoot -Filter 'netdbg*.vsix' -File |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $found) {
-        throw "VSIX が見つかりません。このスクリプトと同じフォルダ ($PSScriptRoot) に dotnet-x86-debugger の .vsix を置くか、-VsixPath で指定してください。"
+        throw "VSIX が見つかりません。このスクリプトと同じフォルダ ($PSScriptRoot) に netdbg の .vsix を置くか、-VsixPath で指定してください。"
     }
     return $found.FullName
 }

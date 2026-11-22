@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace DotnetX86
+namespace Netdbg
 {
     public static class WindowCapture
     {
@@ -152,14 +152,14 @@ namespace DotnetX86
 }
 '@
 
-[DotnetX86.WindowCapture]::Setup()
+[Netdbg.WindowCapture]::Setup()
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 foreach ($entry in $Windows.Split(';')) {
     if ($entry -eq '') { continue }
     $parts = $entry.Split('=', 2)
     $name = [IO.Path]::GetFileName($parts[1])
     try {
-        $answer = [DotnetX86.WindowCapture]::Capture([long]$parts[0], (Join-Path $OutDir $name))
+        $answer = [Netdbg.WindowCapture]::Capture([long]$parts[0], (Join-Path $OutDir $name))
     } catch {
         $answer = 'error ' + $_.Exception.Message.Replace("`r", ' ').Replace("`n", ' ')
     }

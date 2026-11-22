@@ -1,12 +1,12 @@
 /**
- * Coverage marks for the editor (no vscode dependency): turns the engine's line states (`dotnetX86.coverage { file }`)
+ * Coverage marks for the editor (no vscode dependency): turns the engine's line states (`netdbg.coverage { file }`)
  * into the lines to color as run, partly run (some branch outcomes not taken) and not run.
  */
 
-export const COVERAGE_CHANGED_EVENT = 'dotnetX86.coverageChanged';
-export const COVERAGE_REQUEST = 'dotnetX86.coverage';
+export const COVERAGE_CHANGED_EVENT = 'netdbg.coverageChanged';
+export const COVERAGE_REQUEST = 'netdbg.coverage';
 
-/** One line of `dotnetX86.coverage { file }`. */
+/** One line of `netdbg.coverage { file }`. */
 export interface CoverageLine {
     line: number;
     hit: boolean;
@@ -49,7 +49,7 @@ export function samePath(a: string, b: string): boolean {
     return a.replace(/\//g, '\\').toLowerCase() === b.replace(/\//g, '\\').toLowerCase();
 }
 
-/** The summary of `dotnetX86.coverageChanged` / `dotnetX86.coverage` (`lines 56% · branches 40%`). */
+/** The summary of `netdbg.coverageChanged` / `netdbg.coverage` (`lines 56% · branches 40%`). */
 export function coverageSummary(body: { lineRate?: number; branchRate?: number; linesValid?: number; branchesValid?: number }, labels: { lines: string; branches: string }): string {
     const percent = (rate: number | undefined) => `${Math.round((rate ?? 0) * 100)}%`;
     const parts = [`${labels.lines} ${percent(body.lineRate)}`];

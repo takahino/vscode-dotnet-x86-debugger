@@ -4,14 +4,14 @@ import * as vscode from 'vscode';
 const MAX_MESSAGE_LENGTH = 2000;
 
 /**
- * Logs DAP traffic between VS Code and netcoredbg to the output channel when "dotnetX86.trace" is enabled.
+ * Logs DAP traffic between VS Code and netcoredbg to the output channel when "netdbg.trace" is enabled.
  * Used to diagnose issues that only happen inside VS Code (e.g. Variables view or hover showing nothing).
  */
 export class DapTraceFactory implements vscode.DebugAdapterTrackerFactory {
     constructor(private readonly output: vscode.OutputChannel) {}
 
     createDebugAdapterTracker(session: vscode.DebugSession): vscode.ProviderResult<vscode.DebugAdapterTracker> {
-        if (!vscode.workspace.getConfiguration('dotnetX86').get<boolean>('trace')) {
+        if (!vscode.workspace.getConfiguration('netdbg').get<boolean>('trace')) {
             return undefined;
         }
         const log = (direction: string, message: unknown) => {

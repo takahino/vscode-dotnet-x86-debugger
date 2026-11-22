@@ -14,7 +14,7 @@ jobs:
   release:
     runs-on: windows-latest
     env:
-      # 同梱するデバッグエンジン (dotnet-x86dbg) の版。CI と同じものにする
+      # 同梱するデバッグエンジン (netdbg) の版。CI と同じものにする
       ENGINE_REF: main
     steps:
       - uses: actions/checkout@v4
@@ -39,11 +39,11 @@ jobs:
             throw "タグ $tag と package.json の version ($version) が一致しません。package.json を更新してからタグを付け直してください。"
           }
 
-      # デバッグエンジン dotnet-x86dbg (Rust) を取得してビルドし、debugger/dotnet-x86dbg-x86 と -x64 に置く。
+      # デバッグエンジン netdbg (Rust) を取得してビルドし、debugger/netdbg-x86 と -x64 に置く。
       # ENGINE_REF でエンジンの版を固定する (エンジンを新しくするときは、ここを書き換えて E2E を通す)。
       - uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/dotnet-x86dbg
+          repository: ${{ github.repository_owner }}/netdbg
           ref: ${{ env.ENGINE_REF }}
           path: engine
 
@@ -75,7 +75,7 @@ jobs:
         run: |
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item out/dotnet-x86-debugger.vsix "dist/dotnet-x86-debugger-$version.vsix"
+          Copy-Item out/netdbg.vsix "dist/netdbg-$version.vsix"
           Copy-Item scripts/install-vsix.ps1 dist/
           Get-ChildItem dist
 

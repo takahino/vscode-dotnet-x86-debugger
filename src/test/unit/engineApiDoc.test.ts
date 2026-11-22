@@ -32,7 +32,7 @@ describe('engine API document', () => {
             assert.equal(requests.get(name), 'proxy', name);
         }
         // The engine's own: sent by its MCP tool `decompile` (and by clients that want the decompiled files), not by the extension.
-        assert.equal(requests.get('dotnetX86.decompile'), 'engine');
+        assert.equal(requests.get('netdbg.decompile'), 'engine');
         assert.equal(requests.size, 11, [...requests.keys()].join(', '));
     });
 

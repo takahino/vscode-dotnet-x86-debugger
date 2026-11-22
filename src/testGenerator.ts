@@ -40,7 +40,7 @@ export async function generateTestCommand(): Promise<void> {
             return;
         }
 
-        const config = vscode.workspace.getConfiguration('dotnetX86.dump');
+        const config = vscode.workspace.getConfiguration('netdbg.dump');
         const captured = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Reading the arguments of {0}…', method.method) },
             () =>

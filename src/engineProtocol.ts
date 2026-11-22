@@ -1,8 +1,8 @@
-// The contract between the extension and its debug engine (dotnet-x86dbg), and the custom messages the extension's DAP
+// The contract between the extension and its debug engine (netdbg), and the custom messages the extension's DAP
 // relay (DapProxy) adds on top of it. docs/engine-api.html and docs/engine-api.json are generated from this file
 // (npm run docs:api): the interfaces become JSON Schemas, their JSDoc the descriptions. Kept free of the vscode module.
 //
-// Layers:   VS Code  <-- DAP -->  DapProxy (in the extension)  <-- DAP over stdin/stdout -->  dotnet-x86dbg.exe
+// Layers:   VS Code  <-- DAP -->  DapProxy (in the extension)  <-- DAP over stdin/stdout -->  netdbg.exe
 // Messages tagged `@handledBy engine` / `@sentBy engine` cross the engine boundary; `proxy` ones stay in the extension.
 //
 // Tags read by the generator (scripts/gen-engine-api.js):
@@ -24,7 +24,7 @@
 export interface LaunchArguments {
     /** Full path of the exe to start (a .NET apphost, a .NET Framework exe, or dotnet.exe). Not needed with `dumpPath`. */
     program: string;
-    /** Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability `dotnetX86SupportsDumps`). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After `configurationDone` the engine sends `process` (without `systemProcessId`; `dumpProcessId` is the number in the dump) and `stopped` (`exception` on the thread that was throwing, else `pause`, with the description `Crash dump`). `continue`, the steps, `pause`, `goto`, `setVariable`, `setExpression`, `dotnetX86.applyChanges`, `dotnetX86.freezeThread`, `dotnetX86.makeObjectId`, `dotnetX86.processUsage` and expressions that run code are refused with the reason. */
+    /** Open this crash dump (.dmp with full memory) instead of starting a program (read only; capability `netdbgSupportsDumps`). The engine must have the bitness of the dumped process (the extension chooses it; a 32-bit process written as a 64-bit dump counts as x86). After `configurationDone` the engine sends `process` (without `systemProcessId`; `dumpProcessId` is the number in the dump) and `stopped` (`exception` on the thread that was throwing, else `pause`, with the description `Crash dump`). `continue`, the steps, `pause`, `goto`, `setVariable`, `setExpression`, `netdbg.applyChanges`, `netdbg.freezeThread`, `netdbg.makeObjectId`, `netdbg.processUsage` and expressions that run code are refused with the reason. */
     dumpPath?: string;
     /** Command-line arguments. */
     args?: string[];
@@ -40,19 +40,19 @@ export interface LaunchArguments {
     enableStepFiltering?: boolean;
     /** Options for evaluating expressions. */
     expressionEvaluationOptions?: ExpressionEvaluationOptions;
-    /** Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `dotnetX86.applyChanges` can update them. The extension sets it from `dotnetX86.editAndContinue.enabled` unless launch.json does. */
+    /** Edit and Continue (default true): modules of a Debug build with symbols are loaded so that `netdbg.applyChanges` can update them. The extension sets it from `netdbg.editAndContinue.enabled` unless launch.json does. */
     editAndContinue?: boolean;
-    /** Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `dotnetX86.decompile`. */
+    /** Assemblies of the application without symbols are decompiled to C# by the engine (`app`, the default), or not (`off`). See `netdbg.decompile`. */
     decompile?: 'app' | 'off';
-    /** SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (`dotnetX86.sqlExecuted`). `methods` replaces the provider methods (`Namespace.Type.Method`). The extension sets it from `dotnetX86.sqlLog.*` unless launch.json does. */
+    /** SQL log: read the commands the program runs through ADO.NET at the provider, without stopping (`netdbg.sqlExecuted`). `methods` replaces the provider methods (`Namespace.Type.Method`). The extension sets it from `netdbg.sqlLog.*` unless launch.json does. */
     sqlLog?: boolean | { enabled?: boolean; methods?: string[] };
-    /** Exception log: record every thrown exception, also those that do not stop the program (`dotnetX86.exceptionThrown`); `snapshot` takes the stack and locals at the throw (default true). The extension sets it from `dotnetX86.exceptionLog.*`. */
+    /** Exception log: record every thrown exception, also those that do not stop the program (`netdbg.exceptionThrown`); `snapshot` takes the stack and locals at the throw (default true). The extension sets it from `netdbg.exceptionLog.*`. */
     exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
-    /** UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`dotnetX86.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `dotnetX86.uiFreeze.*`. */
+    /** UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`netdbg.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `netdbg.uiFreeze.*`. */
     uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
-    /** Code coverage: count the lines and branches the program runs (`dotnetX86.coverageChanged`, `dotnetX86.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\dotnet-x86dbg\coverage`. The extension sets it from `dotnetX86.coverage.*` unless launch.json does. */
+    /** Code coverage: count the lines and branches the program runs (`netdbg.coverageChanged`, `netdbg.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\netdbg\coverage`. The extension sets it from `netdbg.coverage.*` unless launch.json does. */
     coverage?: boolean | { enabled?: boolean; folder?: string };
-    /** Processes the program starts with `Process.Start`: `record` (default) logs them (`dotnetX86.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them. */
+    /** Processes the program starts with `Process.Start`: `record` (default) logs them (`netdbg.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them. */
     childProcesses?: 'record' | 'follow' | 'off';
     /** Set by the extension when `program` is a .NET Framework exe: the engine starts it with the .NET Framework CLR (no .NET runtime needed). */
     __dotnetFramework?: boolean;
@@ -103,8 +103,8 @@ export interface ExpressionEvaluationOptions {
 /**
  * Gives the object a value refers to an id (`$1`) that stays valid while the program runs (a weak GC handle: it does not
  * keep the object alive, and reads `null` once the object is collected). In expressions the extension writes `$1` as
- * `__DOTNETX86_OBJID_1`; values of objects with an id end with ` {$1}`.
- * @request dotnetX86.makeObjectId
+ * `__NETDBG_OBJID_1`; values of objects with an id end with ` {$1}`.
+ * @request netdbg.makeObjectId
  * @handledBy engine
  */
 export interface MakeObjectIdArguments {
@@ -112,7 +112,7 @@ export interface MakeObjectIdArguments {
     variablesReference: number;
 }
 
-/** @response dotnetX86.makeObjectId */
+/** @response netdbg.makeObjectId */
 export interface MakeObjectIdResponse {
     /** The new id (1, 2, ...); the same object asked twice keeps its first id. */
     id: number;
@@ -120,7 +120,7 @@ export interface MakeObjectIdResponse {
 
 /**
  * Freezes or thaws a thread: a frozen thread stays suspended across `continue`, steps and evaluations until thawed.
- * @request dotnetX86.freezeThread
+ * @request netdbg.freezeThread
  * @handledBy engine
  */
 export interface FreezeThreadArguments {
@@ -132,12 +132,12 @@ export interface FreezeThreadArguments {
 
 /**
  * Counts the objects on the GC heap by type, while the program is stopped. Fails while a GC is in progress.
- * @request dotnetX86.heapStats
+ * @request netdbg.heapStats
  * @handledBy engine
  */
 export interface HeapStatsArguments {}
 
-/** @response dotnetX86.heapStats */
+/** @response netdbg.heapStats */
 export interface HeapStatsResponse {
     /** Largest total size first. Free space between objects is counted under the name `?`. */
     types: HeapTypeStatistics[];
@@ -155,7 +155,7 @@ export interface HeapTypeStatistics {
 /**
  * For the types that hold a native handle in a field, counts the objects and those whose handle is not 0 (not disposed).
  * The field may be declared by a base type (`Bitmap` holds `Image._nativeImage`).
- * @request dotnetX86.handleStats
+ * @request netdbg.handleStats
  * @handledBy engine
  */
 export interface HandleStatsArguments {
@@ -163,7 +163,7 @@ export interface HandleStatsArguments {
     fields: { type: string; field: string }[];
 }
 
-/** @response dotnetX86.handleStats */
+/** @response netdbg.handleStats */
 export interface HandleStatsResponse {
     /** By type name; types without one of the fields are left out. */
     types: { name: string; count: number; live: number; field: string }[];
@@ -175,8 +175,8 @@ export interface HandleStatsResponse {
  * build the change against the sources as they were when debugging started, applies it with `ApplyChanges`, and moves
  * breakpoints to the new code. Changed methods run the new code from their next call; a method that is running moves
  * to the new code at its next statement unless that statement's line was changed. A running program is paused for the
- * moment it takes. Also sends `dotnetX86.changesApplied`, `output` and, when applied, `invalidated`.
- * @request dotnetX86.applyChanges
+ * moment it takes. Also sends `netdbg.changesApplied`, `output` and, when applied, `invalidated`.
+ * @request netdbg.applyChanges
  * @handledBy engine
  */
 export interface ApplyChangesArguments {
@@ -184,7 +184,7 @@ export interface ApplyChangesArguments {
     files?: string[];
 }
 
-/** @response dotnetX86.applyChanges */
+/** @response netdbg.applyChanges */
 export interface ApplyChangesResponse {
     /** `applied`, `noChanges`, `rude` (an edit that needs a restart), `errors` (compile errors) or `failed`. */
     status: 'applied' | 'noChanges' | 'rude' | 'errors' | 'failed';
@@ -201,12 +201,12 @@ export interface ApplyChangesResponse {
 /**
  * Decompiled sources of assemblies without symbols. The engine decompiles the application's assemblies that have no PDB
  * (not .NET's own) itself, when they are first needed: a frame in them, a step into them, a breakpoint in a decompiled file,
- * or this request. The C# files are written to `%LOCALAPPDATA%\dotnet-x86dbg\decompiled\<MVID>-v<version>` and the
+ * or this request. The C# files are written to `%LOCALAPPDATA%\netdbg\decompiled\<MVID>-v<version>` and the
  * symbols are made in memory, so in the same session frames point at the files, breakpoints bind in them and locals have
  * names. The engine then sends `module` (`changed`, `symbolStatus` `Symbols decompiled.`). Symbols found on disk or in
  * `NETCOREDBG_SYMBOL_DIRS` (downloaded ones) take precedence. Methods it cannot turn into C# are shown as IL.
  * Without `module`, lists the assemblies decompiled on demand. The MCP tool `decompile` sends this request.
- * @request dotnetX86.decompile
+ * @request netdbg.decompile
  * @handledBy engine
  */
 export interface DecompileArguments {
@@ -220,7 +220,7 @@ export interface DecompileArguments {
     maxLines?: number;
 }
 
-/** @response dotnetX86.decompile */
+/** @response netdbg.decompile */
 export interface DecompileResponse {
     /** Without `module`: the assemblies decompiled on demand. */
     modules?: { path: string; state: 'notYet' | 'decompiled' | 'failed' }[];
@@ -237,8 +237,8 @@ export interface DecompileResponse {
 
 /**
  * Traces the firing of event handlers without stopping: the engine reads the sender at each handler's entry and sends
- * `dotnetX86.controlEvent`.
- * @request dotnetX86.setEventTrace
+ * `netdbg.controlEvent`.
+ * @request netdbg.setEventTrace
  * @handledBy engine
  */
 export interface SetEventTraceArguments {
@@ -253,7 +253,7 @@ export interface SetEventTraceArguments {
  * which the engine does not have). Replaces the earlier watches. At a write the engine reads the value, steps over the
  * line and reads it again: when it changed it stops with reason `data breakpoint` (`text`: `name: old → new`), otherwise
  * it goes on as if nothing happened. The write-site breakpoints are not reported to the client.
- * @request dotnetX86.setValueWatches
+ * @request netdbg.setValueWatches
  * @handledBy engine
  */
 export interface SetValueWatchesArguments {
@@ -261,7 +261,7 @@ export interface SetValueWatchesArguments {
     watches: { name: string; sites: { path: string; line: number }[] }[];
 }
 
-/** @response dotnetX86.setValueWatches */
+/** @response netdbg.setValueWatches */
 export interface SetValueWatchesResponse {
     /** Per name: whether a site could be bound now (sites in modules not loaded yet bind when they load), and how many sites. */
     watches: { name: string; verified: boolean; sites: number }[];
@@ -270,12 +270,12 @@ export interface SetValueWatchesResponse {
 /**
  * The program's process usage now, read by the engine from the process it debugs (running or stopped). The memory graph
  * asks for it once a second.
- * @request dotnetX86.processUsage
+ * @request netdbg.processUsage
  * @handledBy engine
  */
 export interface ProcessUsageArguments {}
 
-/** @response dotnetX86.processUsage */
+/** @response netdbg.processUsage */
 export interface ProcessUsageResponse {
     /** Bytes. */
     privateBytes: number;
@@ -301,7 +301,7 @@ export interface ProcessUsageResponse {
 /**
  * Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that
  * file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).
- * @request dotnetX86.coverage
+ * @request netdbg.coverage
  * @handledBy engine
  */
 export interface CoverageArguments {
@@ -310,7 +310,7 @@ export interface CoverageArguments {
     folder?: string;
 }
 
-/** @response dotnetX86.coverage */
+/** @response netdbg.coverage */
 export interface CoverageResponse {
     enabled: boolean;
     linesCovered: number;
@@ -333,7 +333,7 @@ export interface CoverageResponse {
 
 /**
  * The exception types checked in the Exception Settings view changed: the relay stops on these when they are thrown.
- * @request dotnetX86.setExceptionTypes
+ * @request netdbg.setExceptionTypes
  * @handledBy proxy
  */
 export interface SetExceptionTypesArguments {
@@ -392,11 +392,11 @@ export interface OutputEventBody {
 }
 
 /**
- * Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `dotnetX86.mcp.enabled`): where
+ * Sent once after `initialize` when the engine was started with `--mcp-listen` (setting `netdbg.mcp.enabled`): where
  * AI clients can control this session through MCP (Streamable HTTP, JSON answers only). The extension offers it to VS
- * Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\dotnet-x86dbg\mcp\<enginePid>.json`
- * (removed on exit), where `dotnet-x86dbg --mcp-connect` finds it for AI clients outside VS Code.
- * @event dotnetX86.mcpEndpoint
+ * Code's AI as an HTTP MCP server. The engine also writes it to `%LOCALAPPDATA%\netdbg\mcp\<enginePid>.json`
+ * (removed on exit), where `netdbg --mcp-connect` finds it for AI clients outside VS Code.
+ * @event netdbg.mcpEndpoint
  * @sentBy engine
  */
 export interface McpEndpointEventBody {
@@ -409,13 +409,13 @@ export interface McpEndpointEventBody {
 }
 
 /**
- * The result of applying code changes (Edit and Continue), whether VS Code asked (`dotnetX86.applyChanges`) or an AI
- * client did through MCP (`debug_apply_changes`). The body is the response of `dotnetX86.applyChanges`.
- * @event dotnetX86.changesApplied
+ * The result of applying code changes (Edit and Continue), whether VS Code asked (`netdbg.applyChanges`) or an AI
+ * client did through MCP (`debug_apply_changes`). The body is the response of `netdbg.applyChanges`.
+ * @event netdbg.changesApplied
  * @sentBy engine
  */
 export interface ChangesAppliedEventBody {
-    /** As in the response of `dotnetX86.applyChanges`. */
+    /** As in the response of `netdbg.applyChanges`. */
     status: 'applied' | 'noChanges' | 'rude' | 'errors' | 'failed';
     /** One-line summary. */
     message: string;
@@ -429,7 +429,7 @@ export interface ChangesAppliedEventBody {
 
 /**
  * Values of a `#track:` logpoint hit, or the time of a `#timer-start:` / `#timer-end:` section.
- * @event dotnetX86.trackedValues
+ * @event netdbg.trackedValues
  * @sentBy engine
  */
 export interface TrackedValuesEventBody {
@@ -442,7 +442,7 @@ export interface TrackedValuesEventBody {
 
 /**
  * A temporary (`#once`) breakpoint was hit: the extension removes it from VS Code's list.
- * @event dotnetX86.removeBreakpoint
+ * @event netdbg.removeBreakpoint
  * @sentBy engine
  */
 export interface RemoveBreakpointEventBody {
@@ -452,7 +452,7 @@ export interface RemoveBreakpointEventBody {
 
 /**
  * An exception was thrown (exception log): sent for every throw while the log is on, whether the program stops or not.
- * @event dotnetX86.exceptionThrown
+ * @event netdbg.exceptionThrown
  * @sentBy engine
  */
 export interface ExceptionThrownEventBody {
@@ -472,7 +472,7 @@ export interface ExceptionThrownEventBody {
 
 /**
  * A statement read from a database command (SQL log), with its parameters and the frames that ran it.
- * @event dotnetX86.sqlExecuted
+ * @event netdbg.sqlExecuted
  * @sentBy engine
  */
 export interface SqlExecutedEventBody {
@@ -496,7 +496,7 @@ export interface SqlExecutedEventBody {
 
 /**
  * A traced event handler ran (event trace).
- * @event dotnetX86.controlEvent
+ * @event netdbg.controlEvent
  * @sentBy engine
  */
 export interface ControlEventEventBody {
@@ -512,9 +512,9 @@ export interface ControlEventEventBody {
 }
 
 /**
- * Lines were counted (at most 4 times a second): the rates as in `dotnetX86.coverage`, and the source files whose marks
- * changed (read their lines with `dotnetX86.coverage { file }`).
- * @event dotnetX86.coverageChanged
+ * Lines were counted (at most 4 times a second): the rates as in `netdbg.coverage`, and the source files whose marks
+ * changed (read their lines with `netdbg.coverage { file }`).
+ * @event netdbg.coverageChanged
  * @sentBy engine
  */
 export interface CoverageChangedEventBody extends CoverageResponse {
@@ -523,7 +523,7 @@ export interface CoverageChangedEventBody extends CoverageResponse {
 /**
  * A UI thread stopped answering window messages for `ms` while the program ran (launch argument `uiFreeze`): the engine
  * pauses the program next, on that thread. The relay words the stop's reason in the user's language.
- * @event dotnetX86.uiFrozen
+ * @event netdbg.uiFrozen
  * @sentBy engine
  */
 export interface UiFrozenEventBody {
@@ -553,7 +553,7 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'setExceptionBreakpoints', handledBy: 'both', notes: 'Filters `all` and `user-unhandled`; `filterOptions[].condition` is `A, B` or `!A, B` (type names).' },
     { command: 'exceptionInfo', handledBy: 'engine', notes: '`exceptionId` is `CLR/<type>`, `breakMode` `always` / `unhandled` / `userUnhandled`, `details` with `message`, `stackTrace`, `innerException`.' },
     { command: 'threads', handledBy: 'engine', notes: 'The OS thread id is the DAP thread id. Names are `Thread.Name`; else the process\'s first thread is `Main Thread` (listed first) and the others `<No name>`.' },
-    { command: 'stackTrace', handledBy: 'engine', notes: 'Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `dotnetX86.decompile`).' },
+    { command: 'stackTrace', handledBy: 'engine', notes: 'Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `netdbg.decompile`).' },
     { command: 'scopes', handledBy: 'engine', notes: 'One scope, `Locals`. A step over a call puts `<Type.Method> returned` first.' },
     { command: 'variables', handledBy: 'engine', notes: 'See the value conventions. Children carry `evaluateName`. `Static members` and `Raw View` are nodes of their own.' },
     { command: 'evaluate', handledBy: 'both', notes: 'C# expressions with the compiler\'s values and types (lambdas, LINQ, `await` waited synchronously, pointers). The relay rewrites `$N` object ids.' },
@@ -567,7 +567,7 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'pause', handledBy: 'engine', notes: 'Stops every thread (reason `pause`).' },
     { command: 'gotoTargets', handledBy: 'engine', notes: 'The lines of the same method that can be the next statement.' },
     { command: 'goto', handledBy: 'both', notes: 'The engine moves the instruction pointer; the relay sends the `stopped` (reason `goto`).' },
-    { command: 'dataBreakpointInfo', handledBy: 'proxy', notes: 'Break on Value Change for a plain name. `setDataBreakpoints` finds the lines that write it in the workspace and sends them as `dotnetX86.setValueWatches`.' },
+    { command: 'dataBreakpointInfo', handledBy: 'proxy', notes: 'Break on Value Change for a plain name. `setDataBreakpoints` finds the lines that write it in the workspace and sends them as `netdbg.setValueWatches`.' },
     { command: 'cancel', handledBy: 'engine', notes: 'Cancels a running evaluation.' },
     { command: 'terminate', handledBy: 'engine', notes: 'Ends the program; `exited` and `terminated` follow.' },
     { command: 'disconnect', handledBy: 'engine', notes: 'Ends a launched program, detaches from an attached one (`terminateDebuggee` overrides).' },
@@ -587,33 +587,33 @@ export const ENGINE_CAPABILITIES = {
     supportTerminateDebuggee: true,
     supportsTerminateRequest: true,
     supportsCancelRequest: true,
-    /** Custom: `dotnetX86.applyChanges` (Edit and Continue). */
-    dotnetX86SupportsApplyChanges: true,
-    /** Custom: `dotnetX86.decompile`, and the `decompile` launch / attach argument. */
-    dotnetX86SupportsDecompile: true,
+    /** Custom: `netdbg.applyChanges` (Edit and Continue). */
+    netdbgSupportsApplyChanges: true,
+    /** Custom: `netdbg.decompile`, and the `decompile` launch / attach argument. */
+    netdbgSupportsDecompile: true,
     /** The engine judges logpoints, hit counts and the breakpoint markers. */
     supportsLogPoints: true,
     supportsHitConditionalBreakpoints: true,
     /** Step Into Target: `stepInTargets`, and `stepIn` with `targetId`. */
     supportsStepInTargetsRequest: true,
-    /** Custom: the SQL log, the exception log and the event trace (launch arguments `sqlLog` / `exceptionLog`, `dotnetX86.setEventTrace`). */
-    dotnetX86SupportsJournal: true,
-    /** Custom: `dotnetX86.setValueWatches` (Break on Value Change). */
-    dotnetX86SupportsValueWatches: true,
-    /** Custom: the UI freeze watch (launch argument `uiFreeze`, `dotnetX86.uiFrozen`). */
-    dotnetX86SupportsUiFreeze: true,
-    /** Custom: `dotnetX86.processUsage`. */
-    dotnetX86SupportsProcessUsage: true,
+    /** Custom: the SQL log, the exception log and the event trace (launch arguments `sqlLog` / `exceptionLog`, `netdbg.setEventTrace`). */
+    netdbgSupportsJournal: true,
+    /** Custom: `netdbg.setValueWatches` (Break on Value Change). */
+    netdbgSupportsValueWatches: true,
+    /** Custom: the UI freeze watch (launch argument `uiFreeze`, `netdbg.uiFrozen`). */
+    netdbgSupportsUiFreeze: true,
+    /** Custom: `netdbg.processUsage`. */
+    netdbgSupportsProcessUsage: true,
     /** Custom: crash dumps (launch argument `dumpPath`, read only). */
-    dotnetX86SupportsDumps: true,
+    netdbgSupportsDumps: true,
     exceptionBreakpointFilters: [{ filter: 'all', label: 'all' }, { filter: 'user-unhandled', label: 'user-unhandled' }],
 } as const;
 
 /** Command line and environment the extension starts the engine with. */
 export const ENGINE_STARTUP: readonly { name: string; notes: string }[] = [
     { name: '--interpreter=vscode', notes: 'DAP over stdin / stdout (the default; accepted for netcoredbg compatibility).' },
-    { name: '--log=<file>', notes: 'Writes the DAP traffic and the engine\'s own log, flushed per line (setting `dotnetX86.trace`).' },
-    { name: '--mcp-listen', notes: 'Also accepts MCP on 127.0.0.1 with a token, and sends `dotnetX86.mcpEndpoint` (setting `dotnetX86.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events.' },
+    { name: '--log=<file>', notes: 'Writes the DAP traffic and the engine\'s own log, flushed per line (setting `netdbg.trace`).' },
+    { name: '--mcp-listen', notes: 'Also accepts MCP on 127.0.0.1 with a token, and sends `netdbg.mcpEndpoint` (setting `netdbg.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events.' },
     { name: '--mcp-connect[=<enginePid>]', notes: 'Not used by the extension: run by AI clients outside VS Code, a stdio MCP server that relays to the latest engine started with `--mcp-listen` (or the given one).' },
     { name: 'NETCOREDBG_SYMBOL_DIRS', notes: 'Environment variable: folders (separated by `;`) searched first for PDBs, by module MVID (downloaded symbols).' },
 ];
@@ -624,7 +624,7 @@ export const VALUE_CONVENTIONS: readonly { what: string; rule: string }[] = [
     { what: 'Strings and chars', rule: 'Strings as C# literals (`"a\\"b"`); chars as the code and the literal (`120 \'x\'`).' },
     { what: 'null', rule: '`null`.' },
     { what: 'Arrays and collections', rule: '`{int[3]}`; collections with a DebuggerDisplay show it (`Count = 3`).' },
-    { what: 'Object ids', rule: 'A value with an id ends with ` {$N}`; in expressions `$N` is sent as `__DOTNETX86_OBJID_N`.' },
+    { what: 'Object ids', rule: 'A value with an id ends with ` {$N}`; in expressions `$N` is sent as `__NETDBG_OBJID_N`.' },
     { what: 'Enums', rule: 'Member names (`Read, Write` for flags); unnamed values as the number in the underlying type (`-6`).' },
     { what: 'Pointers', rule: 'The pointed value, with the pointer type in `type` (`int*`); `null` for 0.' },
     { what: 'Exceptions from evaluations', rule: 'The result is the exception object (`{System.InvalidOperationException}`); errors fail the request with a message saying what to do.' },

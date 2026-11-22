@@ -5,7 +5,7 @@ import { DEFAULT_SYMBOL_SERVERS, downloadSymbols } from './symbolDownload';
 
 /**
  * "Download Symbols" (Modules view): fetches the PDB of an assembly without symbols from the symbol servers (NuGet,
- * Microsoft, or those in dotnetX86.symbolServers). With its Source Link map, the sources follow when the program stops
+ * Microsoft, or those in netdbg.symbolServers). With its Source Link map, the sources follow when the program stops
  * in it. netcoredbg reads symbols when a module loads, so the result applies from the next debug session.
  */
 export class SymbolServer {
@@ -27,7 +27,7 @@ export class SymbolServer {
             }
         }
         const name = path.basename(assembly);
-        const servers = vscode.workspace.getConfiguration('dotnetX86').get<string[]>('symbolServers', DEFAULT_SYMBOL_SERVERS);
+        const servers = vscode.workspace.getConfiguration('netdbg').get<string[]>('symbolServers', DEFAULT_SYMBOL_SERVERS);
         const result = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Downloading the symbols of {0}…', name) },
             () => downloadSymbols(assembly!, servers, this.symbolCache),
@@ -38,7 +38,7 @@ export class SymbolServer {
                 'not-managed': vscode.l10n.t('{0} is not a .NET assembly.', name),
                 'no-pdb-info': vscode.l10n.t('{0} was built without a PDB, so no symbol server has one. The debugger decompiles it to C# when you step into it.', name),
                 'windows-pdb': vscode.l10n.t('{0} was built with a Windows PDB, which this debugger cannot read. The debugger decompiles it to C# instead.', name),
-                'not-found': vscode.l10n.t('No symbol server has the symbols of {0} (details in the ".NET x86 Debugger" output). The debugger decompiles it to C# when you step into it.', name),
+                'not-found': vscode.l10n.t('No symbol server has the symbols of {0} (details in the "netdbg" output). The debugger decompiles it to C# when you step into it.', name),
             };
             void vscode.window.showWarningMessage(reasons[result.reason]);
             return;

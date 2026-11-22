@@ -18,7 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace DotnetX86
+namespace Netdbg
 {
     public static class WindowHighlight
     {
@@ -212,4 +212,4 @@ namespace DotnetX86
 }
 '@
 
-[DotnetX86.WindowHighlight]::Run()
+[Netdbg.WindowHighlight]::Run()

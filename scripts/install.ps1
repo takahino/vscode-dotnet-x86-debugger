@@ -16,7 +16,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$vsixPath = Join-Path $repoRoot 'out\dotnet-x86-debugger.vsix'
+$vsixPath = Join-Path $repoRoot 'out\netdbg.vsix'
 
 # ネイティブコマンドは失敗しても例外にならないため、終了コードで判定する
 function Invoke-Step([string]$Title, [scriptblock]$Command) {
@@ -33,8 +33,8 @@ if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
 
 Push-Location $repoRoot
 try {
-    # VSIX に同梱するデバッグエンジン (x86 / x64) が無ければ、隣の dotnet-x86dbg のリポジトリからビルドして置く
-    if (-not (Test-Path (Join-Path $repoRoot 'debugger\dotnet-x86dbg-x86\dotnet-x86dbg.exe')) -or -not (Test-Path (Join-Path $repoRoot 'debugger\dotnet-x86dbg-x64\dotnet-x86dbg.exe'))) {
+    # VSIX に同梱するデバッグエンジン (x86 / x64) が無ければ、隣の netdbg のリポジトリからビルドして置く
+    if (-not (Test-Path (Join-Path $repoRoot 'debugger\netdbg-x86\netdbg.exe')) -or -not (Test-Path (Join-Path $repoRoot 'debugger\netdbg-x64\netdbg.exe'))) {
         & (Join-Path $PSScriptRoot 'build-engine.ps1')
     }
 

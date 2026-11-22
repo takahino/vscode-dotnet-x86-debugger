@@ -18,7 +18,7 @@ const SERVER = `http://127.0.0.1:${PORT}`;
 const AREA_CS = path.join(REPO, 'test', 'apps', 'LinkedLib', 'Shapes', 'Area.cs');
 
 describe('Source Link and symbol servers', { skip: e2eSkip }, () => {
-    const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-sourcelink-'));
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'netdbg-sourcelink-'));
     const requests: string[] = [];
     let server: http.Server;
     let program = '';

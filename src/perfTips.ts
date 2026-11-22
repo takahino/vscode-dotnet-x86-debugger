@@ -52,7 +52,7 @@ export class PerfTips implements vscode.DebugAdapterTrackerFactory, vscode.Dispo
                 } else if (m.type === 'response' && m.command === 'stackTrace' && stackTraceRequests.has(m.request_seq)) {
                     stackTraceRequests.delete(m.request_seq);
                     const frame = m.body?.stackFrames?.[0];
-                    if (elapsedForThread && frame?.source?.path && vscode.workspace.getConfiguration('dotnetX86.perfTips').get<boolean>('enabled', true)) {
+                    if (elapsedForThread && frame?.source?.path && vscode.workspace.getConfiguration('netdbg.perfTips').get<boolean>('enabled', true)) {
                         this.shown = { path: frame.source.path, line: frame.line - 1, text: vscode.l10n.t('≤ {0} elapsed', formatElapsed(elapsedForThread.ms)) };
                         elapsedForThread = undefined;
                         this.render();

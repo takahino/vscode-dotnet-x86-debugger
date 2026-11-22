@@ -15,7 +15,7 @@ export interface Target {
     root: DapVariable;
 }
 
-export const SNAPSHOT_SCHEME = 'dotnetx86-snapshot';
+export const SNAPSHOT_SCHEME = 'netdbg-snapshot';
 
 /** Serves snapshot / current-value documents shown by "Compare with Snapshot". */
 export class SnapshotStore implements vscode.TextDocumentContentProvider {
@@ -186,9 +186,9 @@ async function targetFromInput(given?: string): Promise<Target | undefined> {
 }
 
 /** Walks the variable with progress and cancellation; returns undefined when cancelled or failed (already reported). */
-/** `options` overrides the dotnetX86.dump.* limits (e.g. the table view needs exactly two levels). */
+/** `options` overrides the netdbg.dump.* limits (e.g. the table view needs exactly two levels). */
 export async function collect(target: Target, options: Partial<DumpOptions> = {}): Promise<CollectResult | undefined> {
-    const config = vscode.workspace.getConfiguration('dotnetX86.dump');
+    const config = vscode.workspace.getConfiguration('netdbg.dump');
     try {
         return await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t("Reading {0}…", target.expression), cancellable: true },
@@ -221,9 +221,9 @@ async function showDump(target: Target): Promise<void> {
 
 function reportTruncation(result: CollectResult): void {
     if (result.truncated) {
-        const config = vscode.workspace.getConfiguration('dotnetX86.dump');
+        const config = vscode.workspace.getConfiguration('netdbg.dump');
         void vscode.window.showInformationMessage(
-            vscode.l10n.t("Some values were not expanded because a limit was reached (depth {0} / nodes {1}). Change it with the dotnetX86.dump.maxDepth / maxNodes settings.", config.get('maxDepth', 3), config.get('maxNodes', 2000)),
+            vscode.l10n.t("Some values were not expanded because a limit was reached (depth {0} / nodes {1}). Change it with the netdbg.dump.maxDepth / maxNodes settings.", config.get('maxDepth', 3), config.get('maxNodes', 2000)),
         );
     }
 }

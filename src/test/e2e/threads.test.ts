@@ -55,7 +55,7 @@ describe('threads', { skip: e2eSkip }, () => {
 
     it('keeps a frozen thread suspended across continues and evaluations, until it is thawed', { timeout: 60_000 }, async () => {
         const { a } = await workers();
-        assert.equal((await s.request('dotnetX86.freezeThread', { threadId: a.id, frozen: true })).success, true);
+        assert.equal((await s.request('netdbg.freezeThread', { threadId: a.id, frozen: true })).success, true);
         const names = async () => ((await s.request('threads')).body.threads as { name: string }[]).map((t) => t.name);
         assert.ok((await names()).includes('worker-a [frozen]'), 'the Call Stack view says it is frozen');
         const frozenAt = await count(0);
@@ -69,7 +69,7 @@ describe('threads', { skip: e2eSkip }, () => {
         await next('third');
         assert.equal(await count(0), frozenAt, 'still frozen after evaluating expressions');
 
-        assert.equal((await s.request('dotnetX86.freezeThread', { threadId: a.id, frozen: false })).success, true);
+        assert.equal((await s.request('netdbg.freezeThread', { threadId: a.id, frozen: false })).success, true);
         assert.ok((await names()).includes('worker-a'));
         await next('fourth');
         assert.ok((await count(0)) > frozenAt, 'counting again once thawed');

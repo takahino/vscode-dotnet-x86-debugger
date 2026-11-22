@@ -35,7 +35,7 @@ export function markChanges(locals: LocalValue[], previous: HistoryEntry | undef
 }
 
 /**
- * Step history: records the location and the local variables at every stop of a dotnet-x86 session, so earlier
+ * Step history: records the location and the local variables at every stop of a netdbg session, so earlier
  * values can be looked at again after stepping on (a history to browse, not a way to run backwards).
  */
 export class StepHistory implements vscode.TreeDataProvider<HistoryEntry | LocalValue>, vscode.DebugAdapterTrackerFactory, vscode.Disposable {
@@ -107,7 +107,7 @@ export class StepHistory implements vscode.TreeDataProvider<HistoryEntry | Local
     }
 
     private async record(session: vscode.DebugSession, threadId: number, reason: string): Promise<void> {
-        if (!vscode.workspace.getConfiguration('dotnetX86.stepHistory').get<boolean>('enabled', true)) {
+        if (!vscode.workspace.getConfiguration('netdbg.stepHistory').get<boolean>('enabled', true)) {
             return;
         }
         try {

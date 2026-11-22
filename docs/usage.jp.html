@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>.NET x86 Debugger ガイド</title>
+<title>netdbg ガイド</title>
 <style>
   :root {
     --bg: #fbfbfa; --surface: #ffffff; --text: #1f2328; --muted: #5d6470; --border: #d8dce1;
@@ -93,7 +93,7 @@
 
 <div class="layout">
 <nav class="toc" aria-label="目次">
-  <div class="brand">.NET x86 Debugger</div>
+  <div class="brand">netdbg</div>
   <div class="lang"><a href="usage.html">English</a> · 日本語</div>
   <ol>
     <li><a href="#what">この拡張機能について</a></li>
@@ -138,14 +138,14 @@
 </nav>
 
 <main>
-<h1>.NET x86 Debugger — はじめてのガイド</h1>
+<h1>netdbg — はじめてのガイド</h1>
 <p class="lead">x86 向けにビルドした WinForms アプリなど、32bit の .NET アプリケーションを Visual Studio Code でデバッグするための拡張機能です。
 Visual Studio でおなじみのデバッグ機能の多くに加え、Visual Studio にも無い機能をいくつか備えています。</p>
 
 <h2 id="what">この拡張機能について</h2>
 <p>VS Code の C# 拡張に含まれるデバッガは 64bit と ARM64 向けしか配布されていないため、
 <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> でビルドしたプロセスはデバッグできません。この拡張機能は、自前のデバッグ エンジン
-<b>dotnet-x86dbg</b>（x86 と x64。プログラムのビット数に合う方を使います）を同梱し、デバッグの種類 <code>dotnet-x86</code> を追加します。
+<b>netdbg</b>（x86 と x64。プログラムのビット数に合う方を使います）を同梱し、デバッグの種類 <code>netdbg</code> を追加します。
 デバッガー自身は .NET を使いません。Visual Studio との違いと、netcoredbg（1.x のエンジン）との違いは README にまとめています。</p>
 <div class="cards">
   <div class="card"><h4>必要なもの</h4>Windows（64bit）、VS Code、.NET SDK、そしてアプリが使う <b>x86 版</b>の .NET ランタイム（WinForms / WPF なら <i>.NET Desktop Runtime (x86)</i>）。</div>
@@ -155,8 +155,8 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h2 id="install">インストール</h2>
 <ol class="steps">
-  <li><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases">Releases ページ</a>から
-    <code>dotnet-x86-debugger-&lt;バージョン&gt;.vsix</code> と <code>install-vsix.ps1</code> を同じフォルダにダウンロードします。</li>
+  <li><a href="https://github.com/takahino/vscode-netdbg/releases">Releases ページ</a>から
+    <code>netdbg-&lt;バージョン&gt;.vsix</code> と <code>install-vsix.ps1</code> を同じフォルダにダウンロードします。</li>
   <li>そのフォルダで次を実行します。
 <pre><code>powershell -ExecutionPolicy Bypass -File install-vsix.ps1</code></pre>
     VS Code のコマンドパレット（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>）で <b>拡張機能: VSIX からのインストール...</b>（Extensions: Install from VSIX...）を実行し、ファイルを選んでもインストールできます。</li>
@@ -190,7 +190,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
   "version": "0.2.0",
   "configurations": [{
     "name": ".NET x86 Launch",
-    "type": "dotnet-x86",
+    "type": "netdbg",
     "request": "launch",
     "preLaunchTask": "build",
     "program": "${workspaceFolder}/bin/x86/Debug/net10.0-windows/MyApp.exe",
@@ -622,7 +622,7 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
 <div class="usecase"><b>ユースケース:</b> 画面のデータが空なのにエラーが出ない。例外ログを見ると、空の <code>catch</code> で握りつぶされた <code>FormatException</code> が見つかります。</div>
 
 <h3 id="f-freeze">UI フリーズの自動検知</h3>
-<p>プログラムの実行中、UI スレッドがウィンドウ メッセージを処理しているかを 1 秒に数回確認します。2 秒（<code>dotnetX86.uiFreeze.thresholdMs</code>）処理しないと、そのスレッドでプログラムを一時停止します。コールスタックに UI を止めているコードが表示され、停止理由は「UI が 2.0 秒応答していません」になります。ブレークポイントでの停止やステップ実行はフリーズとみなしません。上のフレームがフレームワークのコード（<code>Thread.Sleep</code> やロック待ちなど）のときは、数フレーム下の自分のコードを選んでください。<code>dotnetX86.uiFreeze.enabled</code> で無効にできます。</p>
+<p>プログラムの実行中、UI スレッドがウィンドウ メッセージを処理しているかを 1 秒に数回確認します。2 秒（<code>netdbg.uiFreeze.thresholdMs</code>）処理しないと、そのスレッドでプログラムを一時停止します。コールスタックに UI を止めているコードが表示され、停止理由は「UI が 2.0 秒応答していません」になります。ブレークポイントでの停止やステップ実行はフリーズとみなしません。上のフレームがフレームワークのコード（<code>Thread.Sleep</code> やロック待ちなど）のときは、数フレーム下の自分のコードを選んでください。<code>netdbg.uiFreeze.enabled</code> で無効にできます。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 230" role="img" aria-label="UI スレッドが応答しなくなり、2 秒後にそのスレッドで一時停止してコールスタックに原因のコードが表示される">
   <rect x="0" y="0" width="860" height="230" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -655,7 +655,7 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
 </svg>
 <figcaption>クリック処理が UI スレッドでデータを読み込み、2 秒応答しなかった時点でそこで止まります。</figcaption>
 <ol class="callouts">
-  <li>UI スレッドが <code>dotnetX86.uiFreeze.thresholdMs</code>（2 秒）応答しないと、そのスレッドでプログラムを一時停止します。</li>
+  <li>UI スレッドが <code>netdbg.uiFreeze.thresholdMs</code>（2 秒）応答しないと、そのスレッドでプログラムを一時停止します。</li>
   <li>フレームワークのフレームの下にある、最初の自分のコードのフレームを選びます。そこが UI を止めている処理です。</li>
 </ol>
 </figure>
@@ -686,7 +686,7 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
 <figcaption>式ごとに小さなグラフが並びます。計測グラフの山が、遅かった回です。</figcaption>
 </figure>
 <h4>メモリ / CPU グラフ</h4>
-<p>コマンドパレットで <b>.NET x86: メモリ / CPU グラフを表示</b> を実行すると、Private Bytes・Working Set・CPU 使用率を 1 秒ごとに表示します。停止していた区間は網掛けになります。<code>dotnetX86.memoryGraph.autoOpen</code> を有効にすると、デバッグ開始時に自動で開きます。</p>
+<p>コマンドパレットで <b>.NET x86: メモリ / CPU グラフを表示</b> を実行すると、Private Bytes・Working Set・CPU 使用率を 1 秒ごとに表示します。停止していた区間は網掛けになります。<code>netdbg.memoryGraph.autoOpen</code> を有効にすると、デバッグ開始時に自動で開きます。</p>
 <p>その下には、Visual Studio にはないグラフが 2 つあります。<b>GDI / USER オブジェクト数とハンドル数</b>（オブジェクトは種類ごとに 1 プロセス 10,000 個まで。数が上限の半分を超えると上限の線を表示します）と、<b>32bit アドレス空間</b>の使用量（2GB / 4GB の上限と、最大の空きブロック）です。GDI / USER が上限の 80 % に達したとき、アドレス空間の 85 % が埋まったとき、最大の空きブロックが 128MB を切ったときは警告を表示します。</p>
 <div class="usecase"><b>ユースケース:</b> 1 時間ほど使うと、画面に赤い × が出て落ちる。帳票を印刷するたびに GDI のグラフが数個ずつ増えている。印刷処理で作った <code>Font</code> を Dispose していませんでした。</div>
 <figure class="figure">
@@ -713,7 +713,7 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
 </figure>
 <div class="usecase"><b>ユースケース:</b> フォームを開いて閉じるたびにメモリが増える。操作を繰り返しながら Private Bytes を見て、下がらないなら解除し忘れたイベントハンドラを疑います。</div>
 <h4 id="f-heap">ヒープ スナップショット</h4>
-<p>停止中に <b>コールスタック</b> ビューで右クリックして <b>ヒープ スナップショットを取得</b> を選ぶと（コマンド パレットの <b>.NET x86: ヒープ スナップショットを取得</b> も可）、GC ヒープ上の型ごとのオブジェクト数とバイト数が大きい順に表示されます（Visual Studio のメモリ使用量に相当）。あとの停止でもう一度取ると、型ごとの増減（<b>Δ 個数</b>・<b>Δ サイズ</b>）がわかります。比べる 2 つのスナップショットは自由に選べ、列で並べ替え、型名で絞り込み、<b>増えたものだけ</b> の表示ができます。取得の直前にガベージ コレクションを実行し、まだ使われているオブジェクトだけを数えます（<code>dotnetX86.heapSnapshot.collectGarbage</code>、またはパネルのチェックボックス）。</p>
+<p>停止中に <b>コールスタック</b> ビューで右クリックして <b>ヒープ スナップショットを取得</b> を選ぶと（コマンド パレットの <b>.NET x86: ヒープ スナップショットを取得</b> も可）、GC ヒープ上の型ごとのオブジェクト数とバイト数が大きい順に表示されます（Visual Studio のメモリ使用量に相当）。あとの停止でもう一度取ると、型ごとの増減（<b>Δ 個数</b>・<b>Δ サイズ</b>）がわかります。比べる 2 つのスナップショットは自由に選べ、列で並べ替え、型名で絞り込み、<b>増えたものだけ</b> の表示ができます。取得の直前にガベージ コレクションを実行し、まだ使われているオブジェクトだけを数えます（<code>netdbg.heapSnapshot.collectGarbage</code>、またはパネルのチェックボックス）。</p>
 <figure class="figure">
 <svg viewBox="0 0 860 200" role="img" aria-label="ヒープ スナップショット">
   <rect x="0" y="0" width="860" height="200" rx="6" fill="var(--ui-editor)" stroke="var(--ui-frame)"/>
@@ -875,8 +875,8 @@ x86 としてデバッグするには、<code>&lt;PlatformTarget&gt;x86&lt;/Plat
   <li><b>SQL をコピー</b> は、プログラムが送ったままの SQL をコピーします。</li>
   <li><b>SQL ログを出力</b>（ビューのタイトル）で、すべての SQL を時刻・呼び出し元・値つきで <code>.sql</code> ファイルに書き出します。</li>
 </ul>
-<p>SQL を読み取る間、実行ごとにプログラムが一瞬（数百ミリ秒ほど）止まるため、時間を計測するときはオフにしてください（<code>dotnetX86.sqlLog.enabled</code>）。
-他のプロバイダーを記録するには、その Command 型を <code>dotnetX86.sqlLog.methods</code> に追加します（例: <code>Npgsql.NpgsqlCommand.ExecuteReader</code>）。
+<p>SQL を読み取る間、実行ごとにプログラムが一瞬（数百ミリ秒ほど）止まるため、時間を計測するときはオフにしてください（<code>netdbg.sqlLog.enabled</code>）。
+他のプロバイダーを記録するには、その Command 型を <code>netdbg.sqlLog.methods</code> に追加します（例: <code>Npgsql.NpgsqlCommand.ExecuteReader</code>）。
 SQL の実行時間は記録しません。<code>...Async</code> メソッドは、プロバイダーが同期メソッドを呼ぶ場合に限って記録されます。</p>
 <div class="usecase"><b>活用例:</b> 画面に違う受注が表示される。SQL ログから値を埋めた SQL をコピーして SQL Developer で実行すると、
 <code>:since</code> の日付が 1 日ずれていることが分かり、呼び出し元からそれを組み立てたメソッドも分かります。</div>
@@ -900,7 +900,7 @@ SQL の実行時間は記録しません。<code>...Async</code> メソッドは
 
 <h3 id="f-evidence">エビデンス取得</h3>
 <p>停止中に <b>.NET x86: エビデンスを取得</b>（コマンド パレット、コールスタックの右クリック、WinForms コントロール ビューのタイトルのカメラ ボタン）を実行すると、
-その画面からテスト報告に必要なものを、ワークスペースの新しいフォルダー <code>evidence/&lt;日時&gt;/</code>（<code>dotnetX86.evidence.folder</code>）に
+その画面からテスト報告に必要なものを、ワークスペースの新しいフォルダー <code>evidence/&lt;日時&gt;/</code>（<code>netdbg.evidence.folder</code>）に
 <code>evidence.md</code> とフォームごとの PNG で保存します。</p>
 <ul>
   <li><b>開いているすべてのフォームの画像</b> — デスクトップ コンポジターが持つ停止中ウィンドウの最後の画像を一瞬だけ最前面に出して撮るため、
@@ -915,7 +915,7 @@ SQL の実行時間は記録しません。<code>...Async</code> メソッドは
 画面の画像・入力値・（実行されていない）INSERT が 1 つの Markdown にまとまり、そのまま報告に使えます。</div>
 
 <h3 id="f-sourcemap">ソースが別の場所にある場合</h3>
-<p>PDB に記録されたソースのパスがこのマシンに無い自作ライブラリ（別の場所でビルドした NuGet パッケージなど）にステップ インするには、launch.json の <code>sourceSearchPaths</code> にソースの親フォルダを追加するか（サブフォルダも探します）、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（例: <code>{ "/_/": "D:\\work\\MyLib\\" }</code>）。どちらも設定（<code>dotnetX86.sourceFileMap</code> / <code>dotnetX86.sourceSearchPaths</code>）で全構成に共通にできます。停止位置のソースが無いときは、どのパスを置き換えればよいかをデバッグ コンソールに表示します。シンボルの無いライブラリは <a href="#f-decompile">逆コンパイル</a> を使います。</p>
+<p>PDB に記録されたソースのパスがこのマシンに無い自作ライブラリ（別の場所でビルドした NuGet パッケージなど）にステップ インするには、launch.json の <code>sourceSearchPaths</code> にソースの親フォルダを追加するか（サブフォルダも探します）、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（例: <code>{ "/_/": "D:\\work\\MyLib\\" }</code>）。どちらも設定（<code>netdbg.sourceFileMap</code> / <code>netdbg.sourceSearchPaths</code>）で全構成に共通にできます。停止位置のソースが無いときは、どのパスを置き換えればよいかをデバッグ コンソールに表示します。シンボルの無いライブラリは <a href="#f-decompile">逆コンパイル</a> を使います。</p>
 
 <figure class="figure">
 <svg viewBox="0 0 860 190" role="img" aria-label="PDB にはビルド サーバーのパスが記録されているが、sourceSearchPaths か sourceFileMap で手元のファイルにたどり着く">
@@ -1045,7 +1045,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 <p>ランチャーやタスクスケジューラなど、別のものから起動されるアプリを起動直後からデバッグしたいときは、名前でアタッチします。プロセスが現れるまで待ってからアタッチします。</p>
 <pre><code>{
   "name": ".NET x86 Attach (wait for process)",
-  "type": "dotnet-x86",
+  "type": "netdbg",
   "request": "attach",
   "processName": "OrderApp",
   "waitTimeout": 120
@@ -1086,53 +1086,53 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td>ブレークポイントが白抜きのまま</td><td>モジュール ビューで、自分のアセンブリが「シンボル読み込み済み」か確認します（Debug ビルドで、DLL の隣に PDB があること）。</td></tr>
   <tr><td>自作ライブラリにステップインできない／デバッグ コンソールに「ソースが見つかりません: …」</td><td>PDB にこのマシンに無いパスが記録されています。ソースの親フォルダを <code>sourceSearchPaths</code> に追加するか、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（Release ビルドなら <code>justMyCode</code> も false に）。</td></tr>
   <tr><td>変数ビューが見当たらない</td><td>非表示または移動している可能性があります。<b>Run and Debug: Focus on Variables View</b> を実行します。</td></tr>
-  <tr><td>そのほかの問題</td><td><code>dotnetX86.trace</code> を有効にして再現し、出力パネル「.NET x86 Debugger」の内容を添えて <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/issues">Issue</a> を作成してください。</td></tr>
+  <tr><td>そのほかの問題</td><td><code>netdbg.trace</code> を有効にして再現し、出力パネル「netdbg」の内容を添えて <a href="https://github.com/takahino/vscode-netdbg/issues">Issue</a> を作成してください。</td></tr>
 </table>
 
 <h2 id="settings">設定</h2>
 <table>
   <tr><th>設定</th><th>既定値</th><th>意味</th></tr>
-  <tr><td><code>dotnetX86.exceptionLog.enabled</code></td><td>true</td><td>スローされたすべての例外を記録します（例外を大量にスローするアプリでは遅くなります）。</td></tr>
-  <tr><td><code>dotnetX86.uiFreeze.enabled</code> / <code>thresholdMs</code></td><td>true / 2000</td><td>UI がこの時間（ミリ秒）応答しないとプログラムを一時停止します。</td></tr>
-  <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>true</td><td>ステップ後に経過時間を表示します。</td></tr>
-  <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>true</td><td>停止のたびにステップ履歴へ記録します。</td></tr>
-  <tr><td><code>dotnetX86.memoryGraph.autoOpen</code></td><td>false</td><td>デバッグ開始時にメモリ / CPU グラフを開きます。</td></tr>
-  <tr><td><code>dotnetX86.heapSnapshot.collectGarbage</code></td><td>true</td><td>ヒープ スナップショットの直前にガベージ コレクションを実行します。</td></tr>
-  <tr><td><code>dotnetX86.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>変数をダンプなどのコマンドの上限。</td></tr>
-  <tr><td><code>dotnetX86.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
-  <tr><td><code>dotnetX86.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
-  <tr><td><code>dotnetX86.debuggerPath</code></td><td>（空）</td><td>x86 のプログラムに、同梱版の代わりに別の x86 のデバッグ エンジン（dotnet-x86dbg.exe、または 1.x の netcoredbg.exe）を使います。</td></tr>
-  <tr><td><code>dotnetX86.sqlLog.methods</code></td><td>ODP.NET・SqlClient・OleDb・Odbc</td><td>SQL ログがコマンドを読み取るプロバイダーのメソッド（<code>名前空間.型.メソッド</code>）。</td></tr>
-  <tr><td><code>dotnetX86.evidence.folder</code></td><td>evidence</td><td>エビデンスの保存先（ワークスペース フォルダーからの相対パス）。</td></tr>
+  <tr><td><code>netdbg.exceptionLog.enabled</code></td><td>true</td><td>スローされたすべての例外を記録します（例外を大量にスローするアプリでは遅くなります）。</td></tr>
+  <tr><td><code>netdbg.uiFreeze.enabled</code> / <code>thresholdMs</code></td><td>true / 2000</td><td>UI がこの時間（ミリ秒）応答しないとプログラムを一時停止します。</td></tr>
+  <tr><td><code>netdbg.perfTips.enabled</code></td><td>true</td><td>ステップ後に経過時間を表示します。</td></tr>
+  <tr><td><code>netdbg.stepHistory.enabled</code></td><td>true</td><td>停止のたびにステップ履歴へ記録します。</td></tr>
+  <tr><td><code>netdbg.memoryGraph.autoOpen</code></td><td>false</td><td>デバッグ開始時にメモリ / CPU グラフを開きます。</td></tr>
+  <tr><td><code>netdbg.heapSnapshot.collectGarbage</code></td><td>true</td><td>ヒープ スナップショットの直前にガベージ コレクションを実行します。</td></tr>
+  <tr><td><code>netdbg.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>変数をダンプなどのコマンドの上限。</td></tr>
+  <tr><td><code>netdbg.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>（空）</td><td>参照アセンブリのソースの場所を、全構成に共通で指定します（launch.json の値とマージ）。</td></tr>
+  <tr><td><code>netdbg.trace</code></td><td>false</td><td>デバッガとの通信を記録するトラブル調査用のログ。</td></tr>
+  <tr><td><code>netdbg.debuggerPath</code></td><td>（空）</td><td>x86 のプログラムに、同梱版の代わりに別の x86 のデバッグ エンジン（netdbg.exe、または 1.x の netcoredbg.exe）を使います。</td></tr>
+  <tr><td><code>netdbg.sqlLog.methods</code></td><td>ODP.NET・SqlClient・OleDb・Odbc</td><td>SQL ログがコマンドを読み取るプロバイダーのメソッド（<code>名前空間.型.メソッド</code>）。</td></tr>
+  <tr><td><code>netdbg.evidence.folder</code></td><td>evidence</td><td>エビデンスの保存先（ワークスペース フォルダーからの相対パス）。</td></tr>
 </table>
 <h3 id="settings-features">機能のオン / オフ</h3>
 <p>すべての機能は既定でオン（<code>true</code>）です。<code>false</code> にすると、その機能のビュー・メニュー・コマンドが消え、裏で行う処理も止まります。</p>
 <table>
   <tr><th>設定</th><th>機能</th></tr>
-  <tr><td><code>dotnetX86.memoryGraph.enabled</code></td><td>メモリ / CPU / GDI グラフ（計測もしない）</td></tr>
-  <tr><td><code>dotnetX86.inlineValues.enabled</code></td><td>インライン値</td></tr>
-  <tr><td><code>dotnetX86.autos.enabled</code></td><td>自動変数ビュー</td></tr>
-  <tr><td><code>dotnetX86.modules.enabled</code></td><td>モジュール ビュー、シンボルのダウンロード</td></tr>
-  <tr><td><code>dotnetX86.exceptionSettings.enabled</code></td><td>例外設定ビュー（そこでチェックした型での停止も）</td></tr>
-  <tr><td><code>dotnetX86.winforms.enabled</code></td><td>WinForms コントロール ビューとそのコマンド、データ バインディングを表示</td></tr>
-  <tr><td><code>dotnetX86.heapSnapshot.enabled</code></td><td>ヒープ スナップショットと GDI リーク候補</td></tr>
-  <tr><td><code>dotnetX86.parallelStacks.enabled</code></td><td>並列スタック、スレッドの凍結・解除</td></tr>
-  <tr><td><code>dotnetX86.valueTrend.enabled</code></td><td>値の推移と区間の計測</td></tr>
-  <tr><td><code>dotnetX86.pinnedValues.enabled</code></td><td>ピン留めした値（オンに戻すと再表示）</td></tr>
-  <tr><td><code>dotnetX86.breakpointCommands.enabled</code></td><td>エディターの右クリックのブレークポイント コマンド（<code>#once</code> / <code>#after</code> / <code>#changed</code> / <code>#caller</code> の条件は使えます）</td></tr>
-  <tr><td><code>dotnetX86.variableTools.enabled</code></td><td>変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像、C# としてコピー、文字列、スナップショット、オブジェクト ID）</td></tr>
-  <tr><td><code>dotnetX86.generateTest.enabled</code></td><td>ここから単体テストを生成</td></tr>
-  <tr><td><code>dotnetX86.sessionReport.enabled</code></td><td>デバッグ セッション レポートの出力</td></tr>
-  <tr><td><code>dotnetX86.stepHistory.enabled</code></td><td>ステップ履歴ビューと記録</td></tr>
-  <tr><td><code>dotnetX86.exceptionLog.enabled</code></td><td>例外ログ ビューと記録</td></tr>
-  <tr><td><code>dotnetX86.perfTips.enabled</code></td><td>PerfTips</td></tr>
-  <tr><td><code>dotnetX86.uiFreeze.enabled</code></td><td>UI フリーズの検知</td></tr>
-  <tr><td><code>dotnetX86.sqlLog.enabled</code></td><td>SQL ログ ビューと記録</td></tr>
-  <tr><td><code>dotnetX86.eventTrace.enabled</code></td><td>イベントのトレースとイベント トレース ビュー</td></tr>
-  <tr><td><code>dotnetX86.evidence.enabled</code></td><td>エビデンスの取得</td></tr>
-  <tr><td><code>dotnetX86.sourceLink.enabled</code></td><td>Source Link でのダウンロード</td></tr>
+  <tr><td><code>netdbg.memoryGraph.enabled</code></td><td>メモリ / CPU / GDI グラフ（計測もしない）</td></tr>
+  <tr><td><code>netdbg.inlineValues.enabled</code></td><td>インライン値</td></tr>
+  <tr><td><code>netdbg.autos.enabled</code></td><td>自動変数ビュー</td></tr>
+  <tr><td><code>netdbg.modules.enabled</code></td><td>モジュール ビュー、シンボルのダウンロード</td></tr>
+  <tr><td><code>netdbg.exceptionSettings.enabled</code></td><td>例外設定ビュー（そこでチェックした型での停止も）</td></tr>
+  <tr><td><code>netdbg.winforms.enabled</code></td><td>WinForms コントロール ビューとそのコマンド、データ バインディングを表示</td></tr>
+  <tr><td><code>netdbg.heapSnapshot.enabled</code></td><td>ヒープ スナップショットと GDI リーク候補</td></tr>
+  <tr><td><code>netdbg.parallelStacks.enabled</code></td><td>並列スタック、スレッドの凍結・解除</td></tr>
+  <tr><td><code>netdbg.valueTrend.enabled</code></td><td>値の推移と区間の計測</td></tr>
+  <tr><td><code>netdbg.pinnedValues.enabled</code></td><td>ピン留めした値（オンに戻すと再表示）</td></tr>
+  <tr><td><code>netdbg.breakpointCommands.enabled</code></td><td>エディターの右クリックのブレークポイント コマンド（<code>#once</code> / <code>#after</code> / <code>#changed</code> / <code>#caller</code> の条件は使えます）</td></tr>
+  <tr><td><code>netdbg.variableTools.enabled</code></td><td>変数 / ウォッチの右クリックのコマンド（ダンプ、表 / 画像、C# としてコピー、文字列、スナップショット、オブジェクト ID）</td></tr>
+  <tr><td><code>netdbg.generateTest.enabled</code></td><td>ここから単体テストを生成</td></tr>
+  <tr><td><code>netdbg.sessionReport.enabled</code></td><td>デバッグ セッション レポートの出力</td></tr>
+  <tr><td><code>netdbg.stepHistory.enabled</code></td><td>ステップ履歴ビューと記録</td></tr>
+  <tr><td><code>netdbg.exceptionLog.enabled</code></td><td>例外ログ ビューと記録</td></tr>
+  <tr><td><code>netdbg.perfTips.enabled</code></td><td>PerfTips</td></tr>
+  <tr><td><code>netdbg.uiFreeze.enabled</code></td><td>UI フリーズの検知</td></tr>
+  <tr><td><code>netdbg.sqlLog.enabled</code></td><td>SQL ログ ビューと記録</td></tr>
+  <tr><td><code>netdbg.eventTrace.enabled</code></td><td>イベントのトレースとイベント トレース ビュー</td></tr>
+  <tr><td><code>netdbg.evidence.enabled</code></td><td>エビデンスの取得</td></tr>
+  <tr><td><code>netdbg.sourceLink.enabled</code></td><td>Source Link でのダウンロード</td></tr>
 </table>
-<p style="color:var(--muted);font-size:13px;margin-top:40px">.NET x86 Debugger · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>
+<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-netdbg">GitHub</a></p>
 </main>
 </div>
 </body>

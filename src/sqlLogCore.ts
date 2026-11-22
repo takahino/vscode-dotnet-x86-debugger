@@ -1,5 +1,5 @@
 // SQL log: the statements the engine read from ADO.NET commands (OracleCommand, SqlCommand, ...) at the provider
-// (`dotnetX86.sqlExecuted`), shown with the parameter values filled in. Kept free of the vscode module so it can be
+// (`netdbg.sqlExecuted`), shown with the parameter values filled in. Kept free of the vscode module so it can be
 // tested alone. Hooking the provider and not the caller means a home-made data access component in between does not
 // matter: every statement passes through the provider.
 

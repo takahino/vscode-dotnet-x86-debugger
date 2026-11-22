@@ -1,5 +1,5 @@
 {
-  "name": "dotnet-x86-debugger",
+  "name": "netdbg",
   "displayName": "%displayName%",
   "description": "%description%",
   "version": "2.0.0",
@@ -12,12 +12,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/takahino/vscode-dotnet-x86-debugger.git"
+    "url": "https://github.com/takahino/vscode-netdbg.git"
   },
   "bugs": {
-    "url": "https://github.com/takahino/vscode-dotnet-x86-debugger/issues"
+    "url": "https://github.com/takahino/vscode-netdbg/issues"
   },
-  "homepage": "https://github.com/takahino/vscode-dotnet-x86-debugger#readme",
+  "homepage": "https://github.com/takahino/vscode-netdbg#readme",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -39,54 +39,54 @@
   ],
   "main": "./out/extension.js",
   "activationEvents": [
-    "onDebugResolve:dotnet-x86",
-    "onDebugDynamicConfigurations:dotnet-x86",
+    "onDebugResolve:netdbg",
+    "onDebugDynamicConfigurations:netdbg",
     "onDebugInitialConfigurations",
-    "onCommand:dotnetX86.trackValue",
-    "onCommand:dotnetX86.showValueTrend",
-    "onCommand:dotnetX86.startTimer",
-    "onCommand:dotnetX86.endTimer",
-    "onCommand:dotnetX86.addTemporaryBreakpoint",
-    "onCommand:dotnetX86.addDependentBreakpoint",
-    "onCommand:dotnetX86.addWhenChangedBreakpoint",
-    "onCommand:dotnetX86.addCallerBreakpoint",
-    "onCommand:dotnetX86.highlightControl",
-    "onCommand:dotnetX86.showDataBindings",
-    "onCommand:dotnetX86.generateTest",
-    "onCommand:dotnetX86.makeObjectId",
-    "onCommand:dotnetX86.downloadSymbols",
-    "onCommand:dotnetX86.showParallelStacks",
-    "onCommand:dotnetX86.showHeapSnapshots",
-    "onCommand:dotnetX86.checkEnvironment",
-    "onCommand:dotnetX86.generateLaunchJson",
-    "onCommand:dotnetX86.gettingStarted",
-    "onCommand:dotnetX86.takeHeapSnapshot",
-    "onCommand:dotnetX86.clearDownloadedSymbols",
-    "onCommand:dotnetX86.addExceptionType",
-    "onCommand:dotnetX86.pinValue",
-    "onCommand:dotnetX86.unpinValue",
-    "onCommand:dotnetX86.clearPinnedValues",
-    "onCommand:dotnetX86.exportSessionReport",
-    "onCommand:dotnetX86.clearSqlLog",
-    "onCommand:dotnetX86.exportSqlLog",
-    "onCommand:dotnetX86.traceControlEvents",
-    "onCommand:dotnetX86.clearEventTrace",
-    "onCommand:dotnetX86.exportEventTrace",
-    "onCommand:dotnetX86.captureEvidence",
-    "onCommand:dotnetX86.copyMcpConnectionSettings",
-    "onCommand:dotnetX86.registerMcpServer",
-    "onCommand:dotnetX86.applyCodeChanges"
+    "onCommand:netdbg.trackValue",
+    "onCommand:netdbg.showValueTrend",
+    "onCommand:netdbg.startTimer",
+    "onCommand:netdbg.endTimer",
+    "onCommand:netdbg.addTemporaryBreakpoint",
+    "onCommand:netdbg.addDependentBreakpoint",
+    "onCommand:netdbg.addWhenChangedBreakpoint",
+    "onCommand:netdbg.addCallerBreakpoint",
+    "onCommand:netdbg.highlightControl",
+    "onCommand:netdbg.showDataBindings",
+    "onCommand:netdbg.generateTest",
+    "onCommand:netdbg.makeObjectId",
+    "onCommand:netdbg.downloadSymbols",
+    "onCommand:netdbg.showParallelStacks",
+    "onCommand:netdbg.showHeapSnapshots",
+    "onCommand:netdbg.checkEnvironment",
+    "onCommand:netdbg.generateLaunchJson",
+    "onCommand:netdbg.gettingStarted",
+    "onCommand:netdbg.takeHeapSnapshot",
+    "onCommand:netdbg.clearDownloadedSymbols",
+    "onCommand:netdbg.addExceptionType",
+    "onCommand:netdbg.pinValue",
+    "onCommand:netdbg.unpinValue",
+    "onCommand:netdbg.clearPinnedValues",
+    "onCommand:netdbg.exportSessionReport",
+    "onCommand:netdbg.clearSqlLog",
+    "onCommand:netdbg.exportSqlLog",
+    "onCommand:netdbg.traceControlEvents",
+    "onCommand:netdbg.clearEventTrace",
+    "onCommand:netdbg.exportEventTrace",
+    "onCommand:netdbg.captureEvidence",
+    "onCommand:netdbg.copyMcpConnectionSettings",
+    "onCommand:netdbg.registerMcpServer",
+    "onCommand:netdbg.applyCodeChanges"
   ],
   "contributes": {
     "mcpServerDefinitionProviders": [
       {
-        "id": "dotnetX86.mcp",
-        "label": ".NET x86 Debugger"
+        "id": "netdbg.mcp",
+        "label": "netdbg"
       }
     ],
     "walkthroughs": [
       {
-        "id": "dotnetX86.gettingStarted",
+        "id": "netdbg.gettingStarted",
         "title": "%walkthrough.title%",
         "description": "%walkthrough.description%",
         "steps": [
@@ -98,7 +98,7 @@
               "markdown": "%walkthrough.environment.media%"
             },
             "completionEvents": [
-              "onCommand:dotnetX86.checkEnvironment"
+              "onCommand:netdbg.checkEnvironment"
             ]
           },
           {
@@ -109,7 +109,7 @@
               "markdown": "%walkthrough.project.media%"
             },
             "completionEvents": [
-              "onCommand:dotnetX86.checkEnvironment"
+              "onCommand:netdbg.checkEnvironment"
             ]
           },
           {
@@ -120,7 +120,7 @@
               "markdown": "%walkthrough.launch.media%"
             },
             "completionEvents": [
-              "onCommand:dotnetX86.generateLaunchJson"
+              "onCommand:netdbg.generateLaunchJson"
             ]
           },
           {
@@ -142,7 +142,7 @@
               "markdown": "%walkthrough.features.media%"
             },
             "completionEvents": [
-              "onLink:https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html"
+              "onLink:https://takahino.github.io/vscode-netdbg/usage.html"
             ]
           }
         ]
@@ -150,325 +150,325 @@
     ],
     "commands": [
       {
-        "command": "dotnetX86.gettingStarted",
+        "command": "netdbg.gettingStarted",
         "title": "%command.gettingStarted%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.checkEnvironment",
+        "command": "netdbg.checkEnvironment",
         "title": "%command.checkEnvironment%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.generateLaunchJson",
+        "command": "netdbg.generateLaunchJson",
         "title": "%command.generateLaunchJson%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.dumpVariable",
+        "command": "netdbg.dumpVariable",
         "title": "%command.dumpVariable%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.dumpExpression",
+        "command": "netdbg.dumpExpression",
         "title": "%command.dumpExpression%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.copyAsCSharp",
+        "command": "netdbg.copyAsCSharp",
         "title": "%command.copyAsCSharp%",
         "category": ".NET x86"
       },
 
       {
-        "command": "dotnetX86.showParallelStacks",
+        "command": "netdbg.showParallelStacks",
         "title": "%command.showParallelStacks%",
         "category": ".NET x86",
         "icon": "$(type-hierarchy)"
       },
       {
-        "command": "dotnetX86.showHeapSnapshots",
+        "command": "netdbg.showHeapSnapshots",
         "title": "%command.showHeapSnapshots%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.takeHeapSnapshot",
+        "command": "netdbg.takeHeapSnapshot",
         "title": "%command.takeHeapSnapshot%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.freezeThread",
+        "command": "netdbg.freezeThread",
         "title": "%command.freezeThread%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.thawThread",
+        "command": "netdbg.thawThread",
         "title": "%command.thawThread%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.downloadSymbols",
+        "command": "netdbg.downloadSymbols",
         "title": "%command.downloadSymbols%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.clearDownloadedSymbols",
+        "command": "netdbg.clearDownloadedSymbols",
         "title": "%command.clearDownloadedSymbols%",
         "category": ".NET x86"
       },
 
       {
-        "command": "dotnetX86.makeObjectId",
+        "command": "netdbg.makeObjectId",
         "title": "%command.makeObjectId%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.generateTest",
+        "command": "netdbg.generateTest",
         "title": "%command.generateTest%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.viewString",
+        "command": "netdbg.viewString",
         "title": "%command.viewString%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.takeSnapshot",
+        "command": "netdbg.takeSnapshot",
         "title": "%command.takeSnapshot%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.compareWithSnapshot",
+        "command": "netdbg.compareWithSnapshot",
         "title": "%command.compareWithSnapshot%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.showMemoryGraph",
+        "command": "netdbg.showMemoryGraph",
         "title": "%command.showMemoryGraph%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.trackValue",
+        "command": "netdbg.trackValue",
         "title": "%command.trackValue%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.showValueTrend",
+        "command": "netdbg.showValueTrend",
         "title": "%command.showValueTrend%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.writeCoverage",
+        "command": "netdbg.writeCoverage",
         "title": "%command.writeCoverage%",
         "category": ".NET x86"
       },      {
-        "command": "dotnetX86.clearStepHistory",
+        "command": "netdbg.clearStepHistory",
         "title": "%command.clearStepHistory%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
       },
       {
-        "command": "dotnetX86.viewAsTable",
+        "command": "netdbg.viewAsTable",
         "title": "%command.viewAsTable%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.viewAsImage",
+        "command": "netdbg.viewAsImage",
         "title": "%command.viewAsImage%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.copyModulePath",
+        "command": "netdbg.copyModulePath",
         "title": "%command.copyModulePath%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.revealModule",
+        "command": "netdbg.revealModule",
         "title": "%command.revealModule%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.addExceptionType",
+        "command": "netdbg.addExceptionType",
         "title": "%command.addExceptionType%",
         "category": ".NET x86",
         "icon": "$(add)"
       },
       {
-        "command": "dotnetX86.removeExceptionType",
+        "command": "netdbg.removeExceptionType",
         "title": "%command.removeExceptionType%",
         "category": ".NET x86",
         "icon": "$(trash)"
       },
       {
-        "command": "dotnetX86.uncheckExceptionTypes",
+        "command": "netdbg.uncheckExceptionTypes",
         "title": "%command.uncheckExceptionTypes%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
       },
       {
-        "command": "dotnetX86.breakOnExceptionType",
+        "command": "netdbg.breakOnExceptionType",
         "title": "%command.breakOnExceptionType%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.clearExceptionLog",
+        "command": "netdbg.clearExceptionLog",
         "title": "%command.clearExceptionLog%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
       },
       {
-        "command": "dotnetX86.startTimer",
+        "command": "netdbg.startTimer",
         "title": "%command.startTimer%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.endTimer",
+        "command": "netdbg.endTimer",
         "title": "%command.endTimer%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.addTemporaryBreakpoint",
+        "command": "netdbg.addTemporaryBreakpoint",
         "title": "%command.addTemporaryBreakpoint%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.addDependentBreakpoint",
+        "command": "netdbg.addDependentBreakpoint",
         "title": "%command.addDependentBreakpoint%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.addWhenChangedBreakpoint",
+        "command": "netdbg.addWhenChangedBreakpoint",
         "title": "%command.addWhenChangedBreakpoint%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.addCallerBreakpoint",
+        "command": "netdbg.addCallerBreakpoint",
         "title": "%command.addCallerBreakpoint%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.pinValue",
+        "command": "netdbg.pinValue",
         "title": "%command.pinValue%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.unpinValue",
+        "command": "netdbg.unpinValue",
         "title": "%command.unpinValue%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.clearPinnedValues",
+        "command": "netdbg.clearPinnedValues",
         "title": "%command.clearPinnedValues%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.refreshControlTree",
+        "command": "netdbg.refreshControlTree",
         "title": "%command.refreshControlTree%",
         "category": ".NET x86",
         "icon": "$(refresh)"
       },
       {
-        "command": "dotnetX86.breakOnControlEvent",
+        "command": "netdbg.breakOnControlEvent",
         "title": "%command.breakOnControlEvent%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.editControlProperty",
+        "command": "netdbg.editControlProperty",
         "title": "%command.editControlProperty%",
         "category": ".NET x86",
         "icon": "$(edit)"
       },
       {
-        "command": "dotnetX86.highlightControl",
+        "command": "netdbg.highlightControl",
         "title": "%command.highlightControl%",
         "category": ".NET x86",
         "icon": "$(eye)"
       },
       {
-        "command": "dotnetX86.showDataBindings",
+        "command": "netdbg.showDataBindings",
         "title": "%command.showDataBindings%",
         "category": ".NET x86",
         "icon": "$(link)"
       },
       {
-        "command": "dotnetX86.dumpControl",
+        "command": "netdbg.dumpControl",
         "title": "%command.dumpControl%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.copyControlExpression",
+        "command": "netdbg.copyControlExpression",
         "title": "%command.copyControlExpression%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.exportSessionReport",
+        "command": "netdbg.exportSessionReport",
         "title": "%command.exportSessionReport%",
         "category": ".NET x86",
         "icon": "$(output)"
       },
       {
-        "command": "dotnetX86.clearSqlLog",
+        "command": "netdbg.clearSqlLog",
         "title": "%command.clearSqlLog%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
       },
       {
-        "command": "dotnetX86.exportSqlLog",
+        "command": "netdbg.exportSqlLog",
         "title": "%command.exportSqlLog%",
         "category": ".NET x86",
         "icon": "$(output)"
       },
       {
-        "command": "dotnetX86.copySqlWithValues",
+        "command": "netdbg.copySqlWithValues",
         "title": "%command.copySqlWithValues%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.copySql",
+        "command": "netdbg.copySql",
         "title": "%command.copySql%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.openSql",
+        "command": "netdbg.openSql",
         "title": "%command.openSql%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.traceControlEvents",
+        "command": "netdbg.traceControlEvents",
         "title": "%command.traceControlEvents%",
         "category": ".NET x86",
         "icon": "$(zap)"
       },
       {
-        "command": "dotnetX86.clearEventTrace",
+        "command": "netdbg.clearEventTrace",
         "title": "%command.clearEventTrace%",
         "category": ".NET x86",
         "icon": "$(clear-all)"
       },
       {
-        "command": "dotnetX86.exportEventTrace",
+        "command": "netdbg.exportEventTrace",
         "title": "%command.exportEventTrace%",
         "category": ".NET x86",
         "icon": "$(output)"
       },
       {
-        "command": "dotnetX86.captureEvidence",
+        "command": "netdbg.captureEvidence",
         "title": "%command.captureEvidence%",
         "category": ".NET x86",
         "icon": "$(device-camera)"
       },
       {
-        "command": "dotnetX86.copyMcpConnectionSettings",
+        "command": "netdbg.copyMcpConnectionSettings",
         "title": "%command.copyMcpConnectionSettings%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.registerMcpServer",
+        "command": "netdbg.registerMcpServer",
         "title": "%command.registerMcpServer%",
         "category": ".NET x86"
       },
       {
-        "command": "dotnetX86.applyCodeChanges",
+        "command": "netdbg.applyCodeChanges",
         "title": "%command.applyCodeChanges%",
         "category": ".NET x86",
         "icon": "$(flame)"
@@ -477,534 +477,534 @@
     "menus": {
       "debug/toolbar": [
         {
-          "command": "dotnetX86.applyCodeChanges",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.editAndContinue.enabled",
+          "command": "netdbg.applyCodeChanges",
+          "when": "debugType == 'netdbg' && config.netdbg.editAndContinue.enabled",
           "group": "navigation@100"
         }
       ],
       "debug/watch/context": [
         {
-          "command": "dotnetX86.viewAsImage",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.viewAsImage",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.makeObjectId",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.makeObjectId",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@0"
         }
       ],
       "debug/callstack/context": [
         {
-          "command": "dotnetX86.freezeThread",
-          "when": "debugType == 'dotnet-x86' && callStackItemType == 'thread' && config.dotnetX86.parallelStacks.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.freezeThread",
+          "when": "debugType == 'netdbg' && callStackItemType == 'thread' && config.netdbg.parallelStacks.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.thawThread",
-          "when": "debugType == 'dotnet-x86' && callStackItemType == 'thread' && config.dotnetX86.parallelStacks.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.thawThread",
+          "when": "debugType == 'netdbg' && callStackItemType == 'thread' && config.netdbg.parallelStacks.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.showParallelStacks",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.parallelStacks.enabled",
-          "group": "z_dotnetX86@3"
+          "command": "netdbg.showParallelStacks",
+          "when": "debugType == 'netdbg' && config.netdbg.parallelStacks.enabled",
+          "group": "z_netdbg@3"
         },
         {
-          "command": "dotnetX86.takeHeapSnapshot",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.heapSnapshot.enabled",
-          "group": "z_dotnetX86@4"
+          "command": "netdbg.takeHeapSnapshot",
+          "when": "debugType == 'netdbg' && config.netdbg.heapSnapshot.enabled",
+          "group": "z_netdbg@4"
         },
         {
-          "command": "dotnetX86.generateTest",
-          "when": "debugType == 'dotnet-x86' && callStackItemType == 'stackFrame' && config.dotnetX86.generateTest.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.generateTest",
+          "when": "debugType == 'netdbg' && callStackItemType == 'stackFrame' && config.netdbg.generateTest.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.captureEvidence",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.evidence.enabled",
-          "group": "z_dotnetX86@5"
+          "command": "netdbg.captureEvidence",
+          "when": "debugType == 'netdbg' && config.netdbg.evidence.enabled",
+          "group": "z_netdbg@5"
         }
       ],
       "debug/variables/context": [
         {
-          "command": "dotnetX86.makeObjectId",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.makeObjectId",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@0"
         },
         {
-          "command": "dotnetX86.dumpVariable",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.dumpVariable",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.viewAsTable",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.viewAsTable",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.viewAsImage",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.viewAsImage",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.copyAsCSharp",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@3"
+          "command": "netdbg.copyAsCSharp",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@3"
         },
         {
-          "command": "dotnetX86.viewString",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@4"
+          "command": "netdbg.viewString",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@4"
         },
         {
-          "command": "dotnetX86.takeSnapshot",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@5"
+          "command": "netdbg.takeSnapshot",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@5"
         },
         {
-          "command": "dotnetX86.compareWithSnapshot",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.variableTools.enabled",
-          "group": "z_dotnetX86@6"
+          "command": "netdbg.compareWithSnapshot",
+          "when": "debugType == 'netdbg' && config.netdbg.variableTools.enabled",
+          "group": "z_netdbg@6"
         }
       ],
       "commandPalette": [
         {
-          "command": "dotnetX86.dumpVariable",
+          "command": "netdbg.dumpVariable",
           "when": "false"
         },
         {
-          "command": "dotnetX86.copyAsCSharp",
+          "command": "netdbg.copyAsCSharp",
           "when": "false"
         },
         {
-          "command": "dotnetX86.makeObjectId",
+          "command": "netdbg.makeObjectId",
           "when": "false"
         },
         {
-          "command": "dotnetX86.generateTest",
-          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.generateTest.enabled"
+          "command": "netdbg.generateTest",
+          "when": "inDebugMode && debugType == 'netdbg' && config.netdbg.generateTest.enabled"
         },
         {
-          "command": "dotnetX86.freezeThread",
-          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.parallelStacks.enabled"
+          "command": "netdbg.freezeThread",
+          "when": "inDebugMode && debugType == 'netdbg' && config.netdbg.parallelStacks.enabled"
         },
         {
-          "command": "dotnetX86.thawThread",
-          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.parallelStacks.enabled"
+          "command": "netdbg.thawThread",
+          "when": "inDebugMode && debugType == 'netdbg' && config.netdbg.parallelStacks.enabled"
         },
         {
-          "command": "dotnetX86.viewString",
+          "command": "netdbg.viewString",
           "when": "false"
         },
         {
-          "command": "dotnetX86.takeSnapshot",
+          "command": "netdbg.takeSnapshot",
           "when": "false"
         },
         {
-          "command": "dotnetX86.compareWithSnapshot",
+          "command": "netdbg.compareWithSnapshot",
           "when": "false"
         },
         {
-          "command": "dotnetX86.dumpExpression",
-          "when": "inDebugMode && debugState == 'stopped' && config.dotnetX86.variableTools.enabled"
+          "command": "netdbg.dumpExpression",
+          "when": "inDebugMode && debugState == 'stopped' && config.netdbg.variableTools.enabled"
         },
         {
-          "command": "dotnetX86.trackValue",
-          "when": "resourceLangId == csharp && config.dotnetX86.valueTrend.enabled"
+          "command": "netdbg.trackValue",
+          "when": "resourceLangId == csharp && config.netdbg.valueTrend.enabled"
         },
         {
-          "command": "dotnetX86.clearStepHistory",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.stepHistory.enabled"
+          "command": "netdbg.clearStepHistory",
+          "when": "debugType == 'netdbg' && config.netdbg.stepHistory.enabled"
         },
         {
-          "command": "dotnetX86.viewAsTable",
+          "command": "netdbg.viewAsTable",
           "when": "false"
         },
         {
-          "command": "dotnetX86.viewAsImage",
+          "command": "netdbg.viewAsImage",
           "when": "false"
         },
         {
-          "command": "dotnetX86.copyModulePath",
+          "command": "netdbg.copyModulePath",
           "when": "false"
         },
         {
-          "command": "dotnetX86.revealModule",
+          "command": "netdbg.revealModule",
           "when": "false"
         },
         {
-          "command": "dotnetX86.clearExceptionLog",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.exceptionLog.enabled"
+          "command": "netdbg.clearExceptionLog",
+          "when": "debugType == 'netdbg' && config.netdbg.exceptionLog.enabled"
         },
         {
-          "command": "dotnetX86.removeExceptionType",
+          "command": "netdbg.removeExceptionType",
           "when": "false"
         },
         {
-          "command": "dotnetX86.breakOnExceptionType",
+          "command": "netdbg.breakOnExceptionType",
           "when": "false"
         },
         {
-          "command": "dotnetX86.startTimer",
-          "when": "resourceLangId == csharp && config.dotnetX86.valueTrend.enabled"
+          "command": "netdbg.startTimer",
+          "when": "resourceLangId == csharp && config.netdbg.valueTrend.enabled"
         },
         {
-          "command": "dotnetX86.endTimer",
-          "when": "resourceLangId == csharp && config.dotnetX86.valueTrend.enabled"
+          "command": "netdbg.endTimer",
+          "when": "resourceLangId == csharp && config.netdbg.valueTrend.enabled"
         },
         {
-          "command": "dotnetX86.addTemporaryBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled"
+          "command": "netdbg.addTemporaryBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled"
         },
         {
-          "command": "dotnetX86.addDependentBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled"
+          "command": "netdbg.addDependentBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled"
         },
         {
-          "command": "dotnetX86.addWhenChangedBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled"
+          "command": "netdbg.addWhenChangedBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled"
         },
         {
-          "command": "dotnetX86.addCallerBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled"
+          "command": "netdbg.addCallerBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled"
         },
         {
-          "command": "dotnetX86.pinValue",
-          "when": "resourceLangId == csharp && config.dotnetX86.pinnedValues.enabled"
+          "command": "netdbg.pinValue",
+          "when": "resourceLangId == csharp && config.netdbg.pinnedValues.enabled"
         },
         {
-          "command": "dotnetX86.unpinValue",
-          "when": "resourceLangId == csharp && config.dotnetX86.pinnedValues.enabled"
+          "command": "netdbg.unpinValue",
+          "when": "resourceLangId == csharp && config.netdbg.pinnedValues.enabled"
         },
         {
-          "command": "dotnetX86.refreshControlTree",
+          "command": "netdbg.refreshControlTree",
           "when": "false"
         },
         {
-          "command": "dotnetX86.highlightControl",
+          "command": "netdbg.highlightControl",
           "when": "false"
         },
         {
-          "command": "dotnetX86.editControlProperty",
+          "command": "netdbg.editControlProperty",
           "when": "false"
         },
         {
-          "command": "dotnetX86.breakOnControlEvent",
+          "command": "netdbg.breakOnControlEvent",
           "when": "false"
         },
         {
-          "command": "dotnetX86.dumpControl",
+          "command": "netdbg.dumpControl",
           "when": "false"
         },
         {
-          "command": "dotnetX86.copyControlExpression",
+          "command": "netdbg.copyControlExpression",
           "when": "false"
         },
         {
-          "command": "dotnetX86.showMemoryGraph",
-          "when": "config.dotnetX86.memoryGraph.enabled"
+          "command": "netdbg.showMemoryGraph",
+          "when": "config.netdbg.memoryGraph.enabled"
         },
         {
-          "command": "dotnetX86.downloadSymbols",
-          "when": "config.dotnetX86.modules.enabled"
+          "command": "netdbg.downloadSymbols",
+          "when": "config.netdbg.modules.enabled"
         },
 
         {
-          "command": "dotnetX86.addExceptionType",
-          "when": "config.dotnetX86.exceptionSettings.enabled"
+          "command": "netdbg.addExceptionType",
+          "when": "config.netdbg.exceptionSettings.enabled"
         },
         {
-          "command": "dotnetX86.uncheckExceptionTypes",
-          "when": "config.dotnetX86.exceptionSettings.enabled"
+          "command": "netdbg.uncheckExceptionTypes",
+          "when": "config.netdbg.exceptionSettings.enabled"
         },
         {
-          "command": "dotnetX86.showDataBindings",
-          "when": "config.dotnetX86.winforms.enabled"
+          "command": "netdbg.showDataBindings",
+          "when": "config.netdbg.winforms.enabled"
         },
         {
-          "command": "dotnetX86.showHeapSnapshots",
-          "when": "config.dotnetX86.heapSnapshot.enabled"
+          "command": "netdbg.showHeapSnapshots",
+          "when": "config.netdbg.heapSnapshot.enabled"
         },
         {
-          "command": "dotnetX86.takeHeapSnapshot",
-          "when": "config.dotnetX86.heapSnapshot.enabled"
+          "command": "netdbg.takeHeapSnapshot",
+          "when": "config.netdbg.heapSnapshot.enabled"
         },
         {
-          "command": "dotnetX86.showParallelStacks",
-          "when": "config.dotnetX86.parallelStacks.enabled"
+          "command": "netdbg.showParallelStacks",
+          "when": "config.netdbg.parallelStacks.enabled"
         },
         {
-          "command": "dotnetX86.showValueTrend",
-          "when": "config.dotnetX86.valueTrend.enabled"
+          "command": "netdbg.showValueTrend",
+          "when": "config.netdbg.valueTrend.enabled"
         },
         {
-          "command": "dotnetX86.clearPinnedValues",
-          "when": "config.dotnetX86.pinnedValues.enabled"
+          "command": "netdbg.clearPinnedValues",
+          "when": "config.netdbg.pinnedValues.enabled"
         },
         {
-          "command": "dotnetX86.exportSessionReport",
-          "when": "config.dotnetX86.sessionReport.enabled"
+          "command": "netdbg.exportSessionReport",
+          "when": "config.netdbg.sessionReport.enabled"
         },
         {
-          "command": "dotnetX86.clearSqlLog",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.sqlLog.enabled"
+          "command": "netdbg.clearSqlLog",
+          "when": "debugType == 'netdbg' && config.netdbg.sqlLog.enabled"
         },
         {
-          "command": "dotnetX86.exportSqlLog",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.sqlLog.enabled"
+          "command": "netdbg.exportSqlLog",
+          "when": "debugType == 'netdbg' && config.netdbg.sqlLog.enabled"
         },
         {
-          "command": "dotnetX86.copySqlWithValues",
+          "command": "netdbg.copySqlWithValues",
           "when": "false"
         },
         {
-          "command": "dotnetX86.copySql",
+          "command": "netdbg.copySql",
           "when": "false"
         },
         {
-          "command": "dotnetX86.openSql",
+          "command": "netdbg.openSql",
           "when": "false"
         },
         {
-          "command": "dotnetX86.traceControlEvents",
+          "command": "netdbg.traceControlEvents",
           "when": "false"
         },
         {
-          "command": "dotnetX86.clearEventTrace",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.eventTrace.enabled"
+          "command": "netdbg.clearEventTrace",
+          "when": "debugType == 'netdbg' && config.netdbg.eventTrace.enabled"
         },
         {
-          "command": "dotnetX86.exportEventTrace",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.eventTrace.enabled"
+          "command": "netdbg.exportEventTrace",
+          "when": "debugType == 'netdbg' && config.netdbg.eventTrace.enabled"
         },
         {
-          "command": "dotnetX86.captureEvidence",
-          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.evidence.enabled"
+          "command": "netdbg.captureEvidence",
+          "when": "inDebugMode && debugType == 'netdbg' && config.netdbg.evidence.enabled"
         },
         {
-          "command": "dotnetX86.applyCodeChanges",
-          "when": "inDebugMode && debugType == 'dotnet-x86' && config.dotnetX86.editAndContinue.enabled"
+          "command": "netdbg.applyCodeChanges",
+          "when": "inDebugMode && debugType == 'netdbg' && config.netdbg.editAndContinue.enabled"
         }
       ],
       "editor/context": [
         {
-          "command": "dotnetX86.trackValue",
-          "when": "resourceLangId == csharp && config.dotnetX86.valueTrend.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.trackValue",
+          "when": "resourceLangId == csharp && config.netdbg.valueTrend.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.startTimer",
-          "when": "resourceLangId == csharp && config.dotnetX86.valueTrend.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.startTimer",
+          "when": "resourceLangId == csharp && config.netdbg.valueTrend.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.endTimer",
-          "when": "resourceLangId == csharp && config.dotnetX86.valueTrend.enabled",
-          "group": "z_dotnetX86@3"
+          "command": "netdbg.endTimer",
+          "when": "resourceLangId == csharp && config.netdbg.valueTrend.enabled",
+          "group": "z_netdbg@3"
         },
         {
-          "command": "dotnetX86.addTemporaryBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled",
-          "group": "z_dotnetX86bp@1"
+          "command": "netdbg.addTemporaryBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled",
+          "group": "z_netdbgbp@1"
         },
         {
-          "command": "dotnetX86.addDependentBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled",
-          "group": "z_dotnetX86bp@2"
+          "command": "netdbg.addDependentBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled",
+          "group": "z_netdbgbp@2"
         },
         {
-          "command": "dotnetX86.addWhenChangedBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled",
-          "group": "z_dotnetX86bp@3"
+          "command": "netdbg.addWhenChangedBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled",
+          "group": "z_netdbgbp@3"
         },
         {
-          "command": "dotnetX86.addCallerBreakpoint",
-          "when": "resourceLangId == csharp && config.dotnetX86.breakpointCommands.enabled",
-          "group": "z_dotnetX86bp@4"
+          "command": "netdbg.addCallerBreakpoint",
+          "when": "resourceLangId == csharp && config.netdbg.breakpointCommands.enabled",
+          "group": "z_netdbgbp@4"
         },
         {
-          "command": "dotnetX86.pinValue",
-          "when": "resourceLangId == csharp && config.dotnetX86.pinnedValues.enabled",
-          "group": "z_dotnetX86pin@1"
+          "command": "netdbg.pinValue",
+          "when": "resourceLangId == csharp && config.netdbg.pinnedValues.enabled",
+          "group": "z_netdbgpin@1"
         },
         {
-          "command": "dotnetX86.unpinValue",
-          "when": "resourceLangId == csharp && config.dotnetX86.pinnedValues.enabled",
-          "group": "z_dotnetX86pin@2"
+          "command": "netdbg.unpinValue",
+          "when": "resourceLangId == csharp && config.netdbg.pinnedValues.enabled",
+          "group": "z_netdbgpin@2"
         }
       ],
       "view/title": [
         {
-          "command": "dotnetX86.clearStepHistory",
-          "when": "view == dotnetX86.stepHistory && config.dotnetX86.stepHistory.enabled",
+          "command": "netdbg.clearStepHistory",
+          "when": "view == netdbg.stepHistory && config.netdbg.stepHistory.enabled",
           "group": "navigation"
         },
         {
-          "command": "dotnetX86.clearExceptionLog",
-          "when": "view == dotnetX86.exceptions && config.dotnetX86.exceptionLog.enabled",
+          "command": "netdbg.clearExceptionLog",
+          "when": "view == netdbg.exceptions && config.netdbg.exceptionLog.enabled",
           "group": "navigation"
         },
         {
-          "command": "dotnetX86.addExceptionType",
-          "when": "view == dotnetX86.exceptionSettings && config.dotnetX86.exceptionSettings.enabled",
+          "command": "netdbg.addExceptionType",
+          "when": "view == netdbg.exceptionSettings && config.netdbg.exceptionSettings.enabled",
           "group": "navigation@1"
         },
         {
-          "command": "dotnetX86.uncheckExceptionTypes",
-          "when": "view == dotnetX86.exceptionSettings && config.dotnetX86.exceptionSettings.enabled",
+          "command": "netdbg.uncheckExceptionTypes",
+          "when": "view == netdbg.exceptionSettings && config.netdbg.exceptionSettings.enabled",
           "group": "navigation@2"
         },
         {
-          "command": "dotnetX86.showDataBindings",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
+          "command": "netdbg.showDataBindings",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
           "group": "navigation@0"
         },
         {
-          "command": "dotnetX86.refreshControlTree",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
+          "command": "netdbg.refreshControlTree",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
           "group": "navigation"
         },
         {
-          "command": "dotnetX86.exportSessionReport",
-          "when": "view == dotnetX86.stepHistory && config.dotnetX86.sessionReport.enabled",
+          "command": "netdbg.exportSessionReport",
+          "when": "view == netdbg.stepHistory && config.netdbg.sessionReport.enabled",
           "group": "navigation@0"
         },
         {
-          "command": "dotnetX86.exportSqlLog",
-          "when": "view == dotnetX86.sqlLog && config.dotnetX86.sqlLog.enabled",
+          "command": "netdbg.exportSqlLog",
+          "when": "view == netdbg.sqlLog && config.netdbg.sqlLog.enabled",
           "group": "navigation@0"
         },
         {
-          "command": "dotnetX86.clearSqlLog",
-          "when": "view == dotnetX86.sqlLog && config.dotnetX86.sqlLog.enabled",
+          "command": "netdbg.clearSqlLog",
+          "when": "view == netdbg.sqlLog && config.netdbg.sqlLog.enabled",
           "group": "navigation@1"
         },
         {
-          "command": "dotnetX86.exportEventTrace",
-          "when": "view == dotnetX86.eventTrace && config.dotnetX86.eventTrace.enabled",
+          "command": "netdbg.exportEventTrace",
+          "when": "view == netdbg.eventTrace && config.netdbg.eventTrace.enabled",
           "group": "navigation@0"
         },
         {
-          "command": "dotnetX86.clearEventTrace",
-          "when": "view == dotnetX86.eventTrace && config.dotnetX86.eventTrace.enabled",
+          "command": "netdbg.clearEventTrace",
+          "when": "view == netdbg.eventTrace && config.netdbg.eventTrace.enabled",
           "group": "navigation@1"
         },
         {
-          "command": "dotnetX86.captureEvidence",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled && config.dotnetX86.evidence.enabled",
+          "command": "netdbg.captureEvidence",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled && config.netdbg.evidence.enabled",
           "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
-          "command": "dotnetX86.removeExceptionType",
-          "when": "view == dotnetX86.exceptionSettings && viewItem == dotnetX86.exceptionType.custom && config.dotnetX86.exceptionSettings.enabled",
+          "command": "netdbg.removeExceptionType",
+          "when": "view == netdbg.exceptionSettings && viewItem == netdbg.exceptionType.custom && config.netdbg.exceptionSettings.enabled",
           "group": "inline"
         },
         {
-          "command": "dotnetX86.breakOnExceptionType",
-          "when": "view == dotnetX86.exceptions && viewItem == dotnetX86.exception && config.dotnetX86.exceptionLog.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.breakOnExceptionType",
+          "when": "view == netdbg.exceptions && viewItem == netdbg.exception && config.netdbg.exceptionLog.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.copyModulePath",
-          "when": "view == dotnetX86.modules && config.dotnetX86.modules.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.copyModulePath",
+          "when": "view == netdbg.modules && config.netdbg.modules.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.downloadSymbols",
-          "when": "view == dotnetX86.modules && viewItem == dotnetX86.module.noSymbols && config.dotnetX86.modules.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.downloadSymbols",
+          "when": "view == netdbg.modules && viewItem == netdbg.module.noSymbols && config.netdbg.modules.enabled",
+          "group": "z_netdbg@0"
         },
 
         {
-          "command": "dotnetX86.revealModule",
-          "when": "view == dotnetX86.modules && config.dotnetX86.modules.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.revealModule",
+          "when": "view == netdbg.modules && config.netdbg.modules.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.highlightControl",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
+          "command": "netdbg.highlightControl",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
           "group": "inline"
         },
         {
-          "command": "dotnetX86.highlightControl",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.highlightControl",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
+          "group": "z_netdbg@0"
         },
         {
-          "command": "dotnetX86.editControlProperty",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.editControlProperty",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
+          "group": "z_netdbg@0"
         },
         {
-          "command": "dotnetX86.breakOnControlEvent",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.breakOnControlEvent",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
+          "group": "z_netdbg@0"
         },
         {
-          "command": "dotnetX86.showDataBindings",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.showDataBindings",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
+          "group": "z_netdbg@0"
         },
         {
-          "command": "dotnetX86.dumpControl",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.dumpControl",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.copyControlExpression",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.copyControlExpression",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.copySqlWithValues",
-          "when": "view == dotnetX86.sqlLog && viewItem == dotnetX86.sql && config.dotnetX86.sqlLog.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.copySqlWithValues",
+          "when": "view == netdbg.sqlLog && viewItem == netdbg.sql && config.netdbg.sqlLog.enabled",
+          "group": "z_netdbg@0"
         },
         {
-          "command": "dotnetX86.copySql",
-          "when": "view == dotnetX86.sqlLog && viewItem == dotnetX86.sql && config.dotnetX86.sqlLog.enabled",
-          "group": "z_dotnetX86@1"
+          "command": "netdbg.copySql",
+          "when": "view == netdbg.sqlLog && viewItem == netdbg.sql && config.netdbg.sqlLog.enabled",
+          "group": "z_netdbg@1"
         },
         {
-          "command": "dotnetX86.openSql",
-          "when": "view == dotnetX86.sqlLog && viewItem == dotnetX86.sql && config.dotnetX86.sqlLog.enabled",
-          "group": "z_dotnetX86@2"
+          "command": "netdbg.openSql",
+          "when": "view == netdbg.sqlLog && viewItem == netdbg.sql && config.netdbg.sqlLog.enabled",
+          "group": "z_netdbg@2"
         },
         {
-          "command": "dotnetX86.traceControlEvents",
-          "when": "view == dotnetX86.controls && config.dotnetX86.winforms.enabled && config.dotnetX86.eventTrace.enabled",
-          "group": "z_dotnetX86@0"
+          "command": "netdbg.traceControlEvents",
+          "when": "view == netdbg.controls && config.netdbg.winforms.enabled && config.netdbg.eventTrace.enabled",
+          "group": "z_netdbg@0"
         }
       ]
     },
     "configuration": {
       "title": "%config.title%",
       "properties": {
-        "dotnetX86.debuggerPath": {
+        "netdbg.debuggerPath": {
           "type": "string",
           "default": "",
           "description": "%config.debuggerPath%"
         },
-        "dotnetX86.trace": {
+        "netdbg.trace": {
           "type": "boolean",
           "default": false,
           "description": "%config.trace%"
         },
-        "dotnetX86.mcp.enabled": {
+        "netdbg.mcp.enabled": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "%config.mcp.enabled%"
         },
-        "dotnetX86.sourceLink.enabled": {
+        "netdbg.sourceLink.enabled": {
           "type": "boolean",
           "default": true,
           "scope": "resource",
           "description": "%config.sourceLink.enabled%"
         },
-        "dotnetX86.symbolServers": {
+        "netdbg.symbolServers": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1015,7 +1015,7 @@
           ],
           "description": "%config.symbolServers%"
         },
-        "dotnetX86.sourceFileMap": {
+        "netdbg.sourceFileMap": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -1024,7 +1024,7 @@
           "scope": "resource",
           "markdownDescription": "%config.sourceFileMap%"
         },
-        "dotnetX86.sourceSearchPaths": {
+        "netdbg.sourceSearchPaths": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1033,149 +1033,149 @@
           "scope": "resource",
           "markdownDescription": "%config.sourceSearchPaths%"
         },
-        "dotnetX86.memoryGraph.autoOpen": {
+        "netdbg.memoryGraph.autoOpen": {
           "type": "boolean",
           "default": false,
           "description": "%config.memoryGraph.autoOpen%"
         },
-        "dotnetX86.dump.maxDepth": {
+        "netdbg.dump.maxDepth": {
           "type": "integer",
           "default": 3,
           "minimum": 1,
           "description": "%config.dump.maxDepth%"
         },
-        "dotnetX86.dump.maxNodes": {
+        "netdbg.dump.maxNodes": {
           "type": "integer",
           "default": 2000,
           "minimum": 1,
           "description": "%config.dump.maxNodes%"
         },
-        "dotnetX86.stepHistory.enabled": {
+        "netdbg.stepHistory.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.stepHistory.enabled%"
         },
-        "dotnetX86.coverage.enabled": {
+        "netdbg.coverage.enabled": {
           "type": "boolean",
           "default": false,
           "description": "%config.coverage.enabled%"
         },
-        "dotnetX86.coverage.folder": {
+        "netdbg.coverage.folder": {
           "type": "string",
           "default": "",
           "description": "%config.coverage.folder%"
         },
-        "dotnetX86.coverage.showInEditor": {
+        "netdbg.coverage.showInEditor": {
           "type": "boolean",
           "default": true,
           "description": "%config.coverage.showInEditor%"
-        },        "dotnetX86.perfTips.enabled": {
+        },        "netdbg.perfTips.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.perfTips.enabled%"
         },
-        "dotnetX86.uiFreeze.enabled": {
+        "netdbg.uiFreeze.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.uiFreeze.enabled%"
         },
-        "dotnetX86.uiFreeze.thresholdMs": {
+        "netdbg.uiFreeze.thresholdMs": {
           "type": "number",
           "default": 2000,
           "minimum": 500,
           "description": "%config.uiFreeze.thresholdMs%"
         },
-        "dotnetX86.heapSnapshot.collectGarbage": {
+        "netdbg.heapSnapshot.collectGarbage": {
           "type": "boolean",
           "default": true,
           "description": "%config.heapSnapshot.collectGarbage%"
         },
-        "dotnetX86.exceptionLog.enabled": {
+        "netdbg.exceptionLog.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.exceptionLog.enabled%"
         },
-        "dotnetX86.exceptionLog.captureLocals": {
+        "netdbg.exceptionLog.captureLocals": {
           "type": "boolean",
           "default": true,
           "description": "%config.exceptionLog.captureLocals%"
         },
-        "dotnetX86.memoryGraph.enabled": {
+        "netdbg.memoryGraph.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.memoryGraph.enabled%"
         },
-        "dotnetX86.inlineValues.enabled": {
+        "netdbg.inlineValues.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.inlineValues.enabled%"
         },
-        "dotnetX86.autos.enabled": {
+        "netdbg.autos.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.autos.enabled%"
         },
-        "dotnetX86.modules.enabled": {
+        "netdbg.modules.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.modules.enabled%"
         },
-        "dotnetX86.exceptionSettings.enabled": {
+        "netdbg.exceptionSettings.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.exceptionSettings.enabled%"
         },
-        "dotnetX86.winforms.enabled": {
+        "netdbg.winforms.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.winforms.enabled%"
         },
-        "dotnetX86.heapSnapshot.enabled": {
+        "netdbg.heapSnapshot.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.heapSnapshot.enabled%"
         },
-        "dotnetX86.parallelStacks.enabled": {
+        "netdbg.parallelStacks.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.parallelStacks.enabled%"
         },
-        "dotnetX86.valueTrend.enabled": {
+        "netdbg.valueTrend.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.valueTrend.enabled%"
         },
-        "dotnetX86.pinnedValues.enabled": {
+        "netdbg.pinnedValues.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.pinnedValues.enabled%"
         },
-        "dotnetX86.breakpointCommands.enabled": {
+        "netdbg.breakpointCommands.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.breakpointCommands.enabled%"
         },
-        "dotnetX86.variableTools.enabled": {
+        "netdbg.variableTools.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.variableTools.enabled%"
         },
-        "dotnetX86.generateTest.enabled": {
+        "netdbg.generateTest.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.generateTest.enabled%"
         },
-        "dotnetX86.sessionReport.enabled": {
+        "netdbg.sessionReport.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.sessionReport.enabled%"
         },
-        "dotnetX86.sqlLog.enabled": {
+        "netdbg.sqlLog.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.sqlLog.enabled%"
         },
-        "dotnetX86.sqlLog.methods": {
+        "netdbg.sqlLog.methods": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1202,28 +1202,28 @@
           ],
           "markdownDescription": "%config.sqlLog.methods%"
         },
-        "dotnetX86.eventTrace.enabled": {
+        "netdbg.eventTrace.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.eventTrace.enabled%"
         },
-        "dotnetX86.evidence.enabled": {
+        "netdbg.evidence.enabled": {
           "type": "boolean",
           "default": true,
           "description": "%config.evidence.enabled%"
         },
-        "dotnetX86.editAndContinue.enabled": {
+        "netdbg.editAndContinue.enabled": {
           "type": "boolean",
           "default": true,
           "markdownDescription": "%config.editAndContinue.enabled%"
         },
-        "dotnetX86.editAndContinue.applyOnSave": {
+        "netdbg.editAndContinue.applyOnSave": {
           "type": "boolean",
           "default": true,
           "scope": "resource",
           "description": "%config.editAndContinue.applyOnSave%"
         },
-        "dotnetX86.evidence.folder": {
+        "netdbg.evidence.folder": {
           "type": "string",
           "default": "evidence",
           "scope": "resource",
@@ -1244,7 +1244,7 @@
     ],
     "debuggers": [
       {
-        "type": "dotnet-x86",
+        "type": "netdbg",
         "label": "%debugger.label%",
         "languages": [
           "csharp",
@@ -1252,7 +1252,7 @@
           "vb"
         ],
         "variables": {
-          "pickProcess": "dotnetX86.pickProcess"
+          "pickProcess": "netdbg.pickProcess"
         },
         "configurationAttributes": {
           "launch": {
@@ -1483,7 +1483,7 @@
             "description": "%snippet.dump.description%",
             "body": {
               "name": ".NET x86 Crash Dump",
-              "type": "dotnet-x86",
+              "type": "netdbg",
               "request": "launch",
               "dumpPath": "^\"\\${workspaceFolder}/crash.dmp\""
             }
@@ -1493,7 +1493,7 @@
             "description": "%snippet.launch.description%",
             "body": {
               "name": ".NET x86 Launch",
-              "type": "dotnet-x86",
+              "type": "netdbg",
               "request": "launch",
               "preLaunchTask": "build",
               "program": "^\"\\${workspaceFolder}/bin/x86/Debug/net10.0-windows/\\${workspaceFolderBasename}.exe\"",
@@ -1507,7 +1507,7 @@
             "description": "%snippet.attach.description%",
             "body": {
               "name": ".NET x86 Attach",
-              "type": "dotnet-x86",
+              "type": "netdbg",
               "request": "attach",
               "processId": "^\"\\${command:pickProcess}\""
             }
@@ -1517,7 +1517,7 @@
             "description": "%snippet.waitAttach.description%",
             "body": {
               "name": ".NET x86 Attach (wait for process)",
-              "type": "dotnet-x86",
+              "type": "netdbg",
               "request": "attach",
               "processName": "MyApp",
               "waitTimeout": 120
@@ -1529,47 +1529,47 @@
     "views": {
       "debug": [
         {
-          "id": "dotnetX86.autos",
+          "id": "netdbg.autos",
           "name": "%view.autos%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.autos.enabled"
+          "when": "debugType == 'netdbg' && config.netdbg.autos.enabled"
         },
         {
-          "id": "dotnetX86.exceptions",
+          "id": "netdbg.exceptions",
           "name": "%view.exceptions%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.exceptionLog.enabled"
+          "when": "debugType == 'netdbg' && config.netdbg.exceptionLog.enabled"
         },
         {
-          "id": "dotnetX86.sqlLog",
+          "id": "netdbg.sqlLog",
           "name": "%view.sqlLog%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.sqlLog.enabled"
+          "when": "debugType == 'netdbg' && config.netdbg.sqlLog.enabled"
         },
         {
-          "id": "dotnetX86.exceptionSettings",
+          "id": "netdbg.exceptionSettings",
           "name": "%view.exceptionSettings%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.exceptionSettings.enabled",
+          "when": "debugType == 'netdbg' && config.netdbg.exceptionSettings.enabled",
           "visibility": "collapsed"
         },
         {
-          "id": "dotnetX86.stepHistory",
+          "id": "netdbg.stepHistory",
           "name": "%view.stepHistory%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.stepHistory.enabled"
+          "when": "debugType == 'netdbg' && config.netdbg.stepHistory.enabled"
         },
         {
-          "id": "dotnetX86.controls",
+          "id": "netdbg.controls",
           "name": "%view.controls%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.winforms.enabled",
+          "when": "debugType == 'netdbg' && config.netdbg.winforms.enabled",
           "visibility": "collapsed"
         },
         {
-          "id": "dotnetX86.eventTrace",
+          "id": "netdbg.eventTrace",
           "name": "%view.eventTrace%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.eventTrace.enabled",
+          "when": "debugType == 'netdbg' && config.netdbg.eventTrace.enabled",
           "visibility": "collapsed"
         },
         {
-          "id": "dotnetX86.modules",
+          "id": "netdbg.modules",
           "name": "%view.modules%",
-          "when": "debugType == 'dotnet-x86' && config.dotnetX86.modules.enabled",
+          "when": "debugType == 'netdbg' && config.netdbg.modules.enabled",
           "visibility": "collapsed"
         }
       ]
@@ -1582,7 +1582,7 @@
     "test": "tsc -p ./ && node --test \"out/test/unit/**/*.test.js\"",
     "test:e2e": "tsc -p ./ && node --test --test-concurrency=1 \"out/test/e2e/**/*.test.js\"",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package --target win32-x64 -o out/dotnet-x86-debugger.vsix"
+    "package": "vsce package --target win32-x64 -o out/netdbg.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -1,5 +1,5 @@
-// E2E: code coverage as the editor shows it: the launch argument `coverage` (from the setting dotnetX86.coverage.enabled),
-// the engine's `dotnetX86.coverageChanged` naming the source, and `dotnetX86.coverage { file }` read into the editor's marks.
+// E2E: code coverage as the editor shows it: the launch argument `coverage` (from the setting netdbg.coverage.enabled),
+// the engine's `netdbg.coverageChanged` naming the source, and `netdbg.coverage { file }` read into the editor's marks.
 
 import * as assert from 'assert/strict';
 import * as path from 'path';
@@ -29,7 +29,7 @@ describe('code coverage in the editor', { skip: e2eSkip }, () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
         }
         const changed = s.events.filter((e) => e.event === COVERAGE_CHANGED_EVENT).at(-1);
-        assert.ok(changed, 'no dotnetX86.coverageChanged');
+        assert.ok(changed, 'no netdbg.coverageChanged');
         assert.ok(changed.body.linesValid > 0 && changed.body.lineRate > 0, JSON.stringify(changed.body));
 
         const r = await s.request(COVERAGE_REQUEST, { file: source });

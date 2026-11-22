@@ -167,12 +167,12 @@ describe('debugging the Basic app', { skip: e2eSkip }, () => {
             frame = await s.topFrame((await stepped).body.threadId);
         }
         assert.match(frame.name, /NoPdbLib\.Pricing\.WithTax\(/);
-        assert.match(frame.source.path, /\\dotnet-x86dbg\\decompiled\\.*\\Pricing\.cs$/i);
+        assert.match(frame.source.path, /\\netdbg\\decompiled\\.*\\Pricing\.cs$/i);
         assert.ok(fs.readFileSync(frame.source.path, 'utf8').split(/\r?\n/)[frame.line - 1].trim().length > 0, 'the frame\'s line has code');
     });
 });
 
-describe('UI freeze detection', { skip: e2eSkip || (process.env.DOTNETX86_SKIP_UI_TESTS ? 'DOTNETX86_SKIP_UI_TESTS is set' : false) }, () => {
+describe('UI freeze detection', { skip: e2eSkip || (process.env.NETDBG_SKIP_UI_TESTS ? 'NETDBG_SKIP_UI_TESTS is set' : false) }, () => {
     it('pauses on the UI thread that stopped answering', { timeout: TIMEOUT }, async () => {
         const program = path.join(buildApp('Freeze'), 'Freeze.exe');
         // The engine watches the UI itself (with the extension's settings); the relay gives the stop the extension's words.

@@ -7,7 +7,7 @@ import { StepHistory } from './stepHistory';
 import { ValueTracker } from './valueTracker';
 
 /**
- * "Export Debug Session Report": a Markdown summary of the last dotnet-x86 session (stops with changed values,
+ * "Export Debug Session Report": a Markdown summary of the last netdbg session (stops with changed values,
  * exceptions, section timings, tracked values, modules), built from what the other views already recorded.
  */
 export class SessionReport implements vscode.DebugAdapterTrackerFactory, vscode.Disposable {

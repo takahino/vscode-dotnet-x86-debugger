@@ -1,4 +1,4 @@
-// E2E: MCP through the relay. The engine is started as the extension starts it with dotnetX86.mcp.enabled (--mcp-listen);
+// E2E: MCP through the relay. The engine is started as the extension starts it with netdbg.mcp.enabled (--mcp-listen);
 // an AI client (here fetch) uses the endpoint the engine announces, and what it does reaches the IDE side as DAP events.
 
 import * as assert from 'assert/strict';
@@ -56,7 +56,7 @@ describe('MCP through the relay', { skip: e2eSkip }, () => {
         assert.equal((await post(endpoint, { id: nextId++, method: 'tools/list' }, 'wrong')).status, 401);
 
         const init = await post(endpoint, { id: nextId++, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'e2e', version: '1' } } });
-        assert.equal(init.body.result.serverInfo.name, 'dotnet-x86dbg');
+        assert.equal(init.body.result.serverInfo.name, 'netdbg');
 
         // The stop the IDE got is the AI's too.
         assert.match(await callTool(endpoint, 'debug_status'), /"stopped"/);

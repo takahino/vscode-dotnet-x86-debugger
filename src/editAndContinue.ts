@@ -5,7 +5,7 @@ import { isEnabled } from './features';
 
 /**
  * Edit and Continue: applies the edits of the program's C# sources to the program being debugged, without restarting.
- * Saving a .cs file applies it (setting `dotnetX86.editAndContinue.applyOnSave`), and so does the command
+ * Saving a .cs file applies it (setting `netdbg.editAndContinue.applyOnSave`), and so does the command
  * "Apply Code Changes" (debug toolbar). The engine builds the change with the Roslyn of the installed .NET SDK; changed
  * methods run the new code from their next call, and a stopped method moves to the new code at its next statement.
  */
@@ -14,7 +14,7 @@ export class EditAndContinue implements vscode.Disposable {
     private readonly sessions = new Set<vscode.DebugSession>();
     /** Applying, per session: one request at a time (saves can come quickly). */
     private readonly queues = new Map<string, Promise<void>>();
-    /** `dotnetX86.changesApplied` events still to come for our own requests (shown from the response instead). */
+    /** `netdbg.changesApplied` events still to come for our own requests (shown from the response instead). */
     private readonly ownEvents = new Map<string, number>();
 
     constructor(private readonly output: vscode.OutputChannel) {
@@ -45,7 +45,7 @@ export class EditAndContinue implements vscode.Disposable {
     private onSaved(document: vscode.TextDocument): void {
         if (this.sessions.size === 0 || !isCSharpSource(document.languageId, document.fileName)) return;
         if (!isEnabled('editAndContinue', document.uri)) return;
-        if (!vscode.workspace.getConfiguration('dotnetX86.editAndContinue', document.uri).get<boolean>('applyOnSave', true)) return;
+        if (!vscode.workspace.getConfiguration('netdbg.editAndContinue', document.uri).get<boolean>('applyOnSave', true)) return;
         for (const session of this.sessions) {
             void this.apply(session, [document.uri.fsPath], false);
         }
@@ -63,7 +63,7 @@ export class EditAndContinue implements vscode.Disposable {
         try {
             body = await session.customRequest(APPLY_CHANGES_REQUEST, files ? { files } : {});
         } catch (e) {
-            // The session may run netcoredbg (dotnetX86.debuggerPath), be attached, or have Edit and Continue turned off:
+            // The session may run netcoredbg (netdbg.debuggerPath), be attached, or have Edit and Continue turned off:
             // a save then only logs; the command says why.
             const message = e instanceof Error ? e.message : String(e);
             this.output.appendLine(`[enc] ${message}`);

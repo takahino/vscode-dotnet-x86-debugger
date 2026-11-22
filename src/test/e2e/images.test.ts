@@ -8,8 +8,8 @@ import { after, before, describe, it } from 'node:test';
 import { pngSize, saveAsPngExpression } from '../../imageCore';
 import { DapSession, appSource, buildApp, e2eSkip, lineOf } from './harness';
 
-describe('View as Image', { skip: e2eSkip || (process.env.DOTNETX86_SKIP_UI_TESTS ? 'DOTNETX86_SKIP_UI_TESTS is set' : false) }, () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dotnetx86-images-'));
+describe('View as Image', { skip: e2eSkip || (process.env.NETDBG_SKIP_UI_TESTS ? 'NETDBG_SKIP_UI_TESTS is set' : false) }, () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'netdbg-images-'));
     let s: DapSession;
     let frameId = 0;
 

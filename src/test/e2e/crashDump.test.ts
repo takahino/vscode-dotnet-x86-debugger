@@ -13,7 +13,7 @@ describe('crash dumps', { skip: e2eSkip }, () => {
     let s: DapSession;
     let thread = 0;
     const source = appSource('CrashDump', 'Program.cs');
-    const dump = path.join(os.tmpdir(), 'dotnetx86-e2e', `CrashDump-${ARCH}-${process.pid}.dmp`);
+    const dump = path.join(os.tmpdir(), 'netdbg-e2e', `CrashDump-${ARCH}-${process.pid}.dmp`);
 
     before(async () => {
         const program = path.join(buildApp('CrashDump'), 'CrashDump.exe');
@@ -30,7 +30,7 @@ describe('crash dumps', { skip: e2eSkip }, () => {
         assert.equal(written.status, 0, written.stderr);
         s = new DapSession();
         const first = s.nextStop();
-        await s.request('initialize', { adapterID: 'dotnet-x86', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
+        await s.request('initialize', { adapterID: 'netdbg', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
         const launched = await s.request('launch', { dumpPath: dump });
         assert.ok(launched.success, launched.message);
         await s.request('configurationDone');

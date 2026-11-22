@@ -7,11 +7,11 @@ import { DEBUG_TYPE } from './configProvider';
 import { AI_CLIENTS, AiClient, ClientFolders, CursorServerConfig, MCP_ENDPOINT_EVENT, MCP_SERVER_NAME, McpEndpoint, Registration, cursorServer, genericSettings, parseEndpoint } from './mcpCore';
 
 /** Id of the contributed MCP server definition provider (package.json `mcpServerDefinitionProviders`). */
-const PROVIDER_ID = 'dotnetX86.mcp';
+const PROVIDER_ID = 'netdbg.mcp';
 
-/** Whether debug sessions open MCP (`dotnetX86.mcp.enabled`, off by default: AI tools run code in the program). */
+/** Whether debug sessions open MCP (`netdbg.mcp.enabled`, off by default: AI tools run code in the program). */
 export function isMcpEnabled(): boolean {
-    return vscode.workspace.getConfiguration('dotnetX86.mcp').get<boolean>('enabled', false);
+    return vscode.workspace.getConfiguration('netdbg.mcp').get<boolean>('enabled', false);
 }
 
 /** Cursor's MCP extension API (`vscode.cursor.mcp`); not in VS Code's typings. */
@@ -67,7 +67,7 @@ export class McpIntegration implements vscode.Disposable {
             this.syncCursor();
             this.disposables.push(
                 vscode.workspace.onDidChangeConfiguration((e) => {
-                    if (e.affectsConfiguration('dotnetX86.mcp.enabled')) {
+                    if (e.affectsConfiguration('netdbg.mcp.enabled')) {
                         this.syncCursor();
                     }
                 }),
@@ -123,7 +123,7 @@ export class McpIntegration implements vscode.Disposable {
         if (!latest) {
             return [];
         }
-        return [new vscode.McpHttpServerDefinition('.NET x86 Debugger', vscode.Uri.parse(latest.url), { Authorization: `Bearer ${latest.token}` }, String(latest.enginePid))];
+        return [new vscode.McpHttpServerDefinition('netdbg', vscode.Uri.parse(latest.url), { Authorization: `Bearer ${latest.token}` }, String(latest.enginePid))];
     }
 
     /** AI clients offered by the commands. In Cursor, Cursor itself is left out: the API registration covers it. */
@@ -214,7 +214,7 @@ export class McpIntegration implements vscode.Disposable {
      * the file: the older copy is kept then (the relay does not change between versions).
      */
     private updateBridge(): string | undefined {
-        const source = path.join(this.extensionPath, 'debugger', 'dotnet-x86dbg-x86', 'dotnet-x86dbg.exe');
+        const source = path.join(this.extensionPath, 'debugger', 'netdbg-x86', 'netdbg.exe');
         const target = bridgePath();
         try {
             if (sameFile(source, target)) {
@@ -253,9 +253,9 @@ async function reportWithSetting(message: string): Promise<void> {
         return;
     }
     const enable = vscode.l10n.t('Enable MCP');
-    const answer = await vscode.window.showWarningMessage(`${message} ${vscode.l10n.t('MCP is off (dotnetX86.mcp.enabled): turn it on for debug sessions to accept AI clients.')}`, enable);
+    const answer = await vscode.window.showWarningMessage(`${message} ${vscode.l10n.t('MCP is off (netdbg.mcp.enabled): turn it on for debug sessions to accept AI clients.')}`, enable);
     if (answer === enable) {
-        await vscode.workspace.getConfiguration('dotnetX86.mcp').update('enabled', true, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration('netdbg.mcp').update('enabled', true, vscode.ConfigurationTarget.Global);
     }
 }
 
@@ -307,10 +307,10 @@ async function register(registration: Registration): Promise<string | undefined>
         }
         fs.mkdirSync(path.dirname(file), { recursive: true });
         if (text !== undefined) {
-            fs.writeFileSync(`${file}.dotnet-x86.bak`, text, 'utf8'); // the settings before this change, to undo it by hand
+            fs.writeFileSync(`${file}.netdbg.bak`, text, 'utf8'); // the settings before this change, to undo it by hand
         }
         // Written beside and renamed over: the client never reads a half-written file.
-        const temporary = `${file}.dotnet-x86.tmp`;
+        const temporary = `${file}.netdbg.tmp`;
         fs.writeFileSync(temporary, updated, 'utf8');
         fs.renameSync(temporary, file);
         return undefined;
@@ -334,10 +334,10 @@ function run(commandLine: string): Promise<{ ok: boolean; output: string }> {
     );
 }
 
-/** `%LOCALAPPDATA%\dotnet-x86dbg\bin\dotnet-x86dbg.exe`: next to the engine's endpoint files (`...\dotnet-x86dbg\mcp`). */
+/** `%LOCALAPPDATA%\netdbg\bin\netdbg.exe`: next to the engine's endpoint files (`...\netdbg\mcp`). */
 function bridgePath(): string {
     const localAppData = process.env.LOCALAPPDATA ?? path.join(process.env.USERPROFILE ?? '', 'AppData', 'Local');
-    return path.join(localAppData, 'dotnet-x86dbg', 'bin', 'dotnet-x86dbg.exe');
+    return path.join(localAppData, 'netdbg', 'bin', 'netdbg.exe');
 }
 
 /** Whether two files have the same size and contents (the engine is a few MB: comparing bytes is cheap enough). */

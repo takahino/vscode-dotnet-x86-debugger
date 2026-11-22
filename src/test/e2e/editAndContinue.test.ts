@@ -1,5 +1,5 @@
 // E2E: Edit and Continue through the relay. The app is copied to a temporary folder and built there (the test edits its
-// source); the edit is applied with dotnetX86.applyChanges, as the extension does on save, and the program runs it.
+// source); the edit is applied with netdbg.applyChanges, as the extension does on save, and the program runs it.
 
 import * as assert from 'assert/strict';
 import * as cp from 'child_process';
@@ -14,7 +14,7 @@ const TIMEOUT = 180_000;
 
 /** Copies test/apps/EditAndContinue to a temporary folder and builds it for the bitness and framework under test. */
 function buildCopy(): { program: string; source: string } {
-    const work = path.join(os.tmpdir(), 'dotnetx86-e2e-enc', `${ARCH}-${FRAMEWORK ?? 'net10.0'}`);
+    const work = path.join(os.tmpdir(), 'netdbg-e2e-enc', `${ARCH}-${FRAMEWORK ?? 'net10.0'}`);
     fs.rmSync(work, { recursive: true, force: true });
     fs.mkdirSync(work, { recursive: true });
     const app = path.join(REPO, 'test', 'apps', 'EditAndContinue');

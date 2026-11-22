@@ -20,7 +20,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Win32;
 
-namespace DotnetX86
+namespace Netdbg
 {
     public static class ProcessSampler
     {
@@ -139,4 +139,4 @@ namespace DotnetX86
 }
 '@
 
-[DotnetX86.ProcessSampler]::Run($ProcessId, $IntervalMs)
+[Netdbg.ProcessSampler]::Run($ProcessId, $IntervalMs)
