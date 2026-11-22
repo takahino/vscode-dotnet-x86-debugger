@@ -1747,7 +1747,7 @@
   "startup": [
     {
       "name": "--interpreter=vscode",
-      "notes": "DAP over stdin / stdout (the default; accepted for netcoredbg compatibility)."
+      "notes": "DAP over stdin / stdout (the default)."
     },
     {
       "name": "--log=<file>",

@@ -4,9 +4,9 @@
 
 <p align="center"><b>32bit (x86) の .NET / .NET Framework アプリを、WinForms も含めて Visual Studio Code でデバッグします。</b></p>
 
-<p align="center"><a href="https://github.com/takahino/vscode-netdbg/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-netdbg" alt="Release"></a> <a href="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<p align="center"><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-dotnet-x86-debugger" alt="Release"></a> <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
 
-<p align="center"><a href="README.md">English</a> · <a href="https://takahino.github.io/vscode-netdbg/usage.jp.html">図解ガイド</a> · <a href="CHANGELOG.md">変更履歴</a></p>
+<p align="center"><a href="README.md">English</a> · <a href="https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html">図解ガイド</a> · <a href="CHANGELOG.md">変更履歴</a></p>
 
 ![WinForms アプリのデバッグ: ブレークポイント・変数・コールスタック・例外ログ・ステップ履歴](media/readme/debugging.ja.png)
 
@@ -18,7 +18,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 ## クイック スタート
 
 1. [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet) から **.NET Desktop Runtime x86**（8 以降）と .NET SDK をインストールします。
-2. [Releases](https://github.com/takahino/vscode-netdbg/releases) から `.vsix` をダウンロードし、**Extensions: Install from VSIX...** で拡張機能をインストールします。
+2. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から `.vsix` をダウンロードし、**Extensions: Install from VSIX...** で拡張機能をインストールします。
 3. プロジェクトのフォルダーを開き、**.NET x86: はじめに** を実行します。**F5** を押すだけでも、`.csproj` から launch.json とビルド タスクが作られます。
 
 **.NET x86: 環境を確認** で足りないものがわかり、プロジェクト ファイル（x86・Portable PDB）もボタン 1 つで直せます。
@@ -41,7 +41,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## 機能一覧
 
-★ は Visual Studio に無い機能です。すべての機能を、図とユースケースつきで [図解ガイド](https://takahino.github.io/vscode-netdbg/usage.jp.html) にまとめています。
+★ は Visual Studio に無い機能です。すべての機能を、図とユースケースつきで [図解ガイド](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html) にまとめています。
 
 | 機能 | 内容 | 場所 |
 |---|---|---|
@@ -102,7 +102,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## インストール
 
-1. [Releases](https://github.com/takahino/vscode-netdbg/releases) から
+1. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から
    `netdbg-<version>.vsix` と `install-vsix.ps1` を同じフォルダにダウンロードします。
 2. 次を実行します。
 
@@ -268,7 +268,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## 機能の説明
 
-同じ機能を図とユースケースつきで: [図解ガイド](https://takahino.github.io/vscode-netdbg/usage.jp.html)。
+同じ機能を図とユースケースつきで: [図解ガイド](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html)。
 
 ### 止めたいところで止める
 
@@ -750,7 +750,7 @@ Step Into Specific、次のステートメントの設定、戻り値、オブ�
 ## デバッグ エンジンの API
 
 拡張とデバッグ エンジンの間の取り決め（DAP の要求・応答・イベント、独自の要求、launch / attach の引数、値の書き方）は、
-[docs/engine-api.html](https://takahino.github.io/vscode-netdbg/engine-api.html)（JSON Schema は [engine-api.json](docs/engine-api.json)）にあります。
+[docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)（JSON Schema は [engine-api.json](docs/engine-api.json)）にあります。
 `src/engineProtocol.ts` の型から `npm run docs:api` で生成しています。
 
 ## 開発に参加する

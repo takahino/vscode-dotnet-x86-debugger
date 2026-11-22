@@ -155,7 +155,7 @@ The debugger itself uses no .NET. The differences from Visual Studio and from ne
 
 <h2 id="install">Install</h2>
 <ol class="steps">
-  <li>Open the <a href="https://github.com/takahino/vscode-netdbg/releases">Releases page</a> and download
+  <li>Open the <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases">Releases page</a> and download
     <code>netdbg-&lt;version&gt;.vsix</code> and <code>install-vsix.ps1</code> into the same folder.</li>
   <li>In that folder, run:
 <pre><code>powershell -ExecutionPolicy Bypass -File install-vsix.ps1</code></pre>
@@ -1187,7 +1187,7 @@ Debugging waits until the process appears:</p>
   <tr><td>Breakpoint stays hollow</td><td>Check the Modules view: your assembly needs <i>symbols loaded</i> (Debug build, PDB next to the DLL).</td></tr>
   <tr><td>Can’t step into your own library / “Source not found: …” in the Debug Console</td><td>Its PDB records a path that is not on this machine: add a parent folder of the source to <code>sourceSearchPaths</code>, or map the path prefix with <code>sourceFileMap</code> (and set <code>justMyCode</code> to false for a Release build).</td></tr>
   <tr><td>The Variables view is missing</td><td>It may have been hidden or moved: run <b>Run and Debug: Focus on Variables View</b>.</td></tr>
-  <tr><td>Something else is wrong</td><td>Enable <code>netdbg.trace</code>, reproduce, and attach the “netdbg” output to an <a href="https://github.com/takahino/vscode-netdbg/issues">issue</a>.</td></tr>
+  <tr><td>Something else is wrong</td><td>Enable <code>netdbg.trace</code>, reproduce, and attach the “netdbg” output to an <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/issues">issue</a>.</td></tr>
 </table>
 
 <h2 id="settings">Settings</h2>
@@ -1202,7 +1202,7 @@ Debugging waits until the process appears:</p>
   <tr><td><code>netdbg.dump.maxDepth</code> / <code>maxNodes</code></td><td>3 / 2000</td><td>Limits of Dump Variable and related commands.</td></tr>
   <tr><td><code>netdbg.sourceFileMap</code> / <code>sourceSearchPaths</code></td><td>(empty)</td><td>Where the source of referenced assemblies is, for every configuration (merged with launch.json).</td></tr>
   <tr><td><code>netdbg.trace</code></td><td>false</td><td>Troubleshooting log of the debugger communication.</td></tr>
-  <tr><td><code>netdbg.debuggerPath</code></td><td>(empty)</td><td>For x86 programs, use another x86 debug engine (netdbg.exe, or the netcoredbg.exe of 1.x) instead of the bundled one.</td></tr>
+  <tr><td><code>netdbg.debuggerPath</code></td><td>(empty)</td><td>For x86 programs, use another build of the x86 debug engine (<code>netdbg.exe</code>) instead of the bundled one. netcoredbg is not supported.</td></tr>
   <tr><td><code>netdbg.sqlLog.methods</code></td><td>ODP.NET, SqlClient, OleDb, Odbc</td><td>Provider methods the SQL log reads commands at (<code>Namespace.Type.Method</code>).</td></tr>
   <tr><td><code>netdbg.evidence.folder</code></td><td>evidence</td><td>Where Capture Evidence saves (relative to the workspace folder).</td></tr>
 </table>
@@ -1233,7 +1233,7 @@ Debugging waits until the process appears:</p>
   <tr><td><code>netdbg.evidence.enabled</code></td><td>Capture Evidence</td></tr>
   <tr><td><code>netdbg.sourceLink.enabled</code></td><td>Source Link downloads</td></tr>
 </table>
-<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-netdbg">GitHub</a></p>
+<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>
 </main>
 </div>
 </body>

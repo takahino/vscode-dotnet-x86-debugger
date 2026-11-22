@@ -8,13 +8,13 @@
     必要なもの: Rust (rustup。ターゲット i686-pc-windows-msvc / x86_64-pc-windows-msvc)、Visual Studio の C++ ビルドツール。
     エンジン自身は .NET のランタイムを使わない (.NET Framework のアプリも、.NET 無しでデバッグできる)。
 .PARAMETER EngineRepo
-    netdbg のリポジトリ。既定は、この拡張のリポジトリと並んだ ..\dotnet-x86dbg。
+    netdbg のリポジトリ。既定は、この拡張のリポジトリと並んだ ..\netdbg（https://github.com/takahino/netdbg）。
 .PARAMETER SkipBuild
     ビルドせず、すでにある dist を写すだけにする。
 #>
 [CmdletBinding()]
 param(
-    [string]$EngineRepo = (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'dotnet-x86dbg'),
+    [string]$EngineRepo = (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'netdbg'),
     [switch]$SkipBuild
 )
 

@@ -80,7 +80,7 @@ main a { color: var(--engine); }
 
 <h2 id="startup">Starting the engine</h2>
 <table><thead><tr><th>Argument / variable</th><th>Meaning</th></tr></thead>
-<tr><td><code>--interpreter=vscode</code></td><td>DAP over stdin / stdout (the default; accepted for netcoredbg compatibility).</td></tr>
+<tr><td><code>--interpreter=vscode</code></td><td>DAP over stdin / stdout (the default).</td></tr>
 <tr><td><code>--log=&lt;file&gt;</code></td><td>Writes the DAP traffic and the engine's own log, flushed per line (setting <code>netdbg.trace</code>).</td></tr>
 <tr><td><code>--mcp-listen</code></td><td>Also accepts MCP on 127.0.0.1 with a token, and sends <code>netdbg.mcpEndpoint</code> (setting <code>netdbg.mcp.enabled</code>). The tools drive this session; VS Code follows through the usual DAP events.</td></tr>
 <tr><td><code>--mcp-connect[=&lt;enginePid&gt;]</code></td><td>Not used by the extension: run by AI clients outside VS Code, a stdio MCP server that relays to the latest engine started with <code>--mcp-listen</code> (or the given one).</td></tr>

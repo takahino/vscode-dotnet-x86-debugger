@@ -4,9 +4,9 @@
 
 <p align="center"><b>Debug 32-bit (x86) .NET and .NET Framework apps — WinForms included — in Visual Studio Code.</b></p>
 
-<p align="center"><a href="https://github.com/takahino/vscode-netdbg/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-netdbg" alt="Release"></a> <a href="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<p align="center"><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-dotnet-x86-debugger" alt="Release"></a> <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
 
-<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-netdbg/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
+<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
 
 ![Debugging a WinForms app: breakpoints, variables, call stack, exception log, step history](media/readme/debugging.png)
 
@@ -18,7 +18,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 ## Quick start
 
 1. Install the **.NET Desktop Runtime x86** (8 or later) from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet), and a .NET SDK.
-2. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-netdbg/releases) and run **Extensions: Install from VSIX...**.
+2. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
 3. Open your project folder and run **.NET x86: Getting Started** — or just press **F5**: launch.json and the build task are made from your `.csproj`.
 
 **.NET x86: Check Environment** tells you what is missing, and fixes the project file (x86, Portable PDB) with one click.
@@ -42,7 +42,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 
 ## Features
 
-★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-netdbg/usage.html).
+★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
 
 | Feature | What it does | Where |
 |---|---|---|
@@ -104,7 +104,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 ## Installation
 
 1. Download `netdbg-<version>.vsix` and `install-vsix.ps1` from
-   [Releases](https://github.com/takahino/vscode-netdbg/releases) into the same folder.
+   [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) into the same folder.
 2. Run:
 
    ```powershell
@@ -271,7 +271,7 @@ Menus, settings and messages are shown in English, or in Japanese when VS Code's
 
 ## Feature guide
 
-The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-netdbg/usage.html).
+The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
 
 ### Stopping where you want
 
@@ -782,7 +782,7 @@ node (with the base types' members).
 ## Debug engine API
 
 The contract between the extension and its debug engine (DAP requests, responses and events, custom requests, launch / attach
-arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-netdbg/engine-api.html)
+arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)
 (JSON Schema: [engine-api.json](docs/engine-api.json)). It is generated from the types in `src/engineProtocol.ts` with `npm run docs:api`.
 ## Contributing
 

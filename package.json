@@ -12,12 +12,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/takahino/vscode-netdbg.git"
+    "url": "https://github.com/takahino/vscode-dotnet-x86-debugger.git"
   },
   "bugs": {
-    "url": "https://github.com/takahino/vscode-netdbg/issues"
+    "url": "https://github.com/takahino/vscode-dotnet-x86-debugger/issues"
   },
-  "homepage": "https://github.com/takahino/vscode-netdbg#readme",
+  "homepage": "https://github.com/takahino/vscode-dotnet-x86-debugger#readme",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -142,7 +142,7 @@
               "markdown": "%walkthrough.features.media%"
             },
             "completionEvents": [
-              "onLink:https://takahino.github.io/vscode-netdbg/usage.html"
+              "onLink:https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html"
             ]
           }
         ]

@@ -117,7 +117,7 @@
   "walkthrough.debug.title": "デバッグを始める",
   "walkthrough.debug.description": "ブレークポイントを置いて F5 を押します。\n[デバッグを開始](command:workbench.action.debug.start)",
   "walkthrough.features.title": "機能を見てみる",
-  "walkthrough.features.description": "例外・スレッド・メモリ・WinForms コントロールなどの機能を、ユースケースとともに紹介します。\n[ガイドを開く](https://takahino.github.io/vscode-netdbg/usage.html)",
+  "walkthrough.features.description": "例外・スレッド・メモリ・WinForms コントロールなどの機能を、ユースケースとともに紹介します。\n[ガイドを開く](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html)",
   "walkthrough.environment.media": "media/walkthrough/environment.ja.md",
   "walkthrough.project.media": "media/walkthrough/project.ja.md",
   "walkthrough.launch.media": "media/walkthrough/launch.ja.md",

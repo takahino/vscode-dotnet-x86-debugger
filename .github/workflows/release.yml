@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     env:
       # 同梱するデバッグエンジン (netdbg) の版。CI と同じものにする
-      ENGINE_REF: main
+      ENGINE_REF: 65218cefc2699215854eca3323f836de1954063d
     steps:
       - uses: actions/checkout@v4
 

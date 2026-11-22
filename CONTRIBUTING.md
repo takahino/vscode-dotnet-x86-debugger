@@ -4,7 +4,7 @@
 
 Prerequisites: Node.js, Git, a .NET SDK (test apps), and for the debug engine Rust (`rustup`, targets
 `i686-pc-windows-msvc` and `x86_64-pc-windows-msvc`) with the MSVC linker (Visual Studio Build Tools, *Desktop development with C++*).
-The debug engine **netdbg** lives in its own repository; clone it next to this one (`..\dotnet-x86dbg`).
+The debug engine **netdbg** lives in its own repository ([takahino/netdbg](https://github.com/takahino/netdbg)); clone it next to this one (`..\netdbg`).
 
 ```powershell
 # Build the debug engine (x86 and x64, into debugger\netdbg-x86 / -x64), compile, package the VSIX and install it
@@ -14,7 +14,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 
 # Only (re)build and place the engine; -EngineRepo when it is elsewhere, -SkipBuild to copy its dist\ as it is
-powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..\dotnet-x86dbg
+powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..\netdbg
 ```
 
 `scripts\build-engine.ps1` runs the engine's `build.ps1` (which also fetches `dbgshim.dll` from NuGet, version pinned) and copies
@@ -29,7 +29,7 @@ To debug the extension itself, open this folder in VS Code and run **Run Extensi
 What the extension and the engine exchange is defined in `src/engineProtocol.ts` (TypeScript types with JSDoc). After changing it,
 run `npm run docs:api` to regenerate [docs/engine-api.html](docs/engine-api.html) and [docs/engine-api.json](docs/engine-api.json);
 a unit test fails while they are stale, and checks that every custom request and event the extension uses is listed.
-`node scripts/gen-engine-api.js --engine ..\dotnet-x86dbg` also compares the document with the requests the engine dispatches.
+`node scripts/gen-engine-api.js --engine ..\netdbg` also compares the document with the requests the engine dispatches.
 
 ### Tests
 
@@ -41,8 +41,8 @@ $env:NETDBG_E2E_ARCH = 'x64'; npm run test:e2e   # the same with the x64 engine 
 
 The E2E tests need the engine (`scripts\build-engine.ps1`), the .NET SDK
 and the .NET (Desktop) runtime of the bitness under test. They find the lines they stop at by `// @name` markers in the test apps.
-Set `NETDBG_SKIP_UI_TESTS=1` to skip the WinForms tests where no desktop is available, and `NETDBG_E2E_DEBUGGER` to run
-them against another engine (for example netcoredbg, to compare). The [CI workflow](.github/workflows/ci.yml) runs the unit
+Set `NETDBG_SKIP_UI_TESTS=1` to skip the WinForms tests where no desktop is available, and `NETDBG_E2E_DEBUGGER` to point
+the same tests at another build of netdbg (for example the engine repository's `dist\`). The [CI workflow](.github/workflows/ci.yml) runs the unit
 tests and the E2E tests of both bitnesses on every push.
 
 Unit tests live in `src/test/unit` and test the modules that are kept free of the `vscode` module (`*Core.ts` and the like):

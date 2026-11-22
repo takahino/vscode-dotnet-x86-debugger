@@ -4,7 +4,7 @@
 
 前提: Node.js、Git、.NET SDK（テスト アプリ用）、デバッグ エンジン用に Rust（`rustup`。ターゲット
 `i686-pc-windows-msvc` と `x86_64-pc-windows-msvc`）と MSVC のリンカー（Visual Studio Build Tools の「C++ によるデスクトップ開発」）。
-デバッグ エンジン **netdbg** は別のリポジトリです。このリポジトリの隣（`..\dotnet-x86dbg`）に clone してください。
+デバッグ エンジン **netdbg** は別のリポジトリ（[takahino/netdbg](https://github.com/takahino/netdbg)）です。このリポジトリの隣（`..\netdbg`）に clone してください。
 
 ```powershell
 # デバッグ エンジンをビルド（x86 と x64。debugger\netdbg-x86 / -x64 に配置）し、コンパイル・VSIX 作成・VS Code へのインストールまで行う
@@ -14,7 +14,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 
 # エンジンのビルドと配置だけ。別の場所なら -EngineRepo、ビルドせずに dist\ を写すだけなら -SkipBuild
-powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..\dotnet-x86dbg
+powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..\netdbg
 ```
 
 `scripts\build-engine.ps1` は、エンジンの `build.ps1`（`dbgshim.dll` を版を固定して NuGet から取得します）を呼び、両方のビット数の
@@ -29,7 +29,7 @@ x86 か x64 のエンジンを起動します（`configProvider.ts` の `ENGINE_
 拡張とエンジンの間でやり取りするものは `src/engineProtocol.ts`（JSDoc つきの TypeScript の型）で定義しています。変更したら
 `npm run docs:api` で [docs/engine-api.html](docs/engine-api.html) と [docs/engine-api.json](docs/engine-api.json) を作り直してください。
 古いままだと単体テストが失敗します（拡張が使う独自の要求とイベントがすべて載っていることも確かめます）。
-`node scripts/gen-engine-api.js --engine ..\dotnet-x86dbg` で、エンジンが受け付ける要求の一覧とも突き合わせます。
+`node scripts/gen-engine-api.js --engine ..\netdbg` で、エンジンが受け付ける要求の一覧とも突き合わせます。
 
 ### テスト
 
@@ -42,7 +42,7 @@ $env:NETDBG_E2E_ARCH = 'x64'; npm run test:e2e   # 同じものを x64 のエン
 E2E テストには、エンジン（`scripts\build-engine.ps1`）、.NET SDK、
 試すビット数の .NET（Desktop）ランタイムが必要です。停止する行はテスト アプリの `// @名前` マーカーで探します。
 デスクトップの無い環境では `NETDBG_SKIP_UI_TESTS=1` で WinForms のテストを飛ばせます。`NETDBG_E2E_DEBUGGER` で、
-別のエンジン（見比べるための netcoredbg など）に対して実行できます。[CI ワークフロー](.github/workflows/ci.yml) が push のたびに、
+同じテストを別のビルドの netdbg（たとえばエンジンのリポジトリの `dist\`）に向けられます。[CI ワークフロー](.github/workflows/ci.yml) が push のたびに、
 単体テストと両方のビット数の E2E テストを実行します。
 
 単体テストは `src/test/unit` にあり、`vscode` モジュールに依存しないモジュール（`*Core.ts` など）をテストします。機能のロジックはそちらに書き、

@@ -14,7 +14,7 @@ jobs:
       # E2E のテストアプリ（x86）を動かす x86 版 .NET ランタイムの場所
       DOTNET_ROOT(x86): C:\Program Files (x86)\dotnet
       # 同梱するデバッグエンジン (netdbg) の版 (タグかコミット)
-      ENGINE_REF: main
+      ENGINE_REF: 65218cefc2699215854eca3323f836de1954063d
     steps:
       - uses: actions/checkout@v4
 

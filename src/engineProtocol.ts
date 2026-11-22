@@ -611,7 +611,7 @@ export const ENGINE_CAPABILITIES = {
 
 /** Command line and environment the extension starts the engine with. */
 export const ENGINE_STARTUP: readonly { name: string; notes: string }[] = [
-    { name: '--interpreter=vscode', notes: 'DAP over stdin / stdout (the default; accepted for netcoredbg compatibility).' },
+    { name: '--interpreter=vscode', notes: 'DAP over stdin / stdout (the default).' },
     { name: '--log=<file>', notes: 'Writes the DAP traffic and the engine\'s own log, flushed per line (setting `netdbg.trace`).' },
     { name: '--mcp-listen', notes: 'Also accepts MCP on 127.0.0.1 with a token, and sends `netdbg.mcpEndpoint` (setting `netdbg.mcp.enabled`). The tools drive this session; VS Code follows through the usual DAP events.' },
     { name: '--mcp-connect[=<enginePid>]', notes: 'Not used by the extension: run by AI clients outside VS Code, a stdio MCP server that relays to the latest engine started with `--mcp-listen` (or the given one).' },

@@ -117,7 +117,7 @@
   "walkthrough.debug.title": "Start debugging",
   "walkthrough.debug.description": "Set a breakpoint and press F5.\n[Start Debugging](command:workbench.action.debug.start)",
   "walkthrough.features.title": "Explore the features",
-  "walkthrough.features.description": "Exceptions, threads, memory, WinForms controls and more, with use cases.\n[Open the Guide](https://takahino.github.io/vscode-netdbg/usage.html)",
+  "walkthrough.features.description": "Exceptions, threads, memory, WinForms controls and more, with use cases.\n[Open the Guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html)",
   "walkthrough.environment.media": "media/walkthrough/environment.md",
   "walkthrough.project.media": "media/walkthrough/project.md",
   "walkthrough.launch.media": "media/walkthrough/launch.md",

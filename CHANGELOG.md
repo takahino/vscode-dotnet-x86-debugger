@@ -6,9 +6,9 @@
   settings and commands (`netdbg.*`), the bundled engine (`netdbg.exe`) and its folders (`%LOCALAPPDATA%\netdbg`) and the
   environment variable `NETDBG_SYMBOL_DIRS` all use the new name. The old names (`dotnet-x86`, `dotnetX86.*`,
   `NETCOREDBG_SYMBOL_DIRS`) are no longer read: change `launch.json` and the settings.
-- **New debug engine.** The extension bundles **dotnet-x86dbg** (Rust), a debug engine made for it, instead of netcoredbg. It speaks the
-  same DAP and writes values the same way, so every feature works as before; the differences are listed in the README
-  ("Differences from netcoredbg (1.x)"). `dotnetX86.debuggerPath` can still point at a netcoredbg.exe (x86 programs).
+- **New debug engine.** The extension bundles **[netdbg](https://github.com/takahino/netdbg)** (Rust), a debug engine made for it, instead of
+  netcoredbg. It speaks the same DAP and writes values the same way, so every feature works as before; the differences are listed in the
+  README ("Differences from netcoredbg (1.x)"). `netdbg.debuggerPath` takes only builds of netdbg; netcoredbg is no longer supported.
 - New: **x64 and AnyCPU programs.** The engine of the program's bitness is started (an x86 and an x64 engine are bundled): an exe
   runs as it was built, a framework-dependent `.dll` in the dotnet.exe of `architecture` (`x86` by default, or `x64`), and attach
   picks the engine from the process. The process picker lists x86 and x64 .NET processes. The "will run as a 64-bit process"
@@ -25,9 +25,9 @@
   `DebuggerTypeProxy` of your own types are honored (the original members under Raw View).
 - New: **engine API document** — [docs/engine-api.html](docs/engine-api.html) and its JSON Schema, generated from `src/engineProtocol.ts`
   with `npm run docs:api`; a unit test keeps them up to date.
-- New: **AI clients (MCP)** — with `dotnetX86.mcp.enabled` (off by default), AI assistants debug the session through MCP: breakpoints,
+- New: **AI clients (MCP)** — with `netdbg.mcp.enabled` (off by default), AI assistants debug the session through MCP: breakpoints,
   stepping, the stack, variables and expressions, and the program's windows (list, screenshot even while stopped, buttons, text,
-  mouse and keys). VS Code's AI sees it as the MCP server *.NET x86 Debugger* (VS Code 1.101 or later) and Cursor's AI as *dotnet-x86*;
+  mouse and keys). VS Code's AI sees it as the MCP server *netdbg* (VS Code 1.101 or later) and Cursor's AI as *netdbg*;
   **Register the MCP Server with AI Clients** registers it with Claude Code, GitHub Copilot CLI, Codex, Gemini CLI, Claude
   Desktop, Cursor, Windsurf, LM Studio and opencode; **Copy MCP Connection Settings for AI Clients** gives the settings for
   others.
@@ -35,7 +35,7 @@
   change is applied without restarting. Changed methods run the new code from their next call, and a stopped method moves to
   the new code at its next statement; methods, fields, properties and classes can be added (.NET and .NET Framework). Changes
   that need a restart and compile errors are shown with their place. Debug builds started by the debugger; needs the .NET SDK 9
-  or later. `dotnetX86.editAndContinue.enabled`, `dotnetX86.editAndContinue.applyOnSave`; MCP tool `debug_apply_changes`.
+  or later. `netdbg.editAndContinue.enabled`, `netdbg.editAndContinue.applyOnSave`; MCP tool `debug_apply_changes`.
 - New: **debugging programs without symbols** — the engine decompiles the program's assemblies that have no PDB to C# by itself
   when you stop or step into them, so an exe shipped without symbols can be debugged in C# (breakpoints, stepping, locals) in the
   same session, with no .NET runtime needed. `decompile` in launch.json and attach (`app` by default, `off`); MCP tool `decompile`.
@@ -44,9 +44,8 @@
   `#caller`), Step Into Target, Break on Value Change, the SQL log, the exception log, the event trace, the UI freeze watch and the
   memory graph's readings, which the extension's relay and PowerShell helpers did. They work the same, with fewer round trips at
   each stop and no PowerShell; Step Into Target lists the calls from the compiled code (also in decompiled sources), and AI clients
-  get them through MCP too (`sql_log`, `exception_log`, `event_trace`, `ui_freeze`, `process_usage`). With a netcoredbg in
-  `dotnetX86.debuggerPath` the relay still does them.
-- New: **crash dumps** — `dumpPath` in launch.json (snippet ".NET x86: Open Crash Dump") opens a .dmp written with full memory
+  get them through MCP too (`sql_log`, `exception_log`, `event_trace`, `ui_freeze`, `process_usage`).
+- New: **crash dumps** — `dumpPath` in launch.json (snippet "netdbg: Open Crash Dump") opens a .dmp written with full memory
   (Task Manager, WER LocalDumps, procdump -ma) as a stopped program: threads, call stacks with source lines, variables,
   the exception and the heap. It cannot continue, step or run functions. A 32-bit process written by a 64-bit tool opens
   in the x86 engine. No .NET runtime is needed to open a .NET Framework dump.
@@ -57,9 +56,10 @@
   worked from the next session). The engine decompiles by itself instead; the symbols the helper left in the extension's storage are
   deleted on first start.
 - Docs: README, the illustrated guide and CONTRIBUTING describe the new engine; the README lists the differences from Visual Studio
-  and from netcoredbg.
+  and from netcoredbg (1.x).
 - Build: `scripts/build-engine.ps1` replaces `scripts/build-netcoredbg.ps1` and the netcoredbg patches; CI and the release workflow
-  build the engine (`ENGINE_REF`), and CI runs the E2E tests with both the x86 and the x64 engine (`DOTNETX86_E2E_ARCH=x64`).
+  build the engine (`ENGINE_REF`), and CI runs the E2E tests with both the x86 and the x64 engine (`NETDBG_E2E_ARCH=x64`).
+
 ## 1.2.1
 
 - New: **SQL Log** view — every SQL statement the program runs through an ADO.NET provider (ODP.NET managed / unmanaged, SqlClient, OleDb, Odbc), without stopping: the statement, its parameter values, the caller and the call stack. **Copy SQL with Parameter Values** gives the statement with the values filled in (Oracle `BindByName = false` honored), **Export SQL Log** writes a `.sql` file, and a statement that runs five times or more is flagged (N+1). It hooks the provider, so statements run by a home-made data access component are logged too. `dotnetX86.sqlLog.enabled`, `dotnetX86.sqlLog.methods`.
