@@ -299,6 +299,50 @@ export interface ProcessUsageResponse {
 }
 
 /**
+ * The engine's journal of records made without stopping (SQL, exceptions, events, dialogs, bindings, transactions,
+ * child processes, environment). Read after a previous `last` with `after`; filter with `kinds`.
+ * @request netdbg.journal
+ * @handledBy engine
+ */
+export interface JournalArguments {
+    /** Only records with a higher `seq` (default 0: from the start of what is still kept). */
+    after?: number;
+    /** Record kinds (`sql`, `exception`, `event`, `dialog`, `binding`, `transaction`, `process`, `environment`). Empty: all. */
+    kinds?: string[];
+    /** Most records to return, oldest first (default 1000). */
+    limit?: number;
+}
+
+/** @response netdbg.journal */
+export interface JournalResponse {
+    /** Oldest first; each has `seq`, `time`, `kind` and the fields of that kind (a body's `kind` may overwrite the journal kind in the JSON). */
+    records: Record<string, unknown>[];
+    /** Highest `seq` written so far (also after a clear: numbers keep going). */
+    last: number;
+    /** How many records were discarded past the capacity (10,000). */
+    dropped: number;
+}
+
+/**
+ * The database transactions still open (BeginTransaction without Commit / Rollback yet), with elapsed time and the
+ * journal `seq` of the SQL run inside them. Needs the SQL log.
+ * @request netdbg.transactions
+ * @handledBy engine
+ */
+export interface TransactionsArguments {}
+
+/** @response netdbg.transactions */
+export interface TransactionsResponse {
+    open: {
+        transactionId: number;
+        threadId: number;
+        elapsedMs: number;
+        caller?: { name?: string; source?: { path?: string; name?: string }; line?: number };
+        statements: number[];
+    }[];
+}
+
+/**
  * Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that
  * file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).
  * @request netdbg.coverage
@@ -476,6 +520,8 @@ export interface ExceptionThrownEventBody {
  * @sentBy engine
  */
 export interface SqlExecutedEventBody {
+    /** Journal `seq` (also used by `netdbg.sqlCompleted`). */
+    seq?: number;
     time: number;
     threadId: number;
     /** The provider method that ran it (`System.Data.SqlClient.SqlCommand.ExecuteReader`). */
@@ -492,6 +538,113 @@ export interface SqlExecutedEventBody {
     /** Not every parameter was read. */
     truncated?: boolean;
     frames: { name: string; source?: { path?: string; name?: string }; line?: number }[];
+    /** How many times this statement (normalized) has run in the session. */
+    repeat?: number;
+    /** Open transaction that contains this statement. */
+    transactionId?: number;
+    /** Filled later by `netdbg.sqlCompleted` when the statement did not stop. */
+    durationMs?: number;
+    failed?: boolean;
+}
+
+/**
+ * A SQL statement that was recorded without stopping finished: its run time (and whether it threw) is written into
+ * the journal record of `seq`. The SQL Log view updates the same row.
+ * @event netdbg.sqlCompleted
+ * @sentBy engine
+ */
+export interface SqlCompletedEventBody {
+    seq: number;
+    durationMs: number;
+    failed?: boolean;
+}
+
+/**
+ * A dialog was shown (`MessageBox.Show` / `ShowDialog`), recorded without stopping (or the program stopped when a
+ * `breakOn` condition matched). Wake-up for the Records view (`netdbg.journal` kinds `dialog`).
+ * @event netdbg.dialogShown
+ * @sentBy engine
+ */
+export interface DialogShownEventBody {
+    seq?: number;
+    time?: number;
+    kind?: string;
+    method?: string;
+    text?: string;
+    caption?: string;
+    form?: string;
+    threadId?: number;
+    stopped?: boolean;
+    caller?: { name?: string; source?: { path?: string; name?: string }; line?: number };
+}
+
+/**
+ * A WinForms data-binding Format / Parse failure the program swallowed while running. Wake-up for the Records view
+ * (`netdbg.journal` kinds `binding`).
+ * @event netdbg.bindingFailed
+ * @sentBy engine
+ */
+export interface BindingFailedEventBody {
+    seq?: number;
+    time?: number;
+    direction?: string;
+    control?: string;
+    property?: string;
+    member?: string;
+    exceptionType?: string;
+    message?: string;
+    caller?: { name?: string; source?: { path?: string; name?: string }; line?: number };
+}
+
+/**
+ * A database transaction began, committed or rolled back. Wake-up for the Records view and for refreshing open
+ * transactions (`netdbg.transactions`).
+ * @event netdbg.transaction
+ * @sentBy engine
+ */
+export interface TransactionEventBody {
+    seq?: number;
+    time?: number;
+    event?: string;
+    transactionId?: number;
+    durationMs?: number;
+    statements?: number[];
+    caller?: { name?: string; source?: { path?: string; name?: string }; line?: number };
+}
+
+/**
+ * The program started a child with `Process.Start`. Wake-up for the Records view (`netdbg.journal` kinds `process`).
+ * @event netdbg.childProcess
+ * @sentBy engine
+ */
+export interface ChildProcessEventBody {
+    seq?: number;
+    time?: number;
+    fileName?: string;
+    arguments?: string;
+    processId?: number;
+    bitness?: string;
+    followed?: boolean;
+    notFollowed?: string;
+    failed?: boolean;
+    caller?: { name?: string; source?: { path?: string; name?: string }; line?: number };
+}
+
+/**
+ * The program's runtime started: environment snapshot (runtime, bitness, program, connection strings). Wake-up for
+ * the Records view (`netdbg.journal` kinds `environment`).
+ * @event netdbg.environment
+ * @sentBy engine
+ */
+export interface EnvironmentEventBody {
+    seq?: number;
+    time?: number;
+    runtime?: string;
+    bitness?: string;
+    program?: string;
+    commandLine?: string;
+    workingDirectory?: string;
+    connectionStrings?: { name?: string; connectionString?: string; providerName?: string; file?: string }[];
 }
 
 /**

@@ -28,6 +28,7 @@ import { SessionReport } from './sessionReport';
 import { EventTrace } from './eventTrace';
 import { EvidenceCapture } from './evidence';
 import { SqlLog } from './sqlLog';
+import { JournalView } from './journalView';
 import { StepHistory } from './stepHistory';
 import { SymbolServer } from './symbolServer';
 import { generateTestCommand } from './testGenerator';
@@ -74,6 +75,9 @@ export function activate(context: vscode.ExtensionContext): void {
     const evidence = new EvidenceCapture(context.extensionPath, sqlLog, (line) => output.appendLine(line));
     const sqlView = vscode.window.createTreeView('netdbg.sqlLog', { treeDataProvider: sqlLog });
     sqlLog.attach(sqlView);
+    const journalView = new JournalView();
+    const recordsView = vscode.window.createTreeView('netdbg.records', { treeDataProvider: journalView });
+    journalView.attach(recordsView);
     const exceptionSettings = new ExceptionSettings(context.workspaceState);
     const exceptionSettingsView = vscode.window.createTreeView('netdbg.exceptionSettings', { treeDataProvider: exceptionSettings, manageCheckboxStateManually: true });
     exceptionSettings.attach(exceptionSettingsView);
@@ -180,6 +184,9 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('netdbg.copySqlWithValues', (entry) => sqlLog.copy(entry, true)),
         vscode.commands.registerCommand('netdbg.copySql', (entry) => sqlLog.copy(entry, false)),
         vscode.commands.registerCommand('netdbg.openSql', (entry) => sqlLog.open(entry)),
+        journalView,
+        recordsView,
+        vscode.commands.registerCommand('netdbg.clearRecords', () => journalView.clear()),
         exceptionSettings,
         exceptionSettingsView,
         vscode.commands.registerCommand('netdbg.addExceptionType', () => exceptionSettings.addType()),

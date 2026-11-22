@@ -69,6 +69,7 @@
     "onCommand:netdbg.exportSessionReport",
     "onCommand:netdbg.clearSqlLog",
     "onCommand:netdbg.exportSqlLog",
+    "onCommand:netdbg.clearRecords",
     "onCommand:netdbg.traceControlEvents",
     "onCommand:netdbg.clearEventTrace",
     "onCommand:netdbg.exportEventTrace",
@@ -413,6 +414,12 @@
         "icon": "$(clear-all)"
       },
       {
+        "command": "netdbg.clearRecords",
+        "title": "%command.clearRecords%",
+        "category": ".NET x86",
+        "icon": "$(clear-all)"
+      },
+      {
         "command": "netdbg.exportSqlLog",
         "title": "%command.exportSqlLog%",
         "category": ".NET x86",
@@ -751,6 +758,10 @@
           "when": "debugType == 'netdbg' && config.netdbg.sqlLog.enabled"
         },
         {
+          "command": "netdbg.clearRecords",
+          "when": "debugType == 'netdbg' && config.netdbg.records.enabled"
+        },
+        {
           "command": "netdbg.exportSqlLog",
           "when": "debugType == 'netdbg' && config.netdbg.sqlLog.enabled"
         },
@@ -878,6 +889,11 @@
         {
           "command": "netdbg.clearSqlLog",
           "when": "view == netdbg.sqlLog && config.netdbg.sqlLog.enabled",
+          "group": "navigation@1"
+        },
+        {
+          "command": "netdbg.clearRecords",
+          "when": "view == netdbg.records && config.netdbg.records.enabled",
           "group": "navigation@1"
         },
         {
@@ -1169,6 +1185,11 @@
           "type": "boolean",
           "default": true,
           "description": "%config.sessionReport.enabled%"
+        },
+        "netdbg.records.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.records.enabled%"
         },
         "netdbg.sqlLog.enabled": {
           "type": "boolean",
@@ -1542,6 +1563,12 @@
           "id": "netdbg.sqlLog",
           "name": "%view.sqlLog%",
           "when": "debugType == 'netdbg' && config.netdbg.sqlLog.enabled"
+        },
+        {
+          "id": "netdbg.records",
+          "name": "%view.records%",
+          "when": "debugType == 'netdbg' && config.netdbg.records.enabled",
+          "visibility": "collapsed"
         },
         {
           "id": "netdbg.exceptionSettings",

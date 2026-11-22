@@ -77,7 +77,8 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 | [Exception log](#exception-log) ★ | Every thrown exception, swallowed ones too, with the stack and locals at the throw | Exception Log view |
 | [Event trace](#event-trace) ★ | Which control's event fired, in what order and how far apart, without stopping | WinForms Controls right-click |
 | [Capture evidence](#capture-evidence) ★ | Pictures of the open forms, control values, variables, call stack and SQL as Markdown + PNG for a test report | Command Palette / Call Stack right-click |
-| [SQL log](#sql-log) ★ | Every SQL statement run through ODP.NET / SqlClient / OleDb / Odbc with its parameter values and caller, also from your own data access component | SQL Log view |
+| [SQL log](#sql-log) ★ | Every SQL statement run through ODP.NET / SqlClient / OleDb / Odbc with its parameter values, run time and caller, also from your own data access component | SQL Log view |
+| [Records](#records) ★ | Dialogs, data-binding failures, transactions, child processes and the environment snapshot, listed without stopping | Records view |
 | [Session report](#debug-session-report) ★ | Markdown summary of the session for a bug report | Command Palette |
 | [Generate a unit test](#generate-a-unit-test-from-a-stop) ★ | A test that replays the stopped method call | Call Stack right-click |
 | **Source and symbols** | | |
@@ -247,6 +248,7 @@ the exception settings, the exception log, the SQL log and UI freeze detection c
 | `netdbg.stepHistory.enabled` | Step History view and recording |
 | `netdbg.exceptionLog.enabled` | Exception Log view and recording |
 | `netdbg.sqlLog.enabled` | SQL Log view and recording |
+| `netdbg.records.enabled` | Records view (dialogs, bindings, transactions, child processes, environment) |
 | `netdbg.eventTrace.enabled` | Trace Events and the Event Trace view |
 | `netdbg.evidence.enabled` | Capture Evidence |
 | `netdbg.perfTips.enabled` | PerfTips |
@@ -562,8 +564,16 @@ title) writes them all to a `.sql` file as evidence of what the program ran.
 
 It hooks the provider, not your code, so statements run by a home-made data access component are logged too. Each
 statement pauses the program for a moment while it is read (`netdbg.sqlLog.enabled`, new sessions only). To log another
-provider, add its command type to `netdbg.sqlLog.methods` (e.g. `Npgsql.NpgsqlCommand.ExecuteReader`). The time a
-statement took is not recorded, and `Async` methods are only logged where the provider calls its synchronous method.
+provider, add its command type to `netdbg.sqlLog.methods` (e.g. `Npgsql.NpgsqlCommand.ExecuteReader`). Statements that
+do not stop get their run time in milliseconds, and the open transaction's number when they ran inside one.
+`Async` methods are only logged where the provider calls its synchronous method.
+
+#### Records
+
+The **Records (.NET x86)** view lists the journal records that have no view of their own, without stopping: dialogs
+(`MessageBox.Show` / `ShowDialog`), WinForms data-binding Format / Parse failures swallowed while running, database
+transactions (open ones at the top with elapsed time), child processes started with `Process.Start`, and the environment
+snapshot when the runtime starts. SQL, exceptions and the event trace stay in their own views. `netdbg.records.enabled`.
 
 #### Debug session report
 

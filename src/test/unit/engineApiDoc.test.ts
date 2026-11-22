@@ -11,6 +11,7 @@ import { APPLY_CHANGES_REQUEST } from '../../editAndContinueCore';
 import { HEAP_STATS_REQUEST } from '../../heapSnapshotCore';
 import { MAKE_OBJECT_ID_REQUEST } from '../../objectIds';
 import { HANDLE_STATS_REQUEST } from '../../resourceLeakCore';
+import { JOURNAL_REQUEST, RECORDS_EVENTS, SQL_COMPLETED_EVENT, TRANSACTIONS_REQUEST } from '../../journalCore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const REPO = path.resolve(__dirname, '..', '..', '..');
@@ -25,7 +26,7 @@ describe('engine API document', () => {
 
     it('lists every custom request the extension sends, with the side that handles it', () => {
         const requests = new Map(api.messages.filter((m) => m.kind === 'request').map((m) => [m.name, m.side]));
-        for (const name of [HEAP_STATS_REQUEST, HANDLE_STATS_REQUEST, MAKE_OBJECT_ID_REQUEST, proxy.FREEZE_THREAD_REQUEST, APPLY_CHANGES_REQUEST, proxy.EVENT_TRACE_REQUEST, proxy.VALUE_WATCHES_REQUEST, proxy.PROCESS_USAGE_REQUEST, COVERAGE_REQUEST]) {
+        for (const name of [HEAP_STATS_REQUEST, HANDLE_STATS_REQUEST, MAKE_OBJECT_ID_REQUEST, proxy.FREEZE_THREAD_REQUEST, APPLY_CHANGES_REQUEST, proxy.EVENT_TRACE_REQUEST, proxy.VALUE_WATCHES_REQUEST, proxy.PROCESS_USAGE_REQUEST, COVERAGE_REQUEST, JOURNAL_REQUEST, TRANSACTIONS_REQUEST]) {
             assert.equal(requests.get(name), 'engine', name);
         }
         for (const name of [proxy.EXCEPTION_TYPES_REQUEST]) {
@@ -33,12 +34,12 @@ describe('engine API document', () => {
         }
         // The engine's own: sent by its MCP tool `decompile` (and by clients that want the decompiled files), not by the extension.
         assert.equal(requests.get('netdbg.decompile'), 'engine');
-        assert.equal(requests.size, 11, [...requests.keys()].join(', '));
+        assert.equal(requests.size, 13, [...requests.keys()].join(', '));
     });
 
     it('lists the custom events the engine sends for the extension', () => {
         const events = new Map(api.messages.filter((m) => m.kind === 'event').map((m) => [m.name, m.side]));
-        for (const name of [proxy.EVENT_TRACE_EVENT, proxy.EXCEPTION_EVENT, proxy.REMOVE_BREAKPOINT_EVENT, proxy.SQL_EVENT, proxy.TRACK_EVENT, proxy.UI_FROZEN_EVENT, COVERAGE_CHANGED_EVENT]) {
+        for (const name of [proxy.EVENT_TRACE_EVENT, proxy.EXCEPTION_EVENT, proxy.REMOVE_BREAKPOINT_EVENT, proxy.SQL_EVENT, proxy.TRACK_EVENT, proxy.UI_FROZEN_EVENT, COVERAGE_CHANGED_EVENT, SQL_COMPLETED_EVENT, ...RECORDS_EVENTS]) {
             assert.equal(events.get(name), 'engine', name);
         }
         assert.deepEqual([...events].filter(([, side]) => side === 'proxy'), []);

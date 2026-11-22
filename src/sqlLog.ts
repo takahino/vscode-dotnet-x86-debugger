@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { DEBUG_TYPE } from './configProvider';
 import { SQL_EVENT } from './dapProxy';
+import { SQL_COMPLETED_EVENT, applySqlCompleted, sqlDurationLabel } from './journalCore';
 import {
     CallerFrame,
     SqlCommandInfo,
@@ -17,6 +18,8 @@ import {
 export interface SqlEntry extends SqlCommandInfo {
     n: number;
     time: number;
+    /** Journal seq (`netdbg.sqlExecuted` / `netdbg.sqlCompleted`). */
+    seq?: number;
     /** "Oracle.ManagedDataAccess.Client.OracleCommand" */
     typeName: string;
     /** The provider method that ran it ("...OracleCommand.ExecuteReader"). */
@@ -24,6 +27,12 @@ export interface SqlEntry extends SqlCommandInfo {
     frames: CallerFrame[];
     /** How many times this statement (same text) has run in the session, this run included. */
     repeat: number;
+    /** Run time in ms, filled in by `netdbg.sqlCompleted` when the statement did not stop. */
+    durationMs?: number;
+    /** The statement threw before returning. */
+    failed?: boolean;
+    /** Open transaction that ran this statement (`transactionId` on the journal record). */
+    transactionId?: number;
 }
 
 type ParameterNode = { kind: 'parameter'; parameter: SqlParameter };
@@ -50,8 +59,13 @@ export class SqlLog implements vscode.TreeDataProvider<Node>, vscode.Disposable 
         this.disposables.push(
             vscode.debug.onDidStartDebugSession((s) => s.type === DEBUG_TYPE && this.clear()),
             vscode.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-                if (e.session.type === DEBUG_TYPE && e.event === SQL_EVENT) {
+                if (e.session.type !== DEBUG_TYPE) {
+                    return;
+                }
+                if (e.event === SQL_EVENT) {
                     this.add(e.body);
+                } else if (e.event === SQL_COMPLETED_EVENT) {
+                    this.complete(e.body);
                 }
             }),
         );
@@ -79,9 +93,17 @@ export class SqlLog implements vscode.TreeDataProvider<Node>, vscode.Disposable 
         if (e.repeat > 1) {
             parts.push(`×${e.repeat}`);
         }
+        const duration = sqlDurationLabel(e);
+        if (duration) {
+            parts.push(duration);
+        }
         item.description = parts.filter(Boolean).join(' · ');
         item.tooltip = new vscode.MarkdownString().appendCodeblock(this.sqlWithValues(e), 'sql');
-        item.iconPath = e.repeat >= REPEAT_WARNING ? new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground')) : new vscode.ThemeIcon('database');
+        item.iconPath = e.failed
+            ? new vscode.ThemeIcon('error', new vscode.ThemeColor('list.errorForeground'))
+            : e.repeat >= REPEAT_WARNING
+              ? new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground'))
+              : new vscode.ThemeIcon('database');
         item.contextValue = 'netdbg.sql';
         item.command = { command: 'netdbg.openSql', title: vscode.l10n.t('Open SQL'), arguments: [e] };
         return item;
@@ -153,8 +175,9 @@ export class SqlLog implements vscode.TreeDataProvider<Node>, vscode.Disposable 
     private describe(e: SqlEntry): string {
         const caller = callerOf(e.frames);
         const where = caller?.source?.path ? ` (${path.basename(caller.source.path)}:${caller.line})` : '';
+        const duration = sqlDurationLabel(e);
         const header = [
-            `-- #${e.n}  ${new Date(e.time).toLocaleString()}  ${e.method.split('.').slice(-2).join('.')}`,
+            `-- #${e.n}  ${new Date(e.time).toLocaleString()}  ${e.method.split('.').slice(-2).join('.')}${duration ? `  ${duration}` : ''}`,
             caller ? `-- ${shortFrameName(caller.name)}${where}` : '',
             e.dataSource ? `-- ${e.dataSource}` : '',
             e.parameters.length ? `-- ${e.parameters.map((p) => `${p.name}=${p.kind === 'null' ? 'NULL' : p.value}`).join(', ')}` : '',
@@ -162,15 +185,29 @@ export class SqlLog implements vscode.TreeDataProvider<Node>, vscode.Disposable 
         return `${header.filter(Boolean).join('\n')}\n${this.sqlWithValues(e)}${/;\s*$/.test(e.commandText) ? '' : ';'}`;
     }
 
-    private add(body: Omit<SqlEntry, 'n' | 'repeat'>): void {
+    private add(body: Omit<SqlEntry, 'n' | 'repeat'> & { repeat?: number }): void {
         const key = normalizeSql(body.commandText);
-        const repeat = (this.repeats.get(key) ?? 0) + 1;
+        const repeat = typeof body.repeat === 'number' ? body.repeat : (this.repeats.get(key) ?? 0) + 1;
         this.repeats.set(key, repeat);
-        this.entries.push({ ...body, repeat, n: (this.entries[this.entries.length - 1]?.n ?? 0) + 1 });
+        this.entries.push({
+            ...body,
+            seq: typeof body.seq === 'number' ? body.seq : undefined,
+            transactionId: typeof body.transactionId === 'number' ? body.transactionId : undefined,
+            durationMs: typeof body.durationMs === 'number' ? body.durationMs : undefined,
+            failed: body.failed === true ? true : undefined,
+            repeat,
+            n: (this.entries[this.entries.length - 1]?.n ?? 0) + 1,
+        });
         if (this.entries.length > MAX_ENTRIES) {
             this.entries.shift();
         }
         this.update();
+    }
+
+    private complete(body: { seq?: number; durationMs?: number; failed?: boolean }): void {
+        if (applySqlCompleted(this.entries, body)) {
+            this.update();
+        }
     }
 
     private update(): void {

@@ -25,6 +25,7 @@ export type Feature =
     | 'sqlLog'
     | 'eventTrace'
     | 'evidence'
+    | 'records'
     | 'editAndContinue';
 
 export function isEnabled(feature: Feature, scope?: vscode.Uri): boolean {

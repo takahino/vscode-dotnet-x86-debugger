@@ -51,19 +51,27 @@ main a { color: var(--engine); }
 <a class="sub engine" href="#request-netdbg-freezeThread">req netdbg.freezeThread</a>
 <a class="sub engine" href="#request-netdbg-handleStats">req netdbg.handleStats</a>
 <a class="sub engine" href="#request-netdbg-heapStats">req netdbg.heapStats</a>
+<a class="sub engine" href="#request-netdbg-journal">req netdbg.journal</a>
 <a class="sub engine" href="#request-netdbg-makeObjectId">req netdbg.makeObjectId</a>
 <a class="sub engine" href="#request-netdbg-processUsage">req netdbg.processUsage</a>
 <a class="sub engine" href="#request-netdbg-setEventTrace">req netdbg.setEventTrace</a>
 <a class="sub engine" href="#request-netdbg-setValueWatches">req netdbg.setValueWatches</a>
+<a class="sub engine" href="#request-netdbg-transactions">req netdbg.transactions</a>
 <a class="sub proxy" href="#request-netdbg-setExceptionTypes">req netdbg.setExceptionTypes</a>
+<a class="sub engine" href="#event-netdbg-bindingFailed">evt netdbg.bindingFailed</a>
 <a class="sub engine" href="#event-netdbg-changesApplied">evt netdbg.changesApplied</a>
+<a class="sub engine" href="#event-netdbg-childProcess">evt netdbg.childProcess</a>
 <a class="sub engine" href="#event-netdbg-controlEvent">evt netdbg.controlEvent</a>
 <a class="sub engine" href="#event-netdbg-coverageChanged">evt netdbg.coverageChanged</a>
+<a class="sub engine" href="#event-netdbg-dialogShown">evt netdbg.dialogShown</a>
+<a class="sub engine" href="#event-netdbg-environment">evt netdbg.environment</a>
 <a class="sub engine" href="#event-netdbg-exceptionThrown">evt netdbg.exceptionThrown</a>
 <a class="sub engine" href="#event-netdbg-mcpEndpoint">evt netdbg.mcpEndpoint</a>
 <a class="sub engine" href="#event-netdbg-removeBreakpoint">evt netdbg.removeBreakpoint</a>
+<a class="sub engine" href="#event-netdbg-sqlCompleted">evt netdbg.sqlCompleted</a>
 <a class="sub engine" href="#event-netdbg-sqlExecuted">evt netdbg.sqlExecuted</a>
 <a class="sub engine" href="#event-netdbg-trackedValues">evt netdbg.trackedValues</a>
+<a class="sub engine" href="#event-netdbg-transaction">evt netdbg.transaction</a>
 <a class="sub engine" href="#event-netdbg-uiFrozen">evt netdbg.uiFrozen</a>
 <a class="sub engine" href="#event-output">evt output</a>
 <a class="sub engine" href="#event-process">evt process</a>
@@ -508,6 +516,46 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
+<section class="op" id="request-netdbg-journal"><h3><span class="verb request">request</span> <code>netdbg.journal</code> <span class="badge engine">engine</span></h3>
+<p>The engine's journal of records made without stopping (SQL, exceptions, events, dialogs, bindings, transactions, child processes, environment). Read after a previous <code>last</code> with <code>after</code>; filter with <code>kinds</code>.</p>
+<h4>arguments</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>after</code><span class="opt">optional</span></td><td>number</td><td>Only records with a higher <code>seq</code> (default 0: from the start of what is still kept).</td></tr>
+<tr><td><code>kinds</code><span class="opt">optional</span></td><td>string[]</td><td>Record kinds (<code>sql</code>, <code>exception</code>, <code>event</code>, <code>dialog</code>, <code>binding</code>, <code>transaction</code>, <code>process</code>, <code>environment</code>). Empty: all.</td></tr>
+<tr><td><code>limit</code><span class="opt">optional</span></td><td>number</td><td>Most records to return, oldest first (default 1000).</td></tr>
+</table>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;netdbg.journal&quot;,
+  &quot;arguments&quot;: {
+    &quot;after&quot;: 0,
+    &quot;kinds&quot;: [
+      &quot;&quot;
+    ],
+    &quot;limit&quot;: 0
+  }
+}</pre></details>
+<h4>response body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>records</code></td><td>{ [name]: any }[]</td><td>Oldest first; each has <code>seq</code>, <code>time</code>, <code>kind</code> and the fields of that kind (a body's <code>kind</code> may overwrite the journal kind in the JSON).</td></tr>
+<tr><td><code>last</code></td><td>number</td><td>Highest <code>seq</code> written so far (also after a clear: numbers keep going).</td></tr>
+<tr><td><code>dropped</code></td><td>number</td><td>How many records were discarded past the capacity (10,000).</td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;netdbg.journal&quot;,
+  &quot;body&quot;: {
+    &quot;records&quot;: [
+      {}
+    ],
+    &quot;last&quot;: 0,
+    &quot;dropped&quot;: 0
+  }
+}</pre></details>
+</section>
 <section class="op" id="request-netdbg-makeObjectId"><h3><span class="verb request">request</span> <code>netdbg.makeObjectId</code> <span class="badge engine">engine</span></h3>
 <p>Gives the object a value refers to an id (<code>$1</code>) that stays valid while the program runs (a weak GC handle: it does not keep the object alive, and reads <code>null</code> once the object is collected). In expressions the extension writes <code>$1</code> as <code>__NETDBG_OBJID_1</code>; values of objects with an id end with <code> {$1}</code>.</p>
 <h4>arguments</h4>
@@ -663,6 +711,57 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
+<section class="op" id="request-netdbg-transactions"><h3><span class="verb request">request</span> <code>netdbg.transactions</code> <span class="badge engine">engine</span></h3>
+<p>The database transactions still open (BeginTransaction without Commit / Rollback yet), with elapsed time and the journal <code>seq</code> of the SQL run inside them. Needs the SQL log.</p>
+<h4>arguments</h4>
+<p class="none">No fields.</p>
+<details><summary>Example request</summary><pre>{
+  &quot;type&quot;: &quot;request&quot;,
+  &quot;seq&quot;: 1,
+  &quot;command&quot;: &quot;netdbg.transactions&quot;,
+  &quot;arguments&quot;: {}
+}</pre></details>
+<h4>response body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>open</code></td><td>object[]</td><td></td></tr>
+<tr><td><code>open[].transactionId</code></td><td>number</td><td></td></tr>
+<tr><td><code>open[].threadId</code></td><td>number</td><td></td></tr>
+<tr><td><code>open[].elapsedMs</code></td><td>number</td><td></td></tr>
+<tr><td><code>open[].caller</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>open[].caller.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>open[].caller.source</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>open[].caller.source.path</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>open[].caller.source.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>open[].caller.line</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>open[].statements</code></td><td>number[]</td><td></td></tr>
+</table>
+<details><summary>Example response</summary><pre>{
+  &quot;type&quot;: &quot;response&quot;,
+  &quot;request_seq&quot;: 1,
+  &quot;success&quot;: true,
+  &quot;command&quot;: &quot;netdbg.transactions&quot;,
+  &quot;body&quot;: {
+    &quot;open&quot;: [
+      {
+        &quot;transactionId&quot;: 0,
+        &quot;threadId&quot;: 0,
+        &quot;elapsedMs&quot;: 0,
+        &quot;caller&quot;: {
+          &quot;name&quot;: &quot;&quot;,
+          &quot;source&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+          },
+          &quot;line&quot;: 0
+        },
+        &quot;statements&quot;: [
+          0
+        ]
+      }
+    ]
+  }
+}</pre></details>
+</section>
 <section class="op" id="request-netdbg-setExceptionTypes"><h3><span class="verb request">request</span> <code>netdbg.setExceptionTypes</code> <span class="badge proxy">extension relay</span></h3>
 <p>The exception types checked in the Exception Settings view changed: the relay stops on these when they are thrown.</p>
 <h4>arguments</h4>
@@ -681,6 +780,49 @@ main a { color: var(--engine); }
 }</pre></details>
 <h4>response body</h4>
 <p class="none">None (an empty body; <code>success</code> tells the result).</p>
+</section>
+<section class="op" id="event-netdbg-bindingFailed"><h3><span class="verb event">event</span> <code>netdbg.bindingFailed</code> <span class="badge engine">engine</span></h3>
+<p>A WinForms data-binding Format / Parse failure the program swallowed while running. Wake-up for the Records view (<code>netdbg.journal</code> kinds <code>binding</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>time</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>direction</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>control</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>property</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>member</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>exceptionType</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>message</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.source.path</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.line</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;netdbg.bindingFailed&quot;,
+  &quot;body&quot;: {
+    &quot;seq&quot;: 0,
+    &quot;time&quot;: 0,
+    &quot;direction&quot;: &quot;&quot;,
+    &quot;control&quot;: &quot;&quot;,
+    &quot;property&quot;: &quot;&quot;,
+    &quot;member&quot;: &quot;&quot;,
+    &quot;exceptionType&quot;: &quot;&quot;,
+    &quot;message&quot;: &quot;&quot;,
+    &quot;caller&quot;: {
+      &quot;name&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;path&quot;: &quot;&quot;,
+        &quot;name&quot;: &quot;&quot;
+      },
+      &quot;line&quot;: 0
+    }
+  }
+}</pre></details>
 </section>
 <section class="op" id="event-netdbg-changesApplied"><h3><span class="verb event">event</span> <code>netdbg.changesApplied</code> <span class="badge engine">engine</span></h3>
 <p>The result of applying code changes (Edit and Continue), whether VS Code asked (<code>netdbg.applyChanges</code>) or an AI client did through MCP (<code>debug_apply_changes</code>). The body is the response of <code>netdbg.applyChanges</code>.</p>
@@ -722,6 +864,51 @@ main a { color: var(--engine); }
     &quot;details&quot;: [
       &quot;&quot;
     ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-netdbg-childProcess"><h3><span class="verb event">event</span> <code>netdbg.childProcess</code> <span class="badge engine">engine</span></h3>
+<p>The program started a child with <code>Process.Start</code>. Wake-up for the Records view (<code>netdbg.journal</code> kinds <code>process</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>time</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>fileName</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>arguments</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>processId</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>bitness</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>followed</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+<tr><td><code>notFollowed</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>failed</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+<tr><td><code>caller</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.source.path</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.line</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;netdbg.childProcess&quot;,
+  &quot;body&quot;: {
+    &quot;seq&quot;: 0,
+    &quot;time&quot;: 0,
+    &quot;fileName&quot;: &quot;&quot;,
+    &quot;arguments&quot;: &quot;&quot;,
+    &quot;processId&quot;: 0,
+    &quot;bitness&quot;: &quot;&quot;,
+    &quot;followed&quot;: false,
+    &quot;notFollowed&quot;: &quot;&quot;,
+    &quot;failed&quot;: false,
+    &quot;caller&quot;: {
+      &quot;name&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;path&quot;: &quot;&quot;,
+        &quot;name&quot;: &quot;&quot;
+      },
+      &quot;line&quot;: 0
+    }
   }
 }</pre></details>
 </section>
@@ -780,6 +967,91 @@ main a { color: var(--engine); }
   &quot;body&quot;: {
     &quot;files&quot;: [
       &quot;&quot;
+    ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-netdbg-dialogShown"><h3><span class="verb event">event</span> <code>netdbg.dialogShown</code> <span class="badge engine">engine</span></h3>
+<p>A dialog was shown (<code>MessageBox.Show</code> / <code>ShowDialog</code>), recorded without stopping (or the program stopped when a <code>breakOn</code> condition matched). Wake-up for the Records view (<code>netdbg.journal</code> kinds <code>dialog</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>time</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>kind</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>method</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>text</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caption</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>form</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>threadId</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>stopped</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+<tr><td><code>caller</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.source.path</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.line</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;netdbg.dialogShown&quot;,
+  &quot;body&quot;: {
+    &quot;seq&quot;: 0,
+    &quot;time&quot;: 0,
+    &quot;kind&quot;: &quot;&quot;,
+    &quot;method&quot;: &quot;&quot;,
+    &quot;text&quot;: &quot;&quot;,
+    &quot;caption&quot;: &quot;&quot;,
+    &quot;form&quot;: &quot;&quot;,
+    &quot;threadId&quot;: 0,
+    &quot;stopped&quot;: false,
+    &quot;caller&quot;: {
+      &quot;name&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;path&quot;: &quot;&quot;,
+        &quot;name&quot;: &quot;&quot;
+      },
+      &quot;line&quot;: 0
+    }
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-netdbg-environment"><h3><span class="verb event">event</span> <code>netdbg.environment</code> <span class="badge engine">engine</span></h3>
+<p>The program's runtime started: environment snapshot (runtime, bitness, program, connection strings). Wake-up for the Records view (<code>netdbg.journal</code> kinds <code>environment</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>time</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>runtime</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>bitness</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>program</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>commandLine</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>workingDirectory</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>connectionStrings</code><span class="opt">optional</span></td><td>object[]</td><td></td></tr>
+<tr><td><code>connectionStrings[].name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>connectionStrings[].connectionString</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>connectionStrings[].providerName</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>connectionStrings[].file</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;netdbg.environment&quot;,
+  &quot;body&quot;: {
+    &quot;seq&quot;: 0,
+    &quot;time&quot;: 0,
+    &quot;runtime&quot;: &quot;&quot;,
+    &quot;bitness&quot;: &quot;&quot;,
+    &quot;program&quot;: &quot;&quot;,
+    &quot;commandLine&quot;: &quot;&quot;,
+    &quot;workingDirectory&quot;: &quot;&quot;,
+    &quot;connectionStrings&quot;: [
+      {
+        &quot;name&quot;: &quot;&quot;,
+        &quot;connectionString&quot;: &quot;&quot;,
+        &quot;providerName&quot;: &quot;&quot;,
+        &quot;file&quot;: &quot;&quot;
+      }
     ]
   }
 }</pre></details>
@@ -861,10 +1133,30 @@ main a { color: var(--engine); }
   }
 }</pre></details>
 </section>
+<section class="op" id="event-netdbg-sqlCompleted"><h3><span class="verb event">event</span> <code>netdbg.sqlCompleted</code> <span class="badge engine">engine</span></h3>
+<p>A SQL statement that was recorded without stopping finished: its run time (and whether it threw) is written into the journal record of <code>seq</code>. The SQL Log view updates the same row.</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code></td><td>number</td><td></td></tr>
+<tr><td><code>durationMs</code></td><td>number</td><td></td></tr>
+<tr><td><code>failed</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;netdbg.sqlCompleted&quot;,
+  &quot;body&quot;: {
+    &quot;seq&quot;: 0,
+    &quot;durationMs&quot;: 0,
+    &quot;failed&quot;: false
+  }
+}</pre></details>
+</section>
 <section class="op" id="event-netdbg-sqlExecuted"><h3><span class="verb event">event</span> <code>netdbg.sqlExecuted</code> <span class="badge engine">engine</span></h3>
 <p>A statement read from a database command (SQL log), with its parameters and the frames that ran it.</p>
 <h4>body</h4>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code><span class="opt">optional</span></td><td>number</td><td>Journal <code>seq</code> (also used by <code>netdbg.sqlCompleted</code>).</td></tr>
 <tr><td><code>time</code></td><td>number</td><td></td></tr>
 <tr><td><code>threadId</code></td><td>number</td><td></td></tr>
 <tr><td><code>method</code></td><td>string</td><td>The provider method that ran it (<code>System.Data.SqlClient.SqlCommand.ExecuteReader</code>).</td></tr>
@@ -885,12 +1177,17 @@ main a { color: var(--engine); }
 <tr><td><code>frames[].source.path</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
 <tr><td><code>frames[].source.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
 <tr><td><code>frames[].line</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>repeat</code><span class="opt">optional</span></td><td>number</td><td>How many times this statement (normalized) has run in the session.</td></tr>
+<tr><td><code>transactionId</code><span class="opt">optional</span></td><td>number</td><td>Open transaction that contains this statement.</td></tr>
+<tr><td><code>durationMs</code><span class="opt">optional</span></td><td>number</td><td>Filled later by <code>netdbg.sqlCompleted</code> when the statement did not stop.</td></tr>
+<tr><td><code>failed</code><span class="opt">optional</span></td><td>boolean</td><td></td></tr>
 </table>
 <details><summary>Example event</summary><pre>{
   &quot;type&quot;: &quot;event&quot;,
   &quot;seq&quot;: 1,
   &quot;event&quot;: &quot;netdbg.sqlExecuted&quot;,
   &quot;body&quot;: {
+    &quot;seq&quot;: 0,
     &quot;time&quot;: 0,
     &quot;threadId&quot;: 0,
     &quot;method&quot;: &quot;&quot;,
@@ -917,7 +1214,11 @@ main a { color: var(--engine); }
         },
         &quot;line&quot;: 0
       }
-    ]
+    ],
+    &quot;repeat&quot;: 0,
+    &quot;transactionId&quot;: 0,
+    &quot;durationMs&quot;: 0,
+    &quot;failed&quot;: false
   }
 }</pre></details>
 </section>
@@ -955,6 +1256,47 @@ main a { color: var(--engine); }
         &quot;error&quot;: &quot;&quot;
       }
     ]
+  }
+}</pre></details>
+</section>
+<section class="op" id="event-netdbg-transaction"><h3><span class="verb event">event</span> <code>netdbg.transaction</code> <span class="badge engine">engine</span></h3>
+<p>A database transaction began, committed or rolled back. Wake-up for the Records view and for refreshing open transactions (<code>netdbg.transactions</code>).</p>
+<h4>body</h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+<tr><td><code>seq</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>time</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>event</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>transactionId</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>durationMs</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+<tr><td><code>statements</code><span class="opt">optional</span></td><td>number[]</td><td></td></tr>
+<tr><td><code>caller</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source</code><span class="opt">optional</span></td><td>object</td><td></td></tr>
+<tr><td><code>caller.source.path</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.source.name</code><span class="opt">optional</span></td><td>string</td><td></td></tr>
+<tr><td><code>caller.line</code><span class="opt">optional</span></td><td>number</td><td></td></tr>
+</table>
+<details><summary>Example event</summary><pre>{
+  &quot;type&quot;: &quot;event&quot;,
+  &quot;seq&quot;: 1,
+  &quot;event&quot;: &quot;netdbg.transaction&quot;,
+  &quot;body&quot;: {
+    &quot;seq&quot;: 0,
+    &quot;time&quot;: 0,
+    &quot;event&quot;: &quot;&quot;,
+    &quot;transactionId&quot;: 0,
+    &quot;durationMs&quot;: 0,
+    &quot;statements&quot;: [
+      0
+    ],
+    &quot;caller&quot;: {
+      &quot;name&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;path&quot;: &quot;&quot;,
+        &quot;name&quot;: &quot;&quot;
+      },
+      &quot;line&quot;: 0
+    }
   }
 }</pre></details>
 </section>

@@ -713,6 +713,58 @@
       }
     },
     {
+      "name": "netdbg.journal",
+      "kind": "request",
+      "side": "engine",
+      "description": "The engine's journal of records made without stopping (SQL, exceptions, events, dialogs, bindings, transactions, child processes, environment). Read after a previous `last` with `after`; filter with `kinds`.",
+      "arguments": {
+        "type": "object",
+        "properties": {
+          "after": {
+            "type": "number",
+            "description": "Only records with a higher `seq` (default 0: from the start of what is still kept)."
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Record kinds (`sql`, `exception`, `event`, `dialog`, `binding`, `transaction`, `process`, `environment`). Empty: all."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Most records to return, oldest first (default 1000)."
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            "description": "Oldest first; each has `seq`, `time`, `kind` and the fields of that kind (a body's `kind` may overwrite the journal kind in the JSON)."
+          },
+          "last": {
+            "type": "number",
+            "description": "Highest `seq` written so far (also after a clear: numbers keep going)."
+          },
+          "dropped": {
+            "type": "number",
+            "description": "How many records were discarded past the capacity (10,000)."
+          }
+        },
+        "required": [
+          "records",
+          "last",
+          "dropped"
+        ]
+      }
+    },
+    {
       "name": "netdbg.makeObjectId",
       "kind": "request",
       "side": "engine",
@@ -931,6 +983,75 @@
       }
     },
     {
+      "name": "netdbg.transactions",
+      "kind": "request",
+      "side": "engine",
+      "description": "The database transactions still open (BeginTransaction without Commit / Rollback yet), with elapsed time and the journal `seq` of the SQL run inside them. Needs the SQL log.",
+      "arguments": {
+        "type": "object",
+        "properties": {}
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "open": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transactionId": {
+                  "type": "number"
+                },
+                "threadId": {
+                  "type": "number"
+                },
+                "elapsedMs": {
+                  "type": "number"
+                },
+                "caller": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "line": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "statements": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "required": [
+                "transactionId",
+                "threadId",
+                "elapsedMs",
+                "statements"
+              ]
+            }
+          }
+        },
+        "required": [
+          "open"
+        ]
+      }
+    },
+    {
       "name": "netdbg.setExceptionTypes",
       "kind": "request",
       "side": "proxy",
@@ -949,6 +1070,63 @@
         "required": [
           "types"
         ]
+      }
+    },
+    {
+      "name": "netdbg.bindingFailed",
+      "kind": "event",
+      "side": "engine",
+      "description": "A WinForms data-binding Format / Parse failure the program swallowed while running. Wake-up for the Records view (`netdbg.journal` kinds `binding`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number"
+          },
+          "time": {
+            "type": "number"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "control": {
+            "type": "string"
+          },
+          "property": {
+            "type": "string"
+          },
+          "member": {
+            "type": "string"
+          },
+          "exceptionType": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "caller": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "line": {
+                "type": "number"
+              }
+            }
+          }
+        }
       }
     },
     {
@@ -1038,6 +1216,66 @@
       }
     },
     {
+      "name": "netdbg.childProcess",
+      "kind": "event",
+      "side": "engine",
+      "description": "The program started a child with `Process.Start`. Wake-up for the Records view (`netdbg.journal` kinds `process`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number"
+          },
+          "time": {
+            "type": "number"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "string"
+          },
+          "processId": {
+            "type": "number"
+          },
+          "bitness": {
+            "type": "string"
+          },
+          "followed": {
+            "type": "boolean"
+          },
+          "notFollowed": {
+            "type": "string"
+          },
+          "failed": {
+            "type": "boolean"
+          },
+          "caller": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "line": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "name": "netdbg.controlEvent",
       "kind": "event",
       "side": "engine",
@@ -1118,6 +1356,118 @@
         "required": [
           "files"
         ]
+      }
+    },
+    {
+      "name": "netdbg.dialogShown",
+      "kind": "event",
+      "side": "engine",
+      "description": "A dialog was shown (`MessageBox.Show` / `ShowDialog`), recorded without stopping (or the program stopped when a `breakOn` condition matched). Wake-up for the Records view (`netdbg.journal` kinds `dialog`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number"
+          },
+          "time": {
+            "type": "number"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "form": {
+            "type": "string"
+          },
+          "threadId": {
+            "type": "number"
+          },
+          "stopped": {
+            "type": "boolean"
+          },
+          "caller": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "line": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "netdbg.environment",
+      "kind": "event",
+      "side": "engine",
+      "description": "The program's runtime started: environment snapshot (runtime, bitness, program, connection strings). Wake-up for the Records view (`netdbg.journal` kinds `environment`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number"
+          },
+          "time": {
+            "type": "number"
+          },
+          "runtime": {
+            "type": "string"
+          },
+          "bitness": {
+            "type": "string"
+          },
+          "program": {
+            "type": "string"
+          },
+          "commandLine": {
+            "type": "string"
+          },
+          "workingDirectory": {
+            "type": "string"
+          },
+          "connectionStrings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "connectionString": {
+                  "type": "string"
+                },
+                "providerName": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     },
     {
@@ -1233,6 +1583,30 @@
       }
     },
     {
+      "name": "netdbg.sqlCompleted",
+      "kind": "event",
+      "side": "engine",
+      "description": "A SQL statement that was recorded without stopping finished: its run time (and whether it threw) is written into the journal record of `seq`. The SQL Log view updates the same row.",
+      "body": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "seq",
+          "durationMs"
+        ]
+      }
+    },
+    {
       "name": "netdbg.sqlExecuted",
       "kind": "event",
       "side": "engine",
@@ -1240,6 +1614,10 @@
       "body": {
         "type": "object",
         "properties": {
+          "seq": {
+            "type": "number",
+            "description": "Journal `seq` (also used by `netdbg.sqlCompleted`)."
+          },
           "time": {
             "type": "number"
           },
@@ -1333,6 +1711,21 @@
                 "name"
               ]
             }
+          },
+          "repeat": {
+            "type": "number",
+            "description": "How many times this statement (normalized) has run in the session."
+          },
+          "transactionId": {
+            "type": "number",
+            "description": "Open transaction that contains this statement."
+          },
+          "durationMs": {
+            "type": "number",
+            "description": "Filled later by `netdbg.sqlCompleted` when the statement did not stop."
+          },
+          "failed": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -1404,6 +1797,60 @@
           "time",
           "values"
         ]
+      }
+    },
+    {
+      "name": "netdbg.transaction",
+      "kind": "event",
+      "side": "engine",
+      "description": "A database transaction began, committed or rolled back. Wake-up for the Records view and for refreshing open transactions (`netdbg.transactions`).",
+      "body": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number"
+          },
+          "time": {
+            "type": "number"
+          },
+          "event": {
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "number"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "statements": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "caller": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "line": {
+                "type": "number"
+              }
+            }
+          }
+        }
       }
     },
     {

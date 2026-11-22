@@ -2,6 +2,10 @@
 
 ## 2.0.0
 
+- New: **Records** view — dialogs (`MessageBox` / `ShowDialog`), WinForms data-binding failures swallowed while running,
+  database transactions (open ones with elapsed time), child processes and the environment snapshot, read from the engine's
+  `netdbg.journal` without stopping. `netdbg.records.enabled`. The SQL Log shows each statement's run time (`netdbg.sqlCompleted`)
+  and the open transaction's number when it ran inside one.
 - **Renamed to netdbg (breaking).** The extension (`takahino.netdbg`), its display name, the debug type (`"type": "netdbg"`), the
   settings and commands (`netdbg.*`), the bundled engine (`netdbg.exe`) and its folders (`%LOCALAPPDATA%\netdbg`) and the
   environment variable `NETDBG_SYMBOL_DIRS` all use the new name. The old names (`dotnet-x86`, `dotnetX86.*`,
