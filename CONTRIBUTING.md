@@ -3,7 +3,8 @@
 ## Building from source
 
 Prerequisites: Node.js, Git, a .NET SDK (test apps), and for the debug engine Rust (`rustup`, targets
-`i686-pc-windows-msvc` and `x86_64-pc-windows-msvc`) with the MSVC linker (Visual Studio Build Tools, *Desktop development with C++*).
+`i686-pc-windows-msvc`, `x86_64-pc-windows-msvc` and `wasm32-unknown-unknown`) with the MSVC linker (Visual Studio Build Tools, *Desktop development with C++*)
+and `wasm-bindgen-cli` at the version in the engine's `ui\Cargo.lock` (`cargo install wasm-bindgen-cli --version <ver> --locked`).
 The debug engine **netdbg** lives in its own repository ([takahino/netdbg](https://github.com/takahino/netdbg)); clone it next to this one (`..\netdbg`).
 
 ```powershell

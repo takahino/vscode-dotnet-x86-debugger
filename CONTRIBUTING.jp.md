@@ -3,7 +3,8 @@
 ## ソースからのビルド
 
 前提: Node.js、Git、.NET SDK（テスト アプリ用）、デバッグ エンジン用に Rust（`rustup`。ターゲット
-`i686-pc-windows-msvc` と `x86_64-pc-windows-msvc`）と MSVC のリンカー（Visual Studio Build Tools の「C++ によるデスクトップ開発」）。
+`i686-pc-windows-msvc`、`x86_64-pc-windows-msvc`、`wasm32-unknown-unknown`）と MSVC のリンカー（Visual Studio Build Tools の「C++ によるデスクトップ開発」）、
+およびエンジンの `ui\Cargo.lock` と同じ版の `wasm-bindgen-cli`（`cargo install wasm-bindgen-cli --version <ver> --locked`）。
 デバッグ エンジン **netdbg** は別のリポジトリ（[takahino/netdbg](https://github.com/takahino/netdbg)）です。このリポジトリの隣（`..\netdbg`）に clone してください。
 
 ```powershell

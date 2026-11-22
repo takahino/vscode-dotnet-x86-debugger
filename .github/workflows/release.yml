@@ -50,8 +50,14 @@ jobs:
       - name: Install the Rust targets
         shell: pwsh
         run: |
-          rustup target add i686-pc-windows-msvc x86_64-pc-windows-msvc
+          # 画面 (ui/) の WebAssembly 埋め込みに wasm32 と、ui\Cargo.lock と同じ版の wasm-bindgen-cli が要る
+          rustup target add i686-pc-windows-msvc x86_64-pc-windows-msvc wasm32-unknown-unknown
           if ($LASTEXITCODE -ne 0) { throw "Rust のターゲットを追加できません (exit code $LASTEXITCODE)。" }
+          $lock = Get-Content engine/ui/Cargo.lock -Raw
+          $version = [regex]::Match($lock, '(?m)^name = "wasm-bindgen"\r?\nversion = "([^"]+)"').Groups[1].Value
+          if (-not $version) { throw 'engine/ui/Cargo.lock から wasm-bindgen の版が読めません。' }
+          cargo install wasm-bindgen-cli --version $version --locked --force
+          if ($LASTEXITCODE -ne 0) { throw "wasm-bindgen-cli $version のインストールに失敗しました (exit code $LASTEXITCODE)。" }
 
       - name: Build the debug engine (x86 / x64)
         shell: pwsh
