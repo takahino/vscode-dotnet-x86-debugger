@@ -4,17 +4,19 @@
 import * as assert from 'assert/strict';
 import * as cp from 'child_process';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { APPLY_CHANGES_REQUEST, CHANGES_APPLIED_EVENT } from '../../editAndContinueCore';
+import { readPdbInfo } from '../../pdbDocuments';
 import { ARCH, DapSession, ENGINE, FRAMEWORK, REPO, e2eSkip, lineOf } from './harness';
 
 const TIMEOUT = 180_000;
 
-/** Copies test/apps/EditAndContinue to a temporary folder and builds it for the bitness and framework under test. */
+/** Copies test/apps/EditAndContinue to a writable folder and builds it for the bitness and framework under test. */
 function buildCopy(): { program: string; source: string } {
-    const work = path.join(os.tmpdir(), 'netdbg-e2e-enc', `${ARCH}-${FRAMEWORK ?? 'net10.0'}`);
+    // Stay on the repo drive (not os.tmpdir): on GitHub-hosted Windows runners the temp drive can disagree with
+    // PDB document paths enough that breakpoints never bind and the program just exits.
+    const work = path.join(REPO, 'out', 'e2e-enc', `${ARCH}-${FRAMEWORK ?? 'net10.0'}`);
     fs.rmSync(work, { recursive: true, force: true });
     fs.mkdirSync(work, { recursive: true });
     const app = path.join(REPO, 'test', 'apps', 'EditAndContinue');
@@ -29,7 +31,16 @@ function buildCopy(): { program: string; source: string } {
     const out = path.join(work, 'bin');
     const result = cp.spawnSync('dotnet', ['build', work, '-c', 'Debug', '-o', out, '-nologo', '-v', 'q'], { encoding: 'utf8' });
     if (result.status !== 0) throw new Error(`dotnet build failed:\n${result.stdout}\n${result.stderr}`);
-    return { program: path.join(out, 'EditAndContinue.exe'), source: path.join(work, 'Program.cs') };
+    const program = path.join(out, 'EditAndContinue.exe');
+    const source = path.join(work, 'Program.cs');
+    // PDB must name this source path or setBreakpoints will not bind (CI then sees terminated, not stopped).
+    const assembly = path.join(out, 'EditAndContinue.dll');
+    const docs = readPdbInfo(assembly).documents.map((d) => path.normalize(d));
+    const wanted = path.normalize(source);
+    if (!docs.some((d) => d.toLowerCase() === wanted.toLowerCase())) {
+        throw new Error(`PDB documents do not include the edited source.\nwanted: ${wanted}\nhave:\n${docs.join('\n')}`);
+    }
+    return { program, source };
 }
 
 /**
@@ -70,7 +81,7 @@ describe('Edit and Continue through the relay', { skip: e2eSkip }, () => {
             const firstStop = session.nextStopOrEnd(60_000);
             await session.launch(app.program, { [app.source]: [{ line: lineOf(app.source, 'loop') }] }, { editAndContinue: true });
             const stop = await firstStop;
-            assert.equal(stop.event, 'stopped', `expected a breakpoint stop, got ${stop.event}`);
+            assert.equal(stop.event, 'stopped', `expected a breakpoint stop, got ${stop.event} (source=${app.source})`);
             let frame = await session.topFrame(stop.body.threadId);
             assert.equal((await session.evaluate('r', frame.id)).body.result, '11');
 
