@@ -15,6 +15,7 @@ import { readPdbInfo } from './pdbDocuments';
 import { SourceLinkEntry, parseSourceLink, resolveSourceLink, sourceCachePath } from './sourceLinkCore';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { APPLY_CHANGES_REQUEST } from './editAndContinueCore';
+import { isTypeNameOnlyEvaluateError, shouldQuietTypeNameEvaluateError } from './evaluateErrorCore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type DapMessage = {
@@ -159,6 +160,8 @@ export class DapProxy {
     private readonly pendingStackTraces = new Set<number>();
     /** The engine pauses because of a UI freeze: its stop is reported as such, on the frozen thread. */
     private pendingFreeze: { threadId: number; ms: number } | undefined;
+    /** evaluate request seq -> context, so benign type-name failures do not toast during inline values. */
+    private readonly evaluateContexts = new Map<number, string>();
 
     constructor(
         executable: string,
@@ -230,6 +233,9 @@ export class DapProxy {
             void this.setValueWatches(message);
             return;
         }
+        if (message.type === 'request' && message.command === 'evaluate' && message.seq !== undefined) {
+            this.evaluateContexts.set(message.seq, String(message.arguments?.context ?? ''));
+        }
         this.write(message);
     }
 
@@ -299,6 +305,18 @@ export class DapProxy {
             const description = this.options.freezeDescription?.(ms) ?? `UI not responding for ${(ms / 1000).toFixed(1)} s`;
             message = { ...message, body: { ...message.body, threadId, description, text: description, allThreadsStopped: true } };
             this.emitEvent('output', { category: 'console', output: `${description}\n` });
+        }
+        if (message.type === 'response' && message.command === 'evaluate' && message.request_seq !== undefined) {
+            const ctx = this.evaluateContexts.get(message.request_seq);
+            this.evaluateContexts.delete(message.request_seq);
+            if (!message.success && shouldQuietTypeNameEvaluateError(ctx) && isTypeNameOnlyEvaluateError(message.message)) {
+                message = {
+                    ...message,
+                    success: true,
+                    message: undefined,
+                    body: { result: '', variablesReference: 0, presentationHint: { attributes: ['rawString'] } },
+                };
+            }
         }
         this.toClient(message);
     }
