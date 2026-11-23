@@ -1181,7 +1181,6 @@ Debugging waits until the process appears:</p>
 <table>
   <tr><th>Symptom</th><th>What to do</th></tr>
   <tr><td>“… is a Windows PDB, which this debugger cannot read”</td><td>Add <code>&lt;DebugType&gt;portable&lt;/DebugType&gt;</code> to the .NET Framework project and rebuild.</td></tr>
-  <tr><td>“Debugging a .NET Framework app needs the x86 .NET runtime”</td><td>Install the .NET Runtime (x86) 8 or later; the debugger itself uses it.</td></tr>
   <tr><td>The program runs as 64-bit, but should be x86</td><td>Set <code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> and point <code>program</code> at <code>bin/x86/...</code>.</td></tr>
   <tr><td>“The x86 dotnet.exe was not found”</td><td>Install the x86 .NET runtime (for WinForms: .NET Desktop Runtime x86).</td></tr>
   <tr><td>Breakpoint stays hollow</td><td>Check the Modules view: your assembly needs <i>symbols loaded</i> (Debug build, PDB next to the DLL).</td></tr>

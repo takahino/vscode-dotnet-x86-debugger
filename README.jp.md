@@ -17,9 +17,10 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## クイック スタート
 
-1. [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet) から **.NET Desktop Runtime x86**（8 以降）と .NET SDK をインストールします。
-2. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から `.vsix` をダウンロードし、**Extensions: Install from VSIX...** で拡張機能をインストールします。
-3. プロジェクトのフォルダーを開き、**.NET x86: はじめに** を実行します。**F5** を押すだけでも、`.csproj` から launch.json とビルド タスクが作られます。
+1. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から `.vsix` をダウンロードし、**Extensions: Install from VSIX...** で拡張機能をインストールします。
+2. デバッグしたいアプリのソースを開き、**.NET x86: はじめに** を実行します。**F5** でも、`.csproj` から launch.json とビルド タスクが作られます。
+
+そのアプリを **ビルドできる環境**（SDK と、Framework 依存ならそのターゲットのランタイム）があれば、デバッガー用の追加ランタイムは要りません。同梱の **netdbg** は .NET を使いません。
 
 **.NET x86: 環境を確認** で足りないものがわかり、プロジェクト ファイル（x86・Portable PDB）もボタン 1 つで直せます。
 
@@ -96,10 +97,9 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 ## 必要なもの
 
 - Windows (x64)
-- アプリに合った **x86 版 .NET ランタイム**（WinForms / WPF なら *.NET Desktop Runtime (x86)*）
-  （`C:\Program Files (x86)\dotnet` にインストールされます）
-- プロジェクトをビルドするための .NET SDK
-- **.NET Framework 4.x** のアプリには、.NET Framework のほかに要るものはありません（デバッガー自身は .NET を使いません）
+- デバッグする **アプリのソース** と、そのアプリを **ビルドできる環境**（.NET SDK、および Framework 依存の .NET ならターゲットに合うランタイム。x86 ビルドなら x86 版が `C:\Program Files (x86)\dotnet` にあること）
+
+それ以外に、この拡張のための特別なランタイムは不要です。同梱の **netdbg** は .NET を使いません。**.NET Framework 4.x** は .NET Framework だけでビルド・デバッグできます。エディット コンティニュで変更を反映するときだけ、**.NET SDK 9 以降** が必要です。
 
 ## インストール
 
@@ -740,12 +740,13 @@ Step Into Specific、次のステートメントの設定、戻り値、オブ�
 ## netcoredbg（1.x）との違い
 
 1.x はデバッグ エンジンに [netcoredbg](https://github.com/Samsung/netcoredbg)（MIT）の x86 ビルドにパッチを 13 枚当てて同梱していました。
-2.0 からは、この拡張のために作った **netdbg**（Rust）を同梱します。DAP のやり取りと値の書き方は netcoredbg と同じにしてあり、
+**2.x** からは、この拡張のために作った **netdbg**（Rust）を同梱します。DAP のやり取りと値の書き方は netcoredbg と同じにしてあり、
 拡張の機能はそのまま使えます。netcoredbg そのものは、もう使えません（`netdbg.debuggerPath` に指定できるのは netdbg のビルドだけです）。
 
-| | netcoredbg（1.x） | netdbg（2.0） |
+| | netcoredbg（1.x） | netdbg（2.x、現行） |
 |---|---|---|
 | デバッガー自身が使う .NET | x86 の .NET 8 以降が必要（.NET Framework のアプリでも） | 不要。.NET Framework のアプリは .NET を入れていない Windows でもデバッグできます |
+| .NET 5 以降のアプリ（Framework 依存） | アプリを動かすための x86 ランタイム（版はアプリに合わせる）。1.x ではデバッガー用の .NET 8 と混同しやすい | そのアプリをビルドできる環境があれば足りる。デバッガー用の追加ランタイムは不要 |
 | x64 / AnyCPU のアプリ | デバッグできない（警告だけ） | x64 のエンジンでデバッグします（エンジンはプログラムのビット数で選ばれます） |
 | 単一ファイルで発行した自己完結のアプリ | 落ちる | デバッグできます（同じ版の .NET ランタイムが機械にあるとき） |
 | 式の評価 | 名前・呼び出し・演算子など約 50 種類の命令。ラムダ、LINQ、パターンは不可 | C# のコンパイラと同じ値と型（ラムダ、LINQ、パターン、`switch` 式、タプル、ポインター、`await` は同期で待つ、ジェネリックの型引数） |

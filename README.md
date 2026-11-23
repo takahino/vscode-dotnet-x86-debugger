@@ -17,9 +17,10 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 
 ## Quick start
 
-1. Install the **.NET Desktop Runtime x86** (8 or later) from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet), and a .NET SDK.
-2. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
-3. Open your project folder and run **.NET x86: Getting Started** — or just press **F5**: launch.json and the build task are made from your `.csproj`.
+1. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
+2. Open the **source** of the app you want to debug and run **.NET x86: Getting Started** — or press **F5** (launch.json and a build task are made from your `.csproj`).
+
+If the machine can already **build that app** (an SDK, and for a framework-dependent app the runtime that matches its target), you do not need an extra runtime for this debugger. The bundled **netdbg** engine uses no .NET.
 
 **.NET x86: Check Environment** tells you what is missing, and fixes the project file (x86, Portable PDB) with one click.
 
@@ -97,10 +98,9 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 ## Requirements
 
 - Windows (x64)
-- The **x86 .NET runtime** for your app, e.g. *.NET Desktop Runtime (x86)* for WinForms / WPF
-  (installed under `C:\Program Files (x86)\dotnet`)
-- A .NET SDK to build your project
-- **.NET Framework 4.x** apps need nothing else (the debugger itself uses no .NET)
+- The **source** of the app you debug, and a machine that can **build that app** (a .NET SDK, and for a framework-dependent .NET app the runtime that matches its target — the x86 runtime under `C:\Program Files (x86)\dotnet` when the build is x86)
+
+Nothing else: this extension does not need its own runtime. The bundled **netdbg** engine uses no .NET. **.NET Framework 4.x** apps need only .NET Framework to build and debug. **Edit and Continue** needs **.NET SDK 9 or later** to compile the change.
 
 ## Installation
 
@@ -770,13 +770,14 @@ filtering; Step Into Specific; Set Next Statement; return values; Object IDs; `D
 ## Differences from netcoredbg (1.x)
 
 Up to 1.x the extension bundled an x86 build of [netcoredbg](https://github.com/Samsung/netcoredbg) (MIT) with 13 patches.
-From 2.0 it bundles **netdbg** (Rust), a debug engine made for this extension. Its DAP messages and the way it writes
+From **2.x** it bundles **netdbg** (Rust), a debug engine made for this extension. Its DAP messages and the way it writes
 values are kept the same as netcoredbg's, so every feature of the extension works as before. netcoredbg itself is no longer
 supported (`netdbg.debuggerPath` takes only builds of netdbg).
 
-| | netcoredbg (1.x) | netdbg (2.0) |
+| | netcoredbg (1.x) | netdbg (2.x, current) |
 |---|---|---|
 | .NET used by the debugger itself | x86 .NET 8 or later required (also for .NET Framework apps) | None: .NET Framework apps can be debugged on a Windows without .NET |
+| .NET 5+ app (framework-dependent) | x86 runtime on the machine to run the app (version must match the app); easy to confuse with the debugger's own .NET 8 in 1.x | A machine that can build that app is enough. No extra runtime for the debugger |
 | x64 / AnyCPU apps | Not debuggable (a warning only) | Debugged with the x64 engine (the engine is picked by the program's bitness) |
 | Self-contained single-file apps | Crashes | Debuggable (when the same .NET runtime version is on the machine) |
 | Expressions | About 50 instructions (names, calls, operators); no lambdas, LINQ or patterns | The C# compiler's values and types (lambdas, LINQ, patterns, `switch` expressions, tuples, pointers, `await` waited synchronously, generic type arguments) |

@@ -9,7 +9,7 @@ netdbg の機能をひととおり試せる WinForms アプリです。ボタン
 
 1. このフォルダー（`samples/FeatureTour`）を VS Code で開きます。
 2. 実行とデバッグで **Feature Tour (.NET 10, x86)** か **Feature Tour (.NET Framework 4.8, x86)** を選び、F5 を押します。
-   `build` タスクが両方をビルドします（.NET Framework 版でも、デバッガー用に x86 版 .NET ランタイム 8 以降が必要です）。
+   `build` タスクが両方をビルドします。このサンプルをビルドできる環境（.NET 10 の x86 Desktop Runtime と .NET Framework）があれば、デバッガー用の追加ランタイムは要りません。
 3. ウィンドウのタイトルに、ランタイムと `(32-bit)` が表示されます。
 
 ## デモ

@@ -1080,7 +1080,6 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
 <table>
   <tr><th>症状</th><th>対処</th></tr>
   <tr><td>「… は Windows PDB で、このデバッガーでは読み取れません」</td><td>.NET Framework のプロジェクトに <code>&lt;DebugType&gt;portable&lt;/DebugType&gt;</code> を追加して再ビルドします。</td></tr>
-  <tr><td>「.NET Framework アプリのデバッグには … x86 の .NET ランタイム … が必要」</td><td>.NET Runtime (x86) 8 以降をインストールします。デバッガー自身が使います。</td></tr>
   <tr><td>64bit で動いてしまう（x86 にしたい）</td><td><code>&lt;PlatformTarget&gt;x86&lt;/PlatformTarget&gt;</code> を設定し、<code>program</code> を <code>bin/x86/...</code> に向けます。</td></tr>
   <tr><td>「x86 版 dotnet.exe が見つかりません」</td><td>x86 版の .NET ランタイム（WinForms なら .NET Desktop Runtime x86）をインストールします。</td></tr>
   <tr><td>ブレークポイントが白抜きのまま</td><td>モジュール ビューで、自分のアセンブリが「シンボル読み込み済み」か確認します（Debug ビルドで、DLL の隣に PDB があること）。</td></tr>

@@ -9,7 +9,7 @@ The same source is built for **.NET 10** and **.NET Framework 4.8** (both x86), 
 
 1. Open this folder (`samples/FeatureTour`) in VS Code.
 2. In Run and Debug choose **Feature Tour (.NET 10, x86)** or **Feature Tour (.NET Framework 4.8, x86)** and press F5.
-   The `build` task builds both targets. (.NET Framework also needs the x86 .NET runtime 8 or later for the debugger.)
+   The `build` task builds both targets. A machine that can build this sample (.NET 10 Desktop Runtime x86 and .NET Framework) needs no extra runtime for the debugger.
 3. The window title shows the runtime and `(32-bit)`.
 
 ## Demos
