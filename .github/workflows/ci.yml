@@ -13,7 +13,7 @@ jobs:
     env:
       # E2E のテストアプリ（x86）を動かす x86 版 .NET ランタイムの場所
       DOTNET_ROOT(x86): C:\Program Files (x86)\dotnet
-      # 同梱するデバッグエンジン (netdbg) の版 (タグかコミット)
+      # netdbg リリースの元コミット（エンジンを上げるときは engine-release.version と ENGINE_REF を両方更新して E2E を通す）
       ENGINE_REF: be8061e50f987aecfe386877b31adf002cce9f3c
     steps:
       - uses: actions/checkout@v4
@@ -51,29 +51,10 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      # デバッグエンジン netdbg (Rust) を取得してビルドし、debugger/netdbg-x86 と -x64 に置く。
-      # ENGINE_REF でエンジンの版を固定する (エンジンを新しくするときは、ここを書き換えて E2E を通す)。
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/netdbg
-          ref: ${{ env.ENGINE_REF }}
-          path: engine
-
-      - name: Install the Rust targets
+      # デバッグエンジンは netdbg の GitHub Releases から配置（scripts/engine-release.version、ローカル install.ps1 と同じ）
+      - name: Place the debug engine (x86 / x64) from GitHub Releases
         shell: pwsh
-        run: |
-          # 画面 (ui/) の WebAssembly 埋め込みに wasm32 と、ui\Cargo.lock と同じ版の wasm-bindgen-cli が要る
-          rustup target add i686-pc-windows-msvc x86_64-pc-windows-msvc wasm32-unknown-unknown
-          if ($LASTEXITCODE -ne 0) { throw "Rust のターゲットを追加できません (exit code $LASTEXITCODE)。" }
-          $lock = Get-Content engine/ui/Cargo.lock -Raw
-          $version = [regex]::Match($lock, '(?m)^name = "wasm-bindgen"\r?\nversion = "([^"]+)"').Groups[1].Value
-          if (-not $version) { throw 'engine/ui/Cargo.lock から wasm-bindgen の版が読めません。' }
-          cargo install wasm-bindgen-cli --version $version --locked --force
-          if ($LASTEXITCODE -ne 0) { throw "wasm-bindgen-cli $version のインストールに失敗しました (exit code $LASTEXITCODE)。" }
-
-      - name: Build the debug engine (x86 / x64)
-        shell: pwsh
-        run: ./scripts/build-engine.ps1 -EngineRepo engine
+        run: ./scripts/fetch-engine-release.ps1
 
       # Fresh EncDelta.dll is often scanned on first start; the engine does that inside module-load and E2E then times out.
       - name: Warm up the Edit and Continue helper

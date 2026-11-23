@@ -269,7 +269,7 @@ export class X86AdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const bundled = path.join(this.extensionPath, bundledDebuggerDir(architecture), BUNDLED_DEBUGGER_EXE);
         if (!fs.existsSync(bundled)) {
             throw new Error(
-                vscode.l10n.t("The bundled debug engine (netdbg, {0}) was not found: {1}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX.", architecture, bundled),
+                vscode.l10n.t("The bundled debug engine (netdbg, {0}) was not found: {1}. Put it in place with scripts\\fetch-engine-release.ps1 or scripts\\build-engine.ps1, then rebuild the VSIX.", architecture, bundled),
             );
         }
         return bundled;

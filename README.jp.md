@@ -615,6 +615,13 @@ launch.json で `"decompile": "off"` にすると行いません。AI クライ�
 **モジュール** ビューでは「逆コンパイル済み」と表示します。アセンブリのフォルダには何も書き込みません。ローカル変数名は元の名前ではなく、
 逆コンパイラーが型から付けたものです。
 
+**編集中**に手元にソースが無い型へ移動する（Visual Studio の F12 に近い動き）は、この拡張の仕事ではありません。
+**[DotRush](https://marketplace.visualstudio.com/items?itemName=nromanov.dotrush)** の逆コンパイルや、**C# / C# Dev Kit** の
+`dotnet.navigation.navigateToDecompiledSources` を使ってください。x86 のデバッグは netdbg、編集・テスト・参照の閲覧は DotRush、という併用が向いています。
+
+**デバッグ中**の逆コンパイルは上記のとおりエンジンが自動で行います。ステップ インやコール スタック上のファイルを開けば、同じセッションのまま
+ブレークポイントやローカル変数が使えます。
+
 ### WinForms
 
 #### WinForms コントロール ビュー

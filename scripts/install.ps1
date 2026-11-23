@@ -3,14 +3,22 @@
     拡張機能をビルドして VSIX を作成し、VS Code にインストールする。
 .PARAMETER SkipInstall
     VSIX の作成のみ行い、インストールしない。
+.PARAMETER BuildEngine
+    隣の netdbg リポジトリから Rust でエンジンをビルドする。省略時は GitHub Releases から取得する（高速）。
+.PARAMETER EngineVersion
+    取得する netdbg の版（例: 0.9.0）。-BuildEngine では使いません。
 .PARAMETER CodePath
     code コマンド（code.cmd）のパス。省略時は PATH と既定のインストール先から探す。
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -BuildEngine
 #>
 [CmdletBinding()]
 param(
     [switch]$SkipInstall,
+    [switch]$BuildEngine,
+    [string]$EngineVersion,
     [string]$CodePath
 )
 
@@ -33,9 +41,15 @@ if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
 
 Push-Location $repoRoot
 try {
-    # VSIX に同梱するデバッグエンジン (x86 / x64) が無ければ、隣の netdbg のリポジトリからビルドして置く
+    # VSIX に同梱するデバッグエンジン (x86 / x64) が無ければ、リリースから取得する（-BuildEngine でローカル Rust ビルド）
     if (-not (Test-Path (Join-Path $repoRoot 'debugger\netdbg-x86\netdbg.exe')) -or -not (Test-Path (Join-Path $repoRoot 'debugger\netdbg-x64\netdbg.exe'))) {
-        & (Join-Path $PSScriptRoot 'build-engine.ps1')
+        if ($BuildEngine) {
+            & (Join-Path $PSScriptRoot 'build-engine.ps1')
+        } else {
+            $fetchArgs = @{}
+            if ($EngineVersion) { $fetchArgs.Version = $EngineVersion }
+            & (Join-Path $PSScriptRoot 'fetch-engine-release.ps1') @fetchArgs
+        }
     }
 
     if (-not (Test-Path (Join-Path $repoRoot 'node_modules'))) {

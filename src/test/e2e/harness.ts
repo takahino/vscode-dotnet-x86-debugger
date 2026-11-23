@@ -21,7 +21,7 @@ const OUT = path.join(os.tmpdir(), 'netdbg-e2e', FRAMEWORK ? `-${FRAMEWORK}` : A
 
 
 /** Why the E2E tests cannot run here, or false when they can. */
-export const e2eSkip: string | false = fs.existsSync(ENGINE) ? false : `the debugger is missing (${ENGINE}): run scripts/build-engine.ps1, or fix NETDBG_E2E_DEBUGGER`;
+export const e2eSkip: string | false = fs.existsSync(ENGINE) ? false : `the debugger is missing (${ENGINE}): run scripts/fetch-engine-release.ps1 or scripts/build-engine.ps1, or fix NETDBG_E2E_DEBUGGER`;
 
 const built = new Map<string, string>();
 

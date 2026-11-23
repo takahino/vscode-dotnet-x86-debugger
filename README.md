@@ -640,6 +640,13 @@ them). When the program has its PDB, a DLL without symbols does not: set `"justM
 view shows such assemblies as *decompiled*. The assembly's own folder is not touched, and names of locals are the
 decompiler's (from their types), not the original ones.
 
+Jumping to decompiled C# while you **edit** (when there is no source on disk, similar to Visual Studio's F12) is not this extension's job. Use
+**[DotRush](https://marketplace.visualstudio.com/items?itemName=nromanov.dotrush)** decompilation, or **C# / C# Dev Kit** with
+`dotnet.navigation.navigateToDecompiledSources`. A practical split is **netdbg** for x86 debugging and **DotRush** for editing, tests and browsing references.
+
+While **debugging**, the engine decompiles assemblies as described above: step into them or open the paths in the call stack—the same session keeps
+breakpoints and locals working in the decompiled C# files.
+
 ### WinForms
 
 #### WinForms Controls view

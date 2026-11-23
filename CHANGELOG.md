@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 2.0.0
 
 - New: **Records** view — dialogs (`MessageBox` / `ShowDialog`), WinForms data-binding failures swallowed while running,

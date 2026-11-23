@@ -716,7 +716,6 @@
           "command": "netdbg.downloadSymbols",
           "when": "config.netdbg.modules.enabled"
         },
-
         {
           "command": "netdbg.addExceptionType",
           "when": "config.netdbg.exceptionSettings.enabled"
@@ -931,7 +930,7 @@
         {
           "command": "netdbg.downloadSymbols",
           "when": "view == netdbg.modules && viewItem == netdbg.module.noSymbols && config.netdbg.modules.enabled",
-          "group": "z_netdbg@0"
+          "group": "z_netdbg@1"
         },
 
         {

@@ -2,26 +2,33 @@
 
 ## Building from source
 
-Prerequisites: Node.js, Git, a .NET SDK (test apps), and for the debug engine Rust (`rustup`, targets
-`i686-pc-windows-msvc`, `x86_64-pc-windows-msvc` and `wasm32-unknown-unknown`) with the MSVC linker (Visual Studio Build Tools, *Desktop development with C++*)
-and `wasm-bindgen-cli` at the version in the engine's `ui\Cargo.lock` (`cargo install wasm-bindgen-cli --version <ver> --locked`).
-The debug engine **netdbg** lives in its own repository ([takahino/netdbg](https://github.com/takahino/netdbg)); clone it next to this one (`..\netdbg`).
+Prerequisites: Node.js, Git, and a .NET SDK (test apps). **The debug engine** is fetched from
+[netdbg GitHub Releases](https://github.com/takahino/netdbg/releases) by default (`scripts\install.ps1`; version in
+`scripts\engine-release.version`, kept in sync with the release that matches CI's `ENGINE_REF`).
+
+Building the engine from source needs Rust (`rustup`, targets `i686-pc-windows-msvc`, `x86_64-pc-windows-msvc` and
+`wasm32-unknown-unknown`), the MSVC linker and `wasm-bindgen-cli`. Clone [takahino/netdbg](https://github.com/takahino/netdbg) as `..\netdbg`.
 
 ```powershell
-# Build the debug engine (x86 and x64, into debugger\netdbg-x86 / -x64), compile, package the VSIX and install it
+# Fetch the engine from a release, compile, package the VSIX and install it (no Rust)
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 # Only create the VSIX (out\netdbg.vsix)
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SkipInstall
 
-# Only (re)build and place the engine; -EngineRepo when it is elsewhere, -SkipBuild to copy its dist\ as it is
+# Place the engine from a release only
+powershell -ExecutionPolicy Bypass -File scripts\fetch-engine-release.ps1
+
+# Build netdbg locally with Rust (install.ps1 -BuildEngine, or build-engine.ps1)
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -BuildEngine
 powershell -ExecutionPolicy Bypass -File scripts\build-engine.ps1 -EngineRepo ..\netdbg
 ```
 
 `scripts\build-engine.ps1` runs the engine's `build.ps1` (which also fetches `dbgshim.dll` from NuGet, version pinned) and copies
 `netdbg.exe`, `dbgshim.dll` and the Edit and Continue helper (`encdelta\`, C#; built with the .NET SDK 9 or later, and run at debug time with the Roslyn of the user's SDK) of both bitnesses. ICorDebug needs a debugger of the program's bitness, so the extension
 starts the x86 or the x64 engine per session (`ENGINE_ARCHITECTURE_KEY` in `configProvider.ts`). CI and the release workflow
-check out `<owner>/netdbg` at `ENGINE_REF`; to move to a newer engine, change `ENGINE_REF` and run the E2E tests.
+place the engine with `scripts/fetch-engine-release.ps1` (`scripts/engine-release.version`). To move to a newer engine, update
+`engine-release.version` and `ENGINE_REF` in `.github/workflows`, then run the E2E tests.
 
 To debug the extension itself, open this folder in VS Code and run **Run Extension** (F5).
 
@@ -63,6 +70,6 @@ was sent (`sentToDebugger()`). What depends on the engine's own behavior (bindin
    git push origin v2.0.0
    ```
 
-The [Release workflow](.github/workflows/release.yml) builds the debug engine (x86 and x64) at `ENGINE_REF`, packages the VSIX
+The [Release workflow](.github/workflows/release.yml) fetches the debug engine (x86 and x64) from a netdbg release, packages the VSIX
 and creates a GitHub Release with `netdbg-<version>.vsix` and `install-vsix.ps1`.
 Running the workflow manually (*workflow_dispatch*) only uploads the files as a build artifact.

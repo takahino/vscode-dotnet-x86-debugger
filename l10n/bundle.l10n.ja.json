@@ -23,7 +23,7 @@
   "Take Snapshot": "スナップショットを記録",
   "Compare with Snapshot": "スナップショットと比較",
   "The debug engine in the netdbg.debuggerPath setting was not found: {0}. Fix the path, or clear it to use the bundled one.": "設定 netdbg.debuggerPath のデバッグエンジンが見つかりません: {0}。パスを修正するか、空にして同梱版を使ってください。",
-  "The bundled debug engine (netdbg, {0}) was not found: {1}. Put it in place with scripts\\build-engine.ps1 and rebuild the VSIX.": "同梱のデバッグエンジン (netdbg、{0}) が見つかりません: {1}。scripts\\build-engine.ps1 で配置してから VSIX を作り直してください。",
+  "The bundled debug engine (netdbg, {0}) was not found: {1}. Put it in place with scripts\\fetch-engine-release.ps1 or scripts\\build-engine.ps1, then rebuild the VSIX.": "同梱のデバッグエンジン (netdbg、{0}) が見つかりません: {1}。scripts\\fetch-engine-release.ps1 または scripts\\build-engine.ps1 で配置してから VSIX を作り直してください。",
   "netdbg works on Windows only.": "netdbg は Windows でのみ動作します。",
   "Set \"program\" (the path to the .exe) in launch.json.": "launch.json に \"program\"（.exe へのパス）を指定してください。",
   "Crash dump not found: {0}": "クラッシュダンプが見つかりません: {0}",
