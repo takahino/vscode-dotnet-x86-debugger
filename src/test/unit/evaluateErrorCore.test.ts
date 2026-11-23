@@ -1,19 +1,21 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { isTypeNameOnlyEvaluateError, shouldQuietTypeNameEvaluateError } from '../../evaluateErrorCore';
+import { isBenignEvaluateError, shouldQuietAutomaticEvaluateError } from '../../evaluateErrorCore';
 
 describe('evaluateErrorCore', () => {
-    it('recognizes the engine type-name evaluate error', () => {
+    it('recognizes type-name and not-in-scope evaluate errors from the engine', () => {
         assert.equal(
-            isTypeNameOnlyEvaluateError('System.Decimal は型の名前です。値を見るには、メンバーを指定してください。'),
+            isBenignEvaluateError('System.Decimal は型の名前です。値を見るには、メンバーを指定してください。'),
             true,
         );
-        assert.equal(isTypeNameOnlyEvaluateError('System.Decimal is a type name. To see the value, specify a member.'), true);
-        assert.equal(isTypeNameOnlyEvaluateError('The name "x" does not exist'), false);
+        assert.equal(isBenignEvaluateError('System.Decimal is a type name. To see the value, specify a member.'), true);
+        assert.equal(isBenignEvaluateError("'i' という名前の変数、メンバー、型が見つかりません。"), true);
+        assert.equal(isBenignEvaluateError("The name 'i' does not exist in the current context"), true);
+        assert.equal(isBenignEvaluateError('syntax error in expression'), false);
     });
 
     it('keeps the debug console loud', () => {
-        assert.equal(shouldQuietTypeNameEvaluateError('hover'), true);
-        assert.equal(shouldQuietTypeNameEvaluateError('repl'), false);
+        assert.equal(shouldQuietAutomaticEvaluateError('hover'), true);
+        assert.equal(shouldQuietAutomaticEvaluateError('repl'), false);
     });
 });

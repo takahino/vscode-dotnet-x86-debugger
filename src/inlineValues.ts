@@ -23,7 +23,7 @@ export class CSharpInlineValuesProvider implements vscode.InlineValuesProvider {
             lines.push(document.lineAt(i).text);
         }
         return findInlineTargets(lines, stoppedLine)
-            .filter((t) => t.line >= viewPort.start.line && t.line <= viewPort.end.line)
+            .filter((t) => t.line >= viewPort.start.line && t.line <= viewPort.end.line && t.line <= stoppedLine)
             .map((t) => {
                 const range = new vscode.Range(t.line, t.start, t.line, t.end);
                 return t.kind === 'lookup'

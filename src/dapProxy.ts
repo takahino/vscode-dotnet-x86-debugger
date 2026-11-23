@@ -15,7 +15,7 @@ import { readPdbInfo } from './pdbDocuments';
 import { SourceLinkEntry, parseSourceLink, resolveSourceLink, sourceCachePath } from './sourceLinkCore';
 import { pathKey, SourcePathMapper, UnresolvedSource } from './sourceMapCore';
 import { APPLY_CHANGES_REQUEST } from './editAndContinueCore';
-import { isTypeNameOnlyEvaluateError, shouldQuietTypeNameEvaluateError } from './evaluateErrorCore';
+import { isBenignEvaluateError, shouldQuietAutomaticEvaluateError } from './evaluateErrorCore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type DapMessage = {
@@ -309,7 +309,7 @@ export class DapProxy {
         if (message.type === 'response' && message.command === 'evaluate' && message.request_seq !== undefined) {
             const ctx = this.evaluateContexts.get(message.request_seq);
             this.evaluateContexts.delete(message.request_seq);
-            if (!message.success && shouldQuietTypeNameEvaluateError(ctx) && isTypeNameOnlyEvaluateError(message.message)) {
+            if (!message.success && shouldQuietAutomaticEvaluateError(ctx) && isBenignEvaluateError(message.message)) {
                 message = {
                     ...message,
                     success: true,
