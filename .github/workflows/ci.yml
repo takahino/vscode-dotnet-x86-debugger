@@ -75,6 +75,32 @@ jobs:
         shell: pwsh
         run: ./scripts/build-engine.ps1 -EngineRepo engine
 
+      # Fresh EncDelta.dll is often scanned on first start; the engine does that inside module-load and E2E then times out.
+      - name: Warm up the Edit and Continue helper
+        shell: pwsh
+        run: |
+          $sdk = (dotnet --list-sdks | Select-Object -Last 1)
+          if (-not $sdk) { throw 'dotnet --list-sdks returned nothing.' }
+          if ($sdk -notmatch '^(\S+)\s+\[(.+)\]') { throw "Cannot parse SDK line: $sdk" }
+          $roslyn = Join-Path $Matches[2] $Matches[1] 'Roslyn' 'bincore'
+          foreach ($arch in 'x86', 'x64') {
+            $dll = Join-Path "debugger/netdbg-$arch/encdelta" 'EncDelta.dll'
+            if (-not (Test-Path $dll)) { throw "missing $dll" }
+            $psi = New-Object System.Diagnostics.ProcessStartInfo
+            $psi.FileName = 'dotnet'
+            $psi.Arguments = "`"$dll`" --roslyn `"$roslyn`""
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardInput = $true
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.CreateNoWindow = $true
+            $p = [System.Diagnostics.Process]::Start($psi)
+            $p.StandardInput.Close()
+            if (-not $p.WaitForExit(60000)) {
+              $p.Kill()
+              throw "EncDelta ($arch) did not exit within 60s during warm-up."
+            }
+          }
 
       - name: E2E tests (x86)
         run: npm run test:e2e

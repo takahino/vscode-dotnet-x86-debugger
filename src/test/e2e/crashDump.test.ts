@@ -58,6 +58,7 @@ describe('crash dumps', { skip: e2eSkip }, () => {
     it('refuses to continue, with the reason', async () => {
         const continued = await s.request('continue', { threadId: thread });
         assert.equal(continued.success, false);
-        assert.match(continued.message ?? '', /クラッシュダンプは読むだけ/);
+        // Engine language follows the machine (CI is English; NETDBG_LANG=ja yields Japanese).
+        assert.match(continued.message ?? '', /A crash dump is read only|クラッシュダンプは読むだけ/);
     });
 });
