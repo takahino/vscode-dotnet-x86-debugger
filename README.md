@@ -18,7 +18,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 ## Quick start
 
 1. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
-2. Open the **source** of the app you want to debug and run **.NET x86: Getting Started** — or press **F5** (launch.json and a build task are made from your `.csproj`).
+2. Open the **source** of the app you want to debug and run **.NET x86: Getting Started** — or press **F5** (launch.json and a build task are made from your `.csproj`). To open an exe that has no source, see [Debug an exe on its own](#debug-an-exe-on-its-own).
 
 If the machine can already **build that app** (an SDK, and for a framework-dependent app the runtime that matches its target), you do not need an extra runtime for this debugger. The bundled **netdbg** engine uses no .NET.
 
@@ -85,7 +85,7 @@ If the machine can already **build that app** (an SDK, and for a framework-depen
 | **Source and symbols** | | |
 | [Source in another folder](#debugging-referenced-assemblies-source-in-another-folder) | Find source whose PDB path is not on this machine | launch.json / settings |
 | [Source Link and symbol servers](#source-link-and-symbol-servers) | Download the sources and PDBs of NuGet packages | Automatic / Modules right-click |
-| [Debug decompiled assemblies](#debugging-decompiled-assemblies) | Step into exes and DLLs without symbols as C# | Automatic |
+| [Debug decompiled assemblies](#debugging-decompiled-assemblies) | Step into exes and DLLs without symbols as C#. An exe with no source: [Debug an exe on its own](#debug-an-exe-on-its-own) | launch.json |
 | **WinForms** | | |
 | [WinForms Controls view](#winforms-controls-view) | The control tree of the open forms | WinForms Controls view |
 | [Highlight on screen](#winforms-controls-view) ★ | Frame a control on the stopped form | Eye icon in the view |
@@ -98,9 +98,10 @@ If the machine can already **build that app** (an SDK, and for a framework-depen
 ## Requirements
 
 - Windows (x64)
-- The **source** of the app you debug, and a machine that can **build that app** (a .NET SDK, and for a framework-dependent .NET app the runtime that matches its target — the x86 runtime under `C:\Program Files (x86)\dotnet` when the build is x86)
+- **From source**: a machine that can **build that app** (a .NET SDK, and for a framework-dependent .NET app the runtime that matches its target — the x86 runtime under `C:\Program Files (x86)\dotnet` when the build is x86)
+- **An exe on its own**: no source and no SDK. Point `program` at the exe ([Debug an exe on its own](#debug-an-exe-on-its-own)). Whatever the exe needs to start on its own (.NET Framework, or the matching runtime for a framework-dependent app) is the same as when you are not debugging
 
-Nothing else: this extension does not need its own runtime. The bundled **netdbg** engine uses no .NET. **.NET Framework 4.x** apps need only .NET Framework to build and debug. **Edit and Continue** needs **.NET SDK 9 or later** to compile the change.
+Nothing else: this extension does not need its own runtime. The bundled **netdbg** engine uses no .NET. **Edit and Continue** needs **.NET SDK 9 or later** to compile the change.
 
 ## Installation
 
@@ -169,6 +170,30 @@ Nothing else: this extension does not need its own runtime. The bundled **netdbg
    ```
 
 3. Press F5.
+
+### Debug an exe on its own
+
+An exe with no source and no `.csproj` can be debugged from an empty folder. Write its path in `.vscode/launch.json`, with no build task:
+
+```jsonc
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Exe only",
+      "type": "netdbg",
+      "request": "launch",
+      "program": "C:\\path\\to\\App.exe",
+      "cwd": "C:\\path\\to",
+      "stopAtEntry": true
+    }
+  ]
+}
+```
+
+Press F5. With `"stopAtEntry": true`, an exe that has no PDB stops at the decompiled `Main`. The file is written under `%LOCALAPPDATA%\netdbg\decompiled` and opens from the call stack. Local names are the decompiler's, not the originals. A process that is already running can be stopped with the attach configuration above.
+
+A .NET Framework exe needs no .NET (Core) runtime for the debugger. A framework-dependent .NET app needs only the runtime it already uses to start. An x64 exe uses the same launch.json; the x64 engine is picked for it. What happens after the stop is in [Debugging decompiled assemblies](#debugging-decompiled-assemblies).
 
 See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example including `tasks.json`, and
 [`samples/WinFormsNet48X86`](samples/WinFormsNet48X86) for the same with .NET Framework 4.8.
@@ -627,6 +652,8 @@ restarts the current one). With Source Link, its sources follow. When no server 
 **Delete Downloaded Symbols and Sources** clears both caches. Downloads are listed in the *netdbg* output.
 
 #### Debugging decompiled assemblies
+
+To open an exe that has no source, follow [Debug an exe on its own](#debug-an-exe-on-its-own).
 
 The debugger decompiles the program's own assemblies that have no symbols (an exe shipped without its PDB, a DLL whose
 source you do not have) by itself, when you first stop in them, step into them or set a breakpoint in their decompiled file:
