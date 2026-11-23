@@ -67,9 +67,10 @@ describe('Edit and Continue through the relay', { skip: e2eSkip }, () => {
     it('applies a saved edit to the stopped program, which runs the new code from the next call', { timeout: TIMEOUT }, async () => {
         const session = new DapSession({});
         try {
-            const firstStop = session.nextStop(60_000);
+            const firstStop = session.nextStopOrEnd(60_000);
             await session.launch(app.program, { [app.source]: [{ line: lineOf(app.source, 'loop') }] }, { editAndContinue: true });
             const stop = await firstStop;
+            assert.equal(stop.event, 'stopped', `expected a breakpoint stop, got ${stop.event}`);
             let frame = await session.topFrame(stop.body.threadId);
             assert.equal((await session.evaluate('r', frame.id)).body.result, '11');
 
@@ -96,9 +97,10 @@ describe('Edit and Continue through the relay', { skip: e2eSkip }, () => {
             const source = app.source;
             // Restore a clean Compute so the rude edit (extra parameter) is the only change.
             fs.writeFileSync(source, fs.readFileSync(path.join(REPO, 'test', 'apps', 'EditAndContinue', 'Program.cs'), 'utf8'));
-            const firstStop = session.nextStop(60_000);
+            const firstStop = session.nextStopOrEnd(60_000);
             await session.launch(app.program, { [source]: [{ line: lineOf(source, 'loop') }] }, { editAndContinue: true });
-            await firstStop;
+            const stop = await firstStop;
+            assert.equal(stop.event, 'stopped', `expected a breakpoint stop, got ${stop.event}`);
 
             fs.writeFileSync(source, fs.readFileSync(source, 'utf8').replace('static int Compute(int x)', 'static int Compute(int x, int y = 0)'));
             const refused = await session.request(APPLY_CHANGES_REQUEST, { files: [source] }, 120_000);
