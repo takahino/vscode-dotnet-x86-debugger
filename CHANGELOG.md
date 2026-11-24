@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.1
 
 - The repository is now [takahino/vscode-netdbg](https://github.com/takahino/vscode-netdbg). The illustrated guide is at
   `https://takahino.github.io/vscode-netdbg/`.

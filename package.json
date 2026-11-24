@@ -2,7 +2,7 @@
   "name": "netdbg",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "publisher": "takahino",
   "icon": "media/icon.png",
   "galleryBanner": {
