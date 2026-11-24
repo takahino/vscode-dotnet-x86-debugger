@@ -5,7 +5,7 @@
     ローカルで Rust ビルドする代わりに、netdbg のリリース ZIP (win-x86 / win-x64) をダウンロードします。
     版は scripts\engine-release.version（CI の ENGINE_REF と対応するリリースに合わせて更新）が既定です。
 .PARAMETER Version
-    取得する netdbg の版（例: 0.9.0）。省略時は engine-release.version。
+    取得する netdbg の版（例: 0.9.1）。省略時は engine-release.version。
 .PARAMETER Repository
     GitHub の owner/repo。既定は takahino/netdbg。
 #>

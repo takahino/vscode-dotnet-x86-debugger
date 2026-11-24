@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- The repository is now [takahino/vscode-netdbg](https://github.com/takahino/vscode-netdbg). The illustrated guide is at
+  `https://takahino.github.io/vscode-netdbg/`.
+- Engine: bundle [netdbg 0.9.1](https://github.com/takahino/netdbg/releases/tag/v0.9.1) (`db16f8c`).
+  A breakpoint `column` binds that statement when a line has several. Coverage writes an HTML report of the sources
+  beside the Cobertura XML. .NET 11 runtime-async steps across `await` and shows the logical stack. Decompiling an
+  assembly without a PDB restores more C# (`foreach`, `using`, `switch`, `?.`, lambdas, short-circuit). Edit and
+  Continue does not start its helper while modules are still loading.
+
 ## 2.0.0
 
 - New: **Records** view — dialogs (`MessageBox` / `ShowDialog`), WinForms data-binding failures swallowed while running,

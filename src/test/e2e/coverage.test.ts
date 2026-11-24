@@ -2,6 +2,7 @@
 // the engine's `netdbg.coverageChanged` naming the source, and `netdbg.coverage { file }` read into the editor's marks.
 
 import * as assert from 'assert/strict';
+import * as fs from 'fs';
 import * as path from 'path';
 import { after, before, describe, it } from 'node:test';
 import { COVERAGE_CHANGED_EVENT, COVERAGE_REQUEST, coverageMarks, samePath } from '../../coverageCore';
@@ -37,5 +38,16 @@ describe('code coverage in the editor', { skip: e2eSkip }, () => {
         const marks = coverageMarks(r.body.lines);
         assert.ok(marks.hit.includes(lineOf(source, 'nested') - 1), `@nested ran: ${JSON.stringify(marks)}`);
         assert.ok(marks.missed.includes(lineOf(source, 'call-label') - 1), `@call-label (after the stop) has not run: ${JSON.stringify(marks)}`);
+    });
+
+    it('writes the Cobertura XML and the HTML report beside it', async () => {
+        const r = await s.request(COVERAGE_REQUEST, { write: true });
+        assert.ok(r.success, r.message);
+        assert.equal(typeof r.body.path, 'string');
+        assert.equal(typeof r.body.html, 'string');
+        assert.ok(String(r.body.path).endsWith('.cobertura.xml'), r.body.path);
+        assert.ok(String(r.body.html).endsWith('.coverage.html'), r.body.html);
+        assert.ok(fs.existsSync(r.body.path), r.body.path);
+        assert.ok(fs.existsSync(r.body.html), r.body.html);
     });
 });

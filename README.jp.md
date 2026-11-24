@@ -4,9 +4,9 @@
 
 <p align="center"><b>32bit (x86) の .NET / .NET Framework アプリを、WinForms も含めて Visual Studio Code でデバッグします。</b></p>
 
-<p align="center"><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-dotnet-x86-debugger" alt="Release"></a> <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<p align="center"><a href="https://github.com/takahino/vscode-netdbg/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-netdbg" alt="Release"></a> <a href="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
 
-<p align="center"><a href="README.md">English</a> · <a href="https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html">図解ガイド</a> · <a href="CHANGELOG.md">変更履歴</a></p>
+<p align="center"><a href="README.md">English</a> · <a href="https://takahino.github.io/vscode-netdbg/usage.jp.html">図解ガイド</a> · <a href="CHANGELOG.md">変更履歴</a></p>
 
 ![WinForms アプリのデバッグ: ブレークポイント・変数・コールスタック・例外ログ・ステップ履歴](media/readme/debugging.ja.png)
 
@@ -17,7 +17,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## クイック スタート
 
-1. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から `.vsix` をダウンロードし、**Extensions: Install from VSIX...** で拡張機能をインストールします。
+1. [Releases](https://github.com/takahino/vscode-netdbg/releases) から `.vsix` をダウンロードし、**Extensions: Install from VSIX...** で拡張機能をインストールします。
 2. デバッグしたいアプリのソースを開き、**.NET x86: はじめに** を実行します。**F5** でも、`.csproj` から launch.json とビルド タスクが作られます。ソースの無い exe だけを開く手順は [exe だけをデバッグする](#exe-だけをデバッグする) です。
 
 そのアプリを **ビルドできる環境**（SDK と、Framework 依存ならそのターゲットのランタイム）があれば、デバッガー用の追加ランタイムは要りません。同梱の **netdbg** は .NET を使いません。
@@ -42,7 +42,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## 機能一覧
 
-★ は Visual Studio に無い機能です。すべての機能を、図とユースケースつきで [図解ガイド](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html) にまとめています。
+★ は Visual Studio に無い機能です。すべての機能を、図とユースケースつきで [図解ガイド](https://takahino.github.io/vscode-netdbg/usage.jp.html) にまとめています。
 
 | 機能 | 内容 | 場所 |
 |---|---|---|
@@ -66,7 +66,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 | [ダンプ・表・画像・C# 初期化子・文字列ビューアー・スナップショット](#変数ビューの右クリックメニューにあるその他のコマンド) | 複雑な値を読む・比べる | 変数ビューの右クリック |
 | **時間・メモリ・パフォーマンス** | | |
 | [PerfTips](#perftips) | 直前のステップや続行にかかった時間を行に表示 | 自動 |
-| [カバレッジ](#カバレッジ) | 通った行・一部の行・通っていない行をエディターで色分け、Cobertura XML | 設定 |
+| [カバレッジ](#カバレッジ) | 通った行・一部の行・通っていない行をエディターで色分け、Cobertura XML と HTML | 設定 |
 | [区間の時間計測・値の推移](#区間の時間計測) ★ | 止めずに毎回の時間や値を記録してグラフ化 | エディターの右クリック |
 | [メモリ / CPU グラフ](#メモリ--cpu-グラフ) | Private Bytes・Working Set・CPU の推移 | コマンド パレット |
 | [GDI / USER オブジェクト・ハンドル・アドレス空間](#メモリ--cpu-グラフ) ★ | GDI リークや 32bit アドレス空間の枯渇を、落ちる前に見つける | コマンド パレット |
@@ -104,7 +104,7 @@ Visual Studio にある機能を中継役で補います。Visual Studio にも�
 
 ## インストール
 
-1. [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) から
+1. [Releases](https://github.com/takahino/vscode-netdbg/releases) から
    `netdbg-<version>.vsix` と `install-vsix.ps1` を同じフォルダにダウンロードします。
 2. 次を実行します。
 
@@ -240,7 +240,7 @@ F5 を押します。`"stopAtEntry": true` にすると、PDB が無いときは
 | `netdbg.uiFreeze.thresholdMs` | UI スレッドが応答しない状態がこの時間続いたら一時停止します（既定値 `2000` ミリ秒）。 |
 | `netdbg.perfTips.enabled` | ステップ実行や続行の後、停止行に経過時間を表示します（既定値 `true`）。 |
 | `netdbg.coverage.enabled` | 新しいデバッグ セッションでカバレッジを数えます。launch.json に `coverage` があればそちら（既定値 `false`）。 |
-| `netdbg.coverage.folder` | Cobertura XML を書くフォルダー（絶対パス。既定は `%LOCALAPPDATA%\netdbg\coverage`）。 |
+| `netdbg.coverage.folder` | Cobertura XML と HTML を書くフォルダー（絶対パス。既定は `%LOCALAPPDATA%\netdbg\coverage`）。 |
 | `netdbg.coverage.showInEditor` | カバレッジを数えている間、エディターの行に色を付けます（既定値 `true`）。 |
 | `netdbg.memoryGraph.autoOpen` | デバッグ開始時にメモリグラフを自動で開きます（既定値 `false`）。 |
 | `netdbg.heapSnapshot.collectGarbage` | ヒープ スナップショットの直前にガベージ コレクションを実行します（既定値 `true`）。 |
@@ -295,7 +295,7 @@ F5 を押します。`"stopAtEntry": true` にすると、PDB が無いときは
 
 ## 機能の説明
 
-同じ機能を図とユースケースつきで: [図解ガイド](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.jp.html)。
+同じ機能を図とユースケースつきで: [図解ガイド](https://takahino.github.io/vscode-netdbg/usage.jp.html)。
 
 ### 止めたいところで止める
 
@@ -478,7 +478,7 @@ VS Code の設定 `debug.inlineValues` で無効にできます。
 
 `netdbg.coverage.enabled` を入れて（または launch.json に `"coverage": true`）デバッグします。エンジンがプログラムの通った行と分岐を数え、
 エディターでは、通った行を緑、一部（分岐の片方だけ。マウスを載せると数）を黄、通っていない行を赤で、動いている間に色分けします。
-ステータス バーに率を出し、押すと（または **カバレッジの XML を書く**）Cobertura XML を書きます。セッションの終わりにも書きます。
+ステータス バーに率を出し、押すと（または **カバレッジを書く**）Cobertura XML と、その隣にソースをまとめた HTML を書きます。セッションの終わりにも書きます。
 色はセッションのあとも残るので、見直せます。
 
 #### 区間の時間計測
@@ -795,7 +795,7 @@ Step Into Specific、次のステートメントの設定、戻り値、オブ�
 ## デバッグ エンジンの API
 
 拡張とデバッグ エンジンの間の取り決め（DAP の要求・応答・イベント、独自の要求、launch / attach の引数、値の書き方）は、
-[docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)（JSON Schema は [engine-api.json](docs/engine-api.json)）にあります。
+[docs/engine-api.html](https://takahino.github.io/vscode-netdbg/engine-api.html)（JSON Schema は [engine-api.json](docs/engine-api.json)）にあります。
 `src/engineProtocol.ts` の型から `npm run docs:api` で生成しています。
 
 ## 開発に参加する

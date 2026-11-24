@@ -50,7 +50,7 @@ export interface LaunchArguments {
     exceptionLog?: boolean | { enabled?: boolean; snapshot?: boolean };
     /** UI freeze watch (default on, 2000 ms): a UI thread that does not answer window messages for `thresholdMs` while the program runs pauses it there (`netdbg.uiFrozen`, then `stopped` with reason `pause`). The extension sets it from `netdbg.uiFreeze.*`. */
     uiFreeze?: boolean | { enabled?: boolean; thresholdMs?: number };
-    /** Code coverage: count the lines and branches the program runs (`netdbg.coverageChanged`, `netdbg.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\netdbg\coverage`. The extension sets it from `netdbg.coverage.*` unless launch.json does. */
+    /** Code coverage: count the lines and branches the program runs (`netdbg.coverageChanged`, `netdbg.coverage`); the Cobertura XML and an HTML report of the sources (`<name>.coverage.html` beside it) are written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\netdbg\coverage`. The extension sets it from `netdbg.coverage.*` unless launch.json does. */
     coverage?: boolean | { enabled?: boolean; folder?: string };
     /** Processes the program starts with `Process.Start`: `record` (default) logs them (`netdbg.childProcess`), `follow` also suspends a .NET child and sends the reverse request `startDebugging` (`attach` with `processId` and `__resumeChild`) so that the client debugs it in its own session, `off` ignores them. */
     childProcesses?: 'record' | 'follow' | 'off';
@@ -344,7 +344,7 @@ export interface TransactionsResponse {
 
 /**
  * Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that
- * file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).
+ * file (the editor colors them). With `write`, writes the Cobertura XML and the HTML report beside it now (into `folder`, absolute, when given).
  * @request netdbg.coverage
  * @handledBy engine
  */
@@ -367,6 +367,8 @@ export interface CoverageResponse {
     uncountableBranches: number;
     /** The Cobertura XML written last. */
     path?: string;
+    /** The HTML report of every source, written beside the Cobertura XML (`<name>.coverage.html`). */
+    html?: string;
     /** With `file`: each line that has code. A line that ran but did not take every branch outcome has branchesCovered < branchesValid. */
     lines?: { line: number; hit: boolean; branchesCovered?: number; branchesValid?: number; uncountableBranches?: number }[];
 }
@@ -701,12 +703,12 @@ export const STANDARD_REQUESTS: readonly StandardRequest[] = [
     { command: 'launch', handledBy: 'engine', notes: 'Checks the program (exists, bitness of the engine, .NET Framework 4.x) and remembers it; starts it at `configurationDone`.' },
     { command: 'attach', handledBy: 'engine', notes: 'Checks the process (runtime loaded, bitness of the engine); attaches at `configurationDone`.' },
     { command: 'configurationDone', handledBy: 'engine', notes: 'Starts or attaches, then sends `process`.' },
-    { command: 'setBreakpoints', handledBy: 'both', notes: '`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). The relay maps paths.' },
+    { command: 'setBreakpoints', handledBy: 'both', notes: '`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). `column` (1-based) binds that statement when the line has several; omitted or 0 binds the first, and the answer then has `column` and `endColumn`. The relay maps paths.' },
     { command: 'setFunctionBreakpoints', handledBy: 'engine', notes: '`Type.Method`, `Method`, `Namespace.Type.Method` (all overloads). `anyCode: true` binds outside user code too.' },
     { command: 'setExceptionBreakpoints', handledBy: 'both', notes: 'Filters `all` and `user-unhandled`; `filterOptions[].condition` is `A, B` or `!A, B` (type names).' },
     { command: 'exceptionInfo', handledBy: 'engine', notes: '`exceptionId` is `CLR/<type>`, `breakMode` `always` / `unhandled` / `userUnhandled`, `details` with `message`, `stackTrace`, `innerException`.' },
     { command: 'threads', handledBy: 'engine', notes: 'The OS thread id is the DAP thread id. Names are `Thread.Name`; else the process\'s first thread is `Main Thread` (listed first) and the others `<No name>`.' },
-    { command: 'stackTrace', handledBy: 'engine', notes: 'Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `netdbg.decompile`).' },
+    { command: 'stackTrace', handledBy: 'engine', notes: 'Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A .NET 11 runtime-async method (no state machine) is the logical stack and can be stepped across `await`. A frame in an assembly without symbols points at its decompiled file (see `netdbg.decompile`).' },
     { command: 'scopes', handledBy: 'engine', notes: 'One scope, `Locals`. A step over a call puts `<Type.Method> returned` first.' },
     { command: 'variables', handledBy: 'engine', notes: 'See the value conventions. Children carry `evaluateName`. `Static members` and `Raw View` are nodes of their own.' },
     { command: 'evaluate', handledBy: 'both', notes: 'C# expressions with the compiler\'s values and types (lambdas, LINQ, `await` waited synchronously, pointers). The relay rewrites `$N` object ids.' },

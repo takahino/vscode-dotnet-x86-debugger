@@ -144,7 +144,7 @@
             }
           }
         ],
-        "description": "Code coverage: count the lines and branches the program runs (`netdbg.coverageChanged`, `netdbg.coverage`); the Cobertura XML is written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\\netdbg\\coverage`. The extension sets it from `netdbg.coverage.*` unless launch.json does."
+        "description": "Code coverage: count the lines and branches the program runs (`netdbg.coverageChanged`, `netdbg.coverage`); the Cobertura XML and an HTML report of the sources (`<name>.coverage.html` beside it) are written when the session ends, into `folder` (absolute) or `%LOCALAPPDATA%\\netdbg\\coverage`. The extension sets it from `netdbg.coverage.*` unless launch.json does."
       },
       "childProcesses": {
         "type": "string",
@@ -399,7 +399,7 @@
       "name": "netdbg.coverage",
       "kind": "request",
       "side": "engine",
-      "description": "Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that file (the editor colors them). With `write`, writes the Cobertura XML now (into `folder`, absolute, when given).",
+      "description": "Code coverage of the session (launch argument `coverage`): the rates, and with `file` the state of each line of that file (the editor colors them). With `write`, writes the Cobertura XML and the HTML report beside it now (into `folder`, absolute, when given).",
       "arguments": {
         "type": "object",
         "properties": {
@@ -445,6 +445,10 @@
           "path": {
             "type": "string",
             "description": "The Cobertura XML written last."
+          },
+          "html": {
+            "type": "string",
+            "description": "The HTML report of every source, written beside the Cobertura XML (`<name>.coverage.html`)."
           },
           "lines": {
             "type": "array",
@@ -2044,7 +2048,7 @@
     {
       "command": "setBreakpoints",
       "handledBy": "both",
-      "notes": "`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). The relay maps paths."
+      "notes": "`condition` is a C# expression evaluated in the stopped program, or a marker (`#once`, `#after File.cs:12`, `#changed expr`, `#caller A, B`). The engine also judges `hitCondition` (`N`, `==N`, `>=N`, `>N`, `%N`) and `logMessage` (`{expr}`, `$FUNCTION`, `$TID`, `#track:`, `#timer-start:` / `#timer-end:`). `column` (1-based) binds that statement when the line has several; omitted or 0 binds the first, and the answer then has `column` and `endColumn`. The relay maps paths."
     },
     {
       "command": "setFunctionBreakpoints",
@@ -2069,7 +2073,7 @@
     {
       "command": "stackTrace",
       "handledBy": "engine",
-      "notes": "Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A frame in an assembly without symbols points at its decompiled file (see `netdbg.decompile`)."
+      "notes": "Every managed frame, named `Namespace.Type.Method()` with the real type arguments; `startFrame` / `levels` page them. A .NET 11 runtime-async method (no state machine) is the logical stack and can be stepped across `await`. A frame in an assembly without symbols points at its decompiled file (see `netdbg.decompile`)."
     },
     {
       "command": "scopes",

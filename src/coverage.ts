@@ -9,7 +9,7 @@ import { COVERAGE_CHANGED_EVENT, COVERAGE_REQUEST, CoverageLine, CoverageMarks, 
  * `netdbg.coverage.enabled`), the engine sends `netdbg.coverageChanged` with the files whose marks changed; the
  * visible editors of those files are colored as run, partly run (some branch outcomes not taken) and not run. The marks
  * stay after the session ends (to review them) and are cleared when the next session starts. The status bar shows the
- * rates; clicking it writes the Cobertura XML.
+ * rates; clicking it writes the Cobertura XML and the HTML report beside it.
  */
 export class CoverageHighlighter implements vscode.Disposable {
     private readonly decorations = {
@@ -25,7 +25,7 @@ export class CoverageHighlighter implements vscode.Disposable {
 
     constructor() {
         this.status.command = 'netdbg.writeCoverage';
-        this.status.tooltip = vscode.l10n.t('Code coverage of this debug session (lines run, branches taken). Click to write the Cobertura XML.');
+        this.status.tooltip = vscode.l10n.t('Code coverage of this debug session (lines run, branches taken). Click to write the Cobertura XML and the HTML report.');
         this.disposables.push(
             vscode.debug.onDidStartDebugSession((s) => {
                 if (s.type === DEBUG_TYPE) {
@@ -110,7 +110,7 @@ export class CoverageHighlighter implements vscode.Disposable {
         this.status.show();
     }
 
-    /** Writes the Cobertura XML of the debug session (`netdbg.coverage { write }`) and tells where. */
+    /** Writes the Cobertura XML and the HTML report of the debug session (`netdbg.coverage { write }`) and tells where. */
     private async write(): Promise<void> {
         const session = this.session ?? (vscode.debug.activeDebugSession?.type === DEBUG_TYPE ? vscode.debug.activeDebugSession : undefined);
         if (!session) {
@@ -121,7 +121,12 @@ export class CoverageHighlighter implements vscode.Disposable {
             const folder = vscode.workspace.getConfiguration('netdbg.coverage').get<string>('folder', '').trim();
             const body = await session.customRequest(COVERAGE_REQUEST, folder ? { write: true, folder } : { write: true });
             this.showStatus(body);
-            void vscode.window.showInformationMessage(vscode.l10n.t('Coverage written: {0}', String(body?.path ?? '')));
+            const xml = String(body?.path ?? '');
+            const html = typeof body?.html === 'string' ? body.html : '';
+            const written = html
+                ? vscode.l10n.t('Coverage written: {0} and {1}', xml, html)
+                : vscode.l10n.t('Coverage written: {0}', xml);
+            void vscode.window.showInformationMessage(written);
         } catch (e) {
             void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
         }

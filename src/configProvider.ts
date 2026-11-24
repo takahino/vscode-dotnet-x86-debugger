@@ -159,7 +159,7 @@ function warnIfWindowsPdb(program: string): void {
 
 /**
  * Code coverage (setting netdbg.coverage.*) unless launch.json says otherwise: the engine counts the lines and branches
- * the program runs, the editor colors them (CoverageHighlighter), and the Cobertura XML is written at the end.
+ * the program runs, the editor colors them (CoverageHighlighter), and the Cobertura XML and HTML report are written at the end.
  */
 function applyCoverageSetting(config: vscode.DebugConfiguration): void {
     if (config.coverage !== undefined) {

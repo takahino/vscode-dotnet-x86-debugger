@@ -117,7 +117,7 @@
   "walkthrough.debug.title": "デバッグを始める",
   "walkthrough.debug.description": "ブレークポイントを置いて F5 を押します。\n[デバッグを開始](command:workbench.action.debug.start)",
   "walkthrough.features.title": "機能を見てみる",
-  "walkthrough.features.description": "例外・スレッド・メモリ・WinForms コントロールなどの機能を、ユースケースとともに紹介します。\n[ガイドを開く](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html)",
+  "walkthrough.features.description": "例外・スレッド・メモリ・WinForms コントロールなどの機能を、ユースケースとともに紹介します。\n[ガイドを開く](https://takahino.github.io/vscode-netdbg/usage.html)",
   "walkthrough.environment.media": "media/walkthrough/environment.ja.md",
   "walkthrough.project.media": "media/walkthrough/project.ja.md",
   "walkthrough.launch.media": "media/walkthrough/launch.ja.md",
@@ -161,10 +161,10 @@
   "config.editAndContinue.applyOnSave": "デバッグ中のプログラムの C# のソースを保存したときに、その変更を当てます。",
   "config.evidence.enabled": "エビデンスの取得（コマンド パレット・コール スタック・WinForms コントロール ビュー）: 開いているフォームの画像、コントロールの値、変数、コール スタック、前回の取得以降の SQL を、Markdown と PNG で保存します。",
   "config.evidence.folder": "エビデンスの保存先フォルダー（取得ごとにサブフォルダーを作ります）。相対パスはワークスペース フォルダーが基準です。",
-  "debugger.coverage": "カバレッジ: デバッグの間にプログラムが通った行と分岐を数えます。エディターで色を付け (設定 netdbg.coverage.showInEditor)、ステータス バーに率を出します。Cobertura XML は、セッションの終わり (または「カバレッジの XML を書く」) で書きます。true か { \"enabled\": true, \"folder\": \"<絶対パスのフォルダー>\" }。省略すると設定 netdbg.coverage.enabled に従います。",
-  "debugger.coverage.folder": "Cobertura XML を書くフォルダー (絶対パス)。<プログラム名>-<日時>.cobertura.xml として書きます。",
+  "debugger.coverage": "カバレッジ: デバッグの間にプログラムが通った行と分岐を数えます。エディターで色を付け (設定 netdbg.coverage.showInEditor)、ステータス バーに率を出します。Cobertura XML とその隣の HTML は、セッションの終わり (または「カバレッジを書く」) で書きます。true か { \"enabled\": true, \"folder\": \"<絶対パスのフォルダー>\" }。省略すると設定 netdbg.coverage.enabled に従います。",
+  "debugger.coverage.folder": "Cobertura XML と HTML を書くフォルダー (絶対パス)。<プログラム名>-<日時>.cobertura.xml と <プログラム名>-<日時>.coverage.html として書きます。",
   "config.coverage.enabled": "新しいデバッグ セッションでカバレッジ (通った行、通った分岐) を数えます (launch.json の \"coverage\" があればそちら)。エディターで、通った行・一部の行・通っていない行に色を付けます。",
-  "config.coverage.folder": "Cobertura XML を書くフォルダー (絶対パス)。空なら %LOCALAPPDATA%\\netdbg\\coverage。",
+  "config.coverage.folder": "Cobertura XML と HTML を書くフォルダー (絶対パス)。空なら %LOCALAPPDATA%\\netdbg\\coverage。",
   "config.coverage.showInEditor": "カバレッジを数えている間、エディターの行に色を付けます: 通った、一部 (分岐の片方だけ)、通っていない。",
-  "command.writeCoverage": "カバレッジの XML を書く"
+  "command.writeCoverage": "カバレッジを書く"
 }

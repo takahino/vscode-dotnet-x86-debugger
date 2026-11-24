@@ -155,7 +155,7 @@ The debugger itself uses no .NET. The differences from Visual Studio and from ne
 
 <h2 id="install">Install</h2>
 <ol class="steps">
-  <li>Open the <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases">Releases page</a> and download
+  <li>Open the <a href="https://github.com/takahino/vscode-netdbg/releases">Releases page</a> and download
     <code>netdbg-&lt;version&gt;.vsix</code> and <code>install-vsix.ps1</code> into the same folder.</li>
   <li>In that folder, run:
 <pre><code>powershell -ExecutionPolicy Bypass -File install-vsix.ps1</code></pre>
@@ -1186,7 +1186,7 @@ Debugging waits until the process appears:</p>
   <tr><td>Breakpoint stays hollow</td><td>Check the Modules view: your assembly needs <i>symbols loaded</i> (Debug build, PDB next to the DLL).</td></tr>
   <tr><td>Can’t step into your own library / “Source not found: …” in the Debug Console</td><td>Its PDB records a path that is not on this machine: add a parent folder of the source to <code>sourceSearchPaths</code>, or map the path prefix with <code>sourceFileMap</code> (and set <code>justMyCode</code> to false for a Release build).</td></tr>
   <tr><td>The Variables view is missing</td><td>It may have been hidden or moved: run <b>Run and Debug: Focus on Variables View</b>.</td></tr>
-  <tr><td>Something else is wrong</td><td>Enable <code>netdbg.trace</code>, reproduce, and attach the “netdbg” output to an <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/issues">issue</a>.</td></tr>
+  <tr><td>Something else is wrong</td><td>Enable <code>netdbg.trace</code>, reproduce, and attach the “netdbg” output to an <a href="https://github.com/takahino/vscode-netdbg/issues">issue</a>.</td></tr>
 </table>
 
 <h2 id="settings">Settings</h2>
@@ -1232,7 +1232,7 @@ Debugging waits until the process appears:</p>
   <tr><td><code>netdbg.evidence.enabled</code></td><td>Capture Evidence</td></tr>
   <tr><td><code>netdbg.sourceLink.enabled</code></td><td>Source Link downloads</td></tr>
 </table>
-<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>
+<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-netdbg">GitHub</a></p>
 </main>
 </div>
 </body>

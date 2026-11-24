@@ -14,7 +14,7 @@ jobs:
       # E2E のテストアプリ（x86）を動かす x86 版 .NET ランタイムの場所
       DOTNET_ROOT(x86): C:\Program Files (x86)\dotnet
       # netdbg リリースの元コミット（エンジンを上げるときは engine-release.version と ENGINE_REF を両方更新して E2E を通す）
-      ENGINE_REF: be8061e50f987aecfe386877b31adf002cce9f3c
+      ENGINE_REF: db16f8c026510cc959b9908abe80e94c6ac55a64
     steps:
       - uses: actions/checkout@v4
 

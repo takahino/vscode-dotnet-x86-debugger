@@ -6,7 +6,7 @@
 .PARAMETER BuildEngine
     隣の netdbg リポジトリから Rust でエンジンをビルドする。省略時は GitHub Releases から取得する（高速）。
 .PARAMETER EngineVersion
-    取得する netdbg の版（例: 0.9.0）。-BuildEngine では使いません。
+    取得する netdbg の版（例: 0.9.1）。-BuildEngine では使いません。
 .PARAMETER CodePath
     code コマンド（code.cmd）のパス。省略時は PATH と既定のインストール先から探す。
 .EXAMPLE

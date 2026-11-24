@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     env:
       # netdbg リリースの元コミット（engine-release.version と揃える）
-      ENGINE_REF: be8061e50f987aecfe386877b31adf002cce9f3c
+      ENGINE_REF: db16f8c026510cc959b9908abe80e94c6ac55a64
     steps:
       - uses: actions/checkout@v4
 

@@ -4,9 +4,9 @@
 
 <p align="center"><b>Debug 32-bit (x86) .NET and .NET Framework apps — WinForms included — in Visual Studio Code.</b></p>
 
-<p align="center"><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-dotnet-x86-debugger" alt="Release"></a> <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-dotnet-x86-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
+<p align="center"><a href="https://github.com/takahino/vscode-netdbg/releases"><img src="https://img.shields.io/github/v/release/takahino/vscode-netdbg" alt="Release"></a> <a href="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml"><img src="https://github.com/takahino/vscode-netdbg/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a></p>
 
-<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
+<p align="center"><a href="README.jp.md">日本語</a> · <a href="https://takahino.github.io/vscode-netdbg/usage.html">Illustrated guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
 
 ![Debugging a WinForms app: breakpoints, variables, call stack, exception log, step history](media/readme/debugging.png)
 
@@ -17,7 +17,7 @@ uses no .NET, so .NET Framework apps can be debugged on a Windows without .NET i
 
 ## Quick start
 
-1. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) and run **Extensions: Install from VSIX...**.
+1. Install the extension: download the `.vsix` from [Releases](https://github.com/takahino/vscode-netdbg/releases) and run **Extensions: Install from VSIX...**.
 2. Open the **source** of the app you want to debug and run **.NET x86: Getting Started** — or press **F5** (launch.json and a build task are made from your `.csproj`). To open an exe that has no source, see [Debug an exe on its own](#debug-an-exe-on-its-own).
 
 If the machine can already **build that app** (an SDK, and for a framework-dependent app the runtime that matches its target), you do not need an extra runtime for this debugger. The bundled **netdbg** engine uses no .NET.
@@ -43,7 +43,7 @@ If the machine can already **build that app** (an SDK, and for a framework-depen
 
 ## Features
 
-★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
+★ marks features Visual Studio does not have. Every feature is shown with pictures and use cases in the [illustrated guide](https://takahino.github.io/vscode-netdbg/usage.html).
 
 | Feature | What it does | Where |
 |---|---|---|
@@ -67,7 +67,7 @@ If the machine can already **build that app** (an SDK, and for a framework-depen
 | [Dump, table, image, C# initializer, string viewer, snapshots](#more-commands-in-the-variables-view-context-menu) | Read and compare complex values | Variables right-click |
 | **Time, memory and performance** | | |
 | [PerfTips](#perftips) | Time of the last step or continue at the line | Automatic |
-| [Code coverage](#code-coverage) | Lines run, partly run and not run, colored in the editor; Cobertura XML | Setting |
+| [Code coverage](#code-coverage) | Lines run, partly run and not run, colored in the editor; Cobertura XML and an HTML report | Setting |
 | [Section timing, value trend](#section-timing) ★ | Time a section or chart values on every pass, without stopping | Editor right-click |
 | [Memory / CPU graph](#memory--cpu-graph) | Private Bytes, Working Set and CPU over time | Command Palette |
 | [GDI / USER objects, handles, address space](#memory--cpu-graph) ★ | Catch GDI leaks and a full 32-bit address space before the app crashes | Command Palette |
@@ -106,7 +106,7 @@ Nothing else: this extension does not need its own runtime. The bundled **netdbg
 ## Installation
 
 1. Download `netdbg-<version>.vsix` and `install-vsix.ps1` from
-   [Releases](https://github.com/takahino/vscode-dotnet-x86-debugger/releases) into the same folder.
+   [Releases](https://github.com/takahino/vscode-netdbg/releases) into the same folder.
 2. Run:
 
    ```powershell
@@ -241,7 +241,7 @@ See [`samples/WinFormsX86`](samples/WinFormsX86) for a complete example includin
 | `netdbg.uiFreeze.thresholdMs` | How long a UI thread may not respond before pausing (default `2000`). |
 | `netdbg.perfTips.enabled` | Show the elapsed time at the stopped line after a step / continue (default `true`). |
 | `netdbg.coverage.enabled` | Count code coverage in new debug sessions, unless launch.json sets `coverage` (default `false`). |
-| `netdbg.coverage.folder` | The folder (absolute) for the Cobertura XML (default `%LOCALAPPDATA%\netdbg\coverage`). |
+| `netdbg.coverage.folder` | The folder (absolute) for the Cobertura XML and the HTML report (default `%LOCALAPPDATA%\netdbg\coverage`). |
 | `netdbg.coverage.showInEditor` | Color the lines in the editor while counting coverage (default `true`). |
 | `netdbg.memoryGraph.autoOpen` | Open the memory graph automatically when debugging starts (default `false`). |
 | `netdbg.heapSnapshot.collectGarbage` | Run a garbage collection right before each heap snapshot (default `true`). |
@@ -298,7 +298,7 @@ Menus, settings and messages are shown in English, or in Japanese when VS Code's
 
 ## Feature guide
 
-The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-dotnet-x86-debugger/usage.html).
+The same features with pictures and use cases: [illustrated guide](https://takahino.github.io/vscode-netdbg/usage.html).
 
 ### Stopping where you want
 
@@ -492,8 +492,8 @@ own overhead, hence "≤".
 
 Turn on `netdbg.coverage.enabled` (or set `"coverage": true` in launch.json) and debug. The engine counts the lines
 and branches the program runs, and the editor colors the lines as they run: green run, yellow partly run (hover for the
-branches taken), red not run. The status bar shows the rates; click it (or **Write Coverage XML**) to write the Cobertura
-XML, which is also written when the session ends. The colors stay after the session to review them.
+branches taken), red not run. The status bar shows the rates; click it (or **Write Coverage**) to write the Cobertura
+XML and an HTML report of the sources beside it. Both are also written when the session ends. The colors stay after the session to review them.
 
 #### Section timing
 
@@ -827,7 +827,7 @@ node (with the base types' members).
 ## Debug engine API
 
 The contract between the extension and its debug engine (DAP requests, responses and events, custom requests, launch / attach
-arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-dotnet-x86-debugger/engine-api.html)
+arguments, how values are written) is in [docs/engine-api.html](https://takahino.github.io/vscode-netdbg/engine-api.html)
 (JSON Schema: [engine-api.json](docs/engine-api.json)). It is generated from the types in `src/engineProtocol.ts` with `npm run docs:api`.
 ## Contributing
 

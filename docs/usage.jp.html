@@ -155,7 +155,7 @@ Visual Studio でおなじみのデバッグ機能の多くに加え、Visual St
 
 <h2 id="install">インストール</h2>
 <ol class="steps">
-  <li><a href="https://github.com/takahino/vscode-dotnet-x86-debugger/releases">Releases ページ</a>から
+  <li><a href="https://github.com/takahino/vscode-netdbg/releases">Releases ページ</a>から
     <code>netdbg-&lt;バージョン&gt;.vsix</code> と <code>install-vsix.ps1</code> を同じフォルダにダウンロードします。</li>
   <li>そのフォルダで次を実行します。
 <pre><code>powershell -ExecutionPolicy Bypass -File install-vsix.ps1</code></pre>
@@ -1085,7 +1085,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td>ブレークポイントが白抜きのまま</td><td>モジュール ビューで、自分のアセンブリが「シンボル読み込み済み」か確認します（Debug ビルドで、DLL の隣に PDB があること）。</td></tr>
   <tr><td>自作ライブラリにステップインできない／デバッグ コンソールに「ソースが見つかりません: …」</td><td>PDB にこのマシンに無いパスが記録されています。ソースの親フォルダを <code>sourceSearchPaths</code> に追加するか、<code>sourceFileMap</code> でパスの接頭辞を置き換えます（Release ビルドなら <code>justMyCode</code> も false に）。</td></tr>
   <tr><td>変数ビューが見当たらない</td><td>非表示または移動している可能性があります。<b>Run and Debug: Focus on Variables View</b> を実行します。</td></tr>
-  <tr><td>そのほかの問題</td><td><code>netdbg.trace</code> を有効にして再現し、出力パネル「netdbg」の内容を添えて <a href="https://github.com/takahino/vscode-dotnet-x86-debugger/issues">Issue</a> を作成してください。</td></tr>
+  <tr><td>そのほかの問題</td><td><code>netdbg.trace</code> を有効にして再現し、出力パネル「netdbg」の内容を添えて <a href="https://github.com/takahino/vscode-netdbg/issues">Issue</a> を作成してください。</td></tr>
 </table>
 
 <h2 id="settings">設定</h2>
@@ -1131,7 +1131,7 @@ TabIndex を表示します。右クリックで <b>コントロールをダン�
   <tr><td><code>netdbg.evidence.enabled</code></td><td>エビデンスの取得</td></tr>
   <tr><td><code>netdbg.sourceLink.enabled</code></td><td>Source Link でのダウンロード</td></tr>
 </table>
-<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-dotnet-x86-debugger">GitHub</a></p>
+<p style="color:var(--muted);font-size:13px;margin-top:40px">netdbg · MIT License · <a href="https://github.com/takahino/vscode-netdbg">GitHub</a></p>
 </main>
 </div>
 </body>
